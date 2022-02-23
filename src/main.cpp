@@ -1,12 +1,18 @@
 #include "main.hpp"
-#include "include/Enhancers/MapEnhancer.hpp"
+
 #include "include/Models/Replay.hpp"
 #include "include/Utils/FileManager.hpp"
+#include "include/Enhancers/MapEnhancer.hpp"
 
 #include "GlobalNamespace/NoteController.hpp"
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 
 #include "UnityEngine/Application.hpp"
+#include "UnityEngine/Resources.hpp"
+
+#include "System/Action_1.hpp"
+#include "System/Threading/Tasks/Task.hpp"
+#include "System/Threading/Tasks/Task_1.hpp"
 
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
@@ -37,6 +43,9 @@
 #include "GlobalNamespace/PlayerTransforms.hpp"
 #include "GlobalNamespace/PauseMenuManager.hpp"
 #include "GlobalNamespace/SaberSwingRatingCounter.hpp"
+#include "GlobalNamespace/IPlatformUserModel.hpp"
+#include "GlobalNamespace/UserInfo.hpp"
+#include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
 
 #include <map>
 #include <chrono>
@@ -44,10 +53,15 @@
 #include <sstream>
 
 using namespace GlobalNamespace;
+using UnityEngine::Resources;
 
 ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
-static MapEnhancer mapEnhancer;
+
 static Replay* replay;
+
+static MapEnhancer mapEnhancer;
+
+PlatformLeaderboardsModel* pmodel;
 AudioTimeSyncController* audioTimeSyncController;
 
 static map<int, NoteCutInfo> _cutInfoCache;
@@ -118,6 +132,33 @@ void levelStarted() {
     std::stringstream strm;
     strm << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     replay->info->timestamp = strm.str();
+
+    IPlatformUserModel* userModel = NULL;
+    ::ArrayW<PlatformLeaderboardsModel *> pmarray = Resources::FindObjectsOfTypeAll<PlatformLeaderboardsModel*>();
+    for (size_t i = 0; i < pmarray.Length(); i++)
+    {
+        if (pmarray.get(i)->platformUserModel != NULL) {
+            userModel = pmarray.get(i)->platformUserModel;
+            break;
+        }
+    }
+
+    if (userModel == NULL) { return; }
+
+    auto userInfoTask = userModel->GetUserInfo();
+
+    auto action = il2cpp_utils::MakeDelegate<System::Action_1<System::Threading::Tasks::Task*>*>(classof(System::Action_1<System::Threading::Tasks::Task*>*), (std::function<void(System::Threading::Tasks::Task_1<GlobalNamespace::UserInfo*>*)>)[&](System::Threading::Tasks::Task_1<GlobalNamespace::UserInfo*>* userInfoTask) {
+            UserInfo *ui = userInfoTask->get_Result();
+            if (ui != nullptr) {
+                replay->info->playerName = (string)ui->userName;
+                replay->info->playerID = (string)ui->platformUserId;
+                replay->info->platform = "oculus";
+                replay->info->hmd = "Oculus Quest";
+            }
+        }
+    );
+
+    reinterpret_cast<System::Threading::Tasks::Task*>(userInfoTask)->ContinueWith(action);
 }
 
 MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLevel, void, SinglePlayerLevelSelectionFlowCoordinator* self, System::Action* beforeSceneSwitchCallback, bool practice) {
@@ -310,6 +351,11 @@ MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) 
     }
 }
 
+// MAKE_HOOK_MATCH(LeaderboardInit, &PlatformLeaderboardsModel::Initialize, void, PlatformLeaderboardsModel* self) {
+//     LeaderboardInit(self);
+//     pmodel = self;
+// }
+
 // Called later on in the game loading - a good time to install function hooks
 extern "C" void load() {
     il2cpp_functions::Init();
@@ -323,13 +369,14 @@ extern "C" void load() {
     INSTALL_HOOK(logger, SongStart);
     INSTALL_HOOK(logger, SpawnNote);
     INSTALL_HOOK(logger, NoteCut);
-    // INSTALL_HOOK(logger, SwingRatingDidChange);
-    // INSTALL_HOOK(logger, SwingRatingDidFinish);
     INSTALL_HOOK(logger, NoteMiss);
     INSTALL_HOOK(logger, ComboMultiplierChanged);
     INSTALL_HOOK(logger, BeatMapStart);
     INSTALL_HOOK(logger, LevelPause);
     INSTALL_HOOK(logger, LevelUnpause);
+    INSTALL_HOOK(logger, Tick);
+    INSTALL_HOOK(logger, SwingRatingDidFinish);
+    // INSTALL_HOOK(logger, LeaderboardInit);
     // Install our hooks (none defined yet)
     getLogger().info("Installed all hooks!");
 }

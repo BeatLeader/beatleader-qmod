@@ -18,7 +18,7 @@ MapEnhancer::~MapEnhancer()
 void MapEnhancer::Enhance(Replay* replay)
 {
     ReplayInfo* info = replay->info;
-    info->hash = regex_replace((string)previewBeatmapLevel->get_levelID(), basic_regex("\\custom_level_"), "");
+    info->hash = regex_replace((string)previewBeatmapLevel->get_levelID(), basic_regex("custom_level_"), "");
     IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(difficultyBeatmap->get_level());
     info->songName = (string)levelData->get_songName();
     info->mapper = (string)levelData->get_levelAuthorName();
@@ -56,19 +56,19 @@ vector<string> MapEnhancer::Modifiers() {
 string MapEnhancer::DiffName(int diff) {
     switch (diff)
     {
-    case 1:
+    case 0:
         return "Easy";
         break;
-    case 3:
+    case 1:
         return "Normal";
         break;
-    case 5:
+    case 2:
         return "Hard";
         break;
-    case 7:
+    case 3:
         return "Expert";
         break;
-    case 9:
+    case 4:
         return "ExpertPlus";
         break;
     default:
