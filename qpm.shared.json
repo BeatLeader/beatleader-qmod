@@ -1,0 +1,86 @@
+{
+  "config": {
+    "sharedDir": "shared",
+    "dependenciesDir": "extern",
+    "info": {
+      "name": "BeatLeader",
+      "id": "bl",
+      "version": "0.1.0",
+      "url": null,
+      "additionalData": {
+        "overrideSoName": "libbl.so"
+      }
+    },
+    "dependencies": [
+      {
+        "id": "beatsaber-hook",
+        "versionRange": "=3.6.7",
+        "additionalData": {
+          "extraFiles": [
+            "src/inline-hook"
+          ]
+        }
+      },
+      {
+        "id": "modloader",
+        "versionRange": "=1.2.3",
+        "additionalData": {}
+      },
+      {
+        "id": "codegen",
+        "versionRange": "^0.19.3",
+        "additionalData": {}
+      }
+    ],
+    "additionalData": {}
+  },
+  "restoredDependencies": [
+    {
+      "dependency": {
+        "id": "modloader",
+        "versionRange": "=1.2.3",
+        "additionalData": {
+          "soLink": "https://github.com/sc2ad/QuestLoader/releases/download/v1.2.3/libmodloader64.so",
+          "overrideSoName": "libmodloader.so",
+          "branchName": "version-v1.2.3"
+        }
+      },
+      "version": "1.2.3"
+    },
+    {
+      "dependency": {
+        "id": "beatsaber-hook",
+        "versionRange": "=3.6.7",
+        "additionalData": {
+          "soLink": "https://github.com/sc2ad/beatsaber-hook/releases/download/v3.6.7/libbeatsaber-hook_3_6_7.so",
+          "debugSoLink": "https://github.com/sc2ad/beatsaber-hook/releases/download/v3.6.7/debug_libbeatsaber-hook_3_6_7.so",
+          "branchName": "version-v3.6.7"
+        }
+      },
+      "version": "3.6.7"
+    },
+    {
+      "dependency": {
+        "id": "codegen",
+        "versionRange": "^0.19.3",
+        "additionalData": {
+          "soLink": "https://github.com/sc2ad/BeatSaber-Quest-Codegen/releases/download/v0.19.3/libcodegen.so",
+          "overrideSoName": "libcodegen.so",
+          "modLink": "https://github.com/sc2ad/BeatSaber-Quest-Codegen/releases/download/v0.19.3/Codegen.qmod",
+          "branchName": "version-v0.19.3"
+        }
+      },
+      "version": "0.19.3"
+    },
+    {
+      "dependency": {
+        "id": "libil2cpp",
+        "versionRange": "^0.2.3",
+        "additionalData": {
+          "headersOnly": true
+        }
+      },
+      "version": "0.2.3"
+    }
+  ]
+}
