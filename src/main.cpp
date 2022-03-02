@@ -50,6 +50,8 @@
 #include "GlobalNamespace/UserInfo.hpp"
 #include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
 #include "GlobalNamespace/PlayerHeightDetector.hpp"
+#include "GlobalNamespace/CentralLeaderboardViewController.hpp"
+#include "GlobalNamespace/LoadingControl.hpp"
 
 #include <map>
 #include <chrono>
@@ -96,7 +98,7 @@ Configuration& getConfig() {
 
 // Returns a logger, useful for printing debug messages
 Logger& getLogger() {
-    static Logger* logger = new Logger(modInfo);
+    static Logger* logger = new Logger(modInfo, LoggerOptions(false, true));
     return *logger;
 }
 
@@ -187,7 +189,7 @@ void levelStarted() {
     if (playerHeightDetector != NULL && playerSettings->get_automaticPlayerHeight()) {
         _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float>*>(
             classof(System::Action_1<float>*), 
-            static_cast<Il2CppObject*>(nullptr), OnPlayerHeightChange)
+            static_cast<Il2CppObject*>(nullptr), OnPlayerHeightChange);
         playerHeightDetector->add_playerHeightDidChangeEvent(_heightEvent);
     }
 }
@@ -204,6 +206,10 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
     mapEnhancer.energy = levelCompletionResults->energy;
     mapEnhancer.Enhance(replay);
 
+    if (_heightEvent != NULL) {
+        playerHeightDetector->remove_playerHeightDidChangeEvent(_heightEvent);
+    }
+    
     switch (levelCompletionResults->levelEndStateType)
     {
         case LevelCompletionResults::LevelEndStateType::Cleared:
@@ -422,6 +428,8 @@ extern "C" void load() {
     INSTALL_HOOK(logger, LevelPlay);
     INSTALL_HOOK(logger, SongStart);
     INSTALL_HOOK(logger, SpawnNote);
+    INSTALL_HOOK(logger, SpawnBombNote);
+    INSTALL_HOOK(logger, SpawnObstacle);
     INSTALL_HOOK(logger, NoteCut);
     INSTALL_HOOK(logger, NoteMiss);
     INSTALL_HOOK(logger, ComboMultiplierChanged);

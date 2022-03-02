@@ -8,7 +8,9 @@
 void ReplayManager::ProcessReplay(Replay* replay) {
     string filename = FileManager::WriteReplay(replay);
 
-    if (replay->info->failTime < 0.001 && replay->info->speed < 0.001) { return; }
+    getLogger().error("%s",("BLYAT saved " + filename).c_str());
+
+    if (replay->info->failTime > 0.001 || replay->info->speed > 0.001) { return; }
     TryPostReplay(filename, 0);
 }
 

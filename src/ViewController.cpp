@@ -41,17 +41,17 @@ string TryAuth() {
 void UpdateUI(string userID) {
     if (userID.length() > 0) {
         label2->SetText(userID);
-        label2->set_hideFlags(UnityEngine::HideFlags::_get_None());
-        label1->set_hideFlags(UnityEngine::HideFlags::_get_None());
-        logoutButton->set_hideFlags(UnityEngine::HideFlags::_get_None());
-        signinButton->set_hideFlags(UnityEngine::HideFlags::_get_HideInHierarchy());
-        tryButton->set_hideFlags(UnityEngine::HideFlags::_get_HideInHierarchy());
+        label2->get_gameObject()->SetActive(true);
+        label1->get_gameObject()->SetActive(true);
+        logoutButton->get_gameObject()->SetActive(true);
+        signinButton->get_gameObject()->SetActive(false);
+        tryButton->get_gameObject()->SetActive(false);
     } else {
-        label2->set_hideFlags(UnityEngine::HideFlags::_get_HideInHierarchy());
-        label1->set_hideFlags(UnityEngine::HideFlags::_get_HideInHierarchy());
-        logoutButton->set_hideFlags(UnityEngine::HideFlags::_get_HideInHierarchy());
-        signinButton->set_hideFlags(UnityEngine::HideFlags::_get_None());
-        tryButton->set_hideFlags(UnityEngine::HideFlags::_get_None());
+        label2->get_gameObject()->SetActive(false);
+        label1->get_gameObject()->SetActive(false);
+        logoutButton->get_gameObject()->SetActive(false);
+        signinButton->get_gameObject()->SetActive(true);
+        tryButton->get_gameObject()->SetActive(true);
     }
 }
 

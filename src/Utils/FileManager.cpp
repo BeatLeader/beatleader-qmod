@@ -25,8 +25,8 @@ string FileManager::WriteReplay(Replay* replay) {
 }
 
 string FileManager::ToFileName(Replay* replay) {
-    string practice = replay->info->speed != 0 ? "-practice" : "";
-    string fail = replay->info->failTime != 0 ? "-fail" : "";
+    string practice = replay->info->speed > 0.0001 ? "-practice" : "";
+    string fail = replay->info->failTime > 0.0001 ? "-fail" : "";
     string filename = replay->info->playerID + practice + fail + "-" + replay->info->songName + "-" + replay->info->difficulty + "-" + replay->info->mode + "-" + replay->info->hash + ".bsor";
     // string regexSearch = new string(System::IO::Path::GetInvalidFileNameChars()) + new string(System::IO::Path::GetInvalidPathChars());
     // string reg = "[{" + regexSearch + "}]";
