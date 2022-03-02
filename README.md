@@ -1,6 +1,8 @@
-# BeatLeader
+# BeatLeader Quest Mod
 
-#{description}
+Oculus Quest native mod for the BeatLeader.
+
+Records
 
 ## Credits
 

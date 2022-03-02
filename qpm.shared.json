@@ -30,6 +30,26 @@
         "id": "codegen",
         "versionRange": "^0.19.3",
         "additionalData": {}
+      },
+      {
+        "id": "questui",
+        "versionRange": "*",
+        "additionalData": {}
+      },
+      {
+        "id": "custom-types",
+        "versionRange": "*",
+        "additionalData": {}
+      },
+      {
+        "id": "config-utils",
+        "versionRange": "*",
+        "additionalData": {}
+      },
+      {
+        "id": "libcurl",
+        "versionRange": "*",
+        "additionalData": {}
       }
     ],
     "additionalData": {}
@@ -46,6 +66,58 @@
         }
       },
       "version": "1.2.3"
+    },
+    {
+      "dependency": {
+        "id": "libil2cpp",
+        "versionRange": "^0.2.3",
+        "additionalData": {
+          "headersOnly": true
+        }
+      },
+      "version": "0.2.3"
+    },
+    {
+      "dependency": {
+        "id": "config-utils",
+        "versionRange": "*",
+        "additionalData": {
+          "headersOnly": true,
+          "soLink": "https://github.com/darknight1050/config-utils/releases/download/v0.7.2/libconfig-utils_test.so",
+          "debugSoLink": "https://github.com/darknight1050/config-utils/releases/download/v0.7.2/debug_libconfig-utils_test.so",
+          "overrideSoName": "libconfig-utils_test.so",
+          "branchName": "version-v0.7.2"
+        }
+      },
+      "version": "0.7.2"
+    },
+    {
+      "dependency": {
+        "id": "custom-types",
+        "versionRange": "*",
+        "additionalData": {
+          "soLink": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.7/libcustom-types.so",
+          "debugSoLink": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.7/debug_libcustom-types.so",
+          "overrideSoName": "libcustom-types.so",
+          "modLink": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.7/CustomTypes.qmod",
+          "branchName": "version-v0.15.7"
+        }
+      },
+      "version": "0.15.7"
+    },
+    {
+      "dependency": {
+        "id": "libcurl",
+        "versionRange": "*",
+        "additionalData": {
+          "staticLinking": true,
+          "useRelease": true,
+          "soLink": "https://github.com/darknight1050/openssl-curl-android/releases/download/v7.78.0/libcurl.a",
+          "overrideSoName": "libcurl.a",
+          "branchName": "version-v7.78.0"
+        }
+      },
+      "version": "7.78.0"
     },
     {
       "dependency": {
@@ -74,13 +146,22 @@
     },
     {
       "dependency": {
-        "id": "libil2cpp",
-        "versionRange": "^0.2.3",
+        "id": "questui",
+        "versionRange": "*",
         "additionalData": {
-          "headersOnly": true
+          "soLink": "https://github.com/darknight1050/questui/releases/download/v0.13.1/libquestui.so",
+          "debugSoLink": "https://github.com/darknight1050/questui/releases/download/v0.13.1/debug_libquestui.so",
+          "overrideSoName": "libquestui.so",
+          "modLink": "https://github.com/darknight1050/questui/releases/download/v0.13.1/QuestUI.qmod",
+          "branchName": "version-v0.13.1",
+          "compileOptions": {
+            "systemIncludes": [
+              "shared/cppcodec"
+            ]
+          }
         }
       },
-      "version": "0.2.3"
+      "version": "0.13.1"
     }
   ]
 }

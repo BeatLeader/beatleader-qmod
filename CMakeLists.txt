@@ -56,7 +56,7 @@ target_include_directories(${COMPILE_ID} PUBLIC ${SHARED_DIR})
 # codegen includes 
 target_include_directories(${COMPILE_ID} PRIVATE ${EXTERN_DIR}/includes/${CODEGEN_ID}/include)
 
-target_link_libraries(${COMPILE_ID} PRIVATE -llog)
+target_link_libraries(${COMPILE_ID} PRIVATE -llog -lz)
 # add extern stuff like libs and other includes
 include(extern.cmake)
 

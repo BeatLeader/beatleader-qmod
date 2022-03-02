@@ -3,7 +3,7 @@
   "dependenciesDir": "extern",
   "info": {
     "name": "BeatLeader",
-    "id": "bl",
+    "id": "BeatLeader",
     "version": "0.1.0",
     "url": null,
     "additionalData": {
@@ -28,6 +28,26 @@
     {
       "id": "codegen",
       "versionRange": "^0.19.3",
+      "additionalData": {}
+    },
+    {
+      "id": "questui",
+      "versionRange": "*",
+      "additionalData": {}
+    },
+    {
+      "id": "custom-types",
+      "versionRange": "*",
+      "additionalData": {}
+    },
+    {
+      "id": "config-utils",
+      "versionRange": "*",
+      "additionalData": {}
+    },
+    {
+      "id": "libcurl",
+      "versionRange": "*",
       "additionalData": {}
     }
   ],

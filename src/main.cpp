@@ -1,11 +1,14 @@
 #include "main.hpp"
 
 #include "include/Models/Replay.hpp"
-#include "include/Utils/FileManager.hpp"
+#include "include/Utils/ReplayManager.hpp"
 #include "include/Enhancers/MapEnhancer.hpp"
 
 #include "GlobalNamespace/NoteController.hpp"
 #include "beatsaber-hook/shared/utils/hooking.hpp"
+
+#include "questui/shared/QuestUI.hpp"
+#include "questui/shared/ArrayUtil.hpp"
 
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/Resources.hpp"
@@ -46,6 +49,7 @@
 #include "GlobalNamespace/IPlatformUserModel.hpp"
 #include "GlobalNamespace/UserInfo.hpp"
 #include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
+#include "GlobalNamespace/PlayerHeightDetector.hpp"
 
 #include <map>
 #include <chrono>
@@ -63,6 +67,9 @@ static MapEnhancer mapEnhancer;
 
 PlatformLeaderboardsModel* pmodel;
 AudioTimeSyncController* audioTimeSyncController;
+PlayerSpecificSettings* playerSettings;
+PlayerHeightDetector* playerHeightDetector;
+PlayerHeadAndObstacleInteraction* phoi;
 
 static map<int, NoteCutInfo> _cutInfoCache;
 static map<int, NoteEvent *> _noteEventCache;
@@ -78,6 +85,7 @@ static int _wallId;
 static Pause* _currentPause;
 static WallEvent* _currentWallEvent;
 static chrono::steady_clock::time_point _pauseStartTime;
+static System::Action_1<float>* _heightEvent;
 
 // Loads the config from disk using our modInfo, then returns it for use
 Configuration& getConfig() {
@@ -116,11 +124,22 @@ void collectMapData(StandardLevelScenesTransitionSetupDataSO* self, ::StringW ga
     mapEnhancer.useTestNoteCutSoundEffects = useTestNoteCutSoundEffects;
     mapEnhancer.environmentInfo = environmentInfoSO;
     mapEnhancer.colorScheme = overrideColorScheme;
+
+    playerSettings = playerSpecificSettings;
 }
 
 MAKE_HOOK_MATCH(TransitionSetupDataInit, &StandardLevelScenesTransitionSetupDataSO::Init, void, StandardLevelScenesTransitionSetupDataSO* self, ::StringW gameMode, IDifficultyBeatmap* difficultyBeatmap, IPreviewBeatmapLevel* previewBeatmapLevel, OverrideEnvironmentSettings* overrideEnvironmentSettings, ColorScheme* overrideColorScheme, GameplayModifiers* gameplayModifiers, PlayerSpecificSettings* playerSpecificSettings, PracticeSettings* practiceSettings, ::StringW backButtonText, bool useTestNoteCutSoundEffects) {
     TransitionSetupDataInit(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
     collectMapData(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
+}
+
+void OnPlayerHeightChange(float height)
+{
+    AutomaticHeight* automaticHeight = new AutomaticHeight();
+    automaticHeight->height = height;
+    automaticHeight->time = audioTimeSyncController->get_songTime();
+
+    replay->heights.push_back(automaticHeight);
 }
 
 void levelStarted() {
@@ -153,12 +172,24 @@ void levelStarted() {
                 replay->info->playerName = (string)ui->userName;
                 replay->info->playerID = (string)ui->platformUserId;
                 replay->info->platform = "oculus";
+
+                // ¯\_(ツ)_/¯
                 replay->info->hmd = "Oculus Quest";
+                replay->info->trackingSytem = "Oculus";
+                replay->info->controller = "Oculus Touch";
             }
         }
     );
 
     reinterpret_cast<System::Threading::Tasks::Task*>(userInfoTask)->ContinueWith(action);
+
+    playerHeightDetector = Resources::FindObjectsOfTypeAll<PlayerHeightDetector*>()[0];
+    if (playerHeightDetector != NULL && playerSettings->get_automaticPlayerHeight()) {
+        _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float>*>(
+            classof(System::Action_1<float>*), 
+            static_cast<Il2CppObject*>(nullptr), OnPlayerHeightChange)
+        playerHeightDetector->add_playerHeightDidChangeEvent(_heightEvent);
+    }
 }
 
 MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLevel, void, SinglePlayerLevelSelectionFlowCoordinator* self, System::Action* beforeSceneSwitchCallback, bool practice) {
@@ -172,8 +203,24 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
 
     mapEnhancer.energy = levelCompletionResults->energy;
     mapEnhancer.Enhance(replay);
-    
-    FileManager::WriteReplay(replay);
+
+    switch (levelCompletionResults->levelEndStateType)
+    {
+        case LevelCompletionResults::LevelEndStateType::Cleared:
+            ReplayManager::ProcessReplay(replay);
+            break;
+        case LevelCompletionResults::LevelEndStateType::Failed:
+            if (levelCompletionResults->levelEndAction != LevelCompletionResults::LevelEndAction::Restart)
+            {
+                replay->info->failTime = audioTimeSyncController->get_songTime();
+                ReplayManager::ProcessReplay(replay);
+            }
+            break;
+    }
+
+    if (playerHeightDetector != NULL && _heightEvent != NULL) {
+        playerHeightDetector->remove_playerHeightDidChangeEvent(_heightEvent);
+    }
 }
 
 MAKE_HOOK_MATCH(ProcessResultsSolo, &SoloFreePlayFlowCoordinator::ProcessLevelCompletionResultsAfterLevelDidFinish, void, SoloFreePlayFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IDifficultyBeatmap* difficultyBeatmap, GameplayModifiers* gameplayModifiers, bool practice) {
@@ -302,6 +349,7 @@ MAKE_HOOK_MATCH(ComboMultiplierChanged, &ScoreController::NotifyForChange, void,
         wallEvent->time = audioTimeSyncController->get_songTime();
         replay->walls.push_back(wallEvent);
         _currentWallEvent = wallEvent;
+        phoi = self->playerHeadAndObstacleInteraction;
     }
 }
 
@@ -349,18 +397,24 @@ MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) 
         
         replay->frames.push_back(frame);
     }
-}
 
-// MAKE_HOOK_MATCH(LeaderboardInit, &PlatformLeaderboardsModel::Initialize, void, PlatformLeaderboardsModel* self) {
-//     LeaderboardInit(self);
-//     pmodel = self;
-// }
+    if (_currentWallEvent != NULL) {
+        if (phoi->get_intersectingObstacles()->get_Count() == 0)
+        {
+            _currentWallEvent->energy = audioTimeSyncController->get_songTime();
+            _currentWallEvent = NULL;
+        }
+    }
+}
 
 // Called later on in the game loading - a good time to install function hooks
 extern "C" void load() {
     il2cpp_functions::Init();
 
     LoggerContextObject logger = getLogger().WithContext("load");
+
+    QuestUI::Init();
+    QuestUI::Register::RegisterModSettingsViewController(modInfo, "BeatLeader", DidActivate);
 
     getLogger().info("Installing hooks...");
     INSTALL_HOOK(logger, ProcessResultsSolo);
@@ -376,7 +430,6 @@ extern "C" void load() {
     INSTALL_HOOK(logger, LevelUnpause);
     INSTALL_HOOK(logger, Tick);
     INSTALL_HOOK(logger, SwingRatingDidFinish);
-    // INSTALL_HOOK(logger, LeaderboardInit);
     // Install our hooks (none defined yet)
     getLogger().info("Installed all hooks!");
 }
