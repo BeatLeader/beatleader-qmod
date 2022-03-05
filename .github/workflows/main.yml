@@ -41,6 +41,7 @@ jobs:
       run: |
         chmod +x ./qpm-rust
         ./qpm-rust restore
+    - uses: seanmiddleditch/gha-setup-ninja@master
     - name: Build
       run: pwsh -Command ./buildQMOD.ps1
     - name: Upload artifact
