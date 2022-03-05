@@ -32,15 +32,15 @@ jobs:
       uses: dawidd6/action-download-artifact@v2
       with:
         github_token: ${{secrets.GITHUB_TOKEN}}
-        workflow: main.yml
-        name: QPM-ubuntu-x64
+        workflow: cargo-build.yml
+        name: linux-qpm-rust
         path: ./
-        repo: sc2ad/QuestPackageManager
+        repo: RedBrumbler/QuestPackageManager-Rust
       
     - name: QPM Restore
       run: |
-        chmod +x ./QPM
-        ./QPM restore
+        chmod +x ./qpm-rust
+        ./qpm-rust restore
     - name: Build
       run: pwsh -Command ./buildQMOD.ps1
     - name: Upload artifact
