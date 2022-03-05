@@ -2,21 +2,36 @@
 
 #include "include/Models/Replay.hpp"
 #include "include/Utils/ReplayManager.hpp"
+#include "include/Utils/WebUtils.hpp"
 #include "include/Enhancers/MapEnhancer.hpp"
+#include "include/Enhancers/UserEnhancer.hpp"
+#include "include/API/PlayerController.hpp"
+#include "include/Assets/Sprites.hpp"
 
-#include "GlobalNamespace/NoteController.hpp"
 #include "beatsaber-hook/shared/utils/hooking.hpp"
+#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include "questui/shared/QuestUI.hpp"
 #include "questui/shared/ArrayUtil.hpp"
+#include "questui/shared/BeatSaberUI.hpp"
+#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+
+#include "HMUI/TableView.hpp"
+#include "HMUI/TableCell.hpp"
+
+#include "TMPro/TMP_Text.hpp"
+#include "TMPro/TextMeshProUGUI.hpp"
 
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/Resources.hpp"
+#include "UnityEngine/RectTransform.hpp"
+#include "UnityEngine/UI/LayoutElement.hpp"
 
 #include "System/Action_1.hpp"
 #include "System/Threading/Tasks/Task.hpp"
 #include "System/Threading/Tasks/Task_1.hpp"
 
+#include "GlobalNamespace/NoteController.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/BeatmapData.hpp"
@@ -46,19 +61,29 @@
 #include "GlobalNamespace/PlayerTransforms.hpp"
 #include "GlobalNamespace/PauseMenuManager.hpp"
 #include "GlobalNamespace/SaberSwingRatingCounter.hpp"
-#include "GlobalNamespace/IPlatformUserModel.hpp"
-#include "GlobalNamespace/UserInfo.hpp"
 #include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
 #include "GlobalNamespace/PlayerHeightDetector.hpp"
-#include "GlobalNamespace/CentralLeaderboardViewController.hpp"
+#include "GlobalNamespace/PlatformLeaderboardViewController.hpp"
 #include "GlobalNamespace/LoadingControl.hpp"
+#include "GlobalNamespace/LeaderboardTableView.hpp"
+#include "GlobalNamespace/LeaderboardTableView_ScoreData.hpp"
+#include "GlobalNamespace/PlatformLeaderboardsModel_ScoresScope.hpp"
+#include "GlobalNamespace/BeatmapDifficulty.hpp"
+#include "GlobalNamespace/IBeatmapLevel.hpp"
+#include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
+#include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
+#include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
+#include "GlobalNamespace/LeaderboardTableCell.hpp"
 
 #include <map>
 #include <chrono>
 #include <iostream>
 #include <sstream>
+#include <regex>
 
 using namespace GlobalNamespace;
+using namespace HMUI;
+using namespace QuestUI;
 using UnityEngine::Resources;
 
 ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
@@ -66,12 +91,13 @@ ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the mod
 static Replay* replay;
 
 static MapEnhancer mapEnhancer;
+static UserEnhancer userEnhancer;
 
-PlatformLeaderboardsModel* pmodel;
 AudioTimeSyncController* audioTimeSyncController;
 PlayerSpecificSettings* playerSettings;
 PlayerHeightDetector* playerHeightDetector;
 PlayerHeadAndObstacleInteraction* phoi;
+PlatformLeaderboardViewController* leaderboardViewController;
 
 static map<int, NoteCutInfo> _cutInfoCache;
 static map<int, NoteEvent *> _noteEventCache;
@@ -88,6 +114,11 @@ static Pause* _currentPause;
 static WallEvent* _currentWallEvent;
 static chrono::steady_clock::time_point _pauseStartTime;
 static System::Action_1<float>* _heightEvent;
+
+TMPro::TextMeshProUGUI* uploadStatus = NULL;
+TMPro::TextMeshProUGUI* playerInfo = NULL;
+UnityEngine::UI::Button* retryButton = NULL;
+QuestUI::ClickableImage* websiteLink = NULL;
 
 // Loads the config from disk using our modInfo, then returns it for use
 Configuration& getConfig() {
@@ -153,37 +184,7 @@ void levelStarted() {
     std::stringstream strm;
     strm << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     replay->info->timestamp = strm.str();
-
-    IPlatformUserModel* userModel = NULL;
-    ::ArrayW<PlatformLeaderboardsModel *> pmarray = Resources::FindObjectsOfTypeAll<PlatformLeaderboardsModel*>();
-    for (size_t i = 0; i < pmarray.Length(); i++)
-    {
-        if (pmarray.get(i)->platformUserModel != NULL) {
-            userModel = pmarray.get(i)->platformUserModel;
-            break;
-        }
-    }
-
-    if (userModel == NULL) { return; }
-
-    auto userInfoTask = userModel->GetUserInfo();
-
-    auto action = il2cpp_utils::MakeDelegate<System::Action_1<System::Threading::Tasks::Task*>*>(classof(System::Action_1<System::Threading::Tasks::Task*>*), (std::function<void(System::Threading::Tasks::Task_1<GlobalNamespace::UserInfo*>*)>)[&](System::Threading::Tasks::Task_1<GlobalNamespace::UserInfo*>* userInfoTask) {
-            UserInfo *ui = userInfoTask->get_Result();
-            if (ui != nullptr) {
-                replay->info->playerName = (string)ui->userName;
-                replay->info->playerID = (string)ui->platformUserId;
-                replay->info->platform = "oculus";
-
-                // ¯\_(ツ)_/¯
-                replay->info->hmd = "Oculus Quest";
-                replay->info->trackingSytem = "Oculus";
-                replay->info->controller = "Oculus Touch";
-            }
-        }
-    );
-
-    reinterpret_cast<System::Threading::Tasks::Task*>(userInfoTask)->ContinueWith(action);
+    userEnhancer.Enhance(replay);
 
     playerHeightDetector = Resources::FindObjectsOfTypeAll<PlayerHeightDetector*>()[0];
     if (playerHeightDetector != NULL && playerSettings->get_automaticPlayerHeight()) {
@@ -200,6 +201,26 @@ MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLeve
     levelStarted();
 }
 
+void replayPostCallback(ReplayUploadStatus status, string description) {
+    if (status == ReplayUploadStatus::finished) {
+        PlayerController::Refresh();
+    }
+    QuestUI::MainThreadScheduler::Schedule([status, description] {
+        uploadStatus->SetText(description);
+        switch (status)
+        {
+        case ReplayUploadStatus::finished:
+            leaderboardViewController->Refresh(true, true);
+            break;
+        case ReplayUploadStatus::error:
+            retryButton->get_gameObject()->SetActive(true);
+            break;
+        case ReplayUploadStatus::inProgress:
+            break;
+        }
+    });
+}
+
 void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IDifficultyBeatmap* difficultyBeatmap, bool practice) {
     replay->info->score = levelCompletionResults->rawScore;
 
@@ -213,13 +234,17 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
     switch (levelCompletionResults->levelEndStateType)
     {
         case LevelCompletionResults::LevelEndStateType::Cleared:
-            ReplayManager::ProcessReplay(replay);
+            ReplayManager::ProcessReplay(replay, replayPostCallback);
             break;
         case LevelCompletionResults::LevelEndStateType::Failed:
             if (levelCompletionResults->levelEndAction != LevelCompletionResults::LevelEndAction::Restart)
             {
                 replay->info->failTime = audioTimeSyncController->get_songTime();
-                ReplayManager::ProcessReplay(replay);
+                ReplayManager::ProcessReplay(replay, [](bool finished, string description) {
+                    QuestUI::MainThreadScheduler::Schedule([description] {
+                        uploadStatus->SetText(description);
+                    });
+                });
             }
             break;
     }
@@ -413,6 +438,174 @@ MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) 
     }
 }
 
+template <typename T>
+string to_string_wprecision(const T a_value, const int n = 6)
+{
+    std::ostringstream out;
+    out.precision(n);
+    out << std::fixed << a_value;
+    return out.str();
+}
+
+string truncate(string str, size_t width, bool show_ellipsis=true)
+{
+    if (str.length() > width) {
+        if (show_ellipsis) {
+            return str.substr(0, width) + "...";
+        } else {
+            return str.substr(0, width);
+        }
+    }
+            
+    return str;
+}
+
+string generateLabel(string nameLabel, string ppLabel, string accLabel) {
+    return truncate(nameLabel, 14) + "<pos=50%>" + ppLabel + "   " + accLabel; 
+}
+
+void move(UnityEngine::Component* label, float x, float y) {
+    UnityEngine::RectTransform* transform = label->GetComponent<UnityEngine::RectTransform *>();
+    UnityEngine::Vector2 position = transform->get_anchoredPosition();
+    position.x += x;
+    position.y += y;
+    transform->set_anchoredPosition(position);
+}
+
+void resize(TMPro::TextMeshProUGUI* label, float x, float y) {
+    UnityEngine::RectTransform* transform = label->GetComponent<UnityEngine::RectTransform *>();
+    UnityEngine::Vector2 sizeDelta = transform->get_sizeDelta();
+    sizeDelta.x += x;
+    sizeDelta.y += y;
+    transform->set_sizeDelta(sizeDelta);
+}
+
+void updatePlayerInfoLabel() {
+    Player* player = PlayerController::currentPlayer;
+    playerInfo->SetText("#" + to_string(player->rank) + "       " + player->name + "         " + to_string_wprecision(player->pp, 2) + "pp");
+}
+
+MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy) {
+    leaderboardViewController = self;
+    if (PlayerController::currentPlayer == NULL) {
+        self->loadingControl->ShowText("Please login in preferences", true);
+        return;
+    }
+    IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
+    string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
+    string difficulty = MapEnhancer::DiffName(self->difficultyBeatmap->get_difficulty().value);
+    string mode = (string)self->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
+    string url = "https://beatleader.azurewebsites.net/scores/" + hash + "/" + difficulty + "/" + mode;
+
+    switch (PlatformLeaderboardViewController::_get__scoresScope())
+    {
+    case PlatformLeaderboardsModel::ScoresScope::AroundPlayer:
+        url += "?player=" + PlayerController::currentPlayer->id;
+        break;
+    case PlatformLeaderboardsModel::ScoresScope::Friends:
+        url += "?country=" + PlayerController::currentPlayer->country;
+        break;
+    
+    default:
+        break;
+    } 
+
+    WebUtils::GetJSONAsync(url, [self](long status, bool error, rapidjson::Document& result){
+        auto scores = result.GetArray();
+        self->scores->Clear();
+        if ((int)scores.Size() == 0) {
+            QuestUI::MainThreadScheduler::Schedule([self] {
+                self->loadingControl->Hide();
+                self->hasScoresData = false;
+                self->loadingControl->ShowText("No scores was found, make one!", true);
+                self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
+            });
+            return;
+        }
+
+        int selectedScore = 10;
+        for (int index = 0; index < 10; ++index)
+        {
+            if (index < (int)scores.Size())
+            {
+                auto score = scores[index].GetObject();
+
+                string ppLabel = score["pp"].GetDouble() > 0 ? to_string_wprecision(score["pp"].GetDouble(), 2) + "pp" : "";
+                string accLabel = to_string_wprecision(score["accuracy"].GetDouble() * 100, 2) + "%";
+                string nameLabel = score["player"].GetObject()["name"].GetString();
+
+                if (nameLabel.compare(PlayerController::currentPlayer->name) == 0) {
+                    selectedScore = index;
+                }
+
+                LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
+                    score["modifiedScore"].GetInt(), 
+                    generateLabel(nameLabel, ppLabel, accLabel), 
+                    score["rank"].GetInt(), 
+                    score["fullCombo"].GetBool());
+                self->scores->Add(scoreData);
+            }
+        }
+            
+        self->leaderboardTableView->scores = self->scores;
+        self->leaderboardTableView->specialScorePos = selectedScore;
+        QuestUI::MainThreadScheduler::Schedule([self] {
+            self->loadingControl->Hide();
+            self->hasScoresData = true;
+            self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
+        });
+    });
+
+    self->loadingControl->ShowText("Loading", true);
+    
+    if (uploadStatus == NULL) {
+        playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
+        move(playerInfo, 0, 46);
+        if (PlayerController::currentPlayer != NULL) {
+            updatePlayerInfoLabel();
+        }
+
+        websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-38, 48), UnityEngine::Vector2(10, 10), []() {
+            string url = "https://agitated-ptolemy-7d772c.netlify.app/";
+            if (PlayerController::currentPlayer != NULL) {
+                url += "u/" + PlayerController::currentPlayer->id;
+            }
+            UnityEngine::Application::OpenURL(url);
+        });
+
+        // move(websiteLink, -5, 46);
+
+        retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(6, -25), UnityEngine::Vector2(8, 8), [](){
+            retryButton->get_gameObject()->SetActive(false);
+            ReplayManager::RetryPosting(replayPostCallback);
+        });
+        retryButton->get_gameObject()->SetActive(false);
+
+        uploadStatus = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
+        move(uploadStatus, -3, -30);
+        resize(uploadStatus, 10, 0);
+        uploadStatus->set_fontSize(3);
+        uploadStatus->set_richText(true);
+    }
+}
+
+MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, TableCell*, LeaderboardTableView* self, TableView* tableView, int row) {
+    LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
+
+    if (result->playerNameText->get_fontSize() > 3) {
+        result->playerNameText->set_enableAutoSizing(false);
+        result->playerNameText->set_richText(true);
+        resize(result->playerNameText, 10, 0);
+        move(result->fullComboText, 0.2, 0);
+        move(result->scoreText, 1, 0);
+        result->playerNameText->set_fontSize(3);
+        result->fullComboText->set_fontSize(3);
+        result->scoreText->set_fontSize(3);
+    }
+    
+    return (TableCell *)result;
+}
+
 // Called later on in the game loading - a good time to install function hooks
 extern "C" void load() {
     il2cpp_functions::Init();
@@ -438,6 +631,17 @@ extern "C" void load() {
     INSTALL_HOOK(logger, LevelUnpause);
     INSTALL_HOOK(logger, Tick);
     INSTALL_HOOK(logger, SwingRatingDidFinish);
+    INSTALL_HOOK(logger, RefreshLeaderboard);
+    INSTALL_HOOK(logger, LeaderboardCellSource);
+    PlayerController::playerChanged = [](Player* updated) {
+        QuestUI::MainThreadScheduler::Schedule([] {
+            if (playerInfo != NULL) {
+                updatePlayerInfoLabel();
+            }
+        });
+    };
+    PlayerController::Refresh();
+    // INSTALL_HOOK(logger, RefreshLeaderboard2);
     // Install our hooks (none defined yet)
     getLogger().info("Installed all hooks!");
 }

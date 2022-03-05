@@ -8,7 +8,9 @@
 #include "UnityEngine/HideFlags.hpp"
 
 #include "Utils/WebUtils.hpp"
-#include "include/main.hpp"
+#include "API/PlayerController.hpp"
+#include "main.hpp"
+
 #include <string>
 
 using namespace QuestUI;
@@ -19,24 +21,9 @@ UnityEngine::UI::Button* signinButton;
 UnityEngine::UI::Button* tryButton;
 TMPro::TextMeshProUGUI* label1;
 TMPro::TextMeshProUGUI* label2;
+TMPro::TextMeshProUGUI* errorLabel;
 
-string TryAuth() {
-    string userID = "";
-    WebUtils::Get("https://beatleader.azurewebsites.net/user/id", userID);
-    if (userID.length() == 0) {
-        string code = (string)UnityEngine::GUIUtility::get_systemCopyBuffer();
-        if (code.length() == 144) {
-            string result = "";
-            long statusCode = WebUtils::Get("https://beatleader.azurewebsites.net/signinoculus?token=" + code, result);
-            if (statusCode == 200) {
-                WebUtils::Get("https://beatleader.azurewebsites.net/user/id", userID);
-            } else {
-                getLogger().error("BLYAT %s", ("signin error" + to_string(statusCode)).c_str());
-            }
-        }
-    }
-    return userID;
-}
+string errorDescription;
 
 void UpdateUI(string userID) {
     if (userID.length() > 0) {
@@ -53,6 +40,25 @@ void UpdateUI(string userID) {
         signinButton->get_gameObject()->SetActive(true);
         tryButton->get_gameObject()->SetActive(true);
     }
+
+    errorLabel->SetText(errorDescription);
+    if (errorDescription.length() > 0) {
+        errorLabel->get_gameObject()->SetActive(true);
+    } else {
+        errorLabel->get_gameObject()->SetActive(false);
+    }
+}
+
+string TryAuth() {
+    errorDescription = "";
+    string userID = PlayerController::currentPlayer != NULL ? PlayerController::currentPlayer->id : "";
+    if (userID.length() == 0) {
+        userID = PlayerController::LogIn((string)UnityEngine::GUIUtility::get_systemCopyBuffer());
+        if (userID.length() == 0) {
+            errorDescription = PlayerController::lastErrorDescription;
+        }
+    }
+    return userID;
 }
 
 void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
@@ -65,9 +71,13 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
         label1 = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Your id:", false);
         label2 = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), userID, false);
         logoutButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Logout", [](){
-            string empty = "";
-            WebUtils::Get("https://beatleader.azurewebsites.net/signout", empty);
-            UpdateUI("");
+            if (!PlayerController::LogOut()) {
+                errorDescription = PlayerController::lastErrorDescription;
+                UpdateUI(PlayerController::currentPlayer->id);
+            } else {
+                errorDescription = "";
+                UpdateUI("");
+            }
         });
         signinButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Signin", [](){
             UnityEngine::Application::OpenURL("https://auth.oculus.com/sso/?redirect_uri=https%3A%2F%2Fagitated-ptolemy-7d772c.netlify.app%2Fsignin%2Foculus&organization_id=702913270869417");
@@ -75,6 +85,7 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
         tryButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "I've copied code", [](){
             UpdateUI(TryAuth());
         });
+        errorLabel = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), errorDescription, false);
     }
 
     UpdateUI(userID);

@@ -166,6 +166,9 @@ namespace WebUtils {
     void GetAsync(std::string url, long timeout, std::function<void(long, std::string)> finished, std::function<void(float)> progressUpdate) {
         std::thread t (
             [url, timeout, progressUpdate, finished] {
+                std::string directory = getDataDir(modInfo) + "cookies/";
+                std::filesystem::create_directories(directory);
+                std::string cookieFile = directory + "cookies.txt";
                 std::string val;
                 // Init curl
                 auto* curl = curl_easy_init();
@@ -176,6 +179,9 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers); 
 
                 curl_easy_setopt(curl, CURLOPT_URL, query_encode(url).c_str());
+
+                curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str());
+                curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFile.c_str());
 
                 // Don't wait forever, time out after TIMEOUT seconds.
                 curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);

@@ -1,4 +1,5 @@
 #include "include/Enhancers/MapEnhancer.hpp"
+
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/IBeatmapLevel.hpp"
 #include "GlobalNamespace/IDifficultyBeatmapSet.hpp"

@@ -30,8 +30,8 @@ public:
     float energy;
 
     void Enhance(Replay* replay);
+    static string DiffName(int diff);
 private:
     string Join(vector<string> list);
     vector<string> Modifiers();
-    string DiffName(int diff);
 };
