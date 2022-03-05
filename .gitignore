@@ -7,5 +7,6 @@ build
 BeatLeader.qmod
 logcat.log
 tombstone*
-extern
+extern/
 qpm-rust
+qpm.shared.json
