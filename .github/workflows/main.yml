@@ -21,9 +21,9 @@ jobs:
     
     - name: Setup NDK
       id: setup-ndk
-      uses: nttld/setup-ndk@v1.0.2
+      uses: nttld/setup-ndk@v1.0.6
       with:
-        ndk-version: r21
+        ndk-version: r23
       
     - name: Create ndkpath.txt
       run: echo ${{ steps.setup-ndk.outputs.ndk-path }} > ${GITHUB_WORKSPACE}/ndkpath.txt
