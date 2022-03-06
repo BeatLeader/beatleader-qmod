@@ -41,6 +41,8 @@ jobs:
       run: |
         chmod +x ./qpm-rust
         ./qpm-rust restore
+    - name: Fix dependency
+      run: cp -a ./extern/includes/beatsaber-hook/. ./extern/beatsaber-hook/
     - uses: seanmiddleditch/gha-setup-ninja@master
     - name: Build
       run: pwsh -Command ./buildQMOD.ps1

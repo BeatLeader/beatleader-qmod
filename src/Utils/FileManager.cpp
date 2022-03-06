@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <locale>
+#include <codecvt>
 #include <fstream>
 
 #include "include/Utils/FileManager.hpp"

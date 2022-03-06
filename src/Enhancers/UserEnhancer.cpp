@@ -26,11 +26,11 @@ UserEnhancer::~UserEnhancer()
 
 void UserEnhancer::EnhanceLocal(Replay* replay) {
     IPlatformUserModel* userModel = NULL;
-    ::ArrayW<PlatformLeaderboardsModel *> pmarray = Resources::FindObjectsOfTypeAll<PlatformLeaderboardsModel*>();
-    for (size_t i = 0; i < pmarray.Length(); i++)
+    ::Array<PlatformLeaderboardsModel *>* pmarray = Resources::FindObjectsOfTypeAll<PlatformLeaderboardsModel*>();
+    for (size_t i = 0; i < pmarray->Length(); i++)
     {
-        if (pmarray.get(i)->platformUserModel != NULL) {
-            userModel = pmarray.get(i)->platformUserModel;
+        if (pmarray->get(i)->platformUserModel != NULL) {
+            userModel = pmarray->get(i)->platformUserModel;
             break;
         }
     }
@@ -42,8 +42,8 @@ void UserEnhancer::EnhanceLocal(Replay* replay) {
     auto action = il2cpp_utils::MakeDelegate<System::Action_1<System::Threading::Tasks::Task*>*>(classof(System::Action_1<System::Threading::Tasks::Task*>*), (std::function<void(System::Threading::Tasks::Task_1<GlobalNamespace::UserInfo*>*)>)[&](System::Threading::Tasks::Task_1<GlobalNamespace::UserInfo*>* userInfoTask) {
             UserInfo *ui = userInfoTask->get_Result();
             if (ui != nullptr) {
-                replay->info->playerName = (string)ui->userName;
-                replay->info->playerID = (string)ui->platformUserId;
+                replay->info->playerName = to_utf8(csstrtostr(ui->userName));
+                replay->info->playerID = to_utf8(csstrtostr(ui->platformUserId));
                 replay->info->platform = "oculus";
             }
         }

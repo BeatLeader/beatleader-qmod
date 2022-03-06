@@ -27,7 +27,7 @@ string errorDescription;
 
 void UpdateUI(string userID) {
     if (userID.length() > 0) {
-        label2->SetText(userID);
+        label2->SetText(il2cpp_utils::createcsstr(userID));
         label2->get_gameObject()->SetActive(true);
         label1->get_gameObject()->SetActive(true);
         logoutButton->get_gameObject()->SetActive(true);
@@ -41,7 +41,7 @@ void UpdateUI(string userID) {
         tryButton->get_gameObject()->SetActive(true);
     }
 
-    errorLabel->SetText(errorDescription);
+    errorLabel->SetText(il2cpp_utils::createcsstr(errorDescription));
     if (errorDescription.length() > 0) {
         errorLabel->get_gameObject()->SetActive(true);
     } else {
@@ -53,7 +53,7 @@ string TryAuth() {
     errorDescription = "";
     string userID = PlayerController::currentPlayer != NULL ? PlayerController::currentPlayer->id : "";
     if (userID.length() == 0) {
-        userID = PlayerController::LogIn((string)UnityEngine::GUIUtility::get_systemCopyBuffer());
+        userID = PlayerController::LogIn(to_utf8(csstrtostr(UnityEngine::GUIUtility::get_systemCopyBuffer())));
         if (userID.length() == 0) {
             errorDescription = PlayerController::lastErrorDescription;
         }
@@ -80,7 +80,7 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
             }
         });
         signinButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Signin", [](){
-            UnityEngine::Application::OpenURL("https://auth.oculus.com/sso/?redirect_uri=https%3A%2F%2Fagitated-ptolemy-7d772c.netlify.app%2Fsignin%2Foculus&organization_id=702913270869417");
+            UnityEngine::Application::OpenURL(il2cpp_utils::createcsstr("https://auth.oculus.com/sso/?redirect_uri=https%3A%2F%2Fagitated-ptolemy-7d772c.netlify.app%2Fsignin%2Foculus&organization_id=702913270869417"));
         });
         tryButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "I've copied code", [](){
             UpdateUI(TryAuth());
