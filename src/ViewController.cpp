@@ -17,13 +17,18 @@ using namespace QuestUI;
 using namespace std;
 
 UnityEngine::UI::Button* logoutButton;
-UnityEngine::UI::Button* signinButton;
-UnityEngine::UI::Button* tryButton;
+HMUI::InputFieldView* loginField;
+HMUI::InputFieldView* passwordField;
+UnityEngine::UI::Button* loginButton;
+UnityEngine::UI::Button* signupButton;
 TMPro::TextMeshProUGUI* label1;
 TMPro::TextMeshProUGUI* label2;
-TMPro::TextMeshProUGUI* errorLabel;
+TMPro::TextMeshProUGUI* errorDescriptionLabel;
 
-string errorDescription;
+StringW login = "";
+StringW password = "";
+
+string errorDescription = "";
 
 void UpdateUI(string userID) {
     if (userID.length() > 0) {
@@ -31,38 +36,32 @@ void UpdateUI(string userID) {
         label2->get_gameObject()->SetActive(true);
         label1->get_gameObject()->SetActive(true);
         logoutButton->get_gameObject()->SetActive(true);
-        signinButton->get_gameObject()->SetActive(false);
-        tryButton->get_gameObject()->SetActive(false);
+
+        loginField->get_gameObject()->SetActive(false);
+        passwordField->get_gameObject()->SetActive(false);
+        loginButton->get_gameObject()->SetActive(false);
+        signupButton->get_gameObject()->SetActive(false);
     } else {
         label2->get_gameObject()->SetActive(false);
         label1->get_gameObject()->SetActive(false);
         logoutButton->get_gameObject()->SetActive(false);
-        signinButton->get_gameObject()->SetActive(true);
-        tryButton->get_gameObject()->SetActive(true);
+
+        loginField->get_gameObject()->SetActive(true);
+        passwordField->get_gameObject()->SetActive(true);
+        loginButton->get_gameObject()->SetActive(true);
+        signupButton->get_gameObject()->SetActive(true);
     }
 
-    errorLabel->SetText(errorDescription);
+    errorDescriptionLabel->SetText(errorDescription);
     if (errorDescription.length() > 0) {
-        errorLabel->get_gameObject()->SetActive(true);
+        errorDescriptionLabel->get_gameObject()->SetActive(true);
     } else {
-        errorLabel->get_gameObject()->SetActive(false);
+        errorDescriptionLabel->get_gameObject()->SetActive(false);
     }
-}
-
-string TryAuth() {
-    errorDescription = "";
-    string userID = PlayerController::currentPlayer != NULL ? PlayerController::currentPlayer->id : "";
-    if (userID.length() == 0) {
-        userID = PlayerController::LogIn((string)UnityEngine::GUIUtility::get_systemCopyBuffer());
-        if (userID.length() == 0) {
-            errorDescription = PlayerController::lastErrorDescription;
-        }
-    }
-    return userID;
 }
 
 void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
-    string userID = TryAuth();
+    string userID = PlayerController::currentPlayer != NULL ? PlayerController::currentPlayer->id : "";
 
     if (firstActivation) {
         self->get_gameObject()->AddComponent<HMUI::Touchable*>();
@@ -73,19 +72,46 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
         logoutButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Logout", [](){
             if (!PlayerController::LogOut()) {
                 errorDescription = PlayerController::lastErrorDescription;
-                UpdateUI(PlayerController::currentPlayer->id);
             } else {
                 errorDescription = "";
                 UpdateUI("");
             }
         });
-        signinButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Signin", [](){
-            UnityEngine::Application::OpenURL("https://auth.oculus.com/sso/?redirect_uri=https%3A%2F%2Fagitated-ptolemy-7d772c.netlify.app%2Fsignin%2Foculus&organization_id=702913270869417");
+        loginField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), "Login", "", [](StringW value) {
+            login = value;
         });
-        tryButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "I've copied code", [](){
-            UpdateUI(TryAuth());
+        login = PlayerController::platformPlayer != NULL ? PlayerController::platformPlayer->name : "";
+        loginField->SetText(login);
+        passwordField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), "Password", "", [](StringW value) {
+            password = value;
         });
-        errorLabel = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), errorDescription, false);
+        loginButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Log in", []() {
+            string userID = PlayerController::LogIn((string)login, (string)password);
+            if (userID.length() == 0) {
+                errorDescription = PlayerController::lastErrorDescription;
+            } else {
+                errorDescription = "";
+                login = "";
+                loginField->SetText("");
+                password = "";
+                passwordField->SetText("");
+            }
+            UpdateUI(userID);
+        });
+        signupButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Sign up", []() {
+            string userID = PlayerController::SignUp((string)login, (string)password);
+            if (userID.length() == 0) {
+                errorDescription = PlayerController::lastErrorDescription;
+            } else {
+                errorDescription = "";
+                login = "";
+                loginField->SetText("");
+                password = "";
+                passwordField->SetText("");
+            }
+            UpdateUI(userID);
+        });
+        errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "", false);
     }
 
     UpdateUI(userID);

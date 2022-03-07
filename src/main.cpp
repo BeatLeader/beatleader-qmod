@@ -472,7 +472,7 @@ void move(UnityEngine::Component* label, float x, float y) {
     transform->set_anchoredPosition(position);
 }
 
-void resize(TMPro::TextMeshProUGUI* label, float x, float y) {
+void resize(UnityEngine::Component* label, float x, float y) {
     UnityEngine::RectTransform* transform = label->GetComponent<UnityEngine::RectTransform *>();
     UnityEngine::Vector2 sizeDelta = transform->get_sizeDelta();
     sizeDelta.x += x;
@@ -482,7 +482,11 @@ void resize(TMPro::TextMeshProUGUI* label, float x, float y) {
 
 void updatePlayerInfoLabel() {
     Player* player = PlayerController::currentPlayer;
-    playerInfo->SetText("#" + to_string(player->rank) + "       " + player->name + "         " + to_string_wprecision(player->pp, 2) + "pp");
+    if (player != NULL) {
+        playerInfo->SetText("#" + to_string(player->rank) + "       " + player->name + "         " + to_string_wprecision(player->pp, 2) + "pp");
+    } else {
+        playerInfo->SetText("");
+    }
 }
 
 MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy) {
@@ -560,20 +564,18 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     
     if (uploadStatus == NULL) {
         playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
-        move(playerInfo, 0, 46);
+        move(playerInfo, 0, -26);
         if (PlayerController::currentPlayer != NULL) {
             updatePlayerInfoLabel();
         }
 
-        websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-38, 48), UnityEngine::Vector2(10, 10), []() {
+        websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-38, -24), UnityEngine::Vector2(12, 12), []() {
             string url = "https://agitated-ptolemy-7d772c.netlify.app/";
             if (PlayerController::currentPlayer != NULL) {
                 url += "u/" + PlayerController::currentPlayer->id;
             }
             UnityEngine::Application::OpenURL(url);
         });
-
-        // move(websiteLink, -5, 46);
 
         retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(6, -25), UnityEngine::Vector2(8, 8), [](){
             retryButton->get_gameObject()->SetActive(false);
@@ -582,7 +584,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
         retryButton->get_gameObject()->SetActive(false);
 
         uploadStatus = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
-        move(uploadStatus, -3, -30);
+        move(uploadStatus, 6, -32);
         resize(uploadStatus, 10, 0);
         uploadStatus->set_fontSize(3);
         uploadStatus->set_richText(true);
@@ -613,7 +615,7 @@ extern "C" void load() {
     LoggerContextObject logger = getLogger().WithContext("load");
 
     QuestUI::Init();
-    QuestUI::Register::RegisterModSettingsViewController(modInfo, "BeatLeader", DidActivate);
+    QuestUI::Register::RegisterModSettingsViewController(modInfo, DidActivate);
 
     getLogger().info("Installing hooks...");
     INSTALL_HOOK(logger, ProcessResultsSolo);
@@ -640,7 +642,10 @@ extern "C" void load() {
             }
         });
     };
-    PlayerController::Refresh();
+    QuestUI::MainThreadScheduler::Schedule([] {
+        PlayerController::Refresh();
+    });
+    
     // INSTALL_HOOK(logger, RefreshLeaderboard2);
     // Install our hooks (none defined yet)
     getLogger().info("Installed all hooks!");
