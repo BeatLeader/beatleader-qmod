@@ -185,9 +185,11 @@ void levelStarted() {
     strm << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     replay->info->timestamp = strm.str();
     userEnhancer.Enhance(replay);
-
-    playerHeightDetector = Resources::FindObjectsOfTypeAll<PlayerHeightDetector*>()->get(0);
-    if (playerHeightDetector != NULL && playerSettings->get_automaticPlayerHeight()) {
+    
+    if (playerSettings->get_automaticPlayerHeight()) {
+        auto detectors = Resources::FindObjectsOfTypeAll<PlayerHeightDetector*>();
+        if (detectors->Length() == 0 || detectors->get(0) == 0) { return; }
+        playerHeightDetector = detectors->get(0);
         _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float>*>(
             classof(System::Action_1<float>*), 
             static_cast<Il2CppObject*>(nullptr), OnPlayerHeightChange);
