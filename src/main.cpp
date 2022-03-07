@@ -175,7 +175,7 @@ void OnPlayerHeightChange(float height)
     replay->heights.push_back(automaticHeight);
 }
 
-void levelStarted() {
+void levelStarted(SinglePlayerLevelSelectionFlowCoordinator* self) {
     replay = new Replay();
 
     replay->info->version = modInfo.version;
@@ -185,14 +185,14 @@ void levelStarted() {
     strm << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     replay->info->timestamp = strm.str();
     userEnhancer.Enhance(replay);
-    
+
     if (playerSettings->get_automaticPlayerHeight()) {
         auto detectors = Resources::FindObjectsOfTypeAll<PlayerHeightDetector*>();
         if (detectors->Length() == 0 || detectors->get(0) == 0) { return; }
         playerHeightDetector = detectors->get(0);
         _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float>*>(
             classof(System::Action_1<float>*), 
-            static_cast<Il2CppObject*>(nullptr), OnPlayerHeightChange);
+            self, OnPlayerHeightChange);
         playerHeightDetector->add_playerHeightDidChangeEvent(_heightEvent);
     }
 }
@@ -200,7 +200,7 @@ void levelStarted() {
 MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLevel, void, SinglePlayerLevelSelectionFlowCoordinator* self, System::Action* beforeSceneSwitchCallback, bool practice) {
     LevelPlay(self, beforeSceneSwitchCallback, practice);
 
-    levelStarted();
+    levelStarted(self);
 }
 
 void replayPostCallback(ReplayUploadStatus status, string description) {
@@ -228,10 +228,6 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
 
     mapEnhancer.energy = levelCompletionResults->energy;
     mapEnhancer.Enhance(replay);
-
-    if (_heightEvent != NULL) {
-        playerHeightDetector->remove_playerHeightDidChangeEvent(_heightEvent);
-    }
     
     switch (levelCompletionResults->levelEndStateType)
     {
@@ -249,10 +245,6 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
                 });
             }
             break;
-    }
-
-    if (playerHeightDetector != NULL && _heightEvent != NULL) {
-        playerHeightDetector->remove_playerHeightDidChangeEvent(_heightEvent);
     }
 }
 
@@ -572,8 +564,15 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
         if (PlayerController::currentPlayer != NULL) {
             updatePlayerInfoLabel();
         }
-        
-        websiteLink = ::QuestUI::BeatSaberUI::CreateImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-38, -24), UnityEngine::Vector2(12, 12));
+
+        ::QuestUI::BeatSaberUI::CreateImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-38, -24), UnityEngine::Vector2(12, 12));
+        ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "", UnityEngine::Vector2(-38, -24), UnityEngine::Vector2(12, 12), [](){
+            string url = "https://agitated-ptolemy-7d772c.netlify.app/";
+            if (PlayerController::currentPlayer != NULL) {
+                url += "u/" + PlayerController::currentPlayer->id;
+            }
+            UnityEngine::Application::OpenURL(il2cpp_utils::createcsstr(url));
+        });
 
         retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(6, -25), UnityEngine::Vector2(8, 8), [](){
             retryButton->get_gameObject()->SetActive(false);
@@ -633,6 +632,9 @@ extern "C" void load() {
     INSTALL_HOOK(logger, SwingRatingDidFinish);
     INSTALL_HOOK(logger, RefreshLeaderboard);
     INSTALL_HOOK(logger, LeaderboardCellSource);
+    // Install our hooks (none defined yet)
+    getLogger().info("Installed all hooks!");
+
     PlayerController::playerChanged = [](Player* updated) {
         QuestUI::MainThreadScheduler::Schedule([] {
             if (playerInfo != NULL) {
@@ -643,8 +645,4 @@ extern "C" void load() {
     QuestUI::MainThreadScheduler::Schedule([] {
         PlayerController::Refresh();
     });
-    
-    // INSTALL_HOOK(logger, RefreshLeaderboard2);
-    // Install our hooks (none defined yet)
-    getLogger().info("Installed all hooks!");
 }
