@@ -165,6 +165,7 @@ public:
     ~Replay();
 
     void Encode(ofstream& stream);
+    static ReplayInfo* DecodeInfo(ifstream& stream);
 
     ReplayInfo* info = new ReplayInfo();
     vector<Frame*> frames;
@@ -190,4 +191,11 @@ private:
     void Encode(WallEvent* wall, ofstream& stream);
     void Encode(AutomaticHeight* height, ofstream& stream);
     void Encode(Pause* pause, ofstream& stream);
+
+    static char DecodeChar(ifstream& stream);
+    static int DecodeInt(ifstream& stream);
+    static long DecodeLong(ifstream& stream);
+    static bool DecodeBool(ifstream& stream);
+    static float DecodeFloat(ifstream& stream);
+    static string DecodeString(ifstream& stream);
 };

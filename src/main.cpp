@@ -3,6 +3,7 @@
 #include "include/Models/Replay.hpp"
 #include "include/Utils/ReplayManager.hpp"
 #include "include/Utils/WebUtils.hpp"
+#include "include/Utils/constants.hpp"
 #include "include/Enhancers/MapEnhancer.hpp"
 #include "include/Enhancers/UserEnhancer.hpp"
 #include "include/API/PlayerController.hpp"
@@ -18,6 +19,8 @@
 
 #include "HMUI/TableView.hpp"
 #include "HMUI/TableCell.hpp"
+#include "HMUI/IconSegmentedControl.hpp"
+#include "HMUI/IconSegmentedControl_DataItem.hpp"
 
 #include "TMPro/TMP_Text.hpp"
 #include "TMPro/TextMeshProUGUI.hpp"
@@ -119,6 +122,7 @@ TMPro::TextMeshProUGUI* uploadStatus = NULL;
 TMPro::TextMeshProUGUI* playerInfo = NULL;
 UnityEngine::UI::Button* retryButton = NULL;
 QuestUI::ClickableImage* websiteLink = NULL;
+PlatformLeaderboardViewController* plvc = NULL;
 
 // Loads the config from disk using our modInfo, then returns it for use
 Configuration& getConfig() {
@@ -226,10 +230,6 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
 
     mapEnhancer.energy = levelCompletionResults->energy;
     mapEnhancer.Enhance(replay);
-
-    if (_heightEvent != NULL) {
-        playerHeightDetector->remove_playerHeightDidChangeEvent(_heightEvent);
-    }
     
     switch (levelCompletionResults->levelEndStateType)
     {
@@ -247,10 +247,6 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
                 });
             }
             break;
-    }
-
-    if (playerHeightDetector != NULL && _heightEvent != NULL) {
-        playerHeightDetector->remove_playerHeightDidChangeEvent(_heightEvent);
     }
 }
 
@@ -480,10 +476,39 @@ void resize(UnityEngine::Component* label, float x, float y) {
     transform->set_sizeDelta(sizeDelta);
 }
 
+char asciitolower(char in) {
+    if (in <= 'Z' && in >= 'A')
+        return in - ('Z' - 'z');
+    return in;
+}
+
+UnityEngine::Sprite* GetCountryIcon(string country) {
+    std::string data;
+    std::string lowerCountry;
+    lowerCountry.resize(country.size());
+    std::transform(country.begin(), country.end(), lowerCountry.begin(), asciitolower);
+    WebUtils::Get("https://cdn.beatleader.xyz/flags/" + lowerCountry + ".png", 64, data);
+    std::vector<uint8_t> bytes(data.begin(), data.end());
+    Array<uint8_t>* spriteArray = il2cpp_utils::vectorToArray(bytes);
+    return BeatSaberUI::ArrayToSprite(spriteArray);
+}
+
 void updatePlayerInfoLabel() {
     Player* player = PlayerController::currentPlayer;
     if (player != NULL) {
-        playerInfo->SetText("#" + to_string(player->rank) + "       " + player->name + "         " + to_string_wprecision(player->pp, 2) + "pp");
+        if (player->rank > 0) {
+            playerInfo->SetText("#" + to_string(player->rank) + "       " + player->name + "         " + to_string_wprecision(player->pp, 2) + "pp");
+            
+            if (plvc != NULL) {
+                auto countryControl = plvc->scopeSegmentedControl->dataItems.get(2);
+                countryControl->set_hintText("Country");
+                countryControl->set_icon(GetCountryIcon(player->country));
+                plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
+            }
+            
+        } else {
+            playerInfo->SetText(player->name + ", you are ready!");
+        }
     } else {
         playerInfo->SetText("");
     }
@@ -499,7 +524,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
     string difficulty = MapEnhancer::DiffName(self->difficultyBeatmap->get_difficulty().value);
     string mode = (string)self->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
-    string url = "https://beatleader.azurewebsites.net/scores/" + hash + "/" + difficulty + "/" + mode;
+    string url = API_URL + "scores/" + hash + "/" + difficulty + "/" + mode;
 
     switch (PlatformLeaderboardViewController::_get__scoresScope())
     {
@@ -563,6 +588,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     self->loadingControl->ShowText("Loading", true);
     
     if (uploadStatus == NULL) {
+        plvc = self;
         playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
         move(playerInfo, 0, -26);
         if (PlayerController::currentPlayer != NULL) {
@@ -570,14 +596,14 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
         }
 
         websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-38, -24), UnityEngine::Vector2(12, 12), []() {
-            string url = "https://agitated-ptolemy-7d772c.netlify.app/";
+            string url = "https://beatleader.xyz/";
             if (PlayerController::currentPlayer != NULL) {
                 url += "u/" + PlayerController::currentPlayer->id;
             }
             UnityEngine::Application::OpenURL(url);
         });
 
-        retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(6, -25), UnityEngine::Vector2(8, 8), [](){
+        retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(20, -23), UnityEngine::Vector2(8, 8), [](){
             retryButton->get_gameObject()->SetActive(false);
             ReplayManager::RetryPosting(replayPostCallback);
         });
