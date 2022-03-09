@@ -2,6 +2,7 @@
 
 #include "questui/shared/QuestUI.hpp"
 #include "questui/shared/BeatSaberUI.hpp"
+#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/GUIUtility.hpp"
@@ -86,30 +87,33 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
             password = value;
         });
         loginButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Log in", []() {
-            string userID = PlayerController::LogIn((string)login, (string)password);
-            if (userID.length() == 0) {
-                errorDescription = PlayerController::lastErrorDescription;
-            } else {
-                errorDescription = "";
-                login = "";
-                loginField->SetText("");
-                password = "";
-                passwordField->SetText("");
-            }
-            UpdateUI(userID);
+            PlayerController::LogIn((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
+                if (userID.length() == 0) {
+                    errorDescription = PlayerController::lastErrorDescription;
+                } else {
+                    errorDescription = "";
+                    login = "";
+                    loginField->SetText("");
+                    password = "";
+                    passwordField->SetText("");
+                }
+                UpdateUI(userID);      
+            });});
+            
         });
         signupButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Sign up", []() {
-            string userID = PlayerController::SignUp((string)login, (string)password);
-            if (userID.length() == 0) {
-                errorDescription = PlayerController::lastErrorDescription;
-            } else {
-                errorDescription = "";
-                login = "";
-                loginField->SetText("");
-                password = "";
-                passwordField->SetText("");
-            }
-            UpdateUI(userID);
+            PlayerController::SignUp((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
+                if (userID.length() == 0) {
+                    errorDescription = PlayerController::lastErrorDescription;
+                } else {
+                    errorDescription = "";
+                    login = "";
+                    loginField->SetText("");
+                    password = "";
+                    passwordField->SetText("");
+                }
+                UpdateUI(userID);
+            });});
         });
         errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "", false);
     }

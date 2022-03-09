@@ -77,36 +77,35 @@ string PlayerController::Refresh() {
     return RefreshOnline();
 }
 
-string PlayerController::SignUp(string login, string password) {
-    string result = "";
+void PlayerController::SignUp(string login, string password, std::function<void(std::string)> finished) {
     lastErrorDescription = "";
 
-    string error = "";
-    long statusCode = WebUtils::Get(API_URL + "signinoculus?action=signup&login=" + login + "&password=" + password, error);
-    if (statusCode == 200) {
-        result = Refresh();
-    } else {
-        lastErrorDescription = error;
-        getLogger().error("BeatLeader %s", ("signup error" + to_string(statusCode)).c_str());
-    }
-
-    return result;
+    WebUtils::PostFormAsync(API_URL + "signinoculus", "signup", login, password, [finished] (long statusCode, string error) {
+        string result = "";
+        if (statusCode == 200) {
+            result = Refresh();
+        } else {
+            lastErrorDescription = error;
+            getLogger().error("BeatLeader %s", ("signup error" + to_string(statusCode)).c_str());
+        }
+        finished(result);
+    });
 }
 
-string PlayerController::LogIn(string login, string password) {
-    string result = "";
+void PlayerController::LogIn(string login, string password, std::function<void(std::string)> finished) {
     lastErrorDescription = "";
 
-    string error = "";
-    long statusCode = WebUtils::Get(API_URL + "signinoculus?action=login&login=" + login + "&password=" + password, error);
-    if (statusCode == 200) {
-        result = Refresh();
-    } else {
-        lastErrorDescription = error;
-        getLogger().error("BeatLeader %s", ("login error" + to_string(statusCode)).c_str());
-    }
+    WebUtils::PostFormAsync(API_URL + "signinoculus", "login", login, password, [finished] (long statusCode, string error) {
+        string result = "";
+        if (statusCode == 200) {
+            result = Refresh();
+        } else {
+            lastErrorDescription = error;
+            getLogger().error("BeatLeader %s", ("signup error" + to_string(statusCode)).c_str());
+        }
 
-    return result;
+        finished(result);
+    });
 }
 
 bool PlayerController::LogOut() {
