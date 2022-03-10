@@ -3,6 +3,7 @@ name: CI build
 on:
   push:
     branches: [ master ]
+    tags: v*
   pull_request:
     branches: [ master ]
 
@@ -49,3 +50,10 @@ jobs:
       with:
         path: ./BeatLeader.qmod
         if-no-files-found: error
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: ./BeatLeader.qmod
+      env: 
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
