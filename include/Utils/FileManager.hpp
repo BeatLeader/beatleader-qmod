@@ -11,7 +11,7 @@ class FileManager
 private:
     /* data */
 public:
-   static string WriteReplay(Replay* replay);
-private:
-   static string ToFileName(Replay* replay);
+   static void WriteReplay(Replay* replay);
+   static ReplayInfo* ReadInfo(string replayPath);
+   static string ToFilePath(Replay* replay);
 };

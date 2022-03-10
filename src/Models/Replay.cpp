@@ -185,6 +185,78 @@ Quaternion::Quaternion(UnityEngine::Quaternion quat) {
     w = quat.w;
 }
 
+char Replay::DecodeChar(ifstream& stream) {
+    char value;
+    stream.read(reinterpret_cast<char *>(&value), sizeof(char));
+    return value;
+}
+int Replay::DecodeInt(ifstream& stream) {
+    int value;
+    stream.read(reinterpret_cast<char *>(&value), sizeof(int));
+    return value;
+}
+long Replay::DecodeLong(ifstream& stream) {
+    long value;
+    stream.read(reinterpret_cast<char *>(&value), sizeof(long));
+    return value;
+}
+bool Replay::DecodeBool(ifstream& stream) {
+    bool value;
+    stream.read(reinterpret_cast<char *>(&value), sizeof(char));
+    return value;
+}
+float Replay::DecodeFloat(ifstream& stream) {
+    float value;
+    stream.read(reinterpret_cast<char *>(&value), sizeof(int));
+    return value;
+}
+string Replay::DecodeString(ifstream& stream) {
+    size_t stringLength = (size_t)DecodeInt(stream);
+    char* cstring = new char[stringLength];
+    
+    stream.read(cstring, stringLength);
+
+    return cstring;
+}
+
+ReplayInfo* Replay::DecodeInfo(ifstream& stream) {
+    if (DecodeInt(stream) != 0x442d3d69 || DecodeChar(stream) != 1 || DecodeChar(stream) != 0) {
+        return NULL;
+    }
+
+    ReplayInfo* info = new ReplayInfo();
+
+    info->version = DecodeString(stream);
+    info->gameVersion = DecodeString(stream);
+    info->timestamp = DecodeString(stream);
+
+    info->playerID = DecodeString(stream);
+    info->playerName = DecodeString(stream);
+    info->platform = DecodeString(stream);
+
+    info->trackingSytem = DecodeString(stream);
+    info->hmd = DecodeString(stream);
+    info->controller = DecodeString(stream);
+
+    info->hash = DecodeString(stream);
+    info->songName = DecodeString(stream);
+    info->mapper = DecodeString(stream);
+    info->difficulty = DecodeString(stream);
+
+    info->score = DecodeInt(stream);
+    info->mode = DecodeString(stream);
+    info->environment = DecodeString(stream);
+    info->modifiers = DecodeString(stream);
+    info->jumpDistance = DecodeFloat(stream);
+    info->leftHanded = DecodeBool(stream);
+    info->height = DecodeFloat(stream);
+
+    info->startTime = DecodeFloat(stream);
+    info->failTime = DecodeFloat(stream);
+    info->speed = DecodeFloat(stream);
+    return info;
+}
+
 Replay::Replay() {}
 Replay::~Replay() {}
 ReplayInfo::ReplayInfo() {}
