@@ -22,5 +22,7 @@ namespace WebUtils {
 
     void PostJSONAsync(std::string url, std::string data, long timeout, std::function<void(long, std::string)> finished);
 
+    void PostFormAsync(std::string url, std::string action, std::string login, std::string password, std::function<void(long, std::string)> finished);
+
     void PostFileAsync(std::string url, FILE* data, long length, long timeout, std::function<void(long, std::string)> finished);
 }
