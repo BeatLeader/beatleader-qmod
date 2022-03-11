@@ -384,6 +384,8 @@ MAKE_HOOK_MATCH(BeatMapStart, &BeatmapObjectSpawnController::Start, void, Beatma
     BeatMapStart(self);
 
     replay->info->jumpDistance = self->get_jumpDistance();
+    _currentPause = NULL;
+    _currentWallEvent = NULL;
 }
 
 MAKE_HOOK_MATCH(LevelPause, &PauseMenuManager::ShowMenu, void, PauseMenuManager* self) {

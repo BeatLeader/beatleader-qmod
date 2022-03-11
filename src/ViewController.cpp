@@ -26,8 +26,8 @@ TMPro::TextMeshProUGUI* label1;
 TMPro::TextMeshProUGUI* label2;
 TMPro::TextMeshProUGUI* errorDescriptionLabel;
 
-StringW login = "";
-StringW password = "";
+StringW login;
+StringW password;
 
 string errorDescription = "";
 
@@ -78,15 +78,23 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
                 UpdateUI("");
             }
         });
+
         loginField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), "Login", "", [](StringW value) {
             login = value;
         });
         login = PlayerController::platformPlayer != NULL ? PlayerController::platformPlayer->name : "";
         loginField->SetText(login);
+        
         passwordField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), "Password", "", [](StringW value) {
             password = value;
         });
+
         loginButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Log in", []() {
+            if (!login || !password) {
+                errorDescription = "Fill the fields! Create nickname and password";
+                UpdateUI("");
+                return;
+            }
             PlayerController::LogIn((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
                 if (userID.length() == 0) {
                     errorDescription = PlayerController::lastErrorDescription;
@@ -99,9 +107,13 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
                 }
                 UpdateUI(userID);      
             });});
-            
         });
         signupButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Sign up", []() {
+            if (!login || !password) {
+                errorDescription = "Fill the fields! Create nickname and password";
+                UpdateUI("");
+                return;
+            }
             PlayerController::SignUp((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
                 if (userID.length() == 0) {
                     errorDescription = PlayerController::lastErrorDescription;
