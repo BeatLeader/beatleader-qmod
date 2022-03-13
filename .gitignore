@@ -10,3 +10,6 @@ tombstone*
 extern/
 qpm-rust
 qpm.shared.json
+ndkpath.txt
+extern.cmake
+qpm_defines.cmake
