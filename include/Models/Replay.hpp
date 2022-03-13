@@ -35,13 +35,13 @@ public:
     string mode;
     string environment;
     string modifiers;
-    float jumpDistance;
-    bool leftHanded;
-    float height;
+    float jumpDistance = 0;
+    bool leftHanded = false;
+    float height = 0;
 
-    float startTime;
-    float failTime;
-    float speed;
+    float startTime = 0;
+    float failTime = 0;
+    float speed = 0;
 };
 
 class Vector3 {
