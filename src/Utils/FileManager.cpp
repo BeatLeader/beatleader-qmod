@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <locale>
 #include <fstream>
+#include <regex>
 
 #include "include/Utils/FileManager.hpp"
 #include "beatsaber-hook/shared/config/config-utils.hpp"
@@ -33,7 +34,7 @@ string FileManager::ToFilePath(Replay* replay) {
     string filename = replay->info->playerID + practice + fail + "-" + replay->info->songName + "-" + replay->info->difficulty + "-" + replay->info->mode + "-" + replay->info->hash + ".bsor";
     string directory = getDataDir(modInfo) + "replays/";
     filesystem::create_directories(directory);
-    string file = directory + filename;
+    string file = directory + regex_replace(filename, basic_regex("/"), "");;
     // string regexSearch = new string(System::IO::Path::GetInvalidFileNameChars()) + new string(System::IO::Path::GetInvalidPathChars());
     // string reg = "[{" + regexSearch + "}]";
     return file;// regex_replace(filename, basic_regex(reg), "_");

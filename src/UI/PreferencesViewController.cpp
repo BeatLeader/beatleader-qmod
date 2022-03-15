@@ -10,6 +10,7 @@
 
 #include "Utils/WebUtils.hpp"
 #include "API/PlayerController.hpp"
+#include "include/UI/PreferencesViewController.hpp"
 #include "main.hpp"
 
 #include <string>
@@ -61,7 +62,7 @@ void UpdateUI(string userID) {
     }
 }
 
-void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+void PreferencesDidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     string userID = PlayerController::currentPlayer != NULL ? PlayerController::currentPlayer->id : "";
 
     if (firstActivation) {

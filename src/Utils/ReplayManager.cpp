@@ -1,5 +1,6 @@
 #include "include/Utils/FileManager.hpp"
 #include "include/Utils/ReplayManager.hpp"
+#include "include/Utils/ModifiersManager.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/constants.hpp"
 #include "include/main.hpp"
@@ -70,15 +71,11 @@ void ReplayManager::RetryPosting(std::function<void(ReplayUploadStatus, std::str
 float ReplayManager::GetTotalMultiplier(string modifiers) {
     float multiplier = 1;
 
-    if (modifiers.find("DA") != string::npos) { multiplier += 0.07f; }
-    if (modifiers.find("FS") != string::npos) { multiplier += 0.08f; }
-    if (modifiers.find("SS") != string::npos) { multiplier -= 0.3f; }
-    if (modifiers.find("SF") != string::npos) { multiplier += 0.1f; }
-    if (modifiers.find("GN") != string::npos) { multiplier += 0.11f; }
-    if (modifiers.find("NA") != string::npos) { multiplier -= 0.3f; }
-    if (modifiers.find("NB") != string::npos) { multiplier -= 0.1f; }
-    if (modifiers.find("NF") != string::npos) { multiplier -= 0.5f; }
-    if (modifiers.find("NO") != string::npos) { multiplier -= 0.05f; }
+    auto modifierValues = ModifiersManager::modifiers;
+    for (std::map<string, float>::iterator iter = modifierValues.begin(); iter != modifierValues.end(); ++iter)
+    {   
+        if (modifiers.find(iter->first) != string::npos) { multiplier += modifierValues[iter->first]; }
+    }
 
     return multiplier;
 }
