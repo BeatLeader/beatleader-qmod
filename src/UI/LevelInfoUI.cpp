@@ -54,13 +54,13 @@ MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, v
     LevelRefreshContent(self);
 
     if (starsLabel == NULL) {
-        starsLabel = CreateText(self->levelParamsPanel->notesCountText->get_transform(), "", false, UnityEngine::Vector2(24, 3));
+        starsLabel = CreateText(self->levelParamsPanel->notesCountText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
         AddHoverHint(starsLabel, "BeatLeader ranked stars");
         starsImage = CreateImage(self->levelParamsPanel->notesCountText->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
         AddHoverHint(starsImage, "BeatLeader ranked stars");
 
-        ppLabel = CreateText(self->levelParamsPanel->notesPerSecondText->get_transform(), "", false, UnityEngine::Vector2(24, 3));
-        AddHoverHint(starsLabel, "BeatLeader pp for 100%");
+        ppLabel = CreateText(self->levelParamsPanel->notesPerSecondText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
+        AddHoverHint(ppLabel, "BeatLeader pp for 100%");
         ppImage = CreateImage(self->levelParamsPanel->notesPerSecondText->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
         AddHoverHint(ppImage, "BeatLeader pp for 100%");
     }
@@ -100,4 +100,8 @@ void SetupLevelInfoUI() {
     LoggerContextObject logger = getLogger().WithContext("load");
 
     INSTALL_HOOK(logger, LevelRefreshContent);
+}
+
+void ResetLevelInfoUI() {
+    starsLabel = NULL;
 }

@@ -3,6 +3,7 @@
 #include "include/Utils/ModifiersManager.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/constants.hpp"
+#include "include/Utils/StringUtils.hpp"
 #include "include/main.hpp"
 
 #include <sys/stat.h>
@@ -43,13 +44,13 @@ void ReplayManager::TryPostReplay(string name, int tryIndex, std::function<void(
         finished(ReplayUploadStatus::inProgress, "<color=#b103fcff>Posting replay...");
     }
     
-    WebUtils::PostFileAsync(API_URL + "replayoculus", fopen(name.c_str(), "rb"), (long)file_info.st_size, 50, [name, tryIndex, finished](long statusCode, string result) {
+    WebUtils::PostFileAsync(API_URL + "replayoculus", fopen(name.c_str(), "rb"), (long)file_info.st_size, 100, [name, tryIndex, finished](long statusCode, string result) {
         if (statusCode != 200 && tryIndex < 2) {
             getLogger().info("%s", ("Retrying posting replay after " + to_string(statusCode) + " #" + to_string(tryIndex) + " " + result).c_str());
             if (statusCode == 100) {
                 result = "Timed out";
             }
-            finished(ReplayUploadStatus::inProgress, "<color=#ffff00ff>Retrying posting replay after " + to_string(statusCode) + " try" + to_string(tryIndex) + " " + result + "</color>");
+            finished(ReplayUploadStatus::inProgress, "<color=#ffff00ff>Retrying posting replay after " + to_string(statusCode) + " try #" + to_string(tryIndex) + " " + result + "</color>");
             TryPostReplay(name, tryIndex + 1, finished);
         } else if (statusCode == 200) {
             getLogger().info("Replay was posted!");
@@ -61,6 +62,8 @@ void ReplayManager::TryPostReplay(string name, int tryIndex, std::function<void(
             }
             finished(ReplayUploadStatus::error, "<color=#ff0000ff>Replay was not posted! Error: " + result);
         }
+    }, [finished](float percent) {
+        finished(ReplayUploadStatus::inProgress, "<color=#b103fcff>Posting replay: " + to_string_wprecision(percent, 2) + "%");
     });
 }
 
