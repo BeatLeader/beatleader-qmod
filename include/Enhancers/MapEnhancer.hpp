@@ -14,11 +14,7 @@ using namespace GlobalNamespace;
 
 class MapEnhancer
 {
-private:
-    /* data */
 public:
-    MapEnhancer();
-    ~MapEnhancer();
     IDifficultyBeatmap* difficultyBeatmap;
     IPreviewBeatmapLevel* previewBeatmapLevel;
     GameplayModifiers* gameplayModifiers;

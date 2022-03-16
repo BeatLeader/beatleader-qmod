@@ -1,13 +1,21 @@
 #include "main.hpp"
 
 #include "include/Models/Replay.hpp"
+#include "include/API/PlayerController.hpp"
+#include "include/Assets/Sprites.hpp"
+
+#include "include/Enhancers/MapEnhancer.hpp"
+#include "include/Enhancers/UserEnhancer.hpp"
+
+#include "include/UI/PreferencesViewController.hpp"
+#include "include/UI/LevelInfoUI.hpp"
+#include "include/UI/ModifiersUI.hpp"
+
 #include "include/Utils/ReplayManager.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/constants.hpp"
-#include "include/Enhancers/MapEnhancer.hpp"
-#include "include/Enhancers/UserEnhancer.hpp"
-#include "include/API/PlayerController.hpp"
-#include "include/Assets/Sprites.hpp"
+#include "include/Utils/StringUtils.hpp"
+#include "include/Utils/ModifiersManager.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
@@ -28,6 +36,7 @@
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/Resources.hpp"
 #include "UnityEngine/RectTransform.hpp"
+#include "UnityEngine/Time.hpp"
 #include "UnityEngine/UI/LayoutElement.hpp"
 
 #include "System/Action_1.hpp"
@@ -92,7 +101,6 @@ using UnityEngine::Resources;
 ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
 
 static Replay* replay;
-
 static MapEnhancer mapEnhancer;
 static UserEnhancer userEnhancer;
 
@@ -414,7 +422,7 @@ MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) 
     if (audioTimeSyncController != NULL && _currentPause == NULL) {
         Frame* frame = new Frame();
         frame->time = audioTimeSyncController->get_songTime();
-        frame->fps = 72;
+        frame->fps = 1.0f / UnityEngine::Time::get_deltaTime();
 
         frame->head = new Transform();
         frame->head->rotation = new Quaternion(trans->get_headPseudoLocalRot());
@@ -438,15 +446,6 @@ MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) 
             _currentWallEvent = NULL;
         }
     }
-}
-
-template <typename T>
-string to_string_wprecision(const T a_value, const int n = 6)
-{
-    std::ostringstream out;
-    out.precision(n);
-    out << std::fixed << a_value;
-    return out.str();
 }
 
 string truncate(string str, size_t width, bool show_ellipsis=true)
@@ -648,7 +647,7 @@ extern "C" void load() {
     LoggerContextObject logger = getLogger().WithContext("load");
 
     QuestUI::Init();
-    QuestUI::Register::RegisterModSettingsViewController(modInfo, DidActivate);
+    QuestUI::Register::RegisterModSettingsViewController(modInfo, "BeatLeader", PreferencesDidActivate);
 
     getLogger().info("Installing hooks...");
     INSTALL_HOOK(logger, ProcessResultsSolo);
@@ -668,9 +667,11 @@ extern "C" void load() {
     INSTALL_HOOK(logger, SwingRatingDidFinish);
     INSTALL_HOOK(logger, RefreshLeaderboard);
     INSTALL_HOOK(logger, LeaderboardCellSource);
-    // Install our hooks (none defined yet)
+
     getLogger().info("Installed all hooks!");
 
+    SetupLevelInfoUI();
+    SetupModifiersUI();
     PlayerController::playerChanged = [](Player* updated) {
         QuestUI::MainThreadScheduler::Schedule([] {
             if (playerInfo != NULL) {
@@ -681,4 +682,6 @@ extern "C" void load() {
     QuestUI::MainThreadScheduler::Schedule([] {
         PlayerController::Refresh();
     });
+
+    ModifiersManager::Sync();
 }

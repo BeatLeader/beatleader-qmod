@@ -8,14 +8,6 @@
 
 #include <regex>
 
-MapEnhancer::MapEnhancer()
-{
-}
-
-MapEnhancer::~MapEnhancer()
-{
-}
-
 void MapEnhancer::Enhance(Replay* replay)
 {
     ReplayInfo* info = replay->info;
@@ -45,6 +37,10 @@ vector<string> MapEnhancer::Modifiers() {
     if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Faster) { result.push_back("FS"); }
     if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Slower) { result.push_back("SS"); }
     if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::SuperFast) { result.push_back("SF"); }
+    if (gameplayModifiers->strictAngles) { result.push_back("SA"); }
+    if (gameplayModifiers->proMode) { result.push_back("PM"); }
+    if (gameplayModifiers->smallCubes) { result.push_back("SC"); }
+    if (gameplayModifiers->failOnSaberClash) { result.push_back("CS"); }
     if (gameplayModifiers->ghostNotes) { result.push_back("GN"); }
     if (gameplayModifiers->noArrows) { result.push_back("NA"); }
     if (gameplayModifiers->noBombs) { result.push_back("NB"); }
