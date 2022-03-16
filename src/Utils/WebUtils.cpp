@@ -158,6 +158,7 @@ namespace WebUtils {
 
     struct ProgressUpdateWrapper {
         std::function<void(float)> progressUpdate;
+        long length;
     };
 
     void GetAsync(std::string url, std::function<void(long, std::string)> finished, std::function<void(float)> progressUpdate) {
@@ -379,9 +380,9 @@ namespace WebUtils {
         return retcode;
     }
 
-    void PostFileAsync(std::string url, FILE* data, long length, long timeout, std::function<void(long, std::string)> finished) {
+    void PostFileAsync(std::string url, FILE* data, long length, long timeout, std::function<void(long, std::string)> finished, std::function<void(float)> progressUpdate) {
         std::thread t(
-            [url, timeout, data, finished, length] {
+            [url, timeout, data, finished, length, progressUpdate] {
                 std::string val;
                 std::string directory = getDataDir(modInfo) + "cookies/";
                 std::filesystem::create_directories(directory);
@@ -411,7 +412,23 @@ namespace WebUtils {
 
                 // Don't wait forever, time out after TIMEOUT seconds.
                 curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
-                
+
+                ProgressUpdateWrapper* wrapper = new ProgressUpdateWrapper { progressUpdate, length };
+                if (progressUpdate) {
+                    // Internal CURL progressmeter must be disabled if we provide our own callback
+                    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
+                    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, wrapper);
+                    // Install the callback function
+                    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, 
+                        +[] (void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
+                            float percentage = (ulnow / (float)reinterpret_cast<ProgressUpdateWrapper*>(clientp)->length) * 100.0f;
+                            if(isnan(percentage))
+                                percentage = 0.0f;
+                            reinterpret_cast<ProgressUpdateWrapper*>(clientp)->progressUpdate(percentage);
+                            return 0;
+                        }
+                    );
+                }
 
                 // Follow HTTP redirects if necessary.
                 curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);

@@ -25,6 +25,7 @@ UnityEngine::UI::Button* loginButton;
 UnityEngine::UI::Button* signupButton;
 TMPro::TextMeshProUGUI* label1;
 TMPro::TextMeshProUGUI* label2;
+TMPro::TextMeshProUGUI* label3;
 TMPro::TextMeshProUGUI* errorDescriptionLabel;
 
 StringW login;
@@ -37,6 +38,7 @@ void UpdateUI(string userID) {
         label2->SetText(userID);
         label2->get_gameObject()->SetActive(true);
         label1->get_gameObject()->SetActive(true);
+        label3->get_gameObject()->SetActive(false);
         logoutButton->get_gameObject()->SetActive(true);
 
         loginField->get_gameObject()->SetActive(false);
@@ -46,6 +48,7 @@ void UpdateUI(string userID) {
     } else {
         label2->get_gameObject()->SetActive(false);
         label1->get_gameObject()->SetActive(false);
+        label3->get_gameObject()->SetActive(true);
         logoutButton->get_gameObject()->SetActive(false);
 
         loginField->get_gameObject()->SetActive(true);
@@ -129,6 +132,7 @@ void PreferencesDidActivate(HMUI::ViewController* self, bool firstActivation, bo
             });});
         });
         errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "", false);
+        label3 = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Type any login and password to sign up\nor log in if you created account.\nYou'll receive the profile after at least one score posted!\nAfter this you can change pfp and avatar on the website", false);
     }
 
     UpdateUI(userID);

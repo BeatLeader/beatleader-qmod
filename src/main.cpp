@@ -89,6 +89,7 @@
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 #include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
 #include "GlobalNamespace/LeaderboardTableCell.hpp"
+#include "GlobalNamespace/MenuTransitionsHelper.hpp"
 
 #include <map>
 #include <chrono>
@@ -505,7 +506,7 @@ string truncate(string str, size_t width, bool show_ellipsis=true)
 }
 
 string generateLabel(string nameLabel, string ppLabel, string accLabel) {
-    return truncate(nameLabel, 14) + "<pos=50%>" + ppLabel + "   " + accLabel; 
+    return truncate(nameLabel, 20) + "<pos=50%>" + ppLabel + "   " + accLabel; 
 }
 
 void move(UnityEngine::Component* label, float x, float y) {
@@ -564,8 +565,11 @@ void updatePlayerInfoLabel() {
 
 MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy) {
     leaderboardViewController = self;
+    self->scores->Clear();
+    self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
+
     if (PlayerController::currentPlayer == NULL) {
-        self->loadingControl->ShowText("Please login in mod settings!", true);
+        self->loadingControl->ShowText("Please sign up or log in mod settings!", true);
         return;
     }
     IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
@@ -591,10 +595,15 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
         auto scores = result.GetArray();
         self->scores->Clear();
         if ((int)scores.Size() == 0) {
-            QuestUI::MainThreadScheduler::Schedule([self] {
+            QuestUI::MainThreadScheduler::Schedule([self, status] {
                 self->loadingControl->Hide();
                 self->hasScoresData = false;
-                self->loadingControl->ShowText("No scores were found.", true);
+                if (status == 404) {
+                    self->loadingControl->ShowText("Leaderboards for this map are not supported!", true);
+                } else {
+                    self->loadingControl->ShowText("No scores were found!", true);
+                }
+                
                 self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
             });
             return;
@@ -638,12 +647,12 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     if (uploadStatus == NULL) {
         plvc = self;
         playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
-        move(playerInfo, 0, -26);
+        move(playerInfo, 5, -26);
         if (PlayerController::currentPlayer != NULL) {
             updatePlayerInfoLabel();
         }
 
-        websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-38, -24), UnityEngine::Vector2(12, 12), []() {
+        websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12), []() {
             string url = "https://beatleader.xyz/";
             if (PlayerController::currentPlayer != NULL) {
                 url += "u/" + PlayerController::currentPlayer->id;
@@ -651,14 +660,14 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             UnityEngine::Application::OpenURL(url);
         });
 
-        retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(20, -23), UnityEngine::Vector2(15, 10), [](){
+        retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(25, -23), [](){
             retryButton->get_gameObject()->SetActive(false);
             ReplayManager::RetryPosting(replayPostCallback);
         });
         retryButton->get_gameObject()->SetActive(false);
 
         uploadStatus = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
-        move(uploadStatus, 6, -32);
+        move(uploadStatus, 11, -32);
         resize(uploadStatus, 10, 0);
         uploadStatus->set_fontSize(3);
         uploadStatus->set_richText(true);
@@ -672,6 +681,7 @@ MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, TableC
         result->playerNameText->set_enableAutoSizing(false);
         result->playerNameText->set_richText(true);
         resize(result->playerNameText, 10, 0);
+        move(result->playerNameText, -2, 0);
         move(result->fullComboText, 0.2, 0);
         move(result->scoreText, 1, 0);
         result->playerNameText->set_fontSize(3);
@@ -680,6 +690,14 @@ MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, TableC
     }
     
     return (TableCell *)result;
+}
+
+MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransitionsHelper* self, ::System::Action_1<::Zenject::DiContainer*>* finishCallback) {
+    Restart(self, finishCallback);
+
+    uploadStatus = NULL;
+    plvc = NULL;
+    ResetLevelInfoUI();
 }
 
 // Called later on in the game loading - a good time to install function hooks
@@ -708,8 +726,13 @@ extern "C" void load() {
     INSTALL_HOOK(logger, SwingRatingDidFinish);
     INSTALL_HOOK(logger, RefreshLeaderboard);
     INSTALL_HOOK(logger, LeaderboardCellSource);
+    INSTALL_HOOK(logger, Restart);
+
+    getLogger().info("Installed all hooks!");
+
     SetupLevelInfoUI();
     SetupModifiersUI();
+
     PlayerController::playerChanged = [](Player* updated) {
         QuestUI::MainThreadScheduler::Schedule([] {
             if (playerInfo != NULL) {
@@ -722,8 +745,4 @@ extern "C" void load() {
     });
 
     ModifiersManager::Sync();
-    
-    // INSTALL_HOOK(logger, RefreshLeaderboard2);
-    // Install our hooks (none defined yet)
-    getLogger().info("Installed all hooks!");
 }
