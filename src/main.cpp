@@ -42,6 +42,7 @@
 #include "System/Action_1.hpp"
 #include "System/Threading/Tasks/Task.hpp"
 #include "System/Threading/Tasks/Task_1.hpp"
+#include "System/Collections/Generic/HashSet_1.hpp"
 
 #include "GlobalNamespace/NoteController.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
@@ -57,6 +58,7 @@
 #include "GlobalNamespace/BeatmapObjectSpawnMovementData.hpp"
 #include "GlobalNamespace/BeatmapObjectData.hpp"
 #include "GlobalNamespace/NoteData.hpp"
+#include "GlobalNamespace/CutScoreBuffer.hpp"
 #include "GlobalNamespace/BeatmapObjectSpawnMovementData_NoteSpawnData.hpp"
 #include "GlobalNamespace/ObstacleData.hpp"
 #include "GlobalNamespace/BeatmapObjectSpawnMovementData_ObstacleSpawnData.hpp"
@@ -83,6 +85,7 @@
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/IBeatmapLevel.hpp"
 #include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
+#include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 #include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
 #include "GlobalNamespace/LeaderboardTableCell.hpp"
@@ -97,6 +100,47 @@ using namespace GlobalNamespace;
 using namespace HMUI;
 using namespace QuestUI;
 using UnityEngine::Resources;
+
+namespace std {
+    template <>
+    struct hash<Vector3>
+    {
+        size_t operator()(const Vector3 & v) const
+        {
+            std::hash<float> h;
+            return h(v.z) ^ h(v.y) ^ h(v.z);
+        }
+    };
+}
+
+namespace std {
+    template <>
+    struct hash<Quaternion>
+    {
+        size_t operator()(const Quaternion & quat) const
+        {
+            std::hash<float> h;
+            return h(quat.x) ^ h(quat.y) ^ h(quat.z) ^ h(quat.w);
+        }
+    };
+}
+
+namespace std {
+    template<>
+    struct hash<NoteCutInfo> {
+        size_t operator()(const NoteCutInfo & noteCutInfo) const {
+            std::hash<int> hashInt;
+            std::hash<bool> hashBool;
+            std::hash<float> hashFloat;
+            std::hash<NoteData*> hashNoteData;
+            std::hash<Vector3> hashVector3;
+            std::hash<Quaternion> hashQuat;
+            std::hash<ISaberMovementData*> hashSaberData;
+
+            return hashBool(noteCutInfo.speedOK) ^ hashBool(noteCutInfo.directionOK) ^ hashBool(noteCutInfo.saberTypeOK) ^ hashBool(noteCutInfo.wasCutTooSoon) ^ hashFloat(noteCutInfo.saberSpeed) ^ hashVector3(noteCutInfo.saberDir) ^ hashInt(noteCutInfo.saberType.value) ^ hashFloat(noteCutInfo.timeDeviation) ^ hashFloat(noteCutInfo.cutDirDeviation) ^ hashVector3(noteCutInfo.cutPoint) ^ hashVector3(noteCutInfo.cutNormal) ^ hashFloat(noteCutInfo.cutAngle) ^ hashFloat(noteCutInfo.cutDistanceToCenter) ^ hashQuat(noteCutInfo.worldRotation) ^ hashQuat(noteCutInfo.inverseWorldRotation) ^ hashQuat(noteCutInfo.noteRotation) ^ hashVector3(noteCutInfo.notePosition) ^ hashSaberData(noteCutInfo.saberMovementData);
+        }
+    };
+}
 
 ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
 
@@ -113,7 +157,8 @@ PlatformLeaderboardViewController* leaderboardViewController;
 static map<int, NoteCutInfo> _cutInfoCache;
 static map<int, NoteEvent *> _noteEventCache;
 
-static map<NoteController *, int> _noteIdCache;
+
+static map<NoteData *, int> _noteIdCache;
 static map<ISaberSwingRatingCounter*, int> _swingIdCache;
 static int _noteId;
 
@@ -173,8 +218,8 @@ void collectMapData(StandardLevelScenesTransitionSetupDataSO* self, ::StringW ga
     playerSettings = playerSpecificSettings;
 }
 
-MAKE_HOOK_MATCH(TransitionSetupDataInit, &StandardLevelScenesTransitionSetupDataSO::Init, void, StandardLevelScenesTransitionSetupDataSO* self, ::StringW gameMode, IDifficultyBeatmap* difficultyBeatmap, IPreviewBeatmapLevel* previewBeatmapLevel, OverrideEnvironmentSettings* overrideEnvironmentSettings, ColorScheme* overrideColorScheme, GameplayModifiers* gameplayModifiers, PlayerSpecificSettings* playerSpecificSettings, PracticeSettings* practiceSettings, ::StringW backButtonText, bool useTestNoteCutSoundEffects) {
-    TransitionSetupDataInit(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
+MAKE_HOOK_MATCH(TransitionSetupDataInit, &StandardLevelScenesTransitionSetupDataSO::Init, void, StandardLevelScenesTransitionSetupDataSO* self, ::StringW gameMode, IDifficultyBeatmap* difficultyBeatmap, IPreviewBeatmapLevel* previewBeatmapLevel, OverrideEnvironmentSettings* overrideEnvironmentSettings, ColorScheme* overrideColorScheme, GameplayModifiers* gameplayModifiers, PlayerSpecificSettings* playerSpecificSettings, PracticeSettings* practiceSettings, ::StringW backButtonText, bool useTestNoteCutSoundEffects, bool startPaused) {
+    TransitionSetupDataInit(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects, startPaused);
     collectMapData(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
 }
 
@@ -188,6 +233,8 @@ void OnPlayerHeightChange(float height)
 }
 
 void levelStarted() {
+    _currentPause = NULL;
+
     replay = new Replay();
 
     replay->info->version = modInfo.version;
@@ -234,7 +281,7 @@ void replayPostCallback(ReplayUploadStatus status, string description) {
 }
 
 void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IDifficultyBeatmap* difficultyBeatmap, bool practice) {
-    replay->info->score = levelCompletionResults->rawScore;
+    replay->info->score = levelCompletionResults->modifiedScore;
 
     mapEnhancer.energy = levelCompletionResults->energy;
     mapEnhancer.Enhance(replay);
@@ -258,8 +305,8 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
     }
 }
 
-MAKE_HOOK_MATCH(ProcessResultsSolo, &SoloFreePlayFlowCoordinator::ProcessLevelCompletionResultsAfterLevelDidFinish, void, SoloFreePlayFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IDifficultyBeatmap* difficultyBeatmap, GameplayModifiers* gameplayModifiers, bool practice) {
-    ProcessResultsSolo(self, levelCompletionResults, difficultyBeatmap, gameplayModifiers, practice);
+MAKE_HOOK_MATCH(ProcessResultsSolo, &SoloFreePlayFlowCoordinator::ProcessLevelCompletionResultsAfterLevelDidFinish, void, SoloFreePlayFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IReadonlyBeatmapData* transformedBeatmapData, IDifficultyBeatmap* difficultyBeatmap, GameplayModifiers* gameplayModifiers, bool practice) {
+    ProcessResultsSolo(self, levelCompletionResults, transformedBeatmapData, difficultyBeatmap, gameplayModifiers, practice);
     processResults(self, levelCompletionResults, difficultyBeatmap, practice);
 }
 
@@ -270,7 +317,7 @@ MAKE_HOOK_MATCH(SongStart, &AudioTimeSyncController::Start, void, AudioTimeSyncC
 
 void NoteSpawned(NoteController* noteController, NoteData* noteData) {
     _noteId++;
-    _noteIdCache[noteController] = _noteId;
+    _noteIdCache[noteData] = _noteId;
 
     NoteEvent* noteEvent = new NoteEvent();
     noteEvent->noteID = noteData->lineIndex * 1000 + (int)noteData->noteLineLayer * 100 + (int)noteData->colorType * 10 + (int)noteData->cutDirection;
@@ -278,32 +325,21 @@ void NoteSpawned(NoteController* noteController, NoteData* noteData) {
     _noteEventCache[_noteId] = noteEvent;
 }
 
-MAKE_HOOK_MATCH(SpawnNote, &BeatmapObjectManager::SpawnBasicNote, NoteController*, BeatmapObjectManager* self, NoteData* noteData, BeatmapObjectSpawnMovementData::NoteSpawnData noteSpawnData, float rotation, float cutDirectionAngleOffset) {
-    NoteController* noteController = SpawnNote(self, noteData, noteSpawnData, rotation, cutDirectionAngleOffset);
+MAKE_HOOK_MATCH(SpawnNote, &BeatmapObjectManager::AddSpawnedNoteController, void, BeatmapObjectManager* self, NoteController* noteController, BeatmapObjectSpawnMovementData::NoteSpawnData noteSpawnData, float rotation) {
 
-    NoteSpawned(noteController, noteData);
-
-    return noteController;
+    SpawnNote(self, noteController, noteSpawnData, rotation);
+    NoteSpawned(noteController, noteController->noteData);
 }
 
-MAKE_HOOK_MATCH(SpawnBombNote, &BeatmapObjectManager::SpawnBombNote, NoteController*, BeatmapObjectManager* self, NoteData* noteData, BeatmapObjectSpawnMovementData::NoteSpawnData noteSpawnData, float rotation) {
-    NoteController* noteController = SpawnBombNote(self, noteData, noteSpawnData, rotation);
-
-    NoteSpawned(noteController, noteData);
-
-    return noteController;
-}
-
-MAKE_HOOK_MATCH(SpawnObstacle, &BeatmapObjectManager::SpawnObstacle, ObstacleController*, BeatmapObjectManager* self, ObstacleData* obstacleData, BeatmapObjectSpawnMovementData::ObstacleSpawnData obstacleSpawnData, float rotation) {
-    ObstacleController* obstacleController = SpawnObstacle(self, obstacleData, obstacleSpawnData, rotation);
+MAKE_HOOK_MATCH(SpawnObstacle, &BeatmapObjectManager::AddSpawnedObstacleController, void, BeatmapObjectManager* self, ObstacleController* obstacleController, BeatmapObjectSpawnMovementData::ObstacleSpawnData obstacleSpawnData, float rotation) {
+    SpawnObstacle(self, obstacleController, obstacleSpawnData, rotation);
     int wallId = _wallId++;
     _wallCache[obstacleController] = wallId;
 
     WallEvent* wallEvent = new WallEvent();
-    wallEvent->wallID = obstacleData->lineIndex * 100 + (int)obstacleData->obstacleType * 10 + obstacleData->width;
+    wallEvent->wallID = obstacleController->obstacleData->lineIndex * 100 + (int)obstacleController->obstacleData->type * 10 + obstacleController->obstacleData->width;
     wallEvent->spawnTime = audioTimeSyncController->get_songTime();
     _wallEventCache[wallId] = wallEvent;
-    return obstacleController;
 }
 
 void PopulateNoteCutInfo(ReplayNoteCutInfo* noteCutInfo, ByRef<NoteCutInfo> cutInfo) {
@@ -320,80 +356,87 @@ void PopulateNoteCutInfo(ReplayNoteCutInfo* noteCutInfo, ByRef<NoteCutInfo> cutI
     noteCutInfo->cutNormal = new Vector3(cutInfo->cutNormal);
     noteCutInfo->cutDistanceToCenter = cutInfo->cutDistanceToCenter;
     noteCutInfo->cutAngle = cutInfo->cutAngle;
-} 
+}
 
 MAKE_HOOK_MATCH(NoteCut, &ScoreController::HandleNoteWasCut, void, ScoreController* self, NoteController* noteController, ByRef<NoteCutInfo> noteCutInfo) {
     NoteCut(self, noteController, noteCutInfo);
-    
-    int noteId = _noteIdCache[noteController];
+    if(replay) {
+        int noteId = _noteIdCache[noteCutInfo->noteData];
 
-    NoteEvent* noteEvent = _noteEventCache[noteId];
-    noteEvent->eventTime = audioTimeSyncController->get_songTime();
+        NoteEvent* noteEvent = _noteEventCache[noteId];
+        noteEvent->eventTime = audioTimeSyncController->get_songTime();
 
-    if (noteController->noteData->colorType == ColorType::None)
-    {
-        noteEvent->eventType = NoteEventType::bomb;
+        if (noteController->noteData->colorType == ColorType::None)
+        {
+            noteEvent->eventType = NoteEventType::bomb;
+        }
+
+        replay->notes.push_back(noteEvent);
+
+        _cutInfoCache[noteId] = *noteCutInfo;
+        noteEvent->noteCutInfo = new ReplayNoteCutInfo();
+        if (noteCutInfo->speedOK && noteCutInfo->directionOK && noteCutInfo->saberTypeOK && !noteCutInfo->wasCutTooSoon) {
+            noteEvent->eventType = NoteEventType::good;
+        } else {
+            noteEvent->eventType = NoteEventType::bad;
+            PopulateNoteCutInfo(noteEvent->noteCutInfo, noteCutInfo);
+        }
     }
-
-    replay->notes.push_back(noteEvent);
-
-    _cutInfoCache[noteId] = *noteCutInfo;
-    noteEvent->noteCutInfo = new ReplayNoteCutInfo();
-    if (noteCutInfo->speedOK && noteCutInfo->directionOK && noteCutInfo->saberTypeOK && !noteCutInfo->wasCutTooSoon) {
-        noteEvent->eventType = NoteEventType::good;
-    } else {
-        noteEvent->eventType = NoteEventType::bad;
-        PopulateNoteCutInfo(noteEvent->noteCutInfo, noteCutInfo);
-    }
-
-    _swingIdCache[noteCutInfo->swingRatingCounter] = noteId;
 }
 
-MAKE_HOOK_MATCH(SwingRatingDidFinish, &SaberSwingRatingCounter::Finish, void, SaberSwingRatingCounter* self) {
-    SwingRatingDidFinish(self);
+MAKE_HOOK_MATCH(SwingRatingDidFinish, &CutScoreBuffer::HandleSaberSwingRatingCounterDidFinish, void, CutScoreBuffer* self, ISaberSwingRatingCounter* swingRatingCounter) {
+    SwingRatingDidFinish(self, swingRatingCounter);
+    if(replay) {
+        int noteId = _noteIdCache[self->noteCutInfo.noteData];
+        NoteCutInfo cutInfo = self->noteCutInfo;
 
-    int noteId = _swingIdCache[(ISaberSwingRatingCounter*)self];
-    NoteCutInfo cutInfo = _cutInfoCache[noteId];
-
-    NoteEvent* cutEvent = _noteEventCache[noteId];
-    ReplayNoteCutInfo* noteCutInfo = cutEvent->noteCutInfo;
-    PopulateNoteCutInfo(noteCutInfo, cutInfo);
-    noteCutInfo->beforeCutRating = self->get_beforeCutRating();
-    noteCutInfo->afterCutRating = self->get_afterCutRating();
+        NoteEvent* cutEvent = _noteEventCache[noteId];
+        ReplayNoteCutInfo* noteCutInfo = cutEvent->noteCutInfo;
+        PopulateNoteCutInfo(noteCutInfo, cutInfo);
+        noteCutInfo->beforeCutRating = self->get_beforeCutSwingRating();
+        noteCutInfo->afterCutRating = self->get_afterCutSwingRating();
+    }
 }
 
 MAKE_HOOK_MATCH(NoteMiss, &ScoreController::HandleNoteWasMissed, void, ScoreController* self, NoteController* noteController) {
     NoteMiss(self, noteController);
+    if(replay) {
+        int noteId = _noteIdCache[noteController->noteData];
 
-    int noteId = _noteIdCache[noteController];
-
-    if (noteController->noteData->colorType != ColorType::None)
-    {
-        NoteEvent* noteEvent = _noteEventCache[noteId];
-        noteEvent->eventTime = audioTimeSyncController->get_songTime();
-        noteEvent->eventType = NoteEventType::miss;
-        replay->notes.push_back(noteEvent);
+        if (noteController->noteData->colorType != ColorType::None)
+        {
+            NoteEvent* noteEvent = _noteEventCache[noteId];
+            noteEvent->eventTime = audioTimeSyncController->get_songTime();
+            noteEvent->eventType = NoteEventType::miss;
+            replay->notes.push_back(noteEvent);
+        }
     }
 }
 
-MAKE_HOOK_MATCH(ComboMultiplierChanged, &ScoreController::NotifyForChange, void,  ScoreController* self, bool comboChanged, bool multiplierChanged) {
-    ComboMultiplierChanged(self, comboChanged, multiplierChanged);
-
-    if (comboChanged && self->playerHeadAndObstacleInteraction->get_intersectingObstacles()->get_Count() > 0) {
-        WallEvent* wallEvent = _wallEventCache[_wallCache[self->playerHeadAndObstacleInteraction->get_intersectingObstacles()->get_Item(0)]];
-        wallEvent->time = audioTimeSyncController->get_songTime();
-        replay->walls.push_back(wallEvent);
-        _currentWallEvent = wallEvent;
-        phoi = self->playerHeadAndObstacleInteraction;
+MAKE_HOOK_MATCH(ComboMultiplierChanged, &ScoreController::HandlePlayerHeadDidEnterObstacles, void,  ScoreController* self) {
+    ComboMultiplierChanged(self);
+    if(replay) {
+        if (self->scoreMultiplierCounter->ProcessMultiplierEvent(ScoreMultiplierCounter::MultiplierEventType::Negative) && self->playerHeadAndObstacleInteraction->intersectingObstacles->get_Count() > 0) {
+            auto obstacleEnumerator = self->playerHeadAndObstacleInteraction->intersectingObstacles->GetEnumerator();
+            if(obstacleEnumerator.MoveNext()) {
+                WallEvent* wallEvent = _wallEventCache[_wallCache[reinterpret_cast<ObstacleController*>(obstacleEnumerator.current)]];
+                wallEvent->time = audioTimeSyncController->get_songTime();
+                replay->walls.push_back(wallEvent);
+                _currentWallEvent = wallEvent;
+                phoi = self->playerHeadAndObstacleInteraction;
+            }
+        }
     }
 }
 
 MAKE_HOOK_MATCH(BeatMapStart, &BeatmapObjectSpawnController::Start, void, BeatmapObjectSpawnController* self) {
     BeatMapStart(self);
 
-    replay->info->jumpDistance = self->get_jumpDistance();
-    _currentPause = NULL;
-    _currentWallEvent = NULL;
+    if(replay) {
+        replay->info->jumpDistance = self->get_jumpDistance();
+        _currentPause = NULL;
+        _currentWallEvent = NULL;
+    }
 }
 
 MAKE_HOOK_MATCH(LevelPause, &PauseMenuManager::ShowMenu, void, PauseMenuManager* self) {
@@ -410,12 +453,13 @@ MAKE_HOOK_MATCH(LevelUnpause, &PauseMenuManager::HandleResumeFromPauseAnimationD
     _currentPause->duration = (long)chrono::duration_cast<std::chrono::seconds>(chrono::steady_clock::now() - _pauseStartTime).count();
     replay->pauses.push_back(_currentPause);
     _currentPause = NULL;
+    getLogger().info("current pause is now null");
 }
 
 MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
     Tick(trans);
-
-    if (audioTimeSyncController != NULL && _currentPause == NULL) {
+    if (audioTimeSyncController != NULL && _currentPause == NULL && replay) {
+        //getLogger().info("Check Has passed. audiotimesync is %s, currentpause is %s", audioTimeSyncController != NULL ? "not null" : "null", _currentPause != NULL ? "not null" : "null");
         Frame* frame = new Frame();
         frame->time = audioTimeSyncController->get_songTime();
         frame->fps = 1.0f / UnityEngine::Time::get_deltaTime();
@@ -433,10 +477,13 @@ MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) 
         frame->rightHand->position = new Vector3(trans->get_rightHandPseudoLocalPos());
         
         replay->frames.push_back(frame);
+
     }
+    else
+        getLogger().info("check failed. audiotimesync is %s, currentpause is %s", audioTimeSyncController != NULL ? "not null" : "null", _currentPause != NULL ? "not null" : "null");
 
     if (_currentWallEvent != NULL) {
-        if (phoi->get_intersectingObstacles()->get_Count() == 0)
+        if (phoi->intersectingObstacles->get_Count() == 0)
         {
             _currentWallEvent->energy = audioTimeSyncController->get_songTime();
             _currentWallEvent = NULL;
@@ -499,14 +546,14 @@ void updatePlayerInfoLabel() {
     if (player != NULL) {
         if (player->rank > 0) {
             playerInfo->SetText("#" + to_string(player->rank) + "       " + player->name + "         " + to_string_wprecision(player->pp, 2) + "pp");
-            
+
             if (plvc != NULL) {
                 auto countryControl = plvc->scopeSegmentedControl->dataItems.get(2);
                 countryControl->set_hintText("Country");
                 countryControl->set_icon(GetCountryIcon(player->country));
                 plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
             }
-            
+
         } else {
             playerInfo->SetText(player->name + ", you are ready!");
         }
@@ -518,7 +565,7 @@ void updatePlayerInfoLabel() {
 MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy) {
     leaderboardViewController = self;
     if (PlayerController::currentPlayer == NULL) {
-        self->loadingControl->ShowText("Please login in preferences", true);
+        self->loadingControl->ShowText("Please login in mod settings!", true);
         return;
     }
     IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
@@ -547,7 +594,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             QuestUI::MainThreadScheduler::Schedule([self] {
                 self->loadingControl->Hide();
                 self->hasScoresData = false;
-                self->loadingControl->ShowText("No scores was found, make one!", true);
+                self->loadingControl->ShowText("No scores were found.", true);
                 self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
             });
             return;
@@ -604,7 +651,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             UnityEngine::Application::OpenURL(url);
         });
 
-        retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(20, -23), UnityEngine::Vector2(8, 8), [](){
+        retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(20, -23), UnityEngine::Vector2(15, 10), [](){
             retryButton->get_gameObject()->SetActive(false);
             ReplayManager::RetryPosting(replayPostCallback);
         });
@@ -650,7 +697,6 @@ extern "C" void load() {
     INSTALL_HOOK(logger, LevelPlay);
     INSTALL_HOOK(logger, SongStart);
     INSTALL_HOOK(logger, SpawnNote);
-    INSTALL_HOOK(logger, SpawnBombNote);
     INSTALL_HOOK(logger, SpawnObstacle);
     INSTALL_HOOK(logger, NoteCut);
     INSTALL_HOOK(logger, NoteMiss);

@@ -44,7 +44,8 @@ string PlayerController::RefreshOnline() {
 
 void PlayerController::RefreshPlatform() {
     IPlatformUserModel* userModel = NULL;
-    ::ArrayW<PlatformLeaderboardsModel *> pmarray = Resources::FindObjectsOfTypeAll<PlatformLeaderboardsModel*>();
+    getLogger().info("grabbing plaform leaderboardsmodel");
+    /*::ArrayW<PlatformLeaderboardsModel *> pmarray = Resources::FindObjectsOfTypeAll<PlatformLeaderboardsModel *>();
     for (size_t i = 0; i < pmarray.Length(); i++)
     {
         if (pmarray.get(i)->platformUserModel != NULL) {
@@ -66,7 +67,7 @@ void PlayerController::RefreshPlatform() {
             }
         }
     );
-    reinterpret_cast<System::Threading::Tasks::Task*>(userInfoTask)->ContinueWith(action);
+    reinterpret_cast<System::Threading::Tasks::Task*>(userInfoTask)->ContinueWith(action);*/
 }
 
 string PlayerController::Refresh() {
