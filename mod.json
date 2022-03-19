@@ -10,7 +10,7 @@
   "modFiles": [
     "libbl.so"
   ],
-  "libraryFiles": [],
-  "dependencies": [],
-  "fileCopies": []
+  "libraryFiles": [
+    "libbeatsaber-hook_3_7_4.so"
+  ]
 }

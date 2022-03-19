@@ -436,7 +436,7 @@ MAKE_HOOK_MATCH(LevelUnpause, &PauseMenuManager::HandleResumeFromPauseAnimationD
 MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
     Tick(trans);
     if (audioTimeSyncController != NULL && _currentPause == NULL && replay) {
-        //getLogger().info("Check Has passed. audiotimesync is %s, currentpause is %s", audioTimeSyncController != NULL ? "not null" : "null", _currentPause != NULL ? "not null" : "null");
+
         Frame* frame = new Frame();
         frame->time = audioTimeSyncController->get_songTime();
         frame->fps = 1.0f / UnityEngine::Time::get_deltaTime();
@@ -456,8 +456,6 @@ MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) 
         replay->frames.push_back(frame);
 
     }
-    else
-        getLogger().info("check failed. audiotimesync is %s, currentpause is %s", audioTimeSyncController != NULL ? "not null" : "null", _currentPause != NULL ? "not null" : "null");
 
     if (_currentWallEvent != NULL) {
         if (phoi->intersectingObstacles->get_Count() == 0)
