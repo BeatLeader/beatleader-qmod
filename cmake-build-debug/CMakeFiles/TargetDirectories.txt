@@ -1,3 +1,0 @@
-E:/BSMG/beatleader-qmod/cmake-build-debug/CMakeFiles/bl.dir
-E:/BSMG/beatleader-qmod/cmake-build-debug/CMakeFiles/edit_cache.dir
-E:/BSMG/beatleader-qmod/cmake-build-debug/CMakeFiles/rebuild_cache.dir
