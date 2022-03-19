@@ -44,8 +44,7 @@ string PlayerController::RefreshOnline() {
 
 void PlayerController::RefreshPlatform() {
     IPlatformUserModel* userModel = NULL;
-    getLogger().info("grabbing plaform leaderboardsmodel");
-    /*::ArrayW<PlatformLeaderboardsModel *> pmarray = Resources::FindObjectsOfTypeAll<PlatformLeaderboardsModel *>();
+    /*::ArrayW<PlatformLeaderboardsModel *> pmarray = Resources::FindObjectsOfTypeAll<PlatformLeaderboardsModel*>();
     for (size_t i = 0; i < pmarray.Length(); i++)
     {
         if (pmarray.get(i)->platformUserModel != NULL) {
