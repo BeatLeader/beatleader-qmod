@@ -29,6 +29,10 @@
 #include "HMUI/TableCell.hpp"
 #include "HMUI/IconSegmentedControl.hpp"
 #include "HMUI/IconSegmentedControl_DataItem.hpp"
+#include "HMUI/CurvedCanvasSettings.hpp"
+#include "HMUI/Screen.hpp"
+#include "HMUI/ViewController.hpp"
+#include "HMUI/ViewController_AnimationType.hpp"
 
 #include "TMPro/TMP_Text.hpp"
 #include "TMPro/TextMeshProUGUI.hpp"
@@ -37,11 +41,16 @@
 #include "UnityEngine/Resources.hpp"
 #include "UnityEngine/RectTransform.hpp"
 #include "UnityEngine/Time.hpp"
+#include "UnityEngine/SceneManagement/SceneManager.hpp"
 #include "UnityEngine/UI/LayoutElement.hpp"
+#include "UnityEngine/Canvas.hpp"
+#include "UnityEngine/AdditionalCanvasShaderChannels.hpp"
+#include "UnityEngine/UI/CanvasScaler.hpp"
 
 #include "System/Action_1.hpp"
 #include "System/Threading/Tasks/Task.hpp"
 #include "System/Threading/Tasks/Task_1.hpp"
+#include "System/Collections/Generic/HashSet_1.hpp"
 
 #include "GlobalNamespace/NoteController.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
@@ -57,6 +66,7 @@
 #include "GlobalNamespace/BeatmapObjectSpawnMovementData.hpp"
 #include "GlobalNamespace/BeatmapObjectData.hpp"
 #include "GlobalNamespace/NoteData.hpp"
+#include "GlobalNamespace/CutScoreBuffer.hpp"
 #include "GlobalNamespace/BeatmapObjectSpawnMovementData_NoteSpawnData.hpp"
 #include "GlobalNamespace/ObstacleData.hpp"
 #include "GlobalNamespace/BeatmapObjectSpawnMovementData_ObstacleSpawnData.hpp"
@@ -82,11 +92,15 @@
 #include "GlobalNamespace/PlatformLeaderboardsModel_ScoresScope.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/IBeatmapLevel.hpp"
+#include "GlobalNamespace/IBeatmapLevelData.hpp"
 #include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
+#include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 #include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
 #include "GlobalNamespace/LeaderboardTableCell.hpp"
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
+
+#include "VRUIControls/VRGraphicRaycaster.hpp"
 
 #include <map>
 #include <chrono>
@@ -114,7 +128,8 @@ PlatformLeaderboardViewController* leaderboardViewController;
 static map<int, NoteCutInfo> _cutInfoCache;
 static map<int, NoteEvent *> _noteEventCache;
 
-static map<NoteController *, int> _noteIdCache;
+
+static map<NoteData *, int> _noteIdCache;
 static map<ISaberSwingRatingCounter*, int> _swingIdCache;
 static int _noteId;
 
@@ -156,12 +171,16 @@ extern "C" void setup(ModInfo& info) {
     getLogger().info("Completed setup!");
 }
 
+bool isOst = false;
+
 void collectMapData(StandardLevelScenesTransitionSetupDataSO* self, ::StringW gameMode, IDifficultyBeatmap* difficultyBeatmap, IPreviewBeatmapLevel* previewBeatmapLevel, OverrideEnvironmentSettings* overrideEnvironmentSettings, ColorScheme* overrideColorScheme, GameplayModifiers* gameplayModifiers, PlayerSpecificSettings* playerSpecificSettings, PracticeSettings* practiceSettings, ::StringW backButtonText, bool useTestNoteCutSoundEffects) {
     EnvironmentInfoSO* environmentInfoSO = BeatmapEnvironmentHelper::GetEnvironmentInfo(difficultyBeatmap);
     if (overrideEnvironmentSettings != NULL && environmentInfoSO != NULL && overrideEnvironmentSettings->overrideEnvironments)
     {
         environmentInfoSO = overrideEnvironmentSettings->GetOverrideEnvironmentInfoForType(environmentInfoSO->environmentType);
     }
+    isOst = !previewBeatmapLevel->get_levelID().starts_with("custom_level");
+
     mapEnhancer.difficultyBeatmap = difficultyBeatmap;
     mapEnhancer.previewBeatmapLevel = previewBeatmapLevel;
     mapEnhancer.gameplayModifiers = gameplayModifiers;
@@ -174,8 +193,8 @@ void collectMapData(StandardLevelScenesTransitionSetupDataSO* self, ::StringW ga
     playerSettings = playerSpecificSettings;
 }
 
-MAKE_HOOK_MATCH(TransitionSetupDataInit, &StandardLevelScenesTransitionSetupDataSO::Init, void, StandardLevelScenesTransitionSetupDataSO* self, ::StringW gameMode, IDifficultyBeatmap* difficultyBeatmap, IPreviewBeatmapLevel* previewBeatmapLevel, OverrideEnvironmentSettings* overrideEnvironmentSettings, ColorScheme* overrideColorScheme, GameplayModifiers* gameplayModifiers, PlayerSpecificSettings* playerSpecificSettings, PracticeSettings* practiceSettings, ::StringW backButtonText, bool useTestNoteCutSoundEffects) {
-    TransitionSetupDataInit(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
+MAKE_HOOK_MATCH(TransitionSetupDataInit, &StandardLevelScenesTransitionSetupDataSO::Init, void, StandardLevelScenesTransitionSetupDataSO* self, ::StringW gameMode, IDifficultyBeatmap* difficultyBeatmap, IPreviewBeatmapLevel* previewBeatmapLevel, OverrideEnvironmentSettings* overrideEnvironmentSettings, ColorScheme* overrideColorScheme, GameplayModifiers* gameplayModifiers, PlayerSpecificSettings* playerSpecificSettings, PracticeSettings* practiceSettings, ::StringW backButtonText, bool useTestNoteCutSoundEffects, bool startPaused) {
+    TransitionSetupDataInit(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects, startPaused);
     collectMapData(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
 }
 
@@ -189,8 +208,9 @@ void OnPlayerHeightChange(float height)
 }
 
 void levelStarted() {
-    replay = new Replay();
+    _currentPause = NULL;
 
+    replay = new Replay();
     replay->info->version = modInfo.version;
     replay->info->gameVersion = (string)UnityEngine::Application::get_version();
 
@@ -214,28 +234,31 @@ MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLeve
     levelStarted();
 }
 
-void replayPostCallback(ReplayUploadStatus status, string description) {
+void replayPostCallback(ReplayUploadStatus status, string description, float progress) {
     if (status == ReplayUploadStatus::finished) {
         PlayerController::Refresh();
     }
-    QuestUI::MainThreadScheduler::Schedule([status, description] {
+
+    QuestUI::MainThreadScheduler::Schedule([status, description, progress] {
         uploadStatus->SetText(description);
         switch (status)
         {
-        case ReplayUploadStatus::finished:
-            leaderboardViewController->Refresh(true, true);
-            break;
-        case ReplayUploadStatus::error:
-            retryButton->get_gameObject()->SetActive(true);
-            break;
-        case ReplayUploadStatus::inProgress:
-            break;
+            case ReplayUploadStatus::finished:
+                leaderboardViewController->Refresh(true, true);
+                break;
+            case ReplayUploadStatus::error:
+                retryButton->get_gameObject()->SetActive(true);
+                break;
+            case ReplayUploadStatus::inProgress:
+                if(progress >= 100)
+                    uploadStatus->SetText("<color=#b103fcff>Posting replay: Finishing up...");
+                break;
         }
     });
 }
 
 void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IDifficultyBeatmap* difficultyBeatmap, bool practice) {
-    replay->info->score = levelCompletionResults->rawScore;
+    replay->info->score = levelCompletionResults->multipliedScore;
 
     mapEnhancer.energy = levelCompletionResults->energy;
     mapEnhancer.Enhance(replay);
@@ -243,24 +266,24 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
     switch (levelCompletionResults->levelEndStateType)
     {
         case LevelCompletionResults::LevelEndStateType::Cleared:
-            ReplayManager::ProcessReplay(replay, replayPostCallback);
+            ReplayManager::ProcessReplay(replay, replayPostCallback, isOst);
             break;
         case LevelCompletionResults::LevelEndStateType::Failed:
             if (levelCompletionResults->levelEndAction != LevelCompletionResults::LevelEndAction::Restart)
             {
                 replay->info->failTime = audioTimeSyncController->get_songTime();
-                ReplayManager::ProcessReplay(replay, [](bool finished, string description) {
+                ReplayManager::ProcessReplay(replay, [](bool finished, string description, float progress) {
                     QuestUI::MainThreadScheduler::Schedule([description] {
                         uploadStatus->SetText(description);
                     });
-                });
+                }, isOst);
             }
             break;
     }
 }
 
-MAKE_HOOK_MATCH(ProcessResultsSolo, &SoloFreePlayFlowCoordinator::ProcessLevelCompletionResultsAfterLevelDidFinish, void, SoloFreePlayFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IDifficultyBeatmap* difficultyBeatmap, GameplayModifiers* gameplayModifiers, bool practice) {
-    ProcessResultsSolo(self, levelCompletionResults, difficultyBeatmap, gameplayModifiers, practice);
+MAKE_HOOK_MATCH(ProcessResultsSolo, &SoloFreePlayFlowCoordinator::ProcessLevelCompletionResultsAfterLevelDidFinish, void, SoloFreePlayFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IReadonlyBeatmapData* transformedBeatmapData, IDifficultyBeatmap* difficultyBeatmap, GameplayModifiers* gameplayModifiers, bool practice) {
+    ProcessResultsSolo(self, levelCompletionResults, transformedBeatmapData, difficultyBeatmap, gameplayModifiers, practice);
     processResults(self, levelCompletionResults, difficultyBeatmap, practice);
 }
 
@@ -271,7 +294,7 @@ MAKE_HOOK_MATCH(SongStart, &AudioTimeSyncController::Start, void, AudioTimeSyncC
 
 void NoteSpawned(NoteController* noteController, NoteData* noteData) {
     _noteId++;
-    _noteIdCache[noteController] = _noteId;
+    _noteIdCache[noteData] = _noteId;
 
     NoteEvent* noteEvent = new NoteEvent();
     noteEvent->noteID = noteData->lineIndex * 1000 + (int)noteData->noteLineLayer * 100 + (int)noteData->colorType * 10 + (int)noteData->cutDirection;
@@ -279,32 +302,21 @@ void NoteSpawned(NoteController* noteController, NoteData* noteData) {
     _noteEventCache[_noteId] = noteEvent;
 }
 
-MAKE_HOOK_MATCH(SpawnNote, &BeatmapObjectManager::SpawnBasicNote, NoteController*, BeatmapObjectManager* self, NoteData* noteData, BeatmapObjectSpawnMovementData::NoteSpawnData noteSpawnData, float rotation, float cutDirectionAngleOffset) {
-    NoteController* noteController = SpawnNote(self, noteData, noteSpawnData, rotation, cutDirectionAngleOffset);
+MAKE_HOOK_MATCH(SpawnNote, &BeatmapObjectManager::AddSpawnedNoteController, void, BeatmapObjectManager* self, NoteController* noteController, BeatmapObjectSpawnMovementData::NoteSpawnData noteSpawnData, float rotation) {
 
-    NoteSpawned(noteController, noteData);
-
-    return noteController;
+    SpawnNote(self, noteController, noteSpawnData, rotation);
+    NoteSpawned(noteController, noteController->noteData);
 }
 
-MAKE_HOOK_MATCH(SpawnBombNote, &BeatmapObjectManager::SpawnBombNote, NoteController*, BeatmapObjectManager* self, NoteData* noteData, BeatmapObjectSpawnMovementData::NoteSpawnData noteSpawnData, float rotation) {
-    NoteController* noteController = SpawnBombNote(self, noteData, noteSpawnData, rotation);
-
-    NoteSpawned(noteController, noteData);
-
-    return noteController;
-}
-
-MAKE_HOOK_MATCH(SpawnObstacle, &BeatmapObjectManager::SpawnObstacle, ObstacleController*, BeatmapObjectManager* self, ObstacleData* obstacleData, BeatmapObjectSpawnMovementData::ObstacleSpawnData obstacleSpawnData, float rotation) {
-    ObstacleController* obstacleController = SpawnObstacle(self, obstacleData, obstacleSpawnData, rotation);
+MAKE_HOOK_MATCH(SpawnObstacle, &BeatmapObjectManager::AddSpawnedObstacleController, void, BeatmapObjectManager* self, ObstacleController* obstacleController, BeatmapObjectSpawnMovementData::ObstacleSpawnData obstacleSpawnData, float rotation) {
+    SpawnObstacle(self, obstacleController, obstacleSpawnData, rotation);
     int wallId = _wallId++;
     _wallCache[obstacleController] = wallId;
 
     WallEvent* wallEvent = new WallEvent();
-    wallEvent->wallID = obstacleData->lineIndex * 100 + (int)obstacleData->obstacleType * 10 + obstacleData->width;
+    wallEvent->wallID = obstacleController->obstacleData->lineIndex * 100 + (int)obstacleController->obstacleData->type * 10 + obstacleController->obstacleData->width;
     wallEvent->spawnTime = audioTimeSyncController->get_songTime();
     _wallEventCache[wallId] = wallEvent;
-    return obstacleController;
 }
 
 void PopulateNoteCutInfo(ReplayNoteCutInfo* noteCutInfo, ByRef<NoteCutInfo> cutInfo) {
@@ -321,80 +333,87 @@ void PopulateNoteCutInfo(ReplayNoteCutInfo* noteCutInfo, ByRef<NoteCutInfo> cutI
     noteCutInfo->cutNormal = new Vector3(cutInfo->cutNormal);
     noteCutInfo->cutDistanceToCenter = cutInfo->cutDistanceToCenter;
     noteCutInfo->cutAngle = cutInfo->cutAngle;
-} 
+}
 
 MAKE_HOOK_MATCH(NoteCut, &ScoreController::HandleNoteWasCut, void, ScoreController* self, NoteController* noteController, ByRef<NoteCutInfo> noteCutInfo) {
     NoteCut(self, noteController, noteCutInfo);
-    
-    int noteId = _noteIdCache[noteController];
+    if(replay) {
+        int noteId = _noteIdCache[noteCutInfo->noteData];
 
-    NoteEvent* noteEvent = _noteEventCache[noteId];
-    noteEvent->eventTime = audioTimeSyncController->get_songTime();
+        NoteEvent* noteEvent = _noteEventCache[noteId];
+        noteEvent->eventTime = audioTimeSyncController->get_songTime();
 
-    if (noteController->noteData->colorType == ColorType::None)
-    {
-        noteEvent->eventType = NoteEventType::bomb;
+        if (noteController->noteData->colorType == ColorType::None)
+        {
+            noteEvent->eventType = NoteEventType::bomb;
+        }
+
+        replay->notes.push_back(noteEvent);
+
+        _cutInfoCache[noteId] = *noteCutInfo;
+        noteEvent->noteCutInfo = new ReplayNoteCutInfo();
+        if (noteCutInfo->speedOK && noteCutInfo->directionOK && noteCutInfo->saberTypeOK && !noteCutInfo->wasCutTooSoon) {
+            noteEvent->eventType = NoteEventType::good;
+        } else {
+            noteEvent->eventType = NoteEventType::bad;
+            PopulateNoteCutInfo(noteEvent->noteCutInfo, noteCutInfo);
+        }
     }
-
-    replay->notes.push_back(noteEvent);
-
-    _cutInfoCache[noteId] = *noteCutInfo;
-    noteEvent->noteCutInfo = new ReplayNoteCutInfo();
-    if (noteCutInfo->speedOK && noteCutInfo->directionOK && noteCutInfo->saberTypeOK && !noteCutInfo->wasCutTooSoon) {
-        noteEvent->eventType = NoteEventType::good;
-    } else {
-        noteEvent->eventType = NoteEventType::bad;
-        PopulateNoteCutInfo(noteEvent->noteCutInfo, noteCutInfo);
-    }
-
-    _swingIdCache[noteCutInfo->swingRatingCounter] = noteId;
 }
 
-MAKE_HOOK_MATCH(SwingRatingDidFinish, &SaberSwingRatingCounter::Finish, void, SaberSwingRatingCounter* self) {
-    SwingRatingDidFinish(self);
+MAKE_HOOK_MATCH(SwingRatingDidFinish, &CutScoreBuffer::HandleSaberSwingRatingCounterDidFinish, void, CutScoreBuffer* self, ISaberSwingRatingCounter* swingRatingCounter) {
+    SwingRatingDidFinish(self, swingRatingCounter);
+    if(replay) {
+        int noteId = _noteIdCache[self->noteCutInfo.noteData];
+        NoteCutInfo cutInfo = self->noteCutInfo;
 
-    int noteId = _swingIdCache[(ISaberSwingRatingCounter*)self];
-    NoteCutInfo cutInfo = _cutInfoCache[noteId];
-
-    NoteEvent* cutEvent = _noteEventCache[noteId];
-    ReplayNoteCutInfo* noteCutInfo = cutEvent->noteCutInfo;
-    PopulateNoteCutInfo(noteCutInfo, cutInfo);
-    noteCutInfo->beforeCutRating = self->get_beforeCutRating();
-    noteCutInfo->afterCutRating = self->get_afterCutRating();
+        NoteEvent* cutEvent = _noteEventCache[noteId];
+        ReplayNoteCutInfo* noteCutInfo = cutEvent->noteCutInfo;
+        PopulateNoteCutInfo(noteCutInfo, cutInfo);
+        noteCutInfo->beforeCutRating = self->get_beforeCutSwingRating();
+        noteCutInfo->afterCutRating = self->get_afterCutSwingRating();
+    }
 }
 
 MAKE_HOOK_MATCH(NoteMiss, &ScoreController::HandleNoteWasMissed, void, ScoreController* self, NoteController* noteController) {
     NoteMiss(self, noteController);
+    if(replay) {
+        int noteId = _noteIdCache[noteController->noteData];
 
-    int noteId = _noteIdCache[noteController];
-
-    if (noteController->noteData->colorType != ColorType::None)
-    {
-        NoteEvent* noteEvent = _noteEventCache[noteId];
-        noteEvent->eventTime = audioTimeSyncController->get_songTime();
-        noteEvent->eventType = NoteEventType::miss;
-        replay->notes.push_back(noteEvent);
+        if (noteController->noteData->colorType != ColorType::None)
+        {
+            NoteEvent* noteEvent = _noteEventCache[noteId];
+            noteEvent->eventTime = audioTimeSyncController->get_songTime();
+            noteEvent->eventType = NoteEventType::miss;
+            replay->notes.push_back(noteEvent);
+        }
     }
 }
 
-MAKE_HOOK_MATCH(ComboMultiplierChanged, &ScoreController::NotifyForChange, void,  ScoreController* self, bool comboChanged, bool multiplierChanged) {
-    ComboMultiplierChanged(self, comboChanged, multiplierChanged);
-
-    if (comboChanged && self->playerHeadAndObstacleInteraction->get_intersectingObstacles()->get_Count() > 0) {
-        WallEvent* wallEvent = _wallEventCache[_wallCache[self->playerHeadAndObstacleInteraction->get_intersectingObstacles()->get_Item(0)]];
-        wallEvent->time = audioTimeSyncController->get_songTime();
-        replay->walls.push_back(wallEvent);
-        _currentWallEvent = wallEvent;
-        phoi = self->playerHeadAndObstacleInteraction;
+MAKE_HOOK_MATCH(ComboMultiplierChanged, &ScoreController::HandlePlayerHeadDidEnterObstacles, void,  ScoreController* self) {
+    ComboMultiplierChanged(self);
+    if(replay) {
+        if (self->scoreMultiplierCounter->ProcessMultiplierEvent(ScoreMultiplierCounter::MultiplierEventType::Negative) && self->playerHeadAndObstacleInteraction->intersectingObstacles->get_Count() > 0) {
+            auto obstacleEnumerator = self->playerHeadAndObstacleInteraction->intersectingObstacles->GetEnumerator();
+            if(obstacleEnumerator.MoveNext()) {
+                WallEvent* wallEvent = _wallEventCache[_wallCache[reinterpret_cast<ObstacleController*>(obstacleEnumerator.current)]];
+                wallEvent->time = audioTimeSyncController->get_songTime();
+                replay->walls.push_back(wallEvent);
+                _currentWallEvent = wallEvent;
+                phoi = self->playerHeadAndObstacleInteraction;
+            }
+        }
     }
 }
 
 MAKE_HOOK_MATCH(BeatMapStart, &BeatmapObjectSpawnController::Start, void, BeatmapObjectSpawnController* self) {
     BeatMapStart(self);
 
-    replay->info->jumpDistance = self->get_jumpDistance();
-    _currentPause = NULL;
-    _currentWallEvent = NULL;
+    if(replay) {
+        replay->info->jumpDistance = self->get_jumpDistance();
+        _currentPause = NULL;
+        _currentWallEvent = NULL;
+    }
 }
 
 MAKE_HOOK_MATCH(LevelPause, &PauseMenuManager::ShowMenu, void, PauseMenuManager* self) {
@@ -411,12 +430,13 @@ MAKE_HOOK_MATCH(LevelUnpause, &PauseMenuManager::HandleResumeFromPauseAnimationD
     _currentPause->duration = (long)chrono::duration_cast<std::chrono::seconds>(chrono::steady_clock::now() - _pauseStartTime).count();
     replay->pauses.push_back(_currentPause);
     _currentPause = NULL;
+    getLogger().info("current pause is now null");
 }
 
 MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
     Tick(trans);
+    if (audioTimeSyncController != NULL && _currentPause == NULL && replay) {
 
-    if (audioTimeSyncController != NULL && _currentPause == NULL) {
         Frame* frame = new Frame();
         frame->time = audioTimeSyncController->get_songTime();
         frame->fps = 1.0f / UnityEngine::Time::get_deltaTime();
@@ -434,10 +454,11 @@ MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) 
         frame->rightHand->position = new Vector3(trans->get_rightHandPseudoLocalPos());
         
         replay->frames.push_back(frame);
+
     }
 
     if (_currentWallEvent != NULL) {
-        if (phoi->get_intersectingObstacles()->get_Count() == 0)
+        if (phoi->intersectingObstacles->get_Count() == 0)
         {
             _currentWallEvent->energy = audioTimeSyncController->get_songTime();
             _currentWallEvent = NULL;
@@ -500,14 +521,14 @@ void updatePlayerInfoLabel() {
     if (player != NULL) {
         if (player->rank > 0) {
             playerInfo->SetText("#" + to_string(player->rank) + "       " + player->name + "         " + to_string_wprecision(player->pp, 2) + "pp");
-            
+
             if (plvc != NULL) {
                 auto countryControl = plvc->scopeSegmentedControl->dataItems.get(2);
                 countryControl->set_hintText("Country");
                 countryControl->set_icon(GetCountryIcon(player->country));
                 plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
             }
-            
+
         } else {
             playerInfo->SetText(player->name + ", you are ready!");
         }
@@ -516,16 +537,89 @@ void updatePlayerInfoLabel() {
     }
 }
 
+MAKE_HOOK_MATCH(LeaderboardActivate, &PlatformLeaderboardViewController::DidActivate, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHeirarchy, bool screenSystemEnabling) {
+    LeaderboardActivate(self, firstActivation, addedToHeirarchy, screenSystemEnabling);
+    if(firstActivation) {
+        HMUI::ImageView* imageView = self->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
+        imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
+        imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
+        imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
+    }
+}
+
+//Work in progress to get stuff above leaderboard
+UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootView, UnityEngine::Vector2 screenSize, UnityEngine::Vector3 position, float curvatureRadius) {
+    auto gameObject = QuestUI::BeatSaberUI::CreateCanvas();
+    auto screen = gameObject->AddComponent<HMUI::Screen*>();
+    screen->rootViewController = rootView;
+    auto curvedCanvasSettings = gameObject->AddComponent<HMUI::CurvedCanvasSettings*>();
+    curvedCanvasSettings->SetRadius(curvatureRadius);
+
+    auto transform = gameObject->get_transform();
+    UnityEngine::GameObject* screenSystem = UnityEngine::GameObject::Find("ScreenContainer");
+    if(screenSystem) {
+        transform->set_position(screenSystem->get_transform()->get_position());
+        screen->get_gameObject()->GetComponent<UnityEngine::RectTransform*>()->set_sizeDelta(screenSize);
+    }
+    return gameObject;
+}
+
 MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy) {
     leaderboardViewController = self;
+
     self->scores->Clear();
     self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
 
     if (PlayerController::currentPlayer == NULL) {
-        self->loadingControl->ShowText("Please sign up or log in the preferences", true);
+        self->loadingControl->ShowText("Please sign up or log in mod settings!", true);
         return;
     }
     IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
+    if(!levelData->get_levelID().starts_with("custom_level")) {
+        QuestUI::MainThreadScheduler::Schedule([self] {
+            self->loadingControl->Hide();
+            self->hasScoresData = false;
+            self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
+            self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
+        });
+        if (uploadStatus == NULL) {
+            plvc = self;
+            if(playerInfo)
+                UnityEngine::GameObject::Destroy(playerInfo);
+            playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
+            move(playerInfo, 5, -26);
+            if (PlayerController::currentPlayer != NULL) {
+                updatePlayerInfoLabel();
+            }
+
+            if(websiteLink)
+                UnityEngine::GameObject::Destroy(websiteLink);
+            websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12), []() {
+                string url = "https://beatleader.xyz/";
+                if (PlayerController::currentPlayer != NULL) {
+                    url += "u/" + PlayerController::currentPlayer->id;
+                }
+                UnityEngine::Application::OpenURL(url);
+            });
+            if(retryButton)
+                UnityEngine::GameObject::Destroy(retryButton);
+            retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(30, -24), UnityEngine::Vector2(15, 8), [](){
+                retryButton->get_gameObject()->SetActive(false);
+                ReplayManager::RetryPosting(replayPostCallback);
+            });
+            retryButton->get_gameObject()->SetActive(false);
+            retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
+
+            if(uploadStatus)
+                UnityEngine::GameObject::Destroy(uploadStatus);
+            uploadStatus = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
+            move(uploadStatus, 11, -32);
+            resize(uploadStatus, 10, 0);
+            uploadStatus->set_fontSize(3);
+            uploadStatus->set_richText(true);
+        }
+        return;
+    }
     string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
     string difficulty = MapEnhancer::DiffName(self->difficultyBeatmap->get_difficulty().value);
     string mode = (string)self->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
@@ -551,11 +645,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             QuestUI::MainThreadScheduler::Schedule([self, status] {
                 self->loadingControl->Hide();
                 self->hasScoresData = false;
-                if (status == 404) {
-                    self->loadingControl->ShowText("Leaderboards for this map is not supported!", true);
-                } else {
-                    self->loadingControl->ShowText("No scores were found!", true);
-                }
+                self->loadingControl->ShowText("No scores were found!", true);
                 
                 self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
             });
@@ -599,12 +689,18 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     
     if (uploadStatus == NULL) {
         plvc = self;
+
+        //UnityEngine::GameObject* parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(100,50), self->screen->get_transform()->get_position(), 140);
+        if(playerInfo)
+            UnityEngine::GameObject::Destroy(playerInfo);
         playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
         move(playerInfo, 5, -26);
         if (PlayerController::currentPlayer != NULL) {
             updatePlayerInfoLabel();
         }
 
+        if(websiteLink)
+            UnityEngine::GameObject::Destroy(websiteLink);
         websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12), []() {
             string url = "https://beatleader.xyz/";
             if (PlayerController::currentPlayer != NULL) {
@@ -613,12 +709,17 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             UnityEngine::Application::OpenURL(url);
         });
 
-        retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(25, -23), [](){
+        if(retryButton)
+            UnityEngine::GameObject::Destroy(retryButton);
+        retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(30, -24), UnityEngine::Vector2(15, 8), [](){
             retryButton->get_gameObject()->SetActive(false);
             ReplayManager::RetryPosting(replayPostCallback);
         });
         retryButton->get_gameObject()->SetActive(false);
+        retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
 
+        if(uploadStatus)
+            UnityEngine::GameObject::Destroy(uploadStatus);
         uploadStatus = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
         move(uploadStatus, 11, -32);
         resize(uploadStatus, 10, 0);
@@ -627,7 +728,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     }
 }
 
-MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, TableCell*, LeaderboardTableView* self, TableView* tableView, int row) {
+MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
     LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
 
     if (result->playerNameText->get_fontSize() > 3) {
@@ -660,7 +761,7 @@ extern "C" void load() {
     LoggerContextObject logger = getLogger().WithContext("load");
 
     QuestUI::Init();
-    QuestUI::Register::RegisterModSettingsViewController(modInfo, "BeatLeader", PreferencesDidActivate);
+    QuestUI::Register::RegisterModSettingsViewController<BeatLeader::PreferencesViewController*>(modInfo, "BeatLeader");
 
     getLogger().info("Installing hooks...");
     INSTALL_HOOK(logger, ProcessResultsSolo);
@@ -668,7 +769,6 @@ extern "C" void load() {
     INSTALL_HOOK(logger, LevelPlay);
     INSTALL_HOOK(logger, SongStart);
     INSTALL_HOOK(logger, SpawnNote);
-    INSTALL_HOOK(logger, SpawnBombNote);
     INSTALL_HOOK(logger, SpawnObstacle);
     INSTALL_HOOK(logger, NoteCut);
     INSTALL_HOOK(logger, NoteMiss);
@@ -678,6 +778,7 @@ extern "C" void load() {
     INSTALL_HOOK(logger, LevelUnpause);
     INSTALL_HOOK(logger, Tick);
     INSTALL_HOOK(logger, SwingRatingDidFinish);
+    INSTALL_HOOK(logger, LeaderboardActivate);
     INSTALL_HOOK(logger, RefreshLeaderboard);
     INSTALL_HOOK(logger, LeaderboardCellSource);
     INSTALL_HOOK(logger, Restart);

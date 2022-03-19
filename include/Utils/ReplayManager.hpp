@@ -15,10 +15,10 @@ enum ReplayUploadStatus {
 class ReplayManager
 {
 private:
-   static void TryPostReplay(string name, int tryIndex, std::function<void(ReplayUploadStatus, std::string)> finished);
+   static void TryPostReplay(string name, int tryIndex, std::function<void(ReplayUploadStatus, std::string, float)> finished);
    static string lastReplayFilename;
    static float GetTotalMultiplier(string modifiers);
 public:
-   static void ProcessReplay(Replay* replay, std::function<void(ReplayUploadStatus, std::string)> finished);
-   static void RetryPosting(std::function<void(ReplayUploadStatus, std::string)> finished);
+   static void ProcessReplay(Replay* replay, std::function<void(ReplayUploadStatus, std::string, float)> finished, bool isOst);
+   static void RetryPosting(std::function<void(ReplayUploadStatus, std::string, float)> finished);
 };
