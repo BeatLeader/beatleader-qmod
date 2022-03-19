@@ -19,6 +19,6 @@ private:
    static string lastReplayFilename;
    static float GetTotalMultiplier(string modifiers);
 public:
-   static void ProcessReplay(Replay* replay, std::function<void(ReplayUploadStatus, std::string, float)> finished);
+   static void ProcessReplay(Replay* replay, std::function<void(ReplayUploadStatus, std::string, float)> finished, bool isOst);
    static void RetryPosting(std::function<void(ReplayUploadStatus, std::string, float)> finished);
 };

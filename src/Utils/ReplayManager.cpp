@@ -11,7 +11,7 @@
 
 string ReplayManager::lastReplayFilename = "";
 
-void ReplayManager::ProcessReplay(Replay* replay, std::function<void(ReplayUploadStatus, std::string, float)> finished) {
+void ReplayManager::ProcessReplay(Replay* replay, std::function<void(ReplayUploadStatus, std::string, float)> finished, bool isOst) {
 
     string filename = FileManager::ToFilePath(replay);
 
@@ -33,6 +33,8 @@ void ReplayManager::ProcessReplay(Replay* replay, std::function<void(ReplayUploa
         finished(ReplayUploadStatus::finished, "<color=#008000ff>Failed attempt was saved!</color>", 0);
         return; 
     }
+    if(isOst)
+        return;
     if(PlayerController::currentPlayer != NULL)
         TryPostReplay(filename, 0, finished);
 }

@@ -92,6 +92,7 @@
 #include "GlobalNamespace/PlatformLeaderboardsModel_ScoresScope.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/IBeatmapLevel.hpp"
+#include "GlobalNamespace/IBeatmapLevelData.hpp"
 #include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
@@ -170,12 +171,16 @@ extern "C" void setup(ModInfo& info) {
     getLogger().info("Completed setup!");
 }
 
+bool isOst = false;
+
 void collectMapData(StandardLevelScenesTransitionSetupDataSO* self, ::StringW gameMode, IDifficultyBeatmap* difficultyBeatmap, IPreviewBeatmapLevel* previewBeatmapLevel, OverrideEnvironmentSettings* overrideEnvironmentSettings, ColorScheme* overrideColorScheme, GameplayModifiers* gameplayModifiers, PlayerSpecificSettings* playerSpecificSettings, PracticeSettings* practiceSettings, ::StringW backButtonText, bool useTestNoteCutSoundEffects) {
     EnvironmentInfoSO* environmentInfoSO = BeatmapEnvironmentHelper::GetEnvironmentInfo(difficultyBeatmap);
     if (overrideEnvironmentSettings != NULL && environmentInfoSO != NULL && overrideEnvironmentSettings->overrideEnvironments)
     {
         environmentInfoSO = overrideEnvironmentSettings->GetOverrideEnvironmentInfoForType(environmentInfoSO->environmentType);
     }
+    isOst = !previewBeatmapLevel->get_levelID().starts_with("custom_level");
+
     mapEnhancer.difficultyBeatmap = difficultyBeatmap;
     mapEnhancer.previewBeatmapLevel = previewBeatmapLevel;
     mapEnhancer.gameplayModifiers = gameplayModifiers;
@@ -206,7 +211,6 @@ void levelStarted() {
     _currentPause = NULL;
 
     replay = new Replay();
-
     replay->info->version = modInfo.version;
     replay->info->gameVersion = (string)UnityEngine::Application::get_version();
 
@@ -262,7 +266,7 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
     switch (levelCompletionResults->levelEndStateType)
     {
         case LevelCompletionResults::LevelEndStateType::Cleared:
-            ReplayManager::ProcessReplay(replay, replayPostCallback);
+            ReplayManager::ProcessReplay(replay, replayPostCallback, isOst);
             break;
         case LevelCompletionResults::LevelEndStateType::Failed:
             if (levelCompletionResults->levelEndAction != LevelCompletionResults::LevelEndAction::Restart)
@@ -272,7 +276,7 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
                     QuestUI::MainThreadScheduler::Schedule([description] {
                         uploadStatus->SetText(description);
                     });
-                });
+                }, isOst);
             }
             break;
     }
@@ -580,24 +584,42 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
             self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
         });
-        plvc = self;
-        if(playerInfo)
-            UnityEngine::GameObject::Destroy(playerInfo);
-        playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
-        move(playerInfo, 5, -26);
-        if (PlayerController::currentPlayer != NULL) {
-            updatePlayerInfoLabel();
-        }
-
-        if(websiteLink)
-            UnityEngine::GameObject::Destroy(websiteLink);
-        websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12), []() {
-            string url = "https://beatleader.xyz/";
+        if (uploadStatus == NULL) {
+            plvc = self;
+            if(playerInfo)
+                UnityEngine::GameObject::Destroy(playerInfo);
+            playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
+            move(playerInfo, 5, -26);
             if (PlayerController::currentPlayer != NULL) {
-                url += "u/" + PlayerController::currentPlayer->id;
+                updatePlayerInfoLabel();
             }
-            UnityEngine::Application::OpenURL(url);
-        });
+
+            if(websiteLink)
+                UnityEngine::GameObject::Destroy(websiteLink);
+            websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12), []() {
+                string url = "https://beatleader.xyz/";
+                if (PlayerController::currentPlayer != NULL) {
+                    url += "u/" + PlayerController::currentPlayer->id;
+                }
+                UnityEngine::Application::OpenURL(url);
+            });
+            if(retryButton)
+                UnityEngine::GameObject::Destroy(retryButton);
+            retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(30, -24), UnityEngine::Vector2(15, 8), [](){
+                retryButton->get_gameObject()->SetActive(false);
+                ReplayManager::RetryPosting(replayPostCallback);
+            });
+            retryButton->get_gameObject()->SetActive(false);
+            retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
+
+            if(uploadStatus)
+                UnityEngine::GameObject::Destroy(uploadStatus);
+            uploadStatus = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
+            move(uploadStatus, 11, -32);
+            resize(uploadStatus, 10, 0);
+            uploadStatus->set_fontSize(3);
+            uploadStatus->set_richText(true);
+        }
         return;
     }
     string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
