@@ -16,3 +16,4 @@ qpm_defines.cmake
 ndkpath.txt
 *.log
 log.txt
+cmake-build-debug/
