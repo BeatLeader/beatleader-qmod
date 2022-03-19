@@ -29,6 +29,11 @@
 #include "HMUI/TableCell.hpp"
 #include "HMUI/IconSegmentedControl.hpp"
 #include "HMUI/IconSegmentedControl_DataItem.hpp"
+#include "HMUI/CurvedCanvasSettings.hpp"
+#include "HMUI/Screen.hpp"
+#include "HMUI/ViewController.hpp"
+#include "HMUI/ViewController_AnimationType.hpp"
+#include "HMUI/CurvedTextMeshPro.hpp"
 
 #include "TMPro/TMP_Text.hpp"
 #include "TMPro/TextMeshProUGUI.hpp"
@@ -37,11 +42,16 @@
 #include "UnityEngine/Resources.hpp"
 #include "UnityEngine/RectTransform.hpp"
 #include "UnityEngine/Time.hpp"
+#include "UnityEngine/SceneManagement/SceneManager.hpp"
 #include "UnityEngine/UI/LayoutElement.hpp"
+#include "UnityEngine/Canvas.hpp"
+#include "UnityEngine/AdditionalCanvasShaderChannels.hpp"
+#include "UnityEngine/UI/CanvasScaler.hpp"
 
 #include "System/Action_1.hpp"
 #include "System/Threading/Tasks/Task.hpp"
 #include "System/Threading/Tasks/Task_1.hpp"
+#include "System/Collections/Generic/HashSet_1.hpp"
 
 #include "GlobalNamespace/NoteController.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
@@ -57,6 +67,7 @@
 #include "GlobalNamespace/BeatmapObjectSpawnMovementData.hpp"
 #include "GlobalNamespace/BeatmapObjectData.hpp"
 #include "GlobalNamespace/NoteData.hpp"
+#include "GlobalNamespace/CutScoreBuffer.hpp"
 #include "GlobalNamespace/BeatmapObjectSpawnMovementData_NoteSpawnData.hpp"
 #include "GlobalNamespace/ObstacleData.hpp"
 #include "GlobalNamespace/BeatmapObjectSpawnMovementData_ObstacleSpawnData.hpp"
@@ -82,11 +93,15 @@
 #include "GlobalNamespace/PlatformLeaderboardsModel_ScoresScope.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/IBeatmapLevel.hpp"
+#include "GlobalNamespace/IBeatmapLevelData.hpp"
 #include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
+#include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 #include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
 #include "GlobalNamespace/LeaderboardTableCell.hpp"
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
+
+#include "VRUIControls/VRGraphicRaycaster.hpp"
 
 #include <map>
 #include <chrono>
@@ -130,7 +145,8 @@ static System::Action_1<float>* _heightEvent;
 TMPro::TextMeshProUGUI* uploadStatus = NULL;
 TMPro::TextMeshProUGUI* playerInfo = NULL;
 UnityEngine::UI::Button* retryButton = NULL;
-HMUI::ImageView* websiteLink = NULL;
+HMUI::ImageView* websiteLinkImage = NULL;
+UnityEngine::UI::Button* websiteLinkButton = NULL;
 PlatformLeaderboardViewController* plvc = NULL;
 
 // Loads the config from disk using our modInfo, then returns it for use
@@ -156,12 +172,16 @@ extern "C" void setup(ModInfo& info) {
     getLogger().info("Completed setup!");
 }
 
+bool isOst = false;
+
 void collectMapData(StandardLevelScenesTransitionSetupDataSO* self, ::Il2CppString* gameMode, IDifficultyBeatmap* difficultyBeatmap, IPreviewBeatmapLevel* previewBeatmapLevel, OverrideEnvironmentSettings* overrideEnvironmentSettings, ColorScheme* overrideColorScheme, GameplayModifiers* gameplayModifiers, PlayerSpecificSettings* playerSpecificSettings, PracticeSettings* practiceSettings, ::Il2CppString* backButtonText, bool useTestNoteCutSoundEffects) {
     EnvironmentInfoSO* environmentInfoSO = BeatmapEnvironmentHelper::GetEnvironmentInfo(difficultyBeatmap);
     if (overrideEnvironmentSettings != NULL && environmentInfoSO != NULL && overrideEnvironmentSettings->overrideEnvironments)
     {
         environmentInfoSO = overrideEnvironmentSettings->GetOverrideEnvironmentInfoForType(environmentInfoSO->environmentType);
     }
+    isOst = !to_utf8(csstrtostr(previewBeatmapLevel->get_levelID())).starts_with("custom_level");
+
     mapEnhancer.difficultyBeatmap = difficultyBeatmap;
     mapEnhancer.previewBeatmapLevel = previewBeatmapLevel;
     mapEnhancer.gameplayModifiers = gameplayModifiers;
@@ -189,8 +209,9 @@ void OnPlayerHeightChange(float height)
 }
 
 void levelStarted(SinglePlayerLevelSelectionFlowCoordinator* self) {
-    replay = new Replay();
+    _currentPause = NULL;
 
+    replay = new Replay();
     replay->info->version = modInfo.version;
     replay->info->gameVersion = to_utf8(csstrtostr(UnityEngine::Application::get_version()));
 
@@ -216,22 +237,24 @@ MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLeve
     levelStarted(self);
 }
 
-void replayPostCallback(ReplayUploadStatus status, string description) {
+void replayPostCallback(ReplayUploadStatus status, string description, float progress) {
     if (status == ReplayUploadStatus::finished) {
         PlayerController::Refresh();
     }
-    QuestUI::MainThreadScheduler::Schedule([status, description] {
+    QuestUI::MainThreadScheduler::Schedule([status, description, progress] {
         uploadStatus->SetText(il2cpp_utils::createcsstr(description));
         switch (status)
         {
-        case ReplayUploadStatus::finished:
-            leaderboardViewController->Refresh(true, true);
-            break;
-        case ReplayUploadStatus::error:
-            retryButton->get_gameObject()->SetActive(true);
-            break;
-        case ReplayUploadStatus::inProgress:
-            break;
+            case ReplayUploadStatus::finished:
+                leaderboardViewController->Refresh(true, true);
+                break;
+            case ReplayUploadStatus::error:
+                retryButton->get_gameObject()->SetActive(true);
+                break;
+            case ReplayUploadStatus::inProgress:
+                if(progress >= 100)
+                    uploadStatus->SetText(il2cpp_utils::createcsstr("<color=#b103fcff>Posting replay: Finishing up..."));
+                break;
         }
     });
 }
@@ -245,17 +268,17 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
     switch (levelCompletionResults->levelEndStateType)
     {
         case LevelCompletionResults::LevelEndStateType::Cleared:
-            ReplayManager::ProcessReplay(replay, replayPostCallback);
+            ReplayManager::ProcessReplay(replay, replayPostCallback, isOst);
             break;
         case LevelCompletionResults::LevelEndStateType::Failed:
             if (levelCompletionResults->levelEndAction != LevelCompletionResults::LevelEndAction::Restart)
             {
                 replay->info->failTime = audioTimeSyncController->get_songTime();
-                ReplayManager::ProcessReplay(replay, [](bool finished, string description) {
+                ReplayManager::ProcessReplay(replay, [](bool finished, string description, float progress) {
                     QuestUI::MainThreadScheduler::Schedule([description] {
                         uploadStatus->SetText(il2cpp_utils::createcsstr(description));
                     });
-                });
+                }, isOst);
             }
             break;
     }
@@ -396,9 +419,11 @@ MAKE_HOOK_MATCH(ComboMultiplierChanged, &ScoreController::NotifyForChange, void,
 MAKE_HOOK_MATCH(BeatMapStart, &BeatmapObjectSpawnController::Start, void, BeatmapObjectSpawnController* self) {
     BeatMapStart(self);
 
-    replay->info->jumpDistance = self->get_jumpDistance();
-    _currentPause = NULL;
-    _currentWallEvent = NULL;
+    if(replay) {
+        replay->info->jumpDistance = self->get_jumpDistance();
+        _currentPause = NULL;
+        _currentWallEvent = NULL;
+    }
 }
 
 MAKE_HOOK_MATCH(LevelPause, &PauseMenuManager::ShowMenu, void, PauseMenuManager* self) {
@@ -415,12 +440,13 @@ MAKE_HOOK_MATCH(LevelUnpause, &PauseMenuManager::HandleResumeFromPauseAnimationD
     _currentPause->duration = (long)chrono::duration_cast<std::chrono::seconds>(chrono::steady_clock::now() - _pauseStartTime).count();
     replay->pauses.push_back(_currentPause);
     _currentPause = NULL;
+    getLogger().info("current pause is now null");
 }
 
 MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
     Tick(trans);
+    if (audioTimeSyncController != NULL && _currentPause == NULL && replay) {
 
-    if (audioTimeSyncController != NULL && _currentPause == NULL) {
         Frame* frame = new Frame();
         frame->time = audioTimeSyncController->get_songTime();
         frame->fps = 1.0f / UnityEngine::Time::get_deltaTime();
@@ -511,7 +537,7 @@ void updatePlayerInfoLabel() {
                 countryControl->set_icon(GetCountryIcon(player->country));
                 plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
             }
-            
+
         } else {
             playerInfo->SetText(il2cpp_utils::createcsstr(player->name + ", you are ready!"));
         }
@@ -520,16 +546,92 @@ void updatePlayerInfoLabel() {
     }
 }
 
+MAKE_HOOK_MATCH(LeaderboardActivate, &PlatformLeaderboardViewController::DidActivate, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHeirarchy, bool screenSystemEnabling) {
+    LeaderboardActivate(self, firstActivation, addedToHeirarchy, screenSystemEnabling);
+    if(firstActivation) {
+        HMUI::ImageView* imageView = self->get_gameObject()->get_transform()->Find(il2cpp_utils::createcsstr("HeaderPanel"))->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
+        imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
+        imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
+        imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
+    }
+}
+
+//Work in progress to get stuff above leaderboard
+UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootView, UnityEngine::Vector2 screenSize, UnityEngine::Vector3 position, float curvatureRadius) {
+    auto gameObject = QuestUI::BeatSaberUI::CreateCanvas();
+    auto screen = gameObject->AddComponent<HMUI::Screen*>();
+    screen->rootViewController = rootView;
+    auto curvedCanvasSettings = gameObject->AddComponent<HMUI::CurvedCanvasSettings*>();
+    curvedCanvasSettings->SetRadius(curvatureRadius);
+
+    auto transform = gameObject->get_transform();
+    UnityEngine::GameObject* screenSystem = UnityEngine::GameObject::Find(il2cpp_utils::createcsstr("ScreenContainer"));
+    if(screenSystem) {
+        transform->set_position(screenSystem->get_transform()->get_position());
+        screen->get_gameObject()->GetComponent<UnityEngine::RectTransform*>()->set_sizeDelta(screenSize);
+    }
+    return gameObject;
+}
+
 MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy) {
     leaderboardViewController = self;
+
     self->scores->Clear();
     self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
 
     if (PlayerController::currentPlayer == NULL) {
-        self->loadingControl->ShowText(il2cpp_utils::createcsstr("Please sign up or log in the preferences"), true);
+        self->loadingControl->ShowText(il2cpp_utils::createcsstr("Please sign up or log in mod settings!"), true);
         return;
     }
+
     IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
+    if(!to_utf8(csstrtostr(levelData->get_levelID())).starts_with("custom_level")) {
+        QuestUI::MainThreadScheduler::Schedule([self] {
+            self->loadingControl->Hide();
+            self->hasScoresData = false;
+            self->loadingControl->ShowText(il2cpp_utils::createcsstr("Leaderboards for this map are not supported!"), false);
+            self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
+        });
+        if (uploadStatus == NULL) {
+            plvc = self;
+            if(playerInfo)
+                UnityEngine::GameObject::Destroy(playerInfo);
+            playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
+            move(playerInfo, 5, -26);
+            if (PlayerController::currentPlayer != NULL) {
+                updatePlayerInfoLabel();
+            }
+
+            if(websiteLinkImage) UnityEngine::GameObject::Destroy(websiteLinkImage);
+            if(websiteLinkButton) UnityEngine::GameObject::Destroy(websiteLinkButton);
+
+            websiteLinkImage = ::QuestUI::BeatSaberUI::CreateImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12));
+            websiteLinkButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "", UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12), [](){
+                string url = "https://beatleader.xyz/";
+                if (PlayerController::currentPlayer != NULL) {
+                    url += "u/" + PlayerController::currentPlayer->id;
+                }
+                UnityEngine::Application::OpenURL(il2cpp_utils::createcsstr(url));
+            });
+            if(retryButton)
+                UnityEngine::GameObject::Destroy(retryButton);
+            retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(30, -24), UnityEngine::Vector2(15, 8), [](){
+                retryButton->get_gameObject()->SetActive(false);
+                ReplayManager::RetryPosting(replayPostCallback);
+            });
+            retryButton->get_gameObject()->SetActive(false);
+            retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
+
+            if(uploadStatus)
+                UnityEngine::GameObject::Destroy(uploadStatus);
+            uploadStatus = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
+            move(uploadStatus, 11, -32);
+            resize(uploadStatus, 10, 0);
+            uploadStatus->set_fontSize(3);
+            uploadStatus->set_richText(true);
+        }
+        return;
+    }
     string hash = regex_replace(to_utf8(csstrtostr(levelData->get_levelID())), basic_regex("custom_level_"), "");
     string difficulty = MapEnhancer::DiffName(self->difficultyBeatmap->get_difficulty().value);
     string mode = to_utf8(csstrtostr(self->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName));
@@ -555,11 +657,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             QuestUI::MainThreadScheduler::Schedule([self, status] {
                 self->loadingControl->Hide();
                 self->hasScoresData = false;
-                if (status == 404) {
-                    self->loadingControl->ShowText(il2cpp_utils::createcsstr("Leaderboards for this map is not supported!"), true);
-                } else {
-                    self->loadingControl->ShowText(il2cpp_utils::createcsstr("No scores were found!"), true);
-                }
+                self->loadingControl->ShowText(il2cpp_utils::createcsstr("No scores were found!"), true);
                 
                 self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
             });
@@ -603,14 +701,18 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     
     if (uploadStatus == NULL) {
         plvc = self;
+
+        //UnityEngine::GameObject* parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(100,50), self->screen->get_transform()->get_position(), 140);
+        if(playerInfo)
+            UnityEngine::GameObject::Destroy(playerInfo);
         playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
         move(playerInfo, 5, -26);
         if (PlayerController::currentPlayer != NULL) {
             updatePlayerInfoLabel();
         }
 
-        ::QuestUI::BeatSaberUI::CreateImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12));
-        ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "", UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12), [](){
+        websiteLinkImage = ::QuestUI::BeatSaberUI::CreateImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12));
+        websiteLinkButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "", UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12), [](){
             string url = "https://beatleader.xyz/";
             if (PlayerController::currentPlayer != NULL) {
                 url += "u/" + PlayerController::currentPlayer->id;
@@ -618,12 +720,17 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             UnityEngine::Application::OpenURL(il2cpp_utils::createcsstr(url));
         });
 
-        retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(25, -23), [](){
+        if(retryButton)
+            UnityEngine::GameObject::Destroy(retryButton);
+        retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(30, -24), UnityEngine::Vector2(15, 8), [](){
             retryButton->get_gameObject()->SetActive(false);
             ReplayManager::RetryPosting(replayPostCallback);
         });
         retryButton->get_gameObject()->SetActive(false);
+        retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
 
+        if(uploadStatus)
+            UnityEngine::GameObject::Destroy(uploadStatus);
         uploadStatus = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
         move(uploadStatus, 11, -32);
         resize(uploadStatus, 10, 0);
@@ -632,7 +739,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     }
 }
 
-MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, TableCell*, LeaderboardTableView* self, TableView* tableView, int row) {
+MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
     LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
 
     if (result->playerNameText->get_fontSize() > 3) {
@@ -665,7 +772,7 @@ extern "C" void load() {
     LoggerContextObject logger = getLogger().WithContext("load");
 
     QuestUI::Init();
-    QuestUI::Register::RegisterModSettingsViewController(modInfo, "BeatLeader", PreferencesDidActivate);
+    QuestUI::Register::RegisterModSettingsViewController<BeatLeader::PreferencesViewController*>(modInfo, "BeatLeader");
 
     getLogger().info("Installing hooks...");
     INSTALL_HOOK(logger, ProcessResultsSolo);
@@ -683,6 +790,7 @@ extern "C" void load() {
     INSTALL_HOOK(logger, LevelUnpause);
     INSTALL_HOOK(logger, Tick);
     INSTALL_HOOK(logger, SwingRatingDidFinish);
+    INSTALL_HOOK(logger, LeaderboardActivate);
     INSTALL_HOOK(logger, RefreshLeaderboard);
     INSTALL_HOOK(logger, LeaderboardCellSource);
     INSTALL_HOOK(logger, Restart);

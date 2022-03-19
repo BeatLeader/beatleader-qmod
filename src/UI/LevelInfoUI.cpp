@@ -55,9 +55,13 @@ MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, v
 
     if (starsLabel == NULL) {
         starsLabel = CreateText(self->levelParamsPanel->notesCountText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
+        starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
+        starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
         starsImage = CreateImage(self->levelParamsPanel->notesCountText->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
         
         ppLabel = CreateText(self->levelParamsPanel->notesPerSecondText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
+        ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
+        ppLabel->set_fontStyle(TMPro::FontStyles::Italic);
         ppImage = CreateImage(self->levelParamsPanel->notesPerSecondText->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
     }
 

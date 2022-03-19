@@ -18,6 +18,8 @@
 using namespace QuestUI;
 using namespace std;
 
+DEFINE_TYPE(BeatLeader, PreferencesViewController);
+
 UnityEngine::UI::Button* logoutButton;
 HMUI::InputFieldView* loginField;
 HMUI::InputFieldView* passwordField;
@@ -66,12 +68,16 @@ void UpdateUI(string userID) {
     }
 }
 
-void PreferencesDidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+void BeatLeader::PreferencesViewController::DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling) {
+    errorDescription = "";
+}
+
+void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     string userID = PlayerController::currentPlayer != NULL ? PlayerController::currentPlayer->id : "";
 
     if (firstActivation) {
-        self->get_gameObject()->AddComponent<HMUI::Touchable*>();
-        UnityEngine::GameObject* container = BeatSaberUI::CreateScrollableSettingsContainer(self->get_transform());
+        this->get_gameObject()->AddComponent<HMUI::Touchable*>();
+        UnityEngine::GameObject* container = BeatSaberUI::CreateScrollableSettingsContainer(this->get_transform());
 
         label1 = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Your id:", false);
         label2 = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), userID, false);
@@ -93,6 +99,11 @@ void PreferencesDidActivate(HMUI::ViewController* self, bool firstActivation, bo
             password = value;
         });
         loginButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Log in", []() {
+            if (login.length() == 0 || password.length() == 0) {
+                errorDescription = "Enter a username and/or password!";
+                UpdateUI("");
+                return;
+            }
             PlayerController::LogIn((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
                 if (userID.length() == 0) {
                     errorDescription = PlayerController::lastErrorDescription;
@@ -107,6 +118,11 @@ void PreferencesDidActivate(HMUI::ViewController* self, bool firstActivation, bo
             });});
         });
         signupButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Sign up", []() {
+            if (login.length() == 0 || password.length() == 0) {
+                errorDescription = "Enter a username and/or password!";
+                UpdateUI("");
+                return;
+            }
             PlayerController::SignUp((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
                 if (userID.length() == 0) {
                     errorDescription = PlayerController::lastErrorDescription;
@@ -121,7 +137,7 @@ void PreferencesDidActivate(HMUI::ViewController* self, bool firstActivation, bo
             });});
         });
         errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "", false);
-        label3 = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Type any login and password to sign up\nor log in if you created account.\nYou'll receive the profile after at least one score posted!\nAfter this you can change pfp and avatar on the website", false);
+        label3 = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "To sign up, enter your login information.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile picture on the website.", false);
     }
 
     UpdateUI(userID);
