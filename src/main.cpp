@@ -258,7 +258,7 @@ void replayPostCallback(ReplayUploadStatus status, string description, float pro
 }
 
 void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IDifficultyBeatmap* difficultyBeatmap, bool practice) {
-    replay->info->score = levelCompletionResults->modifiedScore;
+    replay->info->score = levelCompletionResults->multipliedScore;
 
     mapEnhancer.energy = levelCompletionResults->energy;
     mapEnhancer.Enhance(replay);
