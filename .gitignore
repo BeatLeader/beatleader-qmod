@@ -13,3 +13,7 @@ qpm.shared.json
 ndkpath.txt
 extern.cmake
 qpm_defines.cmake
+ndkpath.txt
+*.log
+log.txt
+cmake-build-debug/
