@@ -54,10 +54,10 @@ MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, v
     LevelRefreshContent(self);
 
     if (starsLabel == NULL) {
-        starsLabel = CreateText(self->levelParamsPanel->notesCountText->get_transform(), "", false, UnityEngine::Vector2(24, 3));
+        starsLabel = CreateText(self->levelParamsPanel->notesCountText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
         starsImage = CreateImage(self->levelParamsPanel->notesCountText->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
-
-        ppLabel = CreateText(self->levelParamsPanel->notesPerSecondText->get_transform(), "", false, UnityEngine::Vector2(24, 3));
+        
+        ppLabel = CreateText(self->levelParamsPanel->notesPerSecondText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
         ppImage = CreateImage(self->levelParamsPanel->notesPerSecondText->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
     }
 
@@ -96,4 +96,8 @@ void SetupLevelInfoUI() {
     LoggerContextObject logger = getLogger().WithContext("load");
 
     INSTALL_HOOK(logger, LevelRefreshContent);
+}
+
+void ResetLevelInfoUI() {
+    starsLabel = NULL;
 }
