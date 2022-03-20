@@ -594,16 +594,11 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
         });
         if (uploadStatus == NULL) {
             plvc = self;
-            if(playerInfo)
-                UnityEngine::GameObject::Destroy(playerInfo);
             playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
             move(playerInfo, 5, -26);
             if (PlayerController::currentPlayer != NULL) {
                 updatePlayerInfoLabel();
             }
-
-            if(websiteLinkImage) UnityEngine::GameObject::Destroy(websiteLinkImage);
-            if(websiteLinkButton) UnityEngine::GameObject::Destroy(websiteLinkButton);
 
             websiteLinkImage = ::QuestUI::BeatSaberUI::CreateImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12));
             websiteLinkButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "", UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12), [](){
@@ -613,17 +608,12 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
                 }
                 UnityEngine::Application::OpenURL(il2cpp_utils::createcsstr(url));
             });
-            if(retryButton)
-                UnityEngine::GameObject::Destroy(retryButton);
             retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(30, -24), UnityEngine::Vector2(15, 8), [](){
                 retryButton->get_gameObject()->SetActive(false);
                 ReplayManager::RetryPosting(replayPostCallback);
             });
             retryButton->get_gameObject()->SetActive(false);
             retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
-
-            if(uploadStatus)
-                UnityEngine::GameObject::Destroy(uploadStatus);
             uploadStatus = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
             move(uploadStatus, 11, -32);
             resize(uploadStatus, 10, 0);
@@ -703,8 +693,6 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
         plvc = self;
 
         //UnityEngine::GameObject* parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(100,50), self->screen->get_transform()->get_position(), 140);
-        if(playerInfo)
-            UnityEngine::GameObject::Destroy(playerInfo);
         playerInfo = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
         move(playerInfo, 5, -26);
         if (PlayerController::currentPlayer != NULL) {
@@ -720,17 +708,12 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             UnityEngine::Application::OpenURL(il2cpp_utils::createcsstr(url));
         });
 
-        if(retryButton)
-            UnityEngine::GameObject::Destroy(retryButton);
         retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(self->leaderboardTableView->get_transform(), "Retry", UnityEngine::Vector2(30, -24), UnityEngine::Vector2(15, 8), [](){
             retryButton->get_gameObject()->SetActive(false);
             ReplayManager::RetryPosting(replayPostCallback);
         });
         retryButton->get_gameObject()->SetActive(false);
         retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
-
-        if(uploadStatus)
-            UnityEngine::GameObject::Destroy(uploadStatus);
         uploadStatus = ::QuestUI::BeatSaberUI::CreateText(self->leaderboardTableView->get_transform(), "", false);
         move(uploadStatus, 11, -32);
         resize(uploadStatus, 10, 0);
@@ -762,6 +745,7 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
 
     uploadStatus = NULL;
     plvc = NULL;
+    leaderboardViewController = NULL;
     ResetLevelInfoUI();
 }
 
