@@ -8,9 +8,13 @@
 #include "UnityEngine/GUIUtility.hpp"
 #include "UnityEngine/HideFlags.hpp"
 
+#include "Utils/ModConfig.hpp"
 #include "Utils/WebUtils.hpp"
 #include "API/PlayerController.hpp"
+
 #include "include/UI/PreferencesViewController.hpp"
+#include "include/UI/LevelInfoUI.hpp"
+
 #include "main.hpp"
 
 #include <string>
@@ -29,6 +33,9 @@ TMPro::TextMeshProUGUI* label1;
 TMPro::TextMeshProUGUI* label2;
 TMPro::TextMeshProUGUI* label3;
 TMPro::TextMeshProUGUI* errorDescriptionLabel;
+
+HMUI::SimpleTextDropdown* serverDropdown;
+UnityEngine::UI::Toggle* saveToggle;
 
 StringW login;
 StringW password;
@@ -137,6 +144,13 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                 UpdateUI(userID);
             });});
         });
+        serverDropdown = ::QuestUI::BeatSaberUI::CreateDropdown(container->get_transform(), "Server type", "Main", {"Main", "Test"}, [](string serverType) {
+            getModConfig().ServerType.SetValue(serverType);
+            WebUtils::refresh_urls();
+            resetStars();
+            PlayerController::Refresh();
+        });
+        saveToggle = AddConfigValueToggle(container->get_transform(), getModConfig().Save);
         errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "", false);
         label3 = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "To sign up, enter your login information.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile picture on the website.", false);
     }

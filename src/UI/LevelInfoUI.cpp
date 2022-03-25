@@ -19,7 +19,6 @@
 #include "include/Assets/Sprites.hpp"
 #include "include/UI/LevelInfoUI.hpp"
 #include "include/Utils/WebUtils.hpp"
-#include "include/Utils/constants.hpp"
 #include "include/Utils/StringUtils.hpp"
 #include "include/Enhancers/MapEnhancer.hpp"
 #include "main.hpp"
@@ -79,7 +78,7 @@ MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, v
         starsLabel->SetText(to_string_wprecision(_mapInfos[key], 2));
         ppLabel->SetText(to_string_wprecision(_mapInfos[key] * 44.0f, 2));
     } else {
-        string url = API_URL + "map/hash/" + hash;
+        string url = WebUtils::API_URL + "map/hash/" + hash;
 
         WebUtils::GetJSONAsync(url, [difficulty, mode, key, hash](long status, bool error, rapidjson::Document& result){
             auto difficulties = result["difficulties"].GetArray();
@@ -104,6 +103,10 @@ void SetupLevelInfoUI() {
     LoggerContextObject logger = getLogger().WithContext("load");
 
     INSTALL_HOOK(logger, LevelRefreshContent);
+}
+
+void resetStars() {
+    _mapInfos = {};
 }
 
 void ResetLevelInfoUI() {
