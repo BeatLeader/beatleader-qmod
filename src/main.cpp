@@ -13,9 +13,10 @@
 
 #include "include/Utils/ReplayManager.hpp"
 #include "include/Utils/WebUtils.hpp"
-#include "include/Utils/constants.hpp"
 #include "include/Utils/StringUtils.hpp"
 #include "include/Utils/ModifiersManager.hpp"
+#include "include/Utils/ReplaySynchronizer.hpp"
+#include "include/Utils/ModConfig.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
@@ -24,6 +25,9 @@
 #include "questui/shared/ArrayUtil.hpp"
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+
+#include "config-utils/shared/config-utils.hpp"
+#include "custom-types/shared/register.hpp"
 
 #include "HMUI/TableView.hpp"
 #include "HMUI/TableCell.hpp"
@@ -118,6 +122,7 @@ ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the mod
 static Replay* replay;
 static MapEnhancer mapEnhancer;
 static UserEnhancer userEnhancer;
+static ReplaySynchronizer* synchronizer;
 
 AudioTimeSyncController* audioTimeSyncController;
 PlayerSpecificSettings* playerSettings;
@@ -148,12 +153,7 @@ UnityEngine::UI::Button* retryButton = NULL;
 QuestUI::ClickableImage* websiteLink = NULL;
 PlatformLeaderboardViewController* plvc = NULL;
 
-// Loads the config from disk using our modInfo, then returns it for use
-Configuration& getConfig() {
-    static Configuration config(modInfo);
-    config.Load();
-    return config;
-}
+DEFINE_CONFIG(ModConfig);
 
 // Returns a logger, useful for printing debug messages
 Logger& getLogger() {
@@ -167,7 +167,7 @@ extern "C" void setup(ModInfo& info) {
     info.version = VERSION;
     modInfo = info;
 	
-    getConfig().Load(); // Load the config file
+    getModConfig().Init(modInfo); // Load the config file
     getLogger().info("Completed setup!");
 }
 
@@ -234,11 +234,19 @@ MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLeve
     levelStarted();
 }
 
-void replayPostCallback(ReplayUploadStatus status, string description, float progress) {
+void replayPostCallback(ReplayUploadStatus status, string description, float progress, int code) {
     if (status == ReplayUploadStatus::finished) {
         PlayerController::Refresh();
     }
 
+    if (synchronizer != NULL) {
+        if (code == 200) {
+            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::uptodate);
+        } else if ((code >= 400 && code < 500) || code < 0) {
+            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::shouldnotpost);
+        }
+    }
+    
     QuestUI::MainThreadScheduler::Schedule([status, description, progress] {
         uploadStatus->SetText(description);
         switch (status)
@@ -266,17 +274,17 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
     switch (levelCompletionResults->levelEndStateType)
     {
         case LevelCompletionResults::LevelEndStateType::Cleared:
-            ReplayManager::ProcessReplay(replay, replayPostCallback, isOst);
+            ReplayManager::ProcessReplay(replay, isOst, replayPostCallback);
             break;
         case LevelCompletionResults::LevelEndStateType::Failed:
             if (levelCompletionResults->levelEndAction != LevelCompletionResults::LevelEndAction::Restart)
             {
                 replay->info->failTime = audioTimeSyncController->get_songTime();
-                ReplayManager::ProcessReplay(replay, [](bool finished, string description, float progress) {
+                ReplayManager::ProcessReplay(replay, isOst, [](ReplayUploadStatus finished, string description, float progress, int code) {
                     QuestUI::MainThreadScheduler::Schedule([description] {
                         uploadStatus->SetText(description);
                     });
-                }, isOst);
+                });
             }
             break;
     }
@@ -595,7 +603,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             if(websiteLink)
                 UnityEngine::GameObject::Destroy(websiteLink);
             websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12), []() {
-                string url = "https://beatleader.xyz/";
+                string url = WebUtils::WEB_URL;
                 if (PlayerController::currentPlayer != NULL) {
                     url += "u/" + PlayerController::currentPlayer->id;
                 }
@@ -623,7 +631,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
     string difficulty = MapEnhancer::DiffName(self->difficultyBeatmap->get_difficulty().value);
     string mode = (string)self->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
-    string url = API_URL + "scores/" + hash + "/" + difficulty + "/" + mode;
+    string url = WebUtils::API_URL + "scores/" + hash + "/" + difficulty + "/" + mode;
 
     switch (PlatformLeaderboardViewController::_get__scoresScope())
     {
@@ -653,6 +661,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
         }
 
         int selectedScore = 10;
+        int currentScoreValue = 0;
         for (int index = 0; index < 10; ++index)
         {
             if (index < (int)scores.Size())
@@ -665,6 +674,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
 
                 if (nameLabel.compare(PlayerController::currentPlayer->name) == 0) {
                     selectedScore = index;
+                    currentScoreValue = score["modifiedScore"].GetInt();
                 }
 
                 LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
@@ -702,7 +712,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
         if(websiteLink)
             UnityEngine::GameObject::Destroy(websiteLink);
         websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(self->leaderboardTableView->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(-33, -24), UnityEngine::Vector2(12, 12), []() {
-            string url = "https://beatleader.xyz/";
+            string url = WebUtils::WEB_URL;
             if (PlayerController::currentPlayer != NULL) {
                 url += "u/" + PlayerController::currentPlayer->id;
             }
@@ -789,6 +799,7 @@ extern "C" void load() {
     SetupModifiersUI();
 
     PlayerController::playerChanged = [](Player* updated) {
+        synchronizer = new ReplaySynchronizer();
         QuestUI::MainThreadScheduler::Schedule([] {
             if (playerInfo != NULL) {
                 updatePlayerInfoLabel();

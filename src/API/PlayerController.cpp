@@ -1,5 +1,4 @@
 #include "include/API/PlayerController.hpp"
-#include "include/Utils/constants.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/main.hpp"
 
@@ -27,12 +26,12 @@ function<void(Player*)> PlayerController::playerChanged = [](Player* player) {
 
 string PlayerController::RefreshOnline() {
     string result = "";
-    WebUtils::Get(API_URL + "user/id", result);
+    WebUtils::Get(WebUtils::API_URL + "user/id", result);
     if (result.length() > 0) {
         currentPlayer = new Player();
         currentPlayer->id = result;
 
-        WebUtils::GetJSONAsync(API_URL + "player/" + result, [](long status, bool error, rapidjson::Document& result){
+        WebUtils::GetJSONAsync(WebUtils::API_URL + "player/" + result, [](long status, bool error, rapidjson::Document& result){
             if (status == 200) {
                 currentPlayer = new Player(result);
                 playerChanged(currentPlayer);
@@ -57,7 +56,7 @@ string PlayerController::Refresh() {
 void PlayerController::SignUp(string login, string password, std::function<void(std::string)> finished) {
     lastErrorDescription = "";
 
-    WebUtils::PostFormAsync(API_URL + "signinoculus", "signup", login, password, [finished] (long statusCode, string error) {
+    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", "signup", login, password, [finished] (long statusCode, string error) {
         string result = "";
         if (statusCode == 200) {
             result = Refresh();
@@ -72,7 +71,7 @@ void PlayerController::SignUp(string login, string password, std::function<void(
 void PlayerController::LogIn(string login, string password, std::function<void(std::string)> finished) {
     lastErrorDescription = "";
 
-    WebUtils::PostFormAsync(API_URL + "signinoculus", "login", login, password, [finished] (long statusCode, string error) {
+    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", "login", login, password, [finished] (long statusCode, string error) {
         string result = "";
         if (statusCode == 200) {
             result = Refresh();
@@ -87,9 +86,9 @@ void PlayerController::LogIn(string login, string password, std::function<void(s
 
 bool PlayerController::LogOut() {
     string result = "";
-    WebUtils::Get(API_URL + "signout", result);
+    WebUtils::Get(WebUtils::API_URL + "signout", result);
     lastErrorDescription = result;
-    WebUtils::Get(API_URL + "user/id", result);
+    WebUtils::Get(WebUtils::API_URL + "user/id", result);
     if (result.length() == 0) {
         currentPlayer = NULL;
         playerChanged(currentPlayer);

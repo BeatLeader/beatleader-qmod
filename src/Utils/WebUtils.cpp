@@ -1,5 +1,6 @@
 #include "main.hpp"
 #include "Utils/WebUtils.hpp"
+#include "Utils/ModConfig.hpp"
 
 #include "libcurl/shared/curl.h"
 #include "libcurl/shared/easy.h"
@@ -12,7 +13,20 @@
 #define X_BSSB "X-BSSB: ✔"
 
 namespace WebUtils {
-    std::string GameVersion = "Unknown";
+    std::string GameVersion = "1.19.1";
+
+    std::string API_URL = "https://api.beatleader.xyz/";
+    std::string WEB_URL = "https://beatleader.xyz/";
+
+    void refresh_urls() {
+        if (getModConfig().ServerType.GetValue() == "Test") {
+            API_URL = "https://blstage.azurewebsites.net/";
+            WEB_URL = "https://agitated-ptolemy-7d772c.netlify.app/";
+        } else {
+            API_URL = "https://api.beatleader.xyz/";
+            WEB_URL = "https://beatleader.xyz/";
+        }
+    }
 
     //https://stackoverflow.com/a/55660581
     std::string query_encode(const std::string& s)

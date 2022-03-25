@@ -13,12 +13,14 @@ enum ReplayUploadStatus {
 };
 
 class ReplayManager
-{
-private:
-   static void TryPostReplay(string name, int tryIndex, std::function<void(ReplayUploadStatus, std::string, float)> finished);
+{  
+public:
+   static void ProcessReplay(Replay* replay, bool isOst, std::function<void(ReplayUploadStatus, std::string, float, int)> finished);
+   static void RetryPosting(std::function<void(ReplayUploadStatus, std::string, float, int)> finished);
+
+   static void TryPostReplay(string name, int tryIndex, std::function<void(ReplayUploadStatus, std::string, float, int)> finished);
    static string lastReplayFilename;
    static float GetTotalMultiplier(string modifiers);
-public:
-   static void ProcessReplay(Replay* replay, std::function<void(ReplayUploadStatus, std::string, float)> finished, bool isOst);
-   static void RetryPosting(std::function<void(ReplayUploadStatus, std::string, float)> finished);
+
+   int GetLocalScore(string filename);
 };

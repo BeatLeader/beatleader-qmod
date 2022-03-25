@@ -5,6 +5,10 @@
 
 namespace WebUtils {
     extern std::string GameVersion;
+    extern std::string API_URL;
+    extern std::string WEB_URL;
+
+    void refresh_urls();
 
     std::optional<rapidjson::Document> GetJSON(std::string url);
 
