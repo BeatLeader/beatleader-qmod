@@ -1,10 +1,6 @@
 #include "include/Models/Player.hpp"
 
-Player::Player()
-{
-}
-
-Player::Player(rapidjson::Document& document) {
+Player::Player(rapidjson::GenericObject<false, rapidjson::GenericValue<rapidjson::UTF8<>>>& document) {
     id = document["id"].GetString();
     name = document["name"].GetString();
     country = document["country"].GetString();
@@ -15,6 +11,4 @@ Player::Player(rapidjson::Document& document) {
     pp = document["pp"].GetFloat();
 }
 
-Player::~Player()
-{
-}
+Player::Player() {}

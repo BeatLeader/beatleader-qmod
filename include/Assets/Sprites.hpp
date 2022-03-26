@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <map>
+
 #include "UnityEngine/Sprite.hpp"
 
 using namespace std;
@@ -10,12 +12,19 @@ using namespace std;
 /// </summary>
 class Sprites {
     static const string BeatLeaderB64;
-
     static const string StarB64;
-
     static const string GraphB64;
+    static const string DownB64;
+    static const string UpB64;
+
+    static map<string, UnityEngine::Sprite*> iconCache;
 public:
     static UnityEngine::Sprite* get_BeatLeaderIcon();
     static UnityEngine::Sprite* get_StarIcon();
     static UnityEngine::Sprite* get_GraphIcon();
+    static UnityEngine::Sprite* get_DownIcon();
+    static UnityEngine::Sprite* get_UpIcon();
+
+    static void get_Icon(string url, std::function<void(UnityEngine::Sprite*)> completion);
+    static void GetCountryIcon(string country, std::function<void(UnityEngine::Sprite*)> completion);
 };

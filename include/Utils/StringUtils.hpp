@@ -13,3 +13,9 @@ inline string to_string_wprecision(const T a_value, const int n = 6)
     out << std::fixed << a_value;
     return out.str();
 }
+
+inline char asciitolower(char in) {
+    if (in <= 'Z' && in >= 'A')
+        return in - ('Z' - 'z');
+    return in;
+}
