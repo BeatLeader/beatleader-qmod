@@ -29,7 +29,7 @@ public:
     // int Hmd;
     // string Timeset;
 
-    Player* player;
-
+    Player player;
+    Score();
     Score(rapidjson::GenericObject<false, rapidjson::GenericValue<rapidjson::UTF8<>>>& document);
 };

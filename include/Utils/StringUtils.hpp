@@ -19,3 +19,16 @@ inline char asciitolower(char in) {
         return in - ('Z' - 'z');
     return in;
 }
+
+inline string truncate(string str, size_t width, bool show_ellipsis=true)
+{
+    if (str.length() > width) {
+        if (show_ellipsis) {
+            return str.substr(0, width) + "...";
+        } else {
+            return str.substr(0, width);
+        }
+    }
+            
+    return str;
+}

@@ -147,7 +147,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         serverDropdown = ::QuestUI::BeatSaberUI::CreateDropdown(container->get_transform(), "Server type", "Main", {"Main", "Test"}, [](string serverType) {
             getModConfig().ServerType.SetValue(serverType);
             WebUtils::refresh_urls();
-            resetStars();
+            LevelInfoUI::resetStars();
             PlayerController::Refresh();
         });
         saveToggle = AddConfigValueToggle(container->get_transform(), getModConfig().Save);

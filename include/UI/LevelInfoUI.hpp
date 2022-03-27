@@ -1,5 +1,8 @@
 #pragma once
 
-void SetupLevelInfoUI();
-void ResetLevelInfoUI();
-void resetStars();
+namespace LevelInfoUI {
+    void setup();
+    void reset();
+
+    void resetStars();
+}
