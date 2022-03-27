@@ -13,7 +13,7 @@
   "dependencies": [
     {
       "id": "beatsaber-hook",
-      "versionRange": "*",
+      "versionRange": "=3.6.8",
       "additionalData": {
         "extraFiles": [
           "src/inline-hook"
