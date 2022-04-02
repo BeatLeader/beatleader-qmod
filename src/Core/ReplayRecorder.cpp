@@ -7,56 +7,20 @@
 #include "System/Collections/Generic/HashSet_1.hpp"
 
 #include "include/Models/Replay.hpp"
-#include "include/Models/Score.hpp"
-#include "include/API/PlayerController.hpp"
-#include "include/Assets/Sprites.hpp"
 
 #include "include/Enhancers/MapEnhancer.hpp"
 #include "include/Enhancers/UserEnhancer.hpp"
 
-#include "include/UI/PreferencesViewController.hpp"
-#include "include/UI/LevelInfoUI.hpp"
-#include "include/UI/ModifiersUI.hpp"
-
 #include "include/Utils/ReplayManager.hpp"
-#include "include/Utils/WebUtils.hpp"
-#include "include/Utils/StringUtils.hpp"
-#include "include/Utils/ModifiersManager.hpp"
-#include "include/Utils/ReplaySynchronizer.hpp"
-#include "include/Utils/ModConfig.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
-
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/ArrayUtil.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
 #include "config-utils/shared/config-utils.hpp"
 #include "custom-types/shared/register.hpp"
 
-#include "HMUI/TableView.hpp"
-#include "HMUI/TableCell.hpp"
-#include "HMUI/IconSegmentedControl.hpp"
-#include "HMUI/IconSegmentedControl_DataItem.hpp"
-#include "HMUI/CurvedCanvasSettings.hpp"
-#include "HMUI/Screen.hpp"
-#include "HMUI/ViewController.hpp"
-#include "HMUI/ViewController_AnimationType.hpp"
-#include "HMUI/CurvedTextMeshPro.hpp"
-
-#include "TMPro/TMP_Text.hpp"
-#include "TMPro/TextMeshProUGUI.hpp"
-
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/Resources.hpp"
 #include "UnityEngine/Time.hpp"
-#include "UnityEngine/SceneManagement/SceneManager.hpp"
-#include "UnityEngine/UI/LayoutElement.hpp"
-#include "UnityEngine/Canvas.hpp"
-#include "UnityEngine/AdditionalCanvasShaderChannels.hpp"
-#include "UnityEngine/UI/CanvasScaler.hpp"
 
 #include "GlobalNamespace/NoteController.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
@@ -89,13 +53,7 @@
 #include "GlobalNamespace/PlayerTransforms.hpp"
 #include "GlobalNamespace/PauseMenuManager.hpp"
 #include "GlobalNamespace/SaberSwingRatingCounter.hpp"
-#include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
 #include "GlobalNamespace/PlayerHeightDetector.hpp"
-#include "GlobalNamespace/PlatformLeaderboardViewController.hpp"
-#include "GlobalNamespace/LoadingControl.hpp"
-#include "GlobalNamespace/LeaderboardTableView.hpp"
-#include "GlobalNamespace/LeaderboardTableView_ScoreData.hpp"
-#include "GlobalNamespace/PlatformLeaderboardsModel_ScoresScope.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/IBeatmapLevel.hpp"
 #include "GlobalNamespace/IBeatmapLevelData.hpp"
@@ -103,10 +61,7 @@
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 #include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
-#include "GlobalNamespace/LeaderboardTableCell.hpp"
-#include "GlobalNamespace/MenuTransitionsHelper.hpp"
 
-#include "VRUIControls/VRGraphicRaycaster.hpp"
 #include "main.hpp"
 
 #include <map>
@@ -116,8 +71,6 @@
 #include <regex>
 
 using namespace GlobalNamespace;
-using namespace HMUI;
-using namespace QuestUI;
 using UnityEngine::Resources;
 
 namespace ReplayRecorder {
@@ -215,17 +168,13 @@ namespace ReplayRecorder {
         switch (levelCompletionResults->levelEndStateType)
         {
             case LevelCompletionResults::LevelEndStateType::Cleared:
-                ReplayManager::ProcessReplay(replay, isOst, replayPostCallback);
+                replayCallback(replay, MapStatus::cleared, isOst);
                 break;
             case LevelCompletionResults::LevelEndStateType::Failed:
                 if (levelCompletionResults->levelEndAction != LevelCompletionResults::LevelEndAction::Restart)
                 {
                     replay->info->failTime = audioTimeSyncController->get_songTime();
-                    ReplayManager::ProcessReplay(replay, isOst, [](ReplayUploadStatus finished, string description, float progress, int code) {
-                        QuestUI::MainThreadScheduler::Schedule([description] {
-                            uploadStatus->SetText(description);
-                        });
-                    });
+                    replayCallback(replay, MapStatus::failed, isOst);
                 }
                 break;
         }

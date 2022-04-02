@@ -21,6 +21,6 @@ public:
     void updateStatus(string path, ReplayStatus status);
 
     void Save();
-    void Process(DIR *dir);
+    void Process(DIR *dir, string dirName);
     Document statuses;
 };

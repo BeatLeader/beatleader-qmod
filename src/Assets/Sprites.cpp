@@ -1,6 +1,10 @@
 #include "Assets/Sprites.hpp"
+#include "Assets/Gif.hpp"
 #include "Utils/StringUtils.hpp"
 #include "Utils/WebUtils.hpp"
+
+#include "UnityEngine/Texture2D.hpp"
+#include "UnityEngine/SpriteMeshType.hpp"
 
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
@@ -18,9 +22,27 @@ void Sprites::get_Icon(string url, std::function<void(UnityEngine::Sprite*)> com
                 QuestUI::MainThreadScheduler::Schedule([completion, data, url] {
                     std::vector<uint8_t> bytes(data.begin(), data.end());
                     Array<uint8_t>* spriteArray = il2cpp_utils::vectorToArray(bytes);
-                    UnityEngine::Sprite* sprite = QuestUI::BeatSaberUI::ArrayToSprite(spriteArray);
-                    iconCache[url] = sprite;
-                    completion(sprite);
+                    UnityEngine::Sprite* sprite;
+                    Gif gif = Gif(spriteArray);
+                    if (gif.Parse() == 0 && gif.Slurp() == 1) {
+                        auto tex = gif.get_frame(0);
+                        sprite = UnityEngine::Sprite::Create(
+                            tex, 
+                            UnityEngine::Rect(0.0, 0.0, gif.get_width(), gif.get_height()), 
+                            UnityEngine::Vector2(0.5, 0.5), 
+                            100.0, 
+                            0, 
+                            UnityEngine::SpriteMeshType::FullRect, 
+                            UnityEngine::Vector4(0.0, 0.0, 0.0, 0.0), 
+                            false);
+                    } else {
+                        sprite = QuestUI::BeatSaberUI::ArrayToSprite(spriteArray);
+                    }
+
+                    if (sprite != NULL) {
+                        iconCache[url] = sprite;
+                        completion(sprite);
+                    }
                 });
             }
         });

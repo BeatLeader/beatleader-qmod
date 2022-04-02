@@ -78,12 +78,6 @@ extern "C" void load() {
 
     QuestUI::Init();
     QuestUI::Register::RegisterModSettingsViewController<BeatLeader::PreferencesViewController*>(modInfo, "BeatLeader");
-
-    getLogger().info("Installing hooks...");
-    INSTALL_HOOK(logger, Restart);
-
-    getLogger().info("Installed all hooks!");
-
     LeaderboardUI::setup();
     LeaderboardUI::retryCallback = []() {
         ReplayManager::RetryPosting(replayPostCallback);
@@ -112,4 +106,10 @@ extern "C" void load() {
             });
         }
     });
+
+    getLogger().info("Installing main hooks...");
+    
+    INSTALL_HOOK(logger, Restart);
+
+    getLogger().info("Installed main hooks!");
 }

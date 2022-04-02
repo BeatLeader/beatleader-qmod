@@ -1,23 +1,12 @@
 #include "include/UI/LeaderboardUI.hpp"
 
-#include "System/Action_1.hpp"
-#include "System/Threading/Tasks/Task.hpp"
-#include "System/Threading/Tasks/Task_1.hpp"
-#include "System/Collections/Generic/HashSet_1.hpp"
-
 #include "include/Models/Replay.hpp"
 #include "include/Models/Score.hpp"
 #include "include/API/PlayerController.hpp"
 #include "include/Assets/Sprites.hpp"
-
 #include "include/Enhancers/MapEnhancer.hpp"
-#include "include/Enhancers/UserEnhancer.hpp"
 
-#include "include/UI/LevelInfoUI.hpp"
-#include "include/UI/ModifiersUI.hpp"
 #include "include/UI/UIUtils.hpp"
-
-#include "include/Utils/ReplayManager.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
 #include "include/Utils/ModifiersManager.hpp"
@@ -41,11 +30,8 @@
 #include "HMUI/ViewController_AnimationType.hpp"
 #include "HMUI/CurvedTextMeshPro.hpp"
 
-#include "TMPro/TMP_Text.hpp"
-#include "TMPro/TextMeshProUGUI.hpp"
-
-#include "UnityEngine/Application.hpp"
 #include "UnityEngine/Resources.hpp"
+#include "UnityEngine/Application.hpp"
 #include "UnityEngine/Time.hpp"
 #include "UnityEngine/SceneManagement/SceneManager.hpp"
 #include "UnityEngine/UI/LayoutElement.hpp"
@@ -53,39 +39,8 @@
 #include "UnityEngine/AdditionalCanvasShaderChannels.hpp"
 #include "UnityEngine/UI/CanvasScaler.hpp"
 
-#include "GlobalNamespace/NoteController.hpp"
-#include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
-#include "GlobalNamespace/BeatmapData.hpp"
-#include "GlobalNamespace/GameplayModifiers.hpp"
-#include "GlobalNamespace/LevelCompletionResults.hpp"
-#include "GlobalNamespace/StandardLevelScenesTransitionSetupDataSO.hpp"
-#include "GlobalNamespace/BeatmapEnvironmentHelper.hpp"
-#include "GlobalNamespace/OverrideEnvironmentSettings.hpp"
-#include "GlobalNamespace/GameplayCoreInstaller.hpp"
-#include "GlobalNamespace/AudioTimeSyncController.hpp"
-#include "GlobalNamespace/BeatmapObjectSpawnMovementData.hpp"
-#include "GlobalNamespace/BeatmapObjectData.hpp"
-#include "GlobalNamespace/NoteData.hpp"
-#include "GlobalNamespace/CutScoreBuffer.hpp"
-#include "GlobalNamespace/BeatmapObjectSpawnMovementData_NoteSpawnData.hpp"
-#include "GlobalNamespace/ObstacleData.hpp"
-#include "GlobalNamespace/BeatmapObjectSpawnMovementData_ObstacleSpawnData.hpp"
-#include "GlobalNamespace/NoteController.hpp"
-#include "GlobalNamespace/ObstacleController.hpp"
-#include "GlobalNamespace/BeatmapObjectManager.hpp"
-#include "GlobalNamespace/ScoreController.hpp"
-#include "GlobalNamespace/NoteCutInfo.hpp"
-#include "GlobalNamespace/BeatmapObjectSpawnController.hpp"
-#include "GlobalNamespace/ISaberSwingRatingCounterDidChangeReceiver.hpp"
-#include "GlobalNamespace/ISaberSwingRatingCounterDidFinishReceiver.hpp"
-#include "GlobalNamespace/ISaberSwingRatingCounter.hpp"
-#include "GlobalNamespace/PlayerHeadAndObstacleInteraction.hpp"
-#include "GlobalNamespace/PlayerTransforms.hpp"
-#include "GlobalNamespace/PauseMenuManager.hpp"
-#include "GlobalNamespace/SaberSwingRatingCounter.hpp"
 #include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
-#include "GlobalNamespace/PlayerHeightDetector.hpp"
 #include "GlobalNamespace/PlatformLeaderboardViewController.hpp"
 #include "GlobalNamespace/LoadingControl.hpp"
 #include "GlobalNamespace/LeaderboardTableView.hpp"
@@ -100,14 +55,10 @@
 #include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
 #include "GlobalNamespace/LeaderboardTableCell.hpp"
 
-#include "VRUIControls/VRGraphicRaycaster.hpp"
 #include "main.hpp"
 
-#include <map>
-#include <chrono>
-#include <iostream>
-#include <sstream>
 #include <regex>
+#include <map>
 
 using namespace GlobalNamespace;
 using namespace HMUI;
@@ -130,10 +81,12 @@ namespace LeaderboardUI {
 
     int page = 1;
     static vector<Score> scoreVector = vector<Score>(10);
-    vector<HMUI::ImageView*> avatars;
+
+    map<LeaderboardTableCell*, HMUI::ImageView*> avatars;
+    map<string, int> imageRows;
 
     string generateLabel(string nameLabel, string ppLabel, string accLabel, string fcLabel) {
-        return truncate(nameLabel, 20) + "<pos=45%>" + ppLabel + "   " + accLabel + " " + fcLabel; 
+        return truncate(nameLabel, 35) + "<pos=45%>" + ppLabel + "   " + accLabel + " " + fcLabel; 
     }
 
     void updatePlayerInfoLabel() {
@@ -162,11 +115,20 @@ namespace LeaderboardUI {
 
     MAKE_HOOK_MATCH(LeaderboardActivate, &PlatformLeaderboardViewController::DidActivate, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHeirarchy, bool screenSystemEnabling) {
         LeaderboardActivate(self, firstActivation, addedToHeirarchy, screenSystemEnabling);
-        if(firstActivation) {
+        if (firstActivation) {
             HMUI::ImageView* imageView = self->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
             imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
             imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
             imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
+        }
+    }
+
+    MAKE_HOOK_MATCH(LeaderboardDeactivate, &PlatformLeaderboardViewController::DidDeactivate, void, PlatformLeaderboardViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
+        LeaderboardDeactivate(self, removedFromHierarchy, screenSystemDisabling);
+
+        if (upPageButton != NULL) {
+            upPageButton->get_gameObject()->SetActive(false);
+            downPageButton->get_gameObject()->SetActive(false);
         }
     }
 
@@ -352,34 +314,18 @@ namespace LeaderboardUI {
             result->playerNameText->set_fontSize(3);
             result->fullComboText->set_fontSize(3);
             result->scoreText->set_fontSize(2);
+
+            avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-32, 0), UnityEngine::Vector2(4, 4));
         }
 
-        if (avatars.size() == row) {
-            avatars.push_back(::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-32, 0), UnityEngine::Vector2(4, 4)));
-        }
-        
-        avatars[row]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
-        Sprites::get_Icon(scoreVector[row].player.avatar, [row](UnityEngine::Sprite* sprite) {
-            avatars[row]->set_sprite(sprite);
+        avatars[result]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
+        Sprites::get_Icon(scoreVector[row].player.avatar, [result](UnityEngine::Sprite* sprite) {
+            if (sprite != NULL && avatars[result] != NULL) {
+                avatars[result]->set_sprite(sprite);
+            }
         });
         
         return (TableCell *)result;
-    }
-
-    void setup() {
-        LoggerContextObject logger = getLogger().WithContext("load");
-
-        INSTALL_HOOK(logger, LeaderboardActivate);
-        INSTALL_HOOK(logger, RefreshLeaderboard);
-        INSTALL_HOOK(logger, LeaderboardCellSource);
-
-        PlayerController::playerChanged.push_back([](Player* updated) {
-            QuestUI::MainThreadScheduler::Schedule([] {
-                if (playerInfo != NULL) {
-                    updatePlayerInfoLabel();
-                }
-            });
-        });
     }
 
     void updateStatus(ReplayUploadStatus status, string description, float progress) {
@@ -399,8 +345,26 @@ namespace LeaderboardUI {
         }
     }
 
+    void setup() {
+        LoggerContextObject logger = getLogger().WithContext("load");
+
+        INSTALL_HOOK(logger, LeaderboardActivate);
+        INSTALL_HOOK(logger, LeaderboardDeactivate);
+        INSTALL_HOOK(logger, RefreshLeaderboard);
+        INSTALL_HOOK(logger, LeaderboardCellSource);
+
+        PlayerController::playerChanged.push_back([](Player* updated) {
+            QuestUI::MainThreadScheduler::Schedule([] {
+                if (playerInfo != NULL) {
+                    updatePlayerInfoLabel();
+                }
+            });
+        });
+    }
+
     void reset() {
         uploadStatus = NULL;
         plvc = NULL;
-    }
+        avatars = map<LeaderboardTableCell*, HMUI::ImageView*>();
+    }    
 }
