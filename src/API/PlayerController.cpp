@@ -20,9 +20,12 @@ using namespace GlobalNamespace;
 Player* PlayerController::currentPlayer = NULL;
 Player* PlayerController::platformPlayer = NULL;
 string PlayerController::lastErrorDescription = "";
-function<void(Player*)> PlayerController::playerChanged = [](Player* player) {
+vector<function<void(Player*)>> PlayerController::playerChanged;
 
-};
+void callbackWrapper(Player* player) {
+    for (auto && fn : PlayerController::playerChanged)
+        fn(player);
+}
 
 string PlayerController::RefreshOnline() {
     string result = "";
@@ -35,7 +38,7 @@ string PlayerController::RefreshOnline() {
             if (status == 200) {
                 auto player = result.GetObject();
                 currentPlayer = new Player(player);
-                playerChanged(currentPlayer);
+                callbackWrapper(currentPlayer);
             }
         });
     }
@@ -92,7 +95,7 @@ bool PlayerController::LogOut() {
     WebUtils::Get(WebUtils::API_URL + "user/id", result);
     if (result.length() == 0) {
         currentPlayer = NULL;
-        playerChanged(currentPlayer);
+        callbackWrapper(currentPlayer);
         return true;
     } else {
         return false;

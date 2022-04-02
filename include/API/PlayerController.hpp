@@ -9,7 +9,7 @@ class PlayerController
     static string RefreshOnline();
 public:
     static string Refresh();
-    static function<void(Player*)> playerChanged;
+    static vector<function<void(Player*)>> playerChanged;
 
     static void LogIn(string login, string password, std::function<void(std::string)> finished);
     static void SignUp(string login, string password, std::function<void(std::string)> finished);

@@ -40,75 +40,77 @@ using namespace std;
 using namespace QuestUI;
 using namespace BeatSaberUI;
 
-TMPro::TextMeshProUGUI* starsLabel = NULL;
-TMPro::TextMeshProUGUI* ppLabel = NULL;
+namespace LevelInfoUI {
+    TMPro::TextMeshProUGUI* starsLabel = NULL;
+    TMPro::TextMeshProUGUI* ppLabel = NULL;
 
-HMUI::ImageView* starsImage = NULL;
-HMUI::ImageView* ppImage = NULL;
+    HMUI::ImageView* starsImage = NULL;
+    HMUI::ImageView* ppImage = NULL;
 
-static map<string, float> _mapInfos;
-static string selectedMap;
+    static map<string, float> _mapInfos;
+    static string selectedMap;
 
-MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
-    LevelRefreshContent(self);
+    MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
+        LevelRefreshContent(self);
 
-    if (starsLabel == NULL) {
-        starsLabel = CreateText(self->levelParamsPanel->notesCountText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
-        starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
-        starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
-        AddHoverHint(starsLabel, "BeatLeader ranked stars");
-        starsImage = CreateImage(self->levelParamsPanel->notesCountText->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
-        AddHoverHint(starsImage, "BeatLeader ranked stars");
+        if (starsLabel == NULL) {
+            starsLabel = CreateText(self->levelParamsPanel->notesCountText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
+            AddHoverHint(starsLabel, "BeatLeader ranked stars");
+            starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
+            starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
+            starsImage = CreateImage(self->levelParamsPanel->notesCountText->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
+            AddHoverHint(starsImage, "BeatLeader ranked stars");
 
-        ppLabel = CreateText(self->levelParamsPanel->notesPerSecondText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
-        ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
-        ppLabel->set_fontStyle(TMPro::FontStyles::Italic);
-        AddHoverHint(ppLabel, "BeatLeader pp for 100%");
-        ppImage = CreateImage(self->levelParamsPanel->notesPerSecondText->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
-        AddHoverHint(ppImage, "BeatLeader pp for 100%");
-    }
+            ppLabel = CreateText(self->levelParamsPanel->notesPerSecondText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
+            AddHoverHint(ppLabel, "BeatLeader pp for 100%");
+            ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
+            ppLabel->set_fontStyle(TMPro::FontStyles::Italic);
+            ppImage = CreateImage(self->levelParamsPanel->notesPerSecondText->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
+            AddHoverHint(ppImage, "BeatLeader pp for 100%");
+        }
 
-    string hash = regex_replace((string)reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID(), basic_regex("custom_level_"), "");
-    string difficulty = MapEnhancer::DiffName(self->selectedDifficultyBeatmap->get_difficulty().value);
-    string mode = (string)self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName;
+        string hash = regex_replace((string)reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID(), basic_regex("custom_level_"), "");
+        string difficulty = MapEnhancer::DiffName(self->selectedDifficultyBeatmap->get_difficulty().value);
+        string mode = (string)self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName;
 
-    string key = hash + difficulty + mode;
+        string key = hash + difficulty + mode;
 
-    if (_mapInfos.count(key)) {
-        starsLabel->SetText(to_string_wprecision(_mapInfos[key], 2));
-        ppLabel->SetText(to_string_wprecision(_mapInfos[key] * 44.0f, 2));
-    } else {
-        string url = WebUtils::API_URL + "map/hash/" + hash;
+        if (_mapInfos.count(key)) {
+            starsLabel->SetText(to_string_wprecision(_mapInfos[key], 2));
+            ppLabel->SetText(to_string_wprecision(_mapInfos[key] * 44.0f, 2));
+        } else {
+            string url = WebUtils::API_URL + "map/hash/" + hash;
 
-        WebUtils::GetJSONAsync(url, [difficulty, mode, key, hash](long status, bool error, rapidjson::Document& result){
-            auto difficulties = result["difficulties"].GetArray();
+            WebUtils::GetJSONAsync(url, [difficulty, mode, key, hash](long status, bool error, rapidjson::Document& result){
+                auto difficulties = result["difficulties"].GetArray();
 
-            for (int index = 0; index < (int)difficulties.Size(); ++index)
-            {
-                auto value = difficulties[index].GetObject();
-                _mapInfos[hash + value["difficultyName"].GetString() + value["modeName"].GetString()] = value["stars"].GetFloat();
-            }
+                for (int index = 0; index < (int)difficulties.Size(); ++index)
+                {
+                    auto value = difficulties[index].GetObject();
+                    _mapInfos[hash + value["difficultyName"].GetString() + value["modeName"].GetString()] = value["stars"].GetFloat();
+                }
 
-            float stars = _mapInfos[key];
+                float stars = _mapInfos[key];
 
-            QuestUI::MainThreadScheduler::Schedule([stars] () {
-                starsLabel->SetText(to_string_wprecision(stars, 2));
-                ppLabel->SetText(to_string_wprecision(stars * 44.0f, 2));
+                QuestUI::MainThreadScheduler::Schedule([stars] () {
+                    starsLabel->SetText(to_string_wprecision(stars, 2));
+                    ppLabel->SetText(to_string_wprecision(stars * 44.0f, 2));
+                });
             });
-        });
+        }
     }
-}
 
-void SetupLevelInfoUI() {
-    LoggerContextObject logger = getLogger().WithContext("load");
+    void setup() {
+        LoggerContextObject logger = getLogger().WithContext("load");
 
-    INSTALL_HOOK(logger, LevelRefreshContent);
-}
+        INSTALL_HOOK(logger, LevelRefreshContent);
+    }
 
-void resetStars() {
-    _mapInfos = {};
-}
+    void resetStars() {
+        _mapInfos = {};
+    }
 
-void ResetLevelInfoUI() {
-    starsLabel = NULL;
+    void reset() {
+        starsLabel = NULL;
+    }
 }
