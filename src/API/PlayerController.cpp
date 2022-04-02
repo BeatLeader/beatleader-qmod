@@ -33,7 +33,8 @@ string PlayerController::RefreshOnline() {
 
         WebUtils::GetJSONAsync(WebUtils::API_URL + "player/" + result, [](long status, bool error, rapidjson::Document& result){
             if (status == 200) {
-                currentPlayer = new Player(result);
+                auto player = result.GetObject();
+                currentPlayer = new Player(player);
                 playerChanged(currentPlayer);
             }
         });

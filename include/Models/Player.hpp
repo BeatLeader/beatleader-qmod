@@ -1,3 +1,5 @@
+#pragma once
+
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include <string>
@@ -5,8 +7,6 @@ using namespace std;
 
 class Player
 {
-private:
-    /* data */
 public:
     string id;
     string name;
@@ -16,7 +16,6 @@ public:
     int countryRank;
     float pp;
 
+    Player(rapidjson::GenericObject<false, rapidjson::GenericValue<rapidjson::UTF8<>>>& document);
     Player();
-    Player(rapidjson::Document& document);
-    ~Player();
 };
