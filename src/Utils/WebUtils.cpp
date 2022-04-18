@@ -15,8 +15,8 @@
 namespace WebUtils {
     std::string GameVersion = "1.19.1";
 
-    std::string API_URL = "https://api.beatleader.xyz/";
-    std::string WEB_URL = "https://beatleader.xyz/";
+    std::string API_URL = "";
+    std::string WEB_URL = "";
 
     void refresh_urls() {
         if (getModConfig().ServerType.GetValue() == "Test") {

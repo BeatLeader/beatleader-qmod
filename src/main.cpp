@@ -11,6 +11,7 @@
 #include "include/Utils/ModConfig.hpp"
 #include "include/Utils/ReplaySynchronizer.hpp"
 #include "include/Utils/ModifiersManager.hpp"
+#include "include/Utils/WebUtils.hpp"
 
 #include "config-utils/shared/config-utils.hpp"
 #include "custom-types/shared/register.hpp"
@@ -73,6 +74,7 @@ void replayPostCallback(ReplayUploadStatus status, string description, float pro
 // Called later on in the game loading - a good time to install function hooks
 extern "C" void load() {
     il2cpp_functions::Init();
+    WebUtils::refresh_urls();
 
     LoggerContextObject logger = getLogger().WithContext("load");
 
