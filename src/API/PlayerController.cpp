@@ -41,6 +41,8 @@ string PlayerController::RefreshOnline() {
                 callbackWrapper(currentPlayer);
             }
         });
+    } else {
+        currentPlayer = NULL;
     }
     return result;
 }

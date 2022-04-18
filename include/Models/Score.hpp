@@ -11,21 +11,21 @@ class Score
 public:
     // int id;
     // int baseScore;
-    // int ModifiedScore;
-    // float Accuracy;
-    // string PlayerId;
-    // float Pp;
+    int modifiedScore;
+    float accuracy;
+    string playerId;
+    float pp;
     // float Weight;
-    // int Rank;
-    // int CountryRank;
+    int rank;
+    int countryRank;
     // string Replay;
-    // string Modifiers;
+    string modifiers;
     // int BadCuts;
     // int MissedNotes;
     // int BombCuts;
     // int WallsHit;
     // int Pauses;
-    // bool FullCombo;
+    bool fullCombo;
     // int Hmd;
     // string Timeset;
 
