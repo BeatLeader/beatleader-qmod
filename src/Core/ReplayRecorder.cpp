@@ -61,6 +61,8 @@
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 #include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
+#include "GlobalNamespace/SaberMovementData.hpp"
+#include "GlobalNamespace/SaberSwingRating.hpp"
 
 #include "main.hpp"
 
@@ -88,6 +90,8 @@ namespace ReplayRecorder {
 
     map<int, NoteCutInfo> _cutInfoCache;
     map<int, NoteEvent *> _noteEventCache;
+    map<SaberMovementData *, float> _preSwingContainer;
+    map<SaberSwingRatingCounter *, float> _postSwingContainer;
 
     map<NoteController *, int> _noteIdCache;
     map<ISaberSwingRatingCounter*, int> _swingIdCache;
@@ -272,6 +276,72 @@ namespace ReplayRecorder {
         _swingIdCache[noteCutInfo->swingRatingCounter] = noteId;
     }
 
+    MAKE_HOOK_MATCH(ComputeSwingRating, static_cast<float (SaberMovementData::*)(bool, float)>(&SaberMovementData::ComputeSwingRating), float, SaberMovementData* self, bool overrideSegmenAngle, float overrideValue) {
+        float result = ComputeSwingRating(self, overrideSegmenAngle, overrideValue);
+        auto _data = self->data;
+        int _nextAddIndex = self->nextAddIndex;
+        int _validCount = self->validCount;
+
+        int length = _data.Length();
+
+        int index = _nextAddIndex - 1;
+        if (index < 0) index += length;
+
+        float startTime = _data[index].time;
+        float time = startTime;
+
+        UnityEngine::Vector3 segmentNormal1 = _data[index].segmentNormal;
+        float angleDiff = overrideSegmenAngle ? overrideValue : _data[index].segmentAngle;
+        float swingRating = SaberSwingRating::BeforeCutStepRating(angleDiff, 0.0f);
+        for (int i = 2; (double)startTime - (double)time < 0.4 && i < _validCount; ++i)
+        {
+            --index;
+            if (index < 0) index += length;
+
+            UnityEngine::Vector3 segmentNormal2 = _data[index].segmentNormal;
+            float segmentAngle = _data[index].segmentAngle;
+
+            float normalDiff = UnityEngine::Vector3::Angle(segmentNormal2, segmentNormal1);
+            if ((double)normalDiff <= 90.0)
+            {
+                swingRating += SaberSwingRating::BeforeCutStepRating(segmentAngle, normalDiff);
+                time = _data[index].time;
+            }
+            else {
+                break;
+            }
+        }
+
+        _preSwingContainer[self] = swingRating;
+        return result;
+    }
+
+    MAKE_HOOK_MATCH(ProcessNewSwingData, &SaberSwingRatingCounter::ProcessNewData, void, SaberSwingRatingCounter* self, BladeMovementDataElement newData, BladeMovementDataElement prevData, bool prevDataAreValid) {
+        bool alreadyCut = self->notePlaneWasCut;
+        ProcessNewSwingData(self, newData, prevData, prevDataAreValid);
+
+        float postSwing = _postSwingContainer[self];
+        if (!alreadyCut && !self->notePlane.SameSide(newData.topPos, prevData.topPos))
+        {
+            float angleDiff = UnityEngine::Vector3::Angle(self->cutTopPos - self->cutBottomPos, self->afterCutTopPos - self->afterCutBottomPos);
+
+            if (self->rateAfterCut)
+            {
+                postSwing = SaberSwingRating::AfterCutStepRating(angleDiff, 0.0f);
+            }
+        }
+        else
+        {
+            float normalDiff = UnityEngine::Vector3::Angle(newData.segmentNormal, self->cutPlaneNormal);
+            if (self->rateAfterCut)
+            {
+                postSwing += SaberSwingRating::AfterCutStepRating(newData.segmentAngle, normalDiff);
+            }
+        }
+
+        _postSwingContainer[self] = postSwing;
+    }
+
     MAKE_HOOK_MATCH(SwingRatingDidFinish, &SaberSwingRatingCounter::Finish, void, SaberSwingRatingCounter* self) {
         SwingRatingDidFinish(self);
 
@@ -281,8 +351,9 @@ namespace ReplayRecorder {
         NoteEvent* cutEvent = _noteEventCache[noteId];
         ReplayNoteCutInfo* noteCutInfo = cutEvent->noteCutInfo;
         PopulateNoteCutInfo(noteCutInfo, cutInfo);
-        noteCutInfo->beforeCutRating = self->get_beforeCutRating();
-        noteCutInfo->afterCutRating = self->get_afterCutRating();
+
+        noteCutInfo->beforeCutRating = _preSwingContainer[(SaberMovementData *)self->saberMovementData];
+        noteCutInfo->afterCutRating = _postSwingContainer[self];
     }
 
     MAKE_HOOK_MATCH(NoteMiss, &ScoreController::HandleNoteWasMissed, void, ScoreController* self, NoteController* noteController) {
@@ -390,6 +461,8 @@ namespace ReplayRecorder {
         INSTALL_HOOK(logger, LevelUnpause);
         INSTALL_HOOK(logger, Tick);
         INSTALL_HOOK(logger, SwingRatingDidFinish);
+        INSTALL_HOOK(logger, ComputeSwingRating);
+        INSTALL_HOOK(logger, ProcessNewSwingData);
 
         getLogger().info("Installed all ReplayRecorder hooks!");
 

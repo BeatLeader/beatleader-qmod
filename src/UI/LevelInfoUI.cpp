@@ -31,6 +31,8 @@
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
+#include "bs-utils/shared/utils.hpp"
+
 #include <map>
 #include <string>
 #include <regex>
@@ -46,6 +48,8 @@ namespace LevelInfoUI {
 
     HMUI::ImageView* starsImage = NULL;
     HMUI::ImageView* ppImage = NULL;
+
+    TMPro::TextMeshProUGUI* noSubmissionLabel = NULL;
 
     static map<string, float> _mapInfos;
     static string selectedMap;
@@ -67,6 +71,9 @@ namespace LevelInfoUI {
             ppLabel->set_fontStyle(TMPro::FontStyles::Italic);
             ppImage = CreateImage(self->levelParamsPanel->notesPerSecondText->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
             AddHoverHint(ppImage, "BeatLeader pp for 100%");
+
+            noSubmissionLabel = CreateText(self->levelParamsPanel->get_transform(), "Score submission disabled", true, UnityEngine::Vector2(24, 3));
+            noSubmissionLabel->set_color(UnityEngine::Color(1.0, 0.0, 0.0, 1));
         }
 
         string hash = regex_replace((string)reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID(), basic_regex("custom_level_"), "");
@@ -98,6 +105,8 @@ namespace LevelInfoUI {
                 });
             });
         }
+
+        noSubmissionLabel->get_gameObject()->SetActive(!bs_utils::Submission::getEnabled());
     }
 
     void setup() {

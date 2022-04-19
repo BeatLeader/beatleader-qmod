@@ -14,9 +14,9 @@ using UnityEngine::Sprite;
 map<string, UnityEngine::Sprite*> Sprites::iconCache;
 
 void Sprites::get_Icon(string url, std::function<void(UnityEngine::Sprite*)> completion) {
-    if (iconCache.count(url)) {
-        completion(iconCache[url]);
-    } else {
+    // if (iconCache.count(url)) {
+    //     completion(iconCache[url]);
+    // } else {
         WebUtils::GetAsync(url, [completion, url](long code, string data) {
             if (code == 200) {
                 QuestUI::MainThreadScheduler::Schedule([completion, data, url] {
@@ -40,13 +40,13 @@ void Sprites::get_Icon(string url, std::function<void(UnityEngine::Sprite*)> com
                     }
 
                     if (sprite != NULL) {
-                        iconCache[url] = sprite;
+                        // iconCache[url] = sprite;
                         completion(sprite);
                     }
                 });
             }
         });
-    }
+    // }
 }
 
 void Sprites::GetCountryIcon(string country, std::function<void(UnityEngine::Sprite*)> completion) {
@@ -57,7 +57,13 @@ void Sprites::GetCountryIcon(string country, std::function<void(UnityEngine::Spr
     get_Icon("https://cdn.beatleader.xyz/flags/" + lowerCountry + ".png", completion);
 }
 
-const string Sprites::CellBGB64 = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kTtIw0Acxr8+pD4qDnYQcchQBcGCqIijVqEIFUKt0KqDyaUvaNKQpLg4Cq4FBx+LVQcXZ10dXAVB8AHi6OSk6CIl/i8ptIjx4Lgf3933cfcd4K+XmWoGxwFVs4xUIi5ksqtC6BVBdAHowajETH1OFJPwHF/38PH1LsazvM/9OXqVnMkAn0A8y3TDIt4gnt60dM77xBFWlBTic+Ixgy5I/Mh12eU3zgWH/TwzYqRT88QRYqHQxnIbs6KhEk8RRxVVo3x/xmWF8xZntVxlzXvyF4Zz2soy12kOIYFFLEGEABlVlFCGhRitGikmUrQf9/APOn6RXDK5SmDkWEAFKiTHD/4Hv7s185MTblI4DnS82PbHMBDaBRo12/4+tu3GCRB4Bq60lr9SB2Y+Sa+1tOgR0LcNXFy3NHkPuNwBBp50yZAcKUDTn88D72f0TVmg/xboXnN7a+7j9AFIU1fJG+DgEBgpUPa6x7s723v790yzvx8RVnKA8zW+DAAAAAZiS0dEAAAAAAAA+UO7fwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+YECQAUNxJSyS8AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAJ0lEQVRYw+3QQREAAAjDMMC/5yGDB4mCXqsAAAC+6yS5DJjrAwIELCTqBAjIG8enAAAAAElFTkSuQmCC";
+const string Sprites::ModifiersIconB64 = "data:image/png;base64,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";
+
+UnityEngine::Sprite* Sprites::get_ModifiersIcon() {
+    return QuestUI::BeatSaberUI::Base64ToSprite(const_cast<string&>(ModifiersIconB64));
+}
+
+const string Sprites::CellBGB64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY2BgYGAAAAAFAAGKM+MAAAAAAElFTkSuQmCC";
 
 UnityEngine::Sprite* Sprites::get_CellBG() {
     return QuestUI::BeatSaberUI::Base64ToSprite(const_cast<string&>(CellBGB64));
