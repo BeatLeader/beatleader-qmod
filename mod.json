@@ -11,6 +11,7 @@
     "libbl.so"
   ],
   "libraryFiles": [
-    "libbeatsaber-hook_3_7_4.so"
+    "libbs-utils.so",
+    "libbeatsaber-hook_3_8_1.so"
   ]
 }

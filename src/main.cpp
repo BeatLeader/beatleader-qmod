@@ -7,6 +7,7 @@
 
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
+#include "include/Assets/BundleLoader.hpp"
 
 #include "include/Utils/ModConfig.hpp"
 #include "include/Utils/ReplaySynchronizer.hpp"
@@ -71,6 +72,16 @@ void replayPostCallback(ReplayUploadStatus status, string description, float pro
     });
 }
 
+MAKE_HOOK_MATCH(MainMenuViewControllerDidActivate, &MainMenuViewController::DidActivate, void,
+    MainMenuViewController *self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling
+) {
+     MainMenuViewControllerDidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
+
+     if (firstActivation) {
+        self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
+     }
+}
+
 // Called later on in the game loading - a good time to install function hooks
 extern "C" void load() {
     il2cpp_functions::Init();
@@ -112,6 +123,7 @@ extern "C" void load() {
     getLogger().info("Installing main hooks...");
     
     INSTALL_HOOK(logger, Restart);
+    INSTALL_HOOK(logger, MainMenuViewControllerDidActivate);
 
     getLogger().info("Installed main hooks!");
 }

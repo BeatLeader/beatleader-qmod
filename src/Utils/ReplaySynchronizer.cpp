@@ -26,10 +26,12 @@ ReplaySynchronizer::ReplaySynchronizer() noexcept
         filesystem::create_directories(directory);
 
         FILE *fp = fopen((directory + "sync.json").c_str(), "r");
-        char buf[0XFFFF];
-        FileReadStream input(fp, buf, sizeof(buf));
-        self->statuses.ParseStream(input);
-        fclose(fp);
+        if (fp != NULL) {
+            char buf[0XFFFF];
+            FileReadStream input(fp, buf, sizeof(buf));
+            self->statuses.ParseStream(input);
+            fclose(fp);
+        }
 
         if (!self->statuses.HasParseError() && self->statuses.IsObject()) {
             self->statuses.SetObject();
