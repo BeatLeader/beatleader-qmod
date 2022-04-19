@@ -423,7 +423,7 @@ namespace LeaderboardUI {
 
             avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-32, 0), UnityEngine::Vector2(4, 4));
 
-            auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(100, 6), [result]() {
+            auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(90, 6), [result]() {
                 scorePlayerName->SetText(cellScores[result].player.name);
                 scoreDetails->Show(true, true, nullptr);
             });
@@ -432,7 +432,7 @@ namespace LeaderboardUI {
             scoreSelector->set_highlightColor(underlineHoverColor);
             cellHighlights[result] = scoreSelector;
 
-            auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(100, 6));
+            auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(90, 6));
             backgroundImage->set_material(BundleLoader::scoreBackgroundMaterial);
             backgroundImage->get_transform()->SetAsFirstSibling();
             cellBackgrounds[result] = backgroundImage;
