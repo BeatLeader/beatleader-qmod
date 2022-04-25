@@ -11,6 +11,7 @@
 #include "include/UI/ScoreDetailsUI.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
+#include "include/Utils/FormatUtils.hpp"
 #include "include/Utils/ModifiersManager.hpp"
 #include "include/Utils/ModConfig.hpp"
 
@@ -109,6 +110,8 @@ namespace LeaderboardUI {
     HMUI::ModalView* scoreDetails = NULL;
     TMPro::TextMeshProUGUI* scorePlayerName = NULL;
 
+    BeatLeader::ModalPopup* scoreDetailsUI = NULL;
+
     int page = 1;
     int selectedScore = 11;
     bool modifiers = true;
@@ -120,36 +123,16 @@ namespace LeaderboardUI {
     map<LeaderboardTableCell*, Score> cellScores;
     map<string, int> imageRows;
 
-    static UnityEngine::Color lowAccColor = UnityEngine::Color(0.93, 1, 0.62, 1);
-    static UnityEngine::Color highAccColor = UnityEngine::Color(1, 0.39, 0.28, 1);
-
     static UnityEngine::Color underlineDefaultColor = UnityEngine::Color(0.1, 0.3, 0.4, 0.0);
     static UnityEngine::Color underlineHoverColor = UnityEngine::Color(0.0, 0.4, 1.0, 0.8);
 
     static UnityEngine::Color ownScoreColor = UnityEngine::Color(0.7, 0.0, 0.7, 0.3);
     static UnityEngine::Color someoneElseScoreColor = UnityEngine::Color(0.07, 0.0, 0.14, 0.05);
 
-    std::string rgb2hex(UnityEngine::Color color) { 
-        std::stringstream ss; 
-        ss << std::hex << ((int)(color.r * 255.0) << 16 | (int)(color.g * 255.0) << 8 | (int)(color.b * 255.0)); 
-        return ss.str();
-    }
-
-    string getAccColorString(float acc) {
-        auto lerpValue = pow(acc, 14.0f);
-        auto color = UnityEngine::Color::Lerp(lowAccColor, highAccColor, lerpValue);
-        return rgb2hex(color);
-    }
-
-    string formatAcc(float accuracy) {
-        return "<color=#" + getAccColorString(accuracy) + ">" + to_string_wprecision(accuracy * 100, 2) + "%";
-    }
-
     string generateLabel(Score score) {
-        string ppLabel = "<color=#B856FF>" + (score.pp > 0 ? to_string_wprecision(score.pp, 2) + "pp" : "");
         string nameLabel = score.player.name;
         string fcLabel =  "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? ", " : "") + score.modifiers;
-        return truncate(nameLabel, 35) + "<pos=45%>" + ppLabel + "   " + formatAcc(score.accuracy) + " " + fcLabel; 
+        return truncate(nameLabel, 35) + "<pos=45%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
     }
 
     void updatePlayerInfoLabel() {
@@ -158,7 +141,8 @@ namespace LeaderboardUI {
             if (player->rank > 0) {
 
                 globalRank->SetText("#" + to_string(player->rank));
-                countryRankAndPp->SetText("#" + to_string(player->countryRank) + "              <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp");
+                countryRankAndPp->SetText("#" + to_string(player->countryRank) + "        <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp");
+                playerName->set_alignment(TMPro::TextAlignmentOptions::Center);
                 playerName->SetText(player->name);
 
                 Sprites::get_Icon(player->avatar, [](UnityEngine::Sprite* sprite) {
@@ -337,19 +321,18 @@ namespace LeaderboardUI {
         if (uploadStatus == NULL) {
             plvc = self;
 
-            parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(400, 120), self->screen->get_transform()->get_position(), 140);
+            parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(480, 160), self->screen->get_transform()->get_position(), 140);
 
-            scoreDetails = ::QuestUI::BeatSaberUI::CreateModal(self->get_transform(), UnityEngine::Vector2(80, 80), [](HMUI::ModalView *modal) {}, true);
-            scorePlayerName = ::QuestUI::BeatSaberUI::CreateText(scoreDetails->get_transform(), "", false, UnityEngine::Vector2(0, 0));
+            BeatLeader::initModalPopup(&scoreDetailsUI, self->get_transform());
 
             playerAvatar = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(12, 12));
-            globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->globalLeaderboardIcon, UnityEngine::Vector2(130, 45), UnityEngine::Vector2(4, 4));
-            countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->friendsLeaderboardIcon, UnityEngine::Vector2(141, 45), UnityEngine::Vector2(4, 4));
-            playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(110, 50), UnityEngine::Vector2(100, 10));
+            globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->globalLeaderboardIcon, UnityEngine::Vector2(120, 45), UnityEngine::Vector2(4, 4));
+            countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->friendsLeaderboardIcon, UnityEngine::Vector2(135, 45), UnityEngine::Vector2(4, 4));
+            playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 50), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
-            playerName->set_alignment(TMPro::TextAlignmentOptions::Center);
-            globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(151, 42.5));
-            countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(162, 42.5));
+            
+            globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(153, 42.5));
+            countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(168, 42.5));
 
             if (PlayerController::currentPlayer != NULL) {
                 updatePlayerInfoLabel();
@@ -365,7 +348,7 @@ namespace LeaderboardUI {
             });
 
             if (retryButton) UnityEngine::GameObject::Destroy(retryButton);
-            retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(130, 44), UnityEngine::Vector2(15, 8), [](){
+            retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){
                 retryButton->get_gameObject()->SetActive(false);
                 retryCallback();
             });
@@ -374,7 +357,7 @@ namespace LeaderboardUI {
 
             if(uploadStatus) UnityEngine::GameObject::Destroy(uploadStatus);
             uploadStatus = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false);
-            move(uploadStatus, 140, 50);
+            move(uploadStatus, 150, 60);
             resize(uploadStatus, 10, 0);
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
@@ -388,7 +371,7 @@ namespace LeaderboardUI {
                 refreshFromTheServer();
             });
 
-            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, -26), UnityEngine::Vector2(4, 4), [](){
+            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, -28), UnityEngine::Vector2(4, 4), [](){
                 modifiers = !modifiers;
                 updateModifiersButton();
                 refreshFromTheServer();
@@ -423,21 +406,20 @@ namespace LeaderboardUI {
 
             avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-32, 0), UnityEngine::Vector2(4, 4));
 
-            auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(90, 6), [result]() {
-                scorePlayerName->SetText(cellScores[result].player.name);
-                scoreDetails->Show(true, true, nullptr);
+            auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
+                scoreDetailsUI->modal->Show(true, true, nullptr);
+
+                scoreDetailsUI->setScore(cellScores[result]);
             });
             scoreSelector->set_material(BundleLoader::scoreUnderlineMaterial);
             scoreSelector->set_defaultColor(underlineDefaultColor);
             scoreSelector->set_highlightColor(underlineHoverColor);
             cellHighlights[result] = scoreSelector;
 
-            auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(90, 6));
+            auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
             backgroundImage->set_material(BundleLoader::scoreBackgroundMaterial);
             backgroundImage->get_transform()->SetAsFirstSibling();
-            cellBackgrounds[result] = backgroundImage;
-
-            cellScores[result] = scoreVector[row];
+            cellBackgrounds[result] = backgroundImage;            
         }
 
         if (row == selectedScore) {
@@ -445,6 +427,7 @@ namespace LeaderboardUI {
         } else {
             cellBackgrounds[result]->set_color(someoneElseScoreColor);
         }
+        cellScores[result] = scoreVector[row];
         avatars[result]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
         Sprites::get_Icon(scoreVector[row].player.avatar, [result](UnityEngine::Sprite* sprite) {
             if (sprite != NULL && avatars[result] != NULL && sprite->get_texture() != NULL) {
@@ -492,6 +475,7 @@ namespace LeaderboardUI {
     void reset() {
         uploadStatus = NULL;
         plvc = NULL;
+        scoreDetailsUI = NULL;
         avatars = map<LeaderboardTableCell*, HMUI::ImageView*>();
     }    
 }

@@ -1,23 +1,45 @@
 #pragma once
 
-#include "HMUI/ViewController.hpp"
-#include "HMUI/ImageView.hpp"
-#include "TMPro/TextMeshProUGUI.hpp"
-#include "UnityEngine/UI/Button.hpp"
-#include "UnityEngine/UI/VerticalLayoutGroup.hpp"
-#include "UnityEngine/Color.hpp"
-
+#include "custom-types/shared/macros.hpp"
+#include "custom-types/shared/register.hpp"
+#include "modloader/shared/modloader.hpp"
+#include "questui/shared/BeatSaberUI.hpp"
+#include "questui/shared/QuestUI.hpp"
+#include "HMUI/ModalView.hpp"
+#include "UnityEngine/RectOffset.hpp"
+#include "GlobalNamespace/ScoreFormatter.hpp"
+#include "GlobalNamespace/IDifficultyBeatmap.hpp"
+#include "GlobalNamespace/PlayerLevelStatsData.hpp"
+#include "GlobalNamespace/BeatmapData.hpp"
+#include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 #include "include/Models/Score.hpp"
 
-#include "GlobalNamespace/SinglePlayerLevelSelectionFlowCoordinator.hpp"
 
-#include "custom-types/shared/macros.hpp"
+namespace BeatLeader {
+    class ModalPopup {
+        public:
+            HMUI::ModalView* modal;
 
-extern GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator* levelSelectCoordinator;
+            HMUI::ImageView* playerAvatar;
+            UnityEngine::UI::VerticalLayoutGroup* list;
 
-DECLARE_CLASS_CODEGEN(BeatLeader, ScoreDetails, HMUI::ViewController,
-    DECLARE_OVERRIDE_METHOD(void, DidActivate, il2cpp_utils::FindMethodUnsafe("HMUI", "ViewController", "DidActivate", 3), bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling);
+            UnityEngine::UI::HorizontalLayoutGroup* header;
+            TMPro::TextMeshProUGUI* rank;
+            TMPro::TextMeshProUGUI* name;
+            TMPro::TextMeshProUGUI* pp;
 
-    public:
-    void setScore(Score score);
-)
+            TMPro::TextMeshProUGUI* datePlayed;
+            
+            UnityEngine::UI::HorizontalLayoutGroup* header2;
+            TMPro::TextMeshProUGUI* modifiedScore;
+            TMPro::TextMeshProUGUI* accuracy;
+            TMPro::TextMeshProUGUI* scorePp;
+
+            TMPro::TextMeshProUGUI* scoreDetails;
+            
+            UnityEngine::UI::Button* closeButton;
+            
+            void setScore(Score score);
+    };
+    void initModalPopup(ModalPopup** modalUI, UnityEngine::Transform* parent);
+}
