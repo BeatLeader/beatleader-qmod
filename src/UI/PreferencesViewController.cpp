@@ -144,12 +144,12 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                 UpdateUI(userID);
             });});
         });
-        serverDropdown = ::QuestUI::BeatSaberUI::CreateDropdown(container->get_transform(), "Server type", getModConfig().ServerType.GetValue(), {"Main", "Test"}, [](string serverType) {
-            getModConfig().ServerType.SetValue(serverType);
-            WebUtils::refresh_urls();
-            LevelInfoUI::resetStars();
-            PlayerController::Refresh();
-        });
+        // serverDropdown = ::QuestUI::BeatSaberUI::CreateDropdown(container->get_transform(), "Server type", getModConfig().ServerType.GetValue(), {"Main", "Test"}, [](string serverType) {
+        //     getModConfig().ServerType.SetValue(serverType);
+        //     WebUtils::refresh_urls();
+        //     LevelInfoUI::resetStars();
+        //     PlayerController::Refresh();
+        // });
         PlayerController::playerChanged.push_back([](Player* updated) {
             UpdateUI(updated->id);
         });

@@ -20,14 +20,14 @@ public:
     int countryRank;
     // string Replay;
     string modifiers;
-    // int BadCuts;
-    // int MissedNotes;
-    // int BombCuts;
-    // int WallsHit;
-    // int Pauses;
+    int badCuts;
+    int missedNotes;
+    int bombCuts;
+    int wallsHit;
+    int pauses;
     bool fullCombo;
-    // int Hmd;
-    // string Timeset;
+    int hmd;
+    string timeset;
 
     Player player;
     Score();

@@ -13,4 +13,13 @@ Score::Score(rapidjson::GenericObject<false, rapidjson::GenericValue<rapidjson::
     fullCombo = document["fullCombo"].GetBool();
     modifiers = document["modifiers"].GetString();
     modifiedScore = document["modifiedScore"].GetInt();
+
+    badCuts = document["badCuts"].GetInt();
+    missedNotes = document["missedNotes"].GetInt();
+    bombCuts = document["bombCuts"].GetInt();
+    wallsHit = document["wallsHit"].GetInt();
+    pauses = document["pauses"].GetInt();
+
+    hmd = document["hmd"].GetInt();
+    timeset = document["timeset"].GetString();
 }
