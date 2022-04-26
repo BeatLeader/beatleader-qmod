@@ -16,17 +16,19 @@ Sprite* BundleLoader::modifiersIcon;
 
 custom_types::Helpers::Coroutine BundleLoader::LoadBundle()
 {
-    ArrayW<uint8_t> bytes(bl_bundle::getLength());
-    std::copy(bl_bundle::getData(), bl_bundle::getData() + bl_bundle::getLength(), bytes.begin());
+    if (bundle == NULL) {
+        ArrayW<uint8_t> bytes(bl_bundle::getLength());
+        std::copy(bl_bundle::getData(), bl_bundle::getData() + bl_bundle::getLength(), bytes.begin());
 
-    using AssetBundle_LoadFromMemoryAsync = function_ptr_t<UnityEngine::AssetBundleCreateRequest*, ArrayW<uint8_t>, int>;
-    static auto assetBundle_LoadFromMemoryAsync = reinterpret_cast<AssetBundle_LoadFromMemoryAsync>(il2cpp_functions::resolve_icall("UnityEngine.AssetBundle::LoadFromMemoryAsync_Internal"));
+        using AssetBundle_LoadFromMemoryAsync = function_ptr_t<UnityEngine::AssetBundleCreateRequest*, ArrayW<uint8_t>, int>;
+        static auto assetBundle_LoadFromMemoryAsync = reinterpret_cast<AssetBundle_LoadFromMemoryAsync>(il2cpp_functions::resolve_icall("UnityEngine.AssetBundle::LoadFromMemoryAsync_Internal"));
 
-    auto req = assetBundle_LoadFromMemoryAsync(bytes, 0);
-    req->set_allowSceneActivation(true);
-    co_yield reinterpret_cast<System::Collections::IEnumerator*>(req);
+        auto req = assetBundle_LoadFromMemoryAsync(bytes, 0);
+        req->set_allowSceneActivation(true);
+        co_yield reinterpret_cast<System::Collections::IEnumerator*>(req);
 
-    bundle = req->get_assetBundle();
+        bundle = req->get_assetBundle();
+    }
     LoadAssets(bundle);
 }
 

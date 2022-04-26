@@ -150,10 +150,10 @@ namespace LeaderboardUI {
                 });
                 
                 if (plvc != NULL) {
-                    auto countryControl = plvc->scopeSegmentedControl->dataItems.get(2);
+                    auto countryControl = plvc->scopeSegmentedControl->dataItems.get(3);
                     countryControl->set_hintText("Country");
                     Sprites::GetCountryIcon(player->country, [countryControl](UnityEngine::Sprite* sprite) {
-                        plvc->scopeSegmentedControl->dataItems.get(2)->set_icon(sprite);
+                        plvc->scopeSegmentedControl->dataItems.get(3)->set_icon(sprite);
                         plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
 
                         countryRankIcon->set_sprite(sprite);
@@ -230,6 +230,9 @@ namespace LeaderboardUI {
             url += "/global/around";
             break;
         case PlatformLeaderboardsModel::ScoresScope::Friends:
+            url += "/friends/page";
+            break;
+        case 3:
             url += "/country/page";
             break;
         
@@ -320,6 +323,19 @@ namespace LeaderboardUI {
         
         if (uploadStatus == NULL) {
             plvc = self;
+
+            ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(4);
+            ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(4);
+            for (int index = 0; index < 3; ++index)
+            {
+                dataItems[index] = self->scopeSegmentedControl->dataItems.get(index);
+                scoreScopes[index] = self->scoreScopes.get(index);
+            }
+            dataItems[3] = HMUI::IconSegmentedControl::DataItem::New_ctor(self->friendsLeaderboardIcon, "Country");
+            scoreScopes[3] = PlatformLeaderboardsModel::ScoresScope(3);
+
+            self->scopeSegmentedControl->SetData(dataItems);
+            self->scoreScopes = scoreScopes;
 
             parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(480, 160), self->screen->get_transform()->get_position(), 140);
 
@@ -476,6 +492,9 @@ namespace LeaderboardUI {
         uploadStatus = NULL;
         plvc = NULL;
         scoreDetailsUI = NULL;
-        avatars = map<LeaderboardTableCell*, HMUI::ImageView*>();
+        cellScores = {};
+        avatars = {};
+        cellHighlights = {};
+        cellBackgrounds = {};
     }    
 }
