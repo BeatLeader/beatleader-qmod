@@ -106,7 +106,7 @@ void BeatLeader::ModalPopup::setScore(Score score) {
         }
     });
 
-    name->SetText(score.player.name);
+    name->SetText(truncate(score.player.name, 23));
     name->set_alignment(TMPro::TextAlignmentOptions::Center);
     rank->SetText(FormatUtils::FormatRank(score.player.rank, true));
     pp->SetText(FormatUtils::FormatPP(score.player.pp));

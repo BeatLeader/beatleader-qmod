@@ -14,9 +14,18 @@ using UnityEngine::Sprite;
 map<string, UnityEngine::Sprite*> Sprites::iconCache;
 
 void Sprites::get_Icon(string url, std::function<void(UnityEngine::Sprite*)> completion) {
-    // if (iconCache.count(url)) {
-    //     completion(iconCache[url]);
-    // } else {
+    if (iconCache.count(url)) {
+        UnityEngine::Sprite* sprite = iconCache[url];
+        completion(UnityEngine::Sprite::Create(
+            sprite->get_texture(),
+            sprite->get_rect(),
+            sprite->get_pivot(),
+            100.0, 
+            0, 
+            UnityEngine::SpriteMeshType::FullRect, 
+            UnityEngine::Vector4(0.0, 0.0, 0.0, 0.0), 
+            false));
+    } else {
         WebUtils::GetAsync(url, [completion, url](long code, string data) {
             if (code == 200) {
                 QuestUI::MainThreadScheduler::Schedule([completion, data, url] {
@@ -40,13 +49,21 @@ void Sprites::get_Icon(string url, std::function<void(UnityEngine::Sprite*)> com
                     }
 
                     if (sprite != NULL) {
-                        // iconCache[url] = sprite;
-                        completion(sprite);
+                        iconCache[url] = sprite;
+                        completion(UnityEngine::Sprite::Create(
+                            sprite->get_texture(),
+                            sprite->get_rect(),
+                            sprite->get_pivot(),
+                            100.0, 
+                            0, 
+                            UnityEngine::SpriteMeshType::FullRect, 
+                            UnityEngine::Vector4(0.0, 0.0, 0.0, 0.0), 
+                            false));
                     }
                 });
             }
         });
-    // }
+    }
 }
 
 void Sprites::GetCountryIcon(string country, std::function<void(UnityEngine::Sprite*)> completion) {
@@ -55,18 +72,6 @@ void Sprites::GetCountryIcon(string country, std::function<void(UnityEngine::Spr
     transform(country.begin(), country.end(), lowerCountry.begin(), asciitolower);
     
     get_Icon("https://cdn.beatleader.xyz/flags/" + lowerCountry + ".png", completion);
-}
-
-const string Sprites::ModifiersIconB64 = "data:image/png;base64,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";
-
-UnityEngine::Sprite* Sprites::get_ModifiersIcon() {
-    return QuestUI::BeatSaberUI::Base64ToSprite(const_cast<string&>(ModifiersIconB64));
-}
-
-const string Sprites::CellBGB64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY2BgYGAAAAAFAAGKM+MAAAAAAElFTkSuQmCC";
-
-UnityEngine::Sprite* Sprites::get_CellBG() {
-    return QuestUI::BeatSaberUI::Base64ToSprite(const_cast<string&>(CellBGB64));
 }
 
 const string Sprites::UpB64 = "iVBORw0KGgoAAAANSUhEUgAAAJYAAABfCAMAAAA9OM6sAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAhGVYSWZNTQAqAAAACAAFARIAAwAAAAEAAQAAARoABQAAAAEAAABKARsABQAAAAEAAABSASgAAwAAAAEAAgAAh2kABAAAAAEAAABaAAAAAAAAAGAAAAABAAAAYAAAAAEAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAlqADAAQAAAABAAAAXwAAAADvKUNOAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABWWlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNi4wLjAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp0aWZmPSJodHRwOi8vbnMuYWRvYmUuY29tL3RpZmYvMS4wLyI+CiAgICAgICAgIDx0aWZmOk9yaWVudGF0aW9uPjE8L3RpZmY6T3JpZW50YXRpb24+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgoZXuEHAAACiFBMVEUAAAAAAACAgIBVVVVAQEAzMzNmZmZVVVVJSUlAQEBgYGBVVVVNTU1GRkZVVVVOTk5JSUlVVVVQUFBLS0tVVVVRUVFNTU1RUVFOTk5VVVVOTk5SUlJPT09SUlJNTU1VVVVTU1NQUFBOTk5TU1NRUVFOTk5TU1NRUVFPT09TU1NRUVFPT09OTk5TU1NRUVFQUFBOTk5TU1NSUlJQUFBTU1NSUlJQUFBPT09TU1NSUlJRUVFPT09SUlJRUVFPT09SUlJRUVFQUFBSUlJRUVFQUFBPT09RUVFQUFBPT09TU1NRUVFQUFBPT09TU1NSUlJRUVFPT09SUlJRUVFSUlJRUVFSUlJQUFBQUFBRUVFQUFBRUVFRUVFQ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";
