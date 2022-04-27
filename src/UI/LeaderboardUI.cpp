@@ -86,7 +86,7 @@ using UnityEngine::Resources;
 
 namespace LeaderboardUI {
     function<void()> retryCallback;
-    PlatformLeaderboardViewController* leaderboardViewController;
+    PlatformLeaderboardViewController* plvc = NULL;
 
     TMPro::TextMeshProUGUI* uploadStatus = NULL;
 
@@ -100,8 +100,7 @@ namespace LeaderboardUI {
     
     UnityEngine::UI::Button* retryButton = NULL;
     QuestUI::ClickableImage* websiteLink = NULL;
-    PlatformLeaderboardViewController* plvc = NULL;
-
+    
     QuestUI::ClickableImage* upPageButton = NULL;
     QuestUI::ClickableImage* downPageButton = NULL;
     QuestUI::ClickableImage* modifiersButton = NULL;
@@ -132,7 +131,7 @@ namespace LeaderboardUI {
     string generateLabel(Score score) {
         string nameLabel = score.player.name;
         string fcLabel =  "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? ", " : "") + score.modifiers;
-        return truncate(nameLabel, 35) + "<pos=45%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
+        return truncate(nameLabel, 23) + "<pos=45%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
     }
 
     void updatePlayerInfoLabel() {
@@ -306,13 +305,22 @@ namespace LeaderboardUI {
     void updateModifiersButton() {
         modifiersButton->set_defaultColor(modifiers ? selectedColor : fadedColor);
         modifiersButton->set_highlightColor(modifiers ? selectedColor : fadedHoverColor);
+
+        if (modifiers) {
+            ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard without positive modifiers");
+        } else {
+            ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard with positive modifiers");
+        }
+    }
+
+    void clearTable() {
+        plvc->scores->Clear();
+        plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
     }
 
     MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
-        leaderboardViewController = self;
-
-        self->scores->Clear();
-        self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
+        plvc = self;
+        clearTable();
         page = 1;
         selectedScore = 10;
 
@@ -322,8 +330,6 @@ namespace LeaderboardUI {
         }
         
         if (uploadStatus == NULL) {
-            plvc = self;
-
             ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(4);
             ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(4);
             for (int index = 0; index < 3; ++index)
@@ -344,7 +350,7 @@ namespace LeaderboardUI {
             playerAvatar = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(12, 12));
             globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->globalLeaderboardIcon, UnityEngine::Vector2(120, 45), UnityEngine::Vector2(4, 4));
             countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->friendsLeaderboardIcon, UnityEngine::Vector2(135, 45), UnityEngine::Vector2(4, 4));
-            playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 50), UnityEngine::Vector2(60, 10));
+            playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
             
             globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(153, 42.5));
@@ -378,22 +384,29 @@ namespace LeaderboardUI {
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
 
-            upPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 20), UnityEngine::Vector2(8, 5.12), [](){
+            upPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
                 page--;
+                clearTable();
                 refreshFromTheServer();
             });
-            downPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -20), UnityEngine::Vector2(8, 5.12), [](){
+            downPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -17), UnityEngine::Vector2(8, 5.12), [](){
                 page++;
+                clearTable();
                 refreshFromTheServer();
             });
 
-            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, -28), UnityEngine::Vector2(4, 4), [](){
+            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 25), UnityEngine::Vector2(4, 4), [](){
                 modifiers = !modifiers;
+                clearTable();
                 updateModifiersButton();
                 refreshFromTheServer();
             });
+            ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard without positive modifiers");
             updateModifiersButton();
         }
+
+        upPageButton->get_gameObject()->SetActive(false);
+        downPageButton->get_gameObject()->SetActive(false);
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
         if (!levelData->get_levelID().starts_with("custom_level")) {
@@ -459,7 +472,7 @@ namespace LeaderboardUI {
         switch (status)
         {
             case ReplayUploadStatus::finished:
-                leaderboardViewController->Refresh(true, true);
+                plvc->Refresh(true, true);
                 break;
             case ReplayUploadStatus::error:
                 retryButton->get_gameObject()->SetActive(true);

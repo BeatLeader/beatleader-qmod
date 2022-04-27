@@ -89,10 +89,10 @@ namespace ModifiersUI {
         if (totalMultiplier < 0) totalMultiplier = 0;  // thanks Beat Games for Zen mode -1000%
 
         self->totalMultiplierValueText->SetText((totalMultiplier > 1 ? "+" : "") + to_string_wprecision(totalMultiplier * 100.0f, 1) + "%");
-        self->totalMultiplierValueText->set_color(totalMultiplier > 1 ? positiveColor : negativeColor);
+        //self->totalMultiplierValueText->set_color(totalMultiplier > 1 ? positiveColor : negativeColor);
         
         self->maxRankValueText->SetText(getRankForMultiplier(totalMultiplier));
-        self->maxRankValueText->set_color(totalMultiplier > 1 ? positiveColor : negativeColor);
+        //self->maxRankValueText->set_color(totalMultiplier > 1 ? positiveColor : negativeColor);
     }
 
     MAKE_HOOK_MATCH(ModifierStart, &GameplayModifierToggle::Start, void, GameplayModifierToggle* self) {
@@ -102,7 +102,7 @@ namespace ModifiersUI {
         getLogger().info("%s", key.c_str());
         if (ModifiersManager::modifiers.count(key)) {
             float value = ModifiersManager::modifiers[key];
-            self->multiplierText->SetText((value > 0 ? "<color=#FF00BB>+" : "<color=#A67AFF>") + to_string_wprecision(value * 100.0f, 1) + "%");
+            self->multiplierText->SetText((value > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(value * 100.0f, 1) + "%");
         }
     }
 

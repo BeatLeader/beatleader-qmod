@@ -58,19 +58,19 @@ namespace LevelInfoUI {
         LevelRefreshContent(self);
 
         if (starsLabel == NULL) {
-            starsLabel = CreateText(self->levelParamsPanel->notesCountText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
-            AddHoverHint(starsLabel, "BeatLeader ranked stars");
+            starsLabel = CreateText(self->levelParamsPanel->get_transform(), "0.00", true, UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
             starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            starsImage = CreateImage(self->levelParamsPanel->notesCountText->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
-            AddHoverHint(starsImage, "BeatLeader ranked stars");
+            AddHoverHint(starsLabel, "BeatLeader ranked stars");
 
-            ppLabel = CreateText(self->levelParamsPanel->notesPerSecondText->get_transform(), "", true, UnityEngine::Vector2(24, 3));
-            AddHoverHint(ppLabel, "BeatLeader pp for 100%");
+            starsImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3));
+
+            ppLabel = CreateText(self->levelParamsPanel->get_transform(), "0", true, UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
             ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             ppLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            ppImage = CreateImage(self->levelParamsPanel->notesPerSecondText->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
-            AddHoverHint(ppImage, "BeatLeader pp for 100%");
+            AddHoverHint(ppLabel, "BeatLeader pp for 100%");
+            
+            ppImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-15.5, 5.6), UnityEngine::Vector2(3, 3));
 
             noSubmissionLabel = CreateText(self->levelParamsPanel->get_transform(), "Score submission disabled", true, UnityEngine::Vector2(24, 3));
             noSubmissionLabel->set_color(UnityEngine::Color(1.0, 0.0, 0.0, 1));
