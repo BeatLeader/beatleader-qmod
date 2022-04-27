@@ -7,7 +7,9 @@
 
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
+
 #include "include/Assets/BundleLoader.hpp"
+#include "include/Assets/Sprites.hpp"
 
 #include "include/Utils/ModConfig.hpp"
 #include "include/Utils/ReplaySynchronizer.hpp"
@@ -52,6 +54,7 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
 
     LeaderboardUI::reset();
     LevelInfoUI::reset();
+    Sprites::ResetCache();
 }
 
 void replayPostCallback(ReplayUploadStatus status, string description, float progress, int code) {
@@ -100,7 +103,9 @@ extern "C" void load() {
     ModifiersUI::setup();
 
     PlayerController::playerChanged.push_back([](Player* updated) {
-        synchronizer = new ReplaySynchronizer();
+        if (synchronizer == NULL) {
+            synchronizer = new ReplaySynchronizer();
+        }
     });
     QuestUI::MainThreadScheduler::Schedule([] {
         PlayerController::Refresh();

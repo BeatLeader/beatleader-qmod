@@ -164,6 +164,8 @@ namespace ReplayRecorder {
     }
 
     void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IDifficultyBeatmap* difficultyBeatmap, bool practice) {
+        if (self->get_gameMode() == "Party") return;
+
         replay->info->score = levelCompletionResults->multipliedScore;
 
         mapEnhancer.energy = levelCompletionResults->energy;

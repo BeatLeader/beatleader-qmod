@@ -51,6 +51,7 @@
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
 #include "GlobalNamespace/PlatformLeaderboardViewController.hpp"
+#include "GlobalNamespace/LocalLeaderboardViewController.hpp"
 #include "GlobalNamespace/LoadingControl.hpp"
 #include "GlobalNamespace/LeaderboardTableView.hpp"
 #include "GlobalNamespace/LeaderboardTableView_ScoreData.hpp"
@@ -313,7 +314,10 @@ namespace LeaderboardUI {
         }
     }
 
+    static bool isLocal = false;
+
     void clearTable() {
+        selectedScore = 10;
         plvc->scores->Clear();
         plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
     }
@@ -322,7 +326,7 @@ namespace LeaderboardUI {
         plvc = self;
         clearTable();
         page = 1;
-        selectedScore = 10;
+        isLocal = false;
 
         if (PlayerController::currentPlayer == NULL) {
             self->loadingControl->ShowText("Please sign up or log in mod settings!", true);
@@ -451,18 +455,29 @@ namespace LeaderboardUI {
             cellBackgrounds[result] = backgroundImage;            
         }
 
-        if (row == selectedScore) {
-            cellBackgrounds[result]->set_color(ownScoreColor);
-        } else {
-            cellBackgrounds[result]->set_color(someoneElseScoreColor);
-        }
-        cellScores[result] = scoreVector[row];
-        avatars[result]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
-        Sprites::get_Icon(scoreVector[row].player.avatar, [result](UnityEngine::Sprite* sprite) {
-            if (sprite != NULL && avatars[result] != NULL && sprite->get_texture() != NULL) {
-                avatars[result]->set_sprite(sprite);
+        if (!isLocal) {
+            cellBackgrounds[result]->get_gameObject()->set_active(true);
+            avatars[result]->get_gameObject()->set_active(true);
+            cellHighlights[result]->get_gameObject()->set_active(true);
+            if (row == selectedScore) {
+                cellBackgrounds[result]->set_color(ownScoreColor);
+            } else {
+                cellBackgrounds[result]->set_color(someoneElseScoreColor);
             }
-        });
+            cellScores[result] = scoreVector[row];
+            avatars[result]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
+            Sprites::get_Icon(scoreVector[row].player.avatar, [result](UnityEngine::Sprite* sprite) {
+                if (sprite != NULL && avatars[result] != NULL && sprite->get_texture() != NULL) {
+                    avatars[result]->set_sprite(sprite);
+                }
+            });
+        } else {
+            cellBackgrounds[result]->get_gameObject()->set_active(false);
+            avatars[result]->get_gameObject()->set_active(false);
+            cellHighlights[result]->get_gameObject()->set_active(false);
+        }
+
+        
 
         return (TableCell *)result;
     }
@@ -484,6 +499,12 @@ namespace LeaderboardUI {
         }
     }
 
+    MAKE_HOOK_MATCH(LocalLeaderboardDidActivate, &LocalLeaderboardViewController::DidActivate, void, LocalLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+        isLocal = true;
+
+        LocalLeaderboardDidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
+    }
+
     void setup() {
         LoggerContextObject logger = getLogger().WithContext("load");
 
@@ -491,6 +512,7 @@ namespace LeaderboardUI {
         INSTALL_HOOK(logger, LeaderboardDeactivate);
         INSTALL_HOOK(logger, RefreshLeaderboard);
         INSTALL_HOOK(logger, LeaderboardCellSource);
+        INSTALL_HOOK(logger, LocalLeaderboardDidActivate);
 
         PlayerController::playerChanged.push_back([](Player* updated) {
             QuestUI::MainThreadScheduler::Schedule([] {
