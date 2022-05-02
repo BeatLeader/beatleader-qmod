@@ -150,6 +150,10 @@ UnityEngine::UI::Button* websiteLinkButton = NULL;
 PlatformLeaderboardViewController* plvc = NULL;
 UnityEngine::UI::Toggle* showBeatLeaderButton = NULL;
 
+static vector<UnityEngine::Transform*> ssElements;
+bool ssInstalled = true;
+bool showBeatLeader = false;
+
 // Loads the config from disk using our modInfo, then returns it for use
 Configuration& getConfig() {
     static Configuration config(modInfo);
@@ -533,7 +537,7 @@ void updatePlayerInfoLabel() {
             playerInfo->SetText(il2cpp_utils::createcsstr("#" + to_string(player->rank) + "       " + player->name + "         " + to_string_wprecision(player->pp, 2) + "pp"));
             
             if (plvc != NULL) {
-                auto countryControl = plvc->scopeSegmentedControl->dataItems->get(2);
+                auto countryControl = plvc->scopeSegmentedControl->dataItems->get(ssInstalled ? 3 : 2);
                 countryControl->set_hintText(il2cpp_utils::createcsstr("Country"));
                 countryControl->set_icon(GetCountryIcon(player->country));
                 plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
@@ -574,9 +578,6 @@ UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootView, Unit
     }
     return gameObject;
 }
-
-bool ssInstalled = true;
-bool showBeatLeader = false;
 
 MAKE_HOOK_MATCH(ScoreSaberDetector, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy) {
     ssInstalled = false;
@@ -634,16 +635,24 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     string mode = to_utf8(csstrtostr(plvc->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName));
     string url = API_URL + "scores/" + hash + "/" + difficulty + "/" + mode;
 
-    switch (PlatformLeaderboardViewController::_get__scoresScope())
+    
+
+    switch (plvc->scopeSegmentedControl->selectedCellNumber)
     {
-    case PlatformLeaderboardsModel::ScoresScope::AroundPlayer:
+    case 0:
+        break;
+    case 1:
         url += "?player=" + PlayerController::currentPlayer->id;
         break;
-    case PlatformLeaderboardsModel::ScoresScope::Friends:
-        url += "?country=" + PlayerController::currentPlayer->country;
+    case 2:
+        if (ssInstalled) {
+            url += "?friends=" + PlayerController::currentPlayer->id;
+        } else {
+            url += "?country=" + PlayerController::currentPlayer->country;
+        }
         break;
-    
-    default:
+    case 3:
+        url += "?country=" + PlayerController::currentPlayer->country;
         break;
     } 
 
@@ -699,6 +708,17 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     
     if (uploadStatus == NULL) {
 
+        Array<UnityEngine::Transform*> *transforms = plvc->get_gameObject()->get_transform()->FindObjectsOfType<UnityEngine::Transform*>();
+        for (size_t i = 0; i < transforms->Length(); i++)
+        {
+            auto transform = transforms->get(i);
+            auto name =  transform->get_name();
+            if (name != NULL && (to_utf8(csstrtostr(name)) == "ScoreSaberClickableImage" || to_utf8(csstrtostr(name)) == "QuestUIHorizontalLayoutGroup")) {
+                transform->get_gameObject()->SetActive(false);
+                ssElements.push_back(transform);
+            }
+        }
+
         //UnityEngine::GameObject* parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(100,50), self->screen->get_transform()->get_position(), 140);
         playerInfo = ::QuestUI::BeatSaberUI::CreateText(plvc->leaderboardTableView->get_transform(), "", false);
         move(playerInfo, 5, -26);
@@ -735,6 +755,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
         showBeatLeaderButton = ::QuestUI::BeatSaberUI::CreateToggle(self->get_gameObject()->get_transform()->Find(il2cpp_utils::createcsstr("HeaderPanel"))->get_transform(), "Show BL", UnityEngine::Vector2(0, 0), [](bool changed){
             showBeatLeader = !showBeatLeader;
             plvc->Refresh(true, true);
+            
             if (uploadStatus != NULL) {
                 websiteLinkButton->get_gameObject()->SetActive(showBeatLeader);
                 websiteLinkImage->get_gameObject()->SetActive(showBeatLeader);
@@ -742,20 +763,33 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
                 uploadStatus->get_gameObject()->SetActive(false);
                 retryButton->get_gameObject()->SetActive(false);
 
+                for (size_t i = 0; i < ssElements.size(); i++)
+                {
+                    ssElements[i]->get_gameObject()->SetActive(!showBeatLeader);
+                }
+
+                HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find(il2cpp_utils::createcsstr("HeaderPanel"))->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
+
                 if (showBeatLeader) {
-                    HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find(il2cpp_utils::createcsstr("HeaderPanel"))->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
                     imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
                     imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
                     imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
+                } else {
+                    imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
+                    imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
+                    imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
                 }
             }
         });
+        
         resize(showBeatLeaderButton, 170, 0);
 
-        HMUI::ImageView* imageView = self->get_gameObject()->get_transform()->Find(il2cpp_utils::createcsstr("HeaderPanel"))->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
-        imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
-        imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
-        imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
+        QuestUI::MainThreadScheduler::Schedule([] {
+            HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find(il2cpp_utils::createcsstr("HeaderPanel"))->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
+            imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
+            imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
+            imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
+        });
     }
 }
 
