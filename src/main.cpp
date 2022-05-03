@@ -671,31 +671,33 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     string hash = regex_replace(to_utf8(csstrtostr(levelData->get_levelID())), basic_regex("custom_level_"), "");
     string difficulty = MapEnhancer::DiffName(plvc->difficultyBeatmap->get_difficulty().value);
     string mode = to_utf8(csstrtostr(plvc->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName));
-    string url = API_URL + "scores/" + hash + "/" + difficulty + "/" + mode;
+    string url = API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode + "/modifiers/";
 
     switch (plvc->scopeSegmentedControl->selectedCellNumber)
     {
     case 0:
-        url += "?page=" + to_string(page);
+        url += "global/globa";
         break;
     case 1:
-        url += "?player=" + PlayerController::currentPlayer->id + "&page=" + to_string(page);
+        url += "global/around";
         break;
     case 2:
         if (ssInstalled) {
-            url += "?friends=" + PlayerController::currentPlayer->id + "&page=" + to_string(page);
+            url += "friends/global";
         } else {
-            url += "?country=" + PlayerController::currentPlayer->country + "&page=" + to_string(page);
+            url += "country/global";
         }
         break;
     case 3:
-        url += "?country=" + PlayerController::currentPlayer->country + "&page=" + to_string(page);
+        url += "country/global";
         break;
     }
 
+    url += "?player=" + PlayerController::currentPlayer->id + "&page=" + to_string(page) + "&count=8";
+
     WebUtils::GetJSONAsync(url, [](long status, bool error, rapidjson::Document& result){
         if (!showBeatLeader) return;
-        auto scores = result.GetArray();
+        auto scores = result["data"].GetArray();
 
         if ((int)scores.Size() == 0) {
             QuestUI::MainThreadScheduler::Schedule([status] {
@@ -709,6 +711,11 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             return;
         }
         plvc->scores->Clear();
+
+        auto metadata = result["metadata"].GetObject();
+        int perPage = metadata["itemsPerPage"].GetInt();
+        int pageNum = metadata["page"].GetInt();
+        int total = metadata["total"].GetInt();
 
         int selectedScore = 10;
         for (int index = 0; index < 8; ++index)
@@ -736,7 +743,9 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             
         plvc->leaderboardTableView->scores = plvc->scores;
         plvc->leaderboardTableView->specialScorePos = selectedScore;
-        QuestUI::MainThreadScheduler::Schedule([] {
+        QuestUI::MainThreadScheduler::Schedule([pageNum, perPage, total] {
+            pageUpButton->set_interactable(pageNum * perPage < total);
+            pageDownButton->set_interactable(pageNum != 1);
             plvc->loadingControl->Hide();
             plvc->hasScoresData = true;
             plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
