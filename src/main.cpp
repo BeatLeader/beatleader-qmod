@@ -247,19 +247,21 @@ void replayPostCallback(ReplayUploadStatus status, string description, float pro
         PlayerController::Refresh();
     }
     QuestUI::MainThreadScheduler::Schedule([status, description, progress] {
-        uploadStatus->SetText(il2cpp_utils::createcsstr(description));
-        switch (status)
-        {
-            case ReplayUploadStatus::finished:
-                leaderboardViewController->Refresh(true, true);
-                break;
-            case ReplayUploadStatus::error:
-                retryButton->get_gameObject()->SetActive(true);
-                break;
-            case ReplayUploadStatus::inProgress:
-                if(progress >= 100)
-                    uploadStatus->SetText(il2cpp_utils::createcsstr("<color=#b103fcff>Posting replay: Finishing up..."));
-                break;
+        if (uploadStatus != NULL) {
+            uploadStatus->SetText(il2cpp_utils::createcsstr(description));
+            switch (status)
+            {
+                case ReplayUploadStatus::finished:
+                    leaderboardViewController->Refresh(true, true);
+                    break;
+                case ReplayUploadStatus::error:
+                    retryButton->get_gameObject()->SetActive(true);
+                    break;
+                case ReplayUploadStatus::inProgress:
+                    if(progress >= 100)
+                        uploadStatus->SetText(il2cpp_utils::createcsstr("<color=#b103fcff>Posting replay: Finishing up..."));
+                    break;
+            }
         }
     });
 }
@@ -281,7 +283,9 @@ void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelComple
                 replay->info->failTime = audioTimeSyncController->get_songTime();
                 ReplayManager::ProcessReplay(replay, [](bool finished, string description, float progress) {
                     QuestUI::MainThreadScheduler::Schedule([description] {
-                        uploadStatus->SetText(il2cpp_utils::createcsstr(description));
+                        if (uploadStatus != NULL) {
+                            uploadStatus->SetText(il2cpp_utils::createcsstr(description));
+                        }
                     });
                 }, isOst);
             }
@@ -763,6 +767,9 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
                 uploadStatus->get_gameObject()->SetActive(false);
                 retryButton->get_gameObject()->SetActive(false);
 
+                SetLevelInfoActive(showBeatLeader);
+                SetModifiersActive(showBeatLeader);
+
                 for (size_t i = 0; i < ssElements.size(); i++)
                 {
                     ssElements[i]->get_gameObject()->SetActive(!showBeatLeader);
@@ -790,6 +797,9 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
             imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
             imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
         });
+
+        SetLevelInfoActive(false);
+        SetModifiersActive(false);
     }
 }
 

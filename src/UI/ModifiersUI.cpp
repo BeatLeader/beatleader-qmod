@@ -19,6 +19,8 @@
 using namespace GlobalNamespace;
 using namespace std;
 
+static vector<GameplayModifierToggle*> modifiers;
+
 string ModifierKeyFromName(string name) {
     if (name == "MODIFIER_PRO_MODE") return "PM";
     if (name == "MODIFIER_NO_BOMBS") return "NB";
@@ -39,15 +41,40 @@ string ModifierKeyFromName(string name) {
     return "UD";
 }
 
-MAKE_HOOK_MATCH(ModifierStart, &GameplayModifierToggle::Start, void, GameplayModifierToggle* self) {
-    ModifierStart(self);
-
+void SetCustomModifier(GameplayModifierToggle* self) {
     string key = ModifierKeyFromName(to_utf8(csstrtostr(self->get_gameplayModifier()->get_modifierNameLocalizationKey())));
-    getLogger().info("%s", key.c_str());
     if (ModifiersManager::modifiers.count(key)) {
         float value = ModifiersManager::modifiers[key];
         self->multiplierText->SetText(il2cpp_utils::createcsstr((value > 0 ? "+" : "") + to_string_wprecision(value * 100.0f, 1) + "%"));
     }
+}
+
+void ResetCustomModifier(GameplayModifierToggle* self) {
+    string key = ModifierKeyFromName(to_utf8(csstrtostr(self->get_gameplayModifier()->get_modifierNameLocalizationKey())));
+    if (ModifiersManager::modifiers.count(key)) {
+        float value = self->gameplayModifier->multiplier;
+        self->multiplierText->SetText(il2cpp_utils::createcsstr((value > 0 ? "+" : "") + to_string_wprecision(value * 100.0f, 1) + "%"));
+    }
+}
+
+MAKE_HOOK_MATCH(ModifierStart, &GameplayModifierToggle::Start, void, GameplayModifierToggle* self) {
+    ModifierStart(self);
+
+    SetCustomModifier(self);
+
+    modifiers.push_back(self);
+}
+
+void SetModifiersActive(bool active) {
+    for (size_t i = 0; i < modifiers.size(); i++)
+    {
+        if (active) {
+            SetCustomModifier(modifiers[i]);
+        } else {
+            ResetCustomModifier(modifiers[i]);
+        }
+    }
+    
 }
 
 void SetupModifiersUI() {

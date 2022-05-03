@@ -96,6 +96,13 @@ MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, v
     }
 }
 
+void SetLevelInfoActive(bool active) {
+    starsLabel->get_gameObject()->SetActive(active);
+    starsImage->get_gameObject()->SetActive(active);
+    ppLabel->get_gameObject()->SetActive(active);
+    ppImage->get_gameObject()->SetActive(active);
+}
+
 void SetupLevelInfoUI() {
     LoggerContextObject logger = getLogger().WithContext("load");
 
