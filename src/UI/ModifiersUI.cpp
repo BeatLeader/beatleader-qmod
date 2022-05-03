@@ -82,3 +82,7 @@ void SetupModifiersUI() {
 
     INSTALL_HOOK(logger, ModifierStart);
 }
+
+void ResetModifiersUI() {
+    modifiers = vector<GameplayModifierToggle*>();
+}

@@ -47,6 +47,8 @@
 #include "UnityEngine/Canvas.hpp"
 #include "UnityEngine/AdditionalCanvasShaderChannels.hpp"
 #include "UnityEngine/UI/CanvasScaler.hpp"
+#include "UnityEngine/Events/UnityAction_1.hpp"
+#include "UnityEngine/Events/UnityAction.hpp"
 
 #include "System/Action_1.hpp"
 #include "System/Threading/Tasks/Task.hpp"
@@ -151,8 +153,18 @@ PlatformLeaderboardViewController* plvc = NULL;
 UnityEngine::UI::Toggle* showBeatLeaderButton = NULL;
 
 static vector<UnityEngine::Transform*> ssElements;
+
+UnityEngine::UI::Button* pageUpButton;
+UnityEngine::UI::Button::ButtonClickedEvent* ssUpAction;
+UnityEngine::UI::Button::ButtonClickedEvent* blUpAction;
+UnityEngine::UI::Button* pageDownButton;
+UnityEngine::UI::Button::ButtonClickedEvent* ssDownAction;
+UnityEngine::UI::Button::ButtonClickedEvent* blDownAction;
+
 bool ssInstalled = true;
 bool showBeatLeader = false;
+int page = 1;
+bool pageChange = false;
 
 // Loads the config from disk using our modInfo, then returns it for use
 Configuration& getConfig() {
@@ -588,9 +600,30 @@ MAKE_HOOK_MATCH(ScoreSaberDetector, &PlatformLeaderboardViewController::Refresh,
     showBeatLeader = true;
 }
 
+void PageUp() {
+    pageChange = true;
+    page++;
+
+    plvc->Refresh(true, true);
+}
+
+void PageDown() {
+    pageChange = true;
+    if (page > 1) {
+        page--;
+    }
+
+    plvc->Refresh(true, true);
+}
+
 MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy) {
     if (showBeatLeader) {
-    plvc->scores->Clear();
+    if (!pageChange) {
+        page = 1;
+    } else {
+        pageChange = false;
+    }
+    plvc->leaderboardTableView->scores->Clear();
     plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
     if (PlayerController::currentPlayer == NULL) {
         plvc->loadingControl->ShowText(il2cpp_utils::createcsstr("Please sign up or log in mod settings!"), true);
@@ -602,6 +635,7 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
         QuestUI::MainThreadScheduler::Schedule([] {
             plvc->loadingControl->Hide();
             plvc->hasScoresData = false;
+            plvc->leaderboardTableView->scores->Clear();
             plvc->loadingControl->ShowText(il2cpp_utils::createcsstr("Leaderboards for this map are not supported!"), false);
             plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
         });
@@ -639,44 +673,45 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     string mode = to_utf8(csstrtostr(plvc->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName));
     string url = API_URL + "scores/" + hash + "/" + difficulty + "/" + mode;
 
-    
-
     switch (plvc->scopeSegmentedControl->selectedCellNumber)
     {
     case 0:
+        url += "?page=" + to_string(page);
         break;
     case 1:
-        url += "?player=" + PlayerController::currentPlayer->id;
+        url += "?player=" + PlayerController::currentPlayer->id + "&page=" + to_string(page);
         break;
     case 2:
         if (ssInstalled) {
-            url += "?friends=" + PlayerController::currentPlayer->id;
+            url += "?friends=" + PlayerController::currentPlayer->id + "&page=" + to_string(page);
         } else {
-            url += "?country=" + PlayerController::currentPlayer->country;
+            url += "?country=" + PlayerController::currentPlayer->country + "&page=" + to_string(page);
         }
         break;
     case 3:
-        url += "?country=" + PlayerController::currentPlayer->country;
+        url += "?country=" + PlayerController::currentPlayer->country + "&page=" + to_string(page);
         break;
-    } 
+    }
 
     WebUtils::GetJSONAsync(url, [](long status, bool error, rapidjson::Document& result){
+        if (!showBeatLeader) return;
         auto scores = result.GetArray();
-        plvc->scores->Clear();
 
         if ((int)scores.Size() == 0) {
             QuestUI::MainThreadScheduler::Schedule([status] {
                 plvc->loadingControl->Hide();
                 plvc->hasScoresData = false;
+                plvc->leaderboardTableView->scores->Clear();
                 plvc->loadingControl->ShowText(il2cpp_utils::createcsstr("No scores were found!"), true);
                 
                 plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
             });
             return;
         }
+        plvc->scores->Clear();
 
         int selectedScore = 10;
-        for (int index = 0; index < 10; ++index)
+        for (int index = 0; index < 8; ++index)
         {
             if (index < (int)scores.Size())
             {
@@ -711,18 +746,6 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
     plvc->loadingControl->ShowText(il2cpp_utils::createcsstr("Loading"), true);
     
     if (uploadStatus == NULL) {
-
-        Array<UnityEngine::Transform*> *transforms = plvc->get_gameObject()->get_transform()->FindObjectsOfType<UnityEngine::Transform*>();
-        for (size_t i = 0; i < transforms->Length(); i++)
-        {
-            auto transform = transforms->get(i);
-            auto name =  transform->get_name();
-            if (name != NULL && (to_utf8(csstrtostr(name)) == "ScoreSaberClickableImage" || to_utf8(csstrtostr(name)) == "QuestUIHorizontalLayoutGroup")) {
-                transform->get_gameObject()->SetActive(false);
-                ssElements.push_back(transform);
-            }
-        }
-
         //UnityEngine::GameObject* parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(100,50), self->screen->get_transform()->get_position(), 140);
         playerInfo = ::QuestUI::BeatSaberUI::CreateText(plvc->leaderboardTableView->get_transform(), "", false);
         move(playerInfo, 5, -26);
@@ -750,6 +773,48 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
         resize(uploadStatus, 10, 0);
         uploadStatus->set_fontSize(3);
         uploadStatus->set_richText(true);
+
+        if (ssInstalled) {
+            Array<UnityEngine::Transform*> *transforms = plvc->get_gameObject()->get_transform()->FindObjectsOfType<UnityEngine::Transform*>();
+            for (size_t i = 0; i < transforms->Length(); i++)
+            {
+                auto transform = transforms->get(i);
+                auto name =  transform->get_name();
+                if (name != NULL && (to_utf8(csstrtostr(name)) == "ScoreSaberClickableImage" 
+                                || to_utf8(csstrtostr(name)) == "QuestUIHorizontalLayoutGroup")) {
+                    transform->get_gameObject()->SetActive(false);
+                    ssElements.push_back(transform);
+                }
+            }
+
+            Array<UnityEngine::UI::Button*> *buttons = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::UI::Button*>();
+            for (size_t i = 0; i < buttons->Length(); i++)
+            {
+                auto button = buttons->get(i);
+
+                TMPro::TextMeshProUGUI* textMesh = button->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
+                if (textMesh && to_utf8(csstrtostr(textMesh->get_text())) == "") {
+                    auto position = button->GetComponent<UnityEngine::RectTransform *>()->get_anchoredPosition();
+                    if (position.x == -40 && position.y == 20) {
+                        ssDownAction = button->get_onClick();
+                        blDownAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
+                        pageDownButton = button;
+
+                        auto delegate = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), button, PageDown);
+                        blDownAction->AddListener(delegate);
+                        button->set_onClick(blDownAction);
+                    } else if (position.x == -40 && position.y == -20) {
+                        ssUpAction = button->get_onClick();
+                        blUpAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
+                        pageUpButton = button;
+
+                        auto delegate = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), button, PageUp);
+                        blUpAction->AddListener(delegate);
+                        button->set_onClick(blUpAction);
+                    }
+                }
+            }
+        }
     }
     } else {
         RefreshLeaderboard(self, firstActivation, addedToHierarchy);
@@ -766,6 +831,9 @@ MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh,
                 playerInfo->get_gameObject()->SetActive(showBeatLeader);
                 uploadStatus->get_gameObject()->SetActive(false);
                 retryButton->get_gameObject()->SetActive(false);
+
+                pageUpButton->set_onClick(showBeatLeader ? blUpAction : ssUpAction);
+                pageDownButton->set_onClick(showBeatLeader ? blDownAction : ssDownAction);
 
                 SetLevelInfoActive(showBeatLeader);
                 SetModifiersActive(showBeatLeader);
@@ -840,7 +908,12 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
     uploadStatus = NULL;
     plvc = NULL;
     leaderboardViewController = NULL;
+    showBeatLeaderButton = NULL;
+    ssInstalled = true;
+    showBeatLeader = false;
+    ssElements = vector<UnityEngine::Transform*>();
     ResetLevelInfoUI();
+    ResetModifiersUI();
 }
 
 // Called later on in the game loading - a good time to install function hooks
