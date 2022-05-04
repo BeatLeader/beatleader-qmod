@@ -64,12 +64,16 @@ MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, v
         ppLabel->set_fontStyle(TMPro::FontStyles::Italic);
         ppImage = CreateImage(self->levelParamsPanel->notesPerSecondText->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-8.6, 5.6), UnityEngine::Vector2(3, 3));
     }
+    
+    IPreviewBeatmapLevel* level = reinterpret_cast<IPreviewBeatmapLevel*>(self->level);
+    if (level == NULL) return;
 
-    string hash = regex_replace(to_utf8(csstrtostr(reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID())), basic_regex("custom_level_"), "");
+    string hash = regex_replace(to_utf8(csstrtostr(level->get_levelID())), basic_regex("custom_level_"), "");
     string difficulty = MapEnhancer::DiffName(self->selectedDifficultyBeatmap->get_difficulty().value);
     string mode = to_utf8(csstrtostr(self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName));
 
     string key = hash + difficulty + mode;
+    selectedMap = key;
 
     if (_mapInfos.count(key)) {
         starsLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(_mapInfos[key], 2)));
@@ -77,18 +81,19 @@ MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, v
     } else {
         string url = API_URL + "map/hash/" + hash;
 
-        WebUtils::GetJSONAsync(url, [difficulty, mode, key, hash](long status, bool error, rapidjson::Document& result){
+        WebUtils::GetJSONAsync(url, [key, hash](long status, bool error, rapidjson::Document& result){
             auto difficulties = result["difficulties"].GetArray();
+            QuestUI::MainThreadScheduler::Schedule([difficulties, key, hash] () {
+                if (key != selectedMap) return;
 
-            for (int index = 0; index < (int)difficulties.Size(); ++index)
-            {
-                auto value = difficulties[index].GetObject();
-                _mapInfos[hash + value["difficultyName"].GetString() + value["modeName"].GetString()] = value["stars"].GetFloat();
-            }
+                for (int index = 0; index < (int)difficulties.Size(); ++index)
+                {
+                    auto value = difficulties[index].GetObject();
+                    _mapInfos[hash + value["difficultyName"].GetString() + value["modeName"].GetString()] = value["stars"].GetFloat();
+                }
 
-            float stars = _mapInfos[key];
+                float stars = _mapInfos[key];
 
-            QuestUI::MainThreadScheduler::Schedule([stars] () {
                 starsLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(stars, 2)));
                 ppLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(stars * 44.0f, 2)));
             });
