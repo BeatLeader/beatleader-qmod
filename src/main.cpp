@@ -29,7 +29,7 @@ using namespace QuestUI;
 
 ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
 
-static ReplaySynchronizer* synchronizer;
+static std::optional<ReplaySynchronizer> synchronizer;
 
 DEFINE_CONFIG(ModConfig);
 
@@ -57,12 +57,12 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
     Sprites::ResetCache();
 }
 
-void replayPostCallback(ReplayUploadStatus status, string description, float progress, int code) {
+void replayPostCallback(ReplayUploadStatus status, string_view description, float progress, int code) {
     if (status == ReplayUploadStatus::finished) {
         PlayerController::Refresh();
     }
 
-    if (synchronizer != NULL) {
+    if (synchronizer != std::nullopt) {
         if (code == 200) {
             synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::uptodate);
         } else if ((code >= 400 && code < 500) || code < 0) {
@@ -102,9 +102,9 @@ extern "C" void load() {
     LevelInfoUI::setup();
     ModifiersUI::setup();
 
-    PlayerController::playerChanged.push_back([](Player* updated) {
-        if (synchronizer == NULL) {
-            synchronizer = new ReplaySynchronizer();
+    PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
+        if (synchronizer == std::nullopt) {
+            synchronizer = ReplaySynchronizer();
         }
     });
     QuestUI::MainThreadScheduler::Schedule([] {
@@ -113,11 +113,11 @@ extern "C" void load() {
 
     ModifiersManager::Sync();
 
-    ReplayRecorder::StartRecording([](Replay* replay, MapStatus status, bool isOst) {
+    ReplayRecorder::StartRecording([](Replay const& replay, MapStatus status, bool isOst) {
         if (status == MapStatus::cleared) {
             ReplayManager::ProcessReplay(replay, isOst, replayPostCallback);
         } else {
-            ReplayManager::ProcessReplay(replay, isOst, [](ReplayUploadStatus finished, string description, float progress, int code) {
+            ReplayManager::ProcessReplay(replay, isOst, [](ReplayUploadStatus finished, string_view description, float progress, int code) {
                 QuestUI::MainThreadScheduler::Schedule([description, progress, finished] {
                     LeaderboardUI::updateStatus(finished, description, progress);
                 });

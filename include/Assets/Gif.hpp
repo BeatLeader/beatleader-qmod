@@ -10,10 +10,10 @@ using namespace UnityEngine;
 
 struct Gif
 {
-    Gif(std::string& text) : data(text), datastream(&this->data){};
-    Gif(std::vector<uint8_t>& vec) : data(reinterpret_cast<std::vector<char>&>(vec)), datastream(&this->data){};
-    Gif(std::vector<char>& vec) : data(vec), datastream(&this->data){};
-    Gif(Array<char>* array) : data(array), datastream(&this->data){};
+    Gif(std::string& text) : datastream(&this->data), data(text){};
+    Gif(std::span<uint8_t> const vec) : datastream(&this->data), data(reinterpret_cast<std::span<char> const &>(vec)){};
+    Gif(std::span<char> const vec) : datastream(&this->data), data(vec){};
+    Gif(Array<char>* array) : datastream(&this->data), data(array){};
     Gif(Array<uint8_t>* array) : Gif(reinterpret_cast<Array<char>*>(array)){};
 
     /// @brief on destruction we need to actually close the gif file otherwise we are leaking memory
@@ -137,12 +137,12 @@ private:
             this->std::basic_streambuf<CharT, TraitsT>::setg(text.data(), text.data(), text.data() + text.size());
         }
 
-        vectorwrapbuf(std::vector<CharT>& vec)
+        vectorwrapbuf(std::span<CharT> vec)
         {
             this->std::basic_streambuf<CharT, TraitsT>::setg(vec.data(), vec.data(), vec.data() + vec.size());
         }
 
-        vectorwrapbuf(Array<CharT>*& arr)
+        vectorwrapbuf(Array<CharT>* arr)
         {
             this->std::basic_streambuf<CharT, TraitsT>::setg(arr->values, arr->values, arr->values + arr->Length());
         }

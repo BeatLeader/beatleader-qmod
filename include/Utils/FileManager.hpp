@@ -11,7 +11,7 @@ class FileManager
 private:
     /* data */
 public:
-   static void WriteReplay(Replay* replay);
-   static ReplayInfo* ReadInfo(string replayPath);
-   static string ToFilePath(Replay* replay);
+   static void WriteReplay(Replay const &replay);
+   static std::optional<ReplayInfo> ReadInfo(string_view replayPath);
+   static string ToFilePath(Replay const &replay);
 };

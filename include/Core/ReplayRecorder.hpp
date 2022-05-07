@@ -8,5 +8,5 @@ enum MapStatus {
 };
 
 namespace ReplayRecorder {
-    void StartRecording(std::function<void(Replay*, MapStatus, bool)> callback);
+    void StartRecording(function<void(Replay const &, MapStatus, bool)> const &callback);
 }

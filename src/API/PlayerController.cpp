@@ -17,12 +17,12 @@
 using UnityEngine::Resources;
 using namespace GlobalNamespace;
 
-Player* PlayerController::currentPlayer = NULL;
-Player* PlayerController::platformPlayer = NULL;
+std::optional<Player> PlayerController::currentPlayer = std::nullopt;
+std::optional<Player> PlayerController::platformPlayer = std::nullopt;
 string PlayerController::lastErrorDescription = "";
-vector<function<void(Player*)>> PlayerController::playerChanged;
+vector<function<void(std::optional<Player> const&)>> PlayerController::playerChanged;
 
-void callbackWrapper(Player* player) {
+void callbackWrapper(std::optional<Player> const& player) {
     for (auto && fn : PlayerController::playerChanged)
         fn(player);
 }
@@ -31,18 +31,17 @@ string PlayerController::RefreshOnline() {
     string result = "";
     WebUtils::Get(WebUtils::API_URL + "user/id", result);
     if (result.length() > 0) {
-        currentPlayer = new Player();
+        currentPlayer = Player();
         currentPlayer->id = result;
 
-        WebUtils::GetJSONAsync(WebUtils::API_URL + "player/" + result, [](long status, bool error, rapidjson::Document& result){
+        WebUtils::GetJSONAsync(WebUtils::API_URL + "player/" + result, [](long status, bool error, rapidjson::Document const& result){
             if (status == 200) {
-                auto player = result.GetObject();
-                currentPlayer = new Player(player);
+                currentPlayer = Player(result);
                 callbackWrapper(currentPlayer);
             }
         });
     } else {
-        currentPlayer = NULL;
+        currentPlayer = std::nullopt;
     }
     return result;
 }
@@ -52,17 +51,17 @@ void PlayerController::RefreshPlatform() {
 }
 
 string PlayerController::Refresh() {
-    if (platformPlayer == NULL) {
+    if (platformPlayer == std::nullopt) {
         RefreshPlatform();
     }
     
     return RefreshOnline();
 }
 
-void PlayerController::SignUp(string login, string password, std::function<void(std::string)> finished) {
+void PlayerController::SignUp(string_view login, string_view password, const std::function<void(std::string_view)>& finished) {
     lastErrorDescription = "";
 
-    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", "signup", login, password, [finished] (long statusCode, string error) {
+    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", "signup", login, password, [finished] (long statusCode, string_view error) {
         string result = "";
         if (statusCode == 200) {
             result = Refresh();
@@ -74,10 +73,10 @@ void PlayerController::SignUp(string login, string password, std::function<void(
     });
 }
 
-void PlayerController::LogIn(string login, string password, std::function<void(std::string)> finished) {
+void PlayerController::LogIn(string_view login, string_view password, const std::function<void(std::string_view)>& finished) {
     lastErrorDescription = "";
 
-    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", "login", login, password, [finished] (long statusCode, string error) {
+    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", "login", login, password, [finished] (long statusCode, string_view error) {
         string result = "";
         if (statusCode == 200) {
             result = Refresh();
@@ -96,7 +95,7 @@ bool PlayerController::LogOut() {
     lastErrorDescription = result;
     WebUtils::Get(WebUtils::API_URL + "user/id", result);
     if (result.length() == 0) {
-        currentPlayer = NULL;
+        currentPlayer = std::nullopt;
         callbackWrapper(currentPlayer);
         return true;
     } else {

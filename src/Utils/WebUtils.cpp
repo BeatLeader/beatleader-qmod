@@ -29,11 +29,12 @@ namespace WebUtils {
     }
 
     //https://stackoverflow.com/a/55660581
-    std::string query_encode(const std::string& s)
+    std::string query_encode(std::string_view s)
     {
         std::string ret;
+        ret.reserve(s.size());
 
-        #define IS_BETWEEN(ch, low, high) (ch >= low && ch <= high)
+        #define IS_BETWEEN(ch, low, high) ((ch) >= (low) && (ch) <= (high))
         #define IS_ALPHA(ch) (IS_BETWEEN(ch, 'A', 'Z') || IS_BETWEEN(ch, 'a', 'z'))
         #define IS_DIGIT(ch) IS_BETWEEN(ch, '0', '9')
         #define IS_HEXDIG(ch) (IS_DIGIT(ch) || IS_BETWEEN(ch, 'A', 'F') || IS_BETWEEN(ch, 'a', 'f'))
@@ -109,7 +110,7 @@ namespace WebUtils {
         return newLength;
     }
 
-    std::optional<rapidjson::Document> GetJSON(std::string url) {
+    std::optional<rapidjson::Document> GetJSON(std::string_view url) {
         std::string data;
         Get(url, data);
         rapidjson::Document document;
@@ -119,11 +120,11 @@ namespace WebUtils {
         return document;
     }
 
-    long Get(std::string url, std::string& val) {
+    long Get(std::string_view url, std::string& val) {
         return Get(url, TIMEOUT, val);
     }
 
-    long Get(std::string url, long timeout, std::string& val) {
+    long Get(std::string_view url, long timeout, std::string& val) {
 
         std::string directory = getDataDir(modInfo) + "cookies/";
         std::filesystem::create_directories(directory);
@@ -175,11 +176,12 @@ namespace WebUtils {
         long length;
     };
 
-    void GetAsync(std::string url, std::function<void(long, std::string)> finished, std::function<void(float)> progressUpdate) {
+    void GetAsync(std::string_view url, std::function<void(long, std::string_view)> const &finished, std::function<void(
+            float)> const &progressUpdate) {
         GetAsync(url, TIMEOUT, finished, progressUpdate);
     }
 
-    void GetAsync(std::string url, long timeout, std::function<void(long, std::string)> finished, std::function<void(float)> progressUpdate) {
+    void GetAsync(std::string_view url, long timeout, const std::function<void(long, std::string_view)>& finished, const std::function<void(float)>& progressUpdate) {
         std::thread t (
             [url, timeout, progressUpdate, finished] {
                 std::string directory = getDataDir(modInfo) + "cookies/";
@@ -246,21 +248,21 @@ namespace WebUtils {
         t.detach();
     }
 
-    void GetJSONAsync(std::string url, std::function<void(long, bool, rapidjson::Document&)> finished) {
+    void GetJSONAsync(std::string_view url, std::function<void(long, bool, rapidjson::Document const&)> const& finished) {
         GetAsync(url,
-            [finished] (long httpCode, std::string data) { 
+            [finished] (long httpCode, std::string_view data) {
                 rapidjson::Document document;
-                document.Parse(data);
+                document.Parse(data.data());
                 finished(httpCode, document.HasParseError() || !document.IsObject(), document);
             }
         );
     }
 
-    void PostJSONAsync(std::string url, std::string data, std::function<void(long, std::string)> finished) {
+    void PostJSONAsync(std::string_view url, std::string_view data, std::function<void(long, std::string_view)> const& finished) {
         PostJSONAsync(url, data, TIMEOUT, finished);
     }
 
-    void PostJSONAsync(std::string url, std::string data, long timeout, std::function<void(long, std::string)> finished) {
+    void PostJSONAsync(std::string_view url, std::string_view data, long timeout, std::function<void(long, std::string_view)> const& finished) {
         std::thread t(
             [url, timeout, data, finished] {
                 std::string val;
@@ -307,7 +309,7 @@ namespace WebUtils {
         t.detach();
     }
 
-    void PostFormAsync(std::string url, std::string action, std::string login, std::string password, std::function<void(long, std::string)> finished) {
+    void PostFormAsync(std::string_view url, std::string_view action, std::string_view login, std::string_view password, std::function<void(long, std::string_view)> const& finished) {
         std::thread t(
             [url, action, login, password, finished] {
                 long timeout = TIMEOUT;
@@ -344,17 +346,17 @@ namespace WebUtils {
                 curl_formadd(&formpost,
                     &lastptr,
                     CURLFORM_COPYNAME, "action",
-                    CURLFORM_COPYCONTENTS, action.c_str(),
+                    CURLFORM_COPYCONTENTS, action.data(),
                     CURLFORM_END);
                     curl_formadd(&formpost,
                     &lastptr,
                     CURLFORM_COPYNAME, "login",
-                    CURLFORM_COPYCONTENTS, login.c_str(),
+                    CURLFORM_COPYCONTENTS, login.data(),
                     CURLFORM_END);
                     curl_formadd(&formpost,
                     &lastptr,
                     CURLFORM_COPYNAME, "password",
-                    CURLFORM_COPYCONTENTS, password.c_str(),
+                    CURLFORM_COPYCONTENTS, password.data(),
                     CURLFORM_END);
                 curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
 
@@ -394,7 +396,7 @@ namespace WebUtils {
         return retcode;
     }
 
-    void PostFileAsync(std::string url, FILE* data, long length, long timeout, std::function<void(long, std::string)> finished, std::function<void(float)> progressUpdate) {
+    void PostFileAsync(std::string_view url, FILE* data, long length, long timeout, std::function<void(long, std::string_view)> const& finished, std::function<void(float)> const& progressUpdate) {
         std::thread t(
             [url, timeout, data, finished, length, progressUpdate] {
                 std::string val;
@@ -469,6 +471,7 @@ namespace WebUtils {
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);
+                delete wrapper;
                 //curl_mime_free(form);
                 finished(httpCode, val);
             }

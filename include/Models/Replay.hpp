@@ -1,23 +1,26 @@
 #pragma once
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "UnityEngine/Vector3.hpp"
-#include "UnityEngine/Quaternion.hpp"
+#include "sombrero/shared/FastVector3.hpp"
+#include "sombrero/shared/FastQuaternion.hpp"
+#include "sombrero/shared/Vector3Utils.hpp"
+
 
 using namespace std;
 
-class ReplayInfo {
-public:
-    ReplayInfo();
-    ~ReplayInfo();
-
+struct ReplayInfo {
     string version;
     string gameVersion;
     string timestamp;
-        
+
+    ReplayInfo(string_view version, string_view gameVersion, string_view timestamp) : version(version),
+                                                                                            gameVersion(gameVersion),
+                                                                                            timestamp(timestamp) {}
+
     string playerID;
     string playerName;
     string platform;
@@ -44,116 +47,81 @@ public:
     float speed = 0;
 };
 
-class Vector3 {
-public:
-    Vector3();
-    Vector3(UnityEngine::Vector3 vec);
-    ~Vector3();
+using Vector3 = Sombrero::FastVector3;
+using Quaternion = Sombrero::FastQuaternion;
 
-    float x;
-    float y;
-    float z;
+struct Transform {
+    Vector3 position;
+    Quaternion rotation;
+
+    constexpr Transform(Sombrero::FastVector3 const &position, Sombrero::FastQuaternion const &rotation) : position(position),
+                                                                                                 rotation(rotation) {}
 };
 
-class Quaternion {
-public:
-    Quaternion();
-    Quaternion(UnityEngine::Quaternion quat);
-    ~Quaternion();
-
-    float x;
-    float y;
-    float z;
-    float w;
-};
-
-class Transform {
-public:
-    Transform();
-    ~Transform();
-
-    Vector3* position;
-    Quaternion* rotation;
-};
-
-class Frame {
-public:
-    Frame();
-    ~Frame();
-
+struct Frame {
     float time;
     int fps;
-    Transform* head;
-    Transform* leftHand;
-    Transform* rightHand;
+    Transform head;
+    Transform leftHand;
+    Transform rightHand;
+
+    constexpr Frame(float time, int fps, Transform const &head, Transform const &leftHand, Transform const &rightHand) : time(
+            time), fps(fps), head(head), leftHand(leftHand), rightHand(rightHand) {}
 };
 
-class ReplayNoteCutInfo {
-public:
-    ReplayNoteCutInfo();
-    ~ReplayNoteCutInfo();
-
+struct ReplayNoteCutInfo {
     bool speedOK;
     bool directionOK;
     bool saberTypeOK;
     bool wasCutTooSoon;
     float saberSpeed;
-    Vector3* saberDir = new Vector3();
+    Vector3 saberDir;
     int saberType;
     float timeDeviation;
     float cutDirDeviation;
-    Vector3* cutPoint = new Vector3();
-    Vector3* cutNormal  = new Vector3();
+    Vector3 cutPoint;
+    Vector3 cutNormal;
     float cutDistanceToCenter;
     float cutAngle;
     float beforeCutRating;
     float afterCutRating;
 };
 
-enum NoteEventType {
-    good = 0,
-    bad = 1,
-    miss = 2,
-    bomb = 3
+enum struct NoteEventType {
+    GOOD = 0,
+    BAD = 1,
+    MISS = 2,
+    BOMB = 3
 };
 
-class NoteEvent {
-public:
-    NoteEvent();
-    ~NoteEvent();
-
+struct NoteEvent {
     int noteID;
-    float eventTime;
     float spawnTime;
-    NoteEventType eventType = NoteEventType::good;
-    ReplayNoteCutInfo* noteCutInfo = new ReplayNoteCutInfo();
+    float eventTime;
+    NoteEventType eventType = NoteEventType::GOOD;
+    ReplayNoteCutInfo noteCutInfo;
+
+    constexpr NoteEvent(int noteId, float spawnTime) : noteID(noteId), spawnTime(spawnTime) {}
 };
 
-class WallEvent {
-public:
-    WallEvent();
-    ~WallEvent();
-
+struct WallEvent {
     int wallID;
+    float spawnTime;
+
     float energy;
     float time;
-    float spawnTime;
+
+    constexpr WallEvent(int wallId, float spawnTime) : wallID(wallId), spawnTime(spawnTime) {}
 };
 
-class AutomaticHeight {
-public:
-    AutomaticHeight();
-    ~AutomaticHeight();
+struct AutomaticHeight {
+    constexpr AutomaticHeight(float height, float time) : height(height), time(time) {}
 
     float height;
     float time;
 };
 
-class Pause {
-public:
-    Pause();
-    ~Pause();
-
+struct Pause {
     long duration;
     float time;
 };
@@ -161,36 +129,46 @@ public:
 class Replay
 {
 public:
-    Replay();
-    ~Replay();
+    void Encode(ofstream& stream) const;
+    static std::optional<ReplayInfo> DecodeInfo(ifstream& stream);
 
-    void Encode(ofstream& stream);
-    static ReplayInfo* DecodeInfo(ifstream& stream);
+    explicit Replay(ReplayInfo info) : info(std::move(info)) {}
+    Replay(Replay&&) = default; // make move default, avoid copying
 
-    ReplayInfo* info = new ReplayInfo();
-    vector<Frame*> frames;
-    vector<NoteEvent*> notes;
-    vector<WallEvent*> walls;
-    vector<AutomaticHeight*> heights;
-    vector<Pause*> pauses;
+
+    ReplayInfo info;
+    vector<Frame> frames;
+    vector<NoteEvent> notes;
+    vector<WallEvent> walls;
+    vector<AutomaticHeight> heights;
+    vector<Pause> pauses;
 private:
-    void Encode(char value, ofstream& stream);
-    void Encode(int value, ofstream& stream);
-    void Encode(long value, ofstream& stream);
-    void Encode(bool value, ofstream& stream);
-    void Encode(float value, ofstream& stream);
-    void Encode(string value, ofstream& stream);
+    static void Encode(char value, ofstream& stream);
+    static void Encode(int value, ofstream& stream);
+    static void Encode(long value, ofstream& stream);
+    static void Encode(bool value, ofstream& stream);
+    static void Encode(float value, ofstream& stream);
+    static void Encode(string_view value, ofstream& stream);
 
+    // template methods MUST be header only
     template<class T>
-    void Encode(vector<T> list, ofstream& stream);
-    void Encode(ReplayInfo* info, ofstream& stream);
-    void Encode(Vector3* vector, ofstream& stream);
-    void Encode(Quaternion* quaternion, ofstream& stream);
-    void Encode(Frame* frame, ofstream& stream);
-    void Encode(NoteEvent* note, ofstream& stream);
-    void Encode(WallEvent* wall, ofstream& stream);
-    void Encode(AutomaticHeight* height, ofstream& stream);
-    void Encode(Pause* pause, ofstream& stream);
+    static void Encode(vector<T> const& list, ofstream& stream) {
+        size_t count = list.size();
+        Encode((int)count, stream);
+        for (size_t i = 0; i < count; i++)
+        {
+            Encode(list[i], stream);
+        }
+    }
+
+    static void Encode(ReplayInfo const &info, ofstream& stream);
+    static void Encode(Vector3 const &vector, ofstream& stream);
+    static void Encode(Quaternion const &quaternion, ofstream& stream);
+    static void Encode(Frame const &frame, ofstream& stream);
+    static void Encode(NoteEvent const &note, ofstream& stream);
+    static void Encode(WallEvent const &wall, ofstream& stream);
+    static void Encode(AutomaticHeight const &height, ofstream& stream);
+    static void Encode(Pause const &pause, ofstream& stream);
 
     static char DecodeChar(ifstream& stream);
     static int DecodeInt(ifstream& stream);

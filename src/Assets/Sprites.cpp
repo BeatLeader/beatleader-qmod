@@ -11,10 +11,10 @@
 
 using UnityEngine::Sprite;
 
-map<string, std::vector<uint8_t>> Sprites::iconCache;
+map<string_view, std::vector<uint8_t>> Sprites::iconCache;
 
-void Sprites::get_Icon(string url, std::function<void(UnityEngine::Sprite*)> completion) {
-    if (iconCache.count(url)) {
+void Sprites::get_Icon(string_view url, const std::function<void(UnityEngine::Sprite*)>& completion) {
+    if (iconCache.contains(url)) {
         std::vector<uint8_t> bytes = iconCache[url];
         Array<uint8_t>* spriteArray = il2cpp_utils::vectorToArray(bytes);
         UnityEngine::Sprite* sprite;
@@ -38,11 +38,10 @@ void Sprites::get_Icon(string url, std::function<void(UnityEngine::Sprite*)> com
             completion(sprite);
         }
     } else {
-        WebUtils::GetAsync(url, [completion, url](long code, string data) {
+        WebUtils::GetAsync(url, [completion, url](long code, string_view data) {
             if (code == 200) {
-                std::vector<uint8_t> bytes(data.begin(), data.end());
-                iconCache[url] = bytes;
-                QuestUI::MainThreadScheduler::Schedule([completion, data, url] {
+                iconCache[url] = {data.begin(), data.end()};
+                QuestUI::MainThreadScheduler::Schedule([completion, url] {
                     get_Icon(url, completion);
                 });
             }
@@ -50,7 +49,7 @@ void Sprites::get_Icon(string url, std::function<void(UnityEngine::Sprite*)> com
     }
 }
 
-void Sprites::GetCountryIcon(string country, std::function<void(UnityEngine::Sprite*)> completion) {
+void Sprites::GetCountryIcon(string_view country, const std::function<void(UnityEngine::Sprite*)>& completion) {
     string lowerCountry;
     lowerCountry.resize(country.size());
     transform(country.begin(), country.end(), lowerCountry.begin(), asciitolower);

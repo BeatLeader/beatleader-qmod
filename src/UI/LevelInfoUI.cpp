@@ -82,18 +82,18 @@ namespace LevelInfoUI {
 
         string key = hash + difficulty + mode;
 
-        if (_mapInfos.count(key)) {
+        if (_mapInfos.contains(key)) {
             starsLabel->SetText(to_string_wprecision(_mapInfos[key], 2));
             ppLabel->SetText(to_string_wprecision(_mapInfos[key] * 44.0f, 2));
         } else {
             string url = WebUtils::API_URL + "map/hash/" + hash;
 
-            WebUtils::GetJSONAsync(url, [difficulty, mode, key, hash](long status, bool error, rapidjson::Document& result){
-                auto difficulties = result["difficulties"].GetArray();
+            WebUtils::GetJSONAsync(url, [difficulty, mode, key, hash](long status, bool error, rapidjson::Document const& result){
+                auto const& difficulties = result["difficulties"].GetArray();
 
                 for (int index = 0; index < (int)difficulties.Size(); ++index)
                 {
-                    auto value = difficulties[index].GetObject();
+                    auto const& value = difficulties[index].GetObject();
                     _mapInfos[hash + value["difficultyName"].GetString() + value["modeName"].GetString()] = value["stars"].GetFloat();
                 }
 

@@ -2,13 +2,13 @@
 
 Score::Score() {}
 
-Score::Score(rapidjson::GenericObject<false, rapidjson::GenericValue<rapidjson::UTF8<>>>& document) {
-    auto playerObject = document["player"].GetObject();
+Score::Score(rapidjson::Value const& document) {
+    auto const& playerObject = document["player"];
     player = Player(playerObject);
 
-    pp = document["pp"].GetDouble();
+    pp = document["pp"].GetFloat();
     rank = document["rank"].GetInt();
-    accuracy = document["accuracy"].GetDouble();
+    accuracy = document["accuracy"].GetFloat();
     playerId = document["playerId"].GetString();
     fullCombo = document["fullCombo"].GetBool();
     modifiers = document["modifiers"].GetString();
