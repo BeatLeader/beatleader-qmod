@@ -1,17 +1,12 @@
 {
   "_QPVersion": "0.1.1",
-  "id": "BeatLeader",
+  "id": "${mod_id}",
   "name": "BeatLeader",
-  "version": "0.2.2",
+  "version": "${version}",
   "author": "NSGolova",
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.21.0",
   "coverImage": "cover.png",
-  "modFiles": [
-    "libbl.so"
-  ],
-  "libraryFiles": [
-    "libbs-utils.so",
-    "libbeatsaber-hook_3_8_1.so"
-  ]
+  "modFiles": [],
+  "libraryFiles": []
 }
