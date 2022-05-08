@@ -4,6 +4,8 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 #include <dirent.h>
 
+#include "Utils/ThreadKeeper.hpp"
+
 using namespace std;
 using namespace rapidjson;
 
@@ -18,9 +20,11 @@ class ReplaySynchronizer
 {
 public:
     ReplaySynchronizer() noexcept;
-    void updateStatus(string path, ReplayStatus status);
 
-    void Save();
-    void Process(DIR *dir, string dirName);
-    Document statuses;
+    static void updateStatus(string path, ReplayStatus status, rapidjson::Document &doc);
+
+    static void Save(rapidjson::Document const &doc) ;
+    static void Process(DIR *dir, string dirName, shared_ptr<Document> docPtr);
+
+    std::shared_ptr<Document> statuses;
 };

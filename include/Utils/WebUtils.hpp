@@ -16,19 +16,19 @@ namespace WebUtils {
 
     long Get(std::string_view url, long timeout, std::string& val);
 
-    void GetAsync(std::string_view url, std::function<void(long, std::string_view)> const &finished, std::function<void(
+    std::thread GetAsync(std::string_view url, std::function<void(long, std::string_view)> const &finished, std::function<void(
             float)> const &progressUpdate = nullptr);
 
-    void GetAsync(std::string_view url, long timeout, std::function<void(long, std::string_view)> const& finished, std::function<void(float)> const& progressUpdate = nullptr);
+    std::thread GetAsync(std::string_view url, long timeout, std::function<void(long, std::string_view)> const& finished, std::function<void(float)> const& progressUpdate = nullptr);
 
-    void GetJSONAsync(std::string_view url, std::function<void(long, bool, rapidjson::Document const&)> const& finished);
+    std::thread GetJSONAsync(std::string_view url, std::function<void(long, bool, rapidjson::Document const&)> const& finished);
 
-    void PostJSONAsync(std::string_view url, std::string_view data, std::function<void(long, std::string_view)> const& finished);
+    std::thread PostJSONAsync(std::string_view url, std::string_view data, std::function<void(long, std::string_view)> const& finished);
 
-    void PostJSONAsync(const std::string& url, std::string data, long timeout, std::function<void(long, std::string_view)> const& finished);
+    std::thread PostJSONAsync(const std::string& url, std::string data, long timeout, std::function<void(long, std::string_view)> const& finished);
 
-    void PostFormAsync(const std::string& url, const std::string& password, const std::string& login, const std::string& action,
+    std::thread PostFormAsync(const std::string& url, const std::string& password, const std::string& login, const std::string& action,
                        std::function<void(long, std::string_view)> const &finished);
 
-    void PostFileAsync(std::string_view url, FILE* data, long length, long timeout, std::function<void(long, std::string_view)> const& finished, std::function<void(float)> const& progressUpdate);
+    std::thread PostFileAsync(std::string_view url, FILE* data, long length, long timeout, std::function<void(long, std::string_view)> const& finished, std::function<void(float)> const& progressUpdate);
 }

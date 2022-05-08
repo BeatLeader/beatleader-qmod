@@ -176,12 +176,12 @@ namespace WebUtils {
         long length;
     };
 
-    void GetAsync(std::string_view url, std::function<void(long, std::string_view)> const &finished, std::function<void(
+    std::thread GetAsync(std::string_view url, std::function<void(long, std::string_view)> const &finished, std::function<void(
             float)> const &progressUpdate) {
-        GetAsync(url, TIMEOUT, finished, progressUpdate);
+        return GetAsync(url, TIMEOUT, finished, progressUpdate);
     }
 
-    void GetAsync(std::string_view url, long timeout, const std::function<void(long, std::string_view)>& finished, const std::function<void(float)>& progressUpdate) {
+    std::thread GetAsync(std::string_view url, long timeout, const std::function<void(long, std::string_view)>& finished, const std::function<void(float)>& progressUpdate) {
         std::thread t (
             [url = std::string(url), timeout, progressUpdate, finished] {
                 std::string directory = getDataDir(modInfo) + "cookies/";
@@ -245,10 +245,11 @@ namespace WebUtils {
             }
         );
         t.detach();
+        return t;
     }
 
-    void GetJSONAsync(std::string_view url, std::function<void(long, bool, rapidjson::Document const&)> const& finished) {
-        GetAsync(url,
+    std::thread GetJSONAsync(std::string_view url, std::function<void(long, bool, rapidjson::Document const&)> const& finished) {
+        return GetAsync(url,
             [finished] (long httpCode, std::string_view data) {
                 rapidjson::Document document;
                 document.Parse(data.data());
@@ -257,11 +258,11 @@ namespace WebUtils {
         );
     }
 
-    void PostJSONAsync(std::string_view url, std::string_view data, std::function<void(long, std::string_view)> const& finished) {
-        PostJSONAsync(std::string(url), std::string(data), TIMEOUT, finished);
+    std::thread PostJSONAsync(std::string_view url, std::string_view data, std::function<void(long, std::string_view)> const& finished) {
+        return PostJSONAsync(std::string(url), std::string(data), TIMEOUT, finished);
     }
 
-    void PostJSONAsync(const std::string& url, std::string data, long timeout, std::function<void(long, std::string_view)> const& finished) {
+    std::thread PostJSONAsync(const std::string& url, std::string data, long timeout, std::function<void(long, std::string_view)> const& finished) {
         std::thread t(
             [url, timeout, data, finished] {
                 std::string val;
@@ -306,9 +307,10 @@ namespace WebUtils {
             }
         );
         t.detach();
+        return t;
     }
 
-    void PostFormAsync(const std::string& url, const std::string& password, const std::string& login, const std::string& action,
+    std::thread PostFormAsync(const std::string& url, const std::string& password, const std::string& login, const std::string& action,
                        std::function<void(long, std::string_view)> const &finished) {
         std::thread t(
             [url, action, login, password, finished] {
@@ -380,6 +382,7 @@ namespace WebUtils {
             }
         );
         t.detach();
+        return t;
     }
 
     struct input {
@@ -396,7 +399,7 @@ namespace WebUtils {
         return retcode;
     }
 
-    void PostFileAsync(std::string_view url, FILE* data, long length, long timeout, std::function<void(long, std::string_view)> const& finished, std::function<void(float)> const& progressUpdate) {
+    std::thread PostFileAsync(std::string_view url, FILE* data, long length, long timeout, std::function<void(long, std::string_view)> const& finished, std::function<void(float)> const& progressUpdate) {
         std::thread t(
             [url = std::string(url), timeout, data, finished, length, progressUpdate] {
                 std::string val;
@@ -476,6 +479,7 @@ namespace WebUtils {
             }
         );
         t.detach();
+        return t;
     }
 
 }

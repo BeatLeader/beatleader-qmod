@@ -64,9 +64,9 @@ void replayPostCallback(ReplayUploadStatus status, string_view description, floa
 
     if (synchronizer != std::nullopt) {
         if (code == 200) {
-            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::uptodate);
+            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::uptodate, *synchronizer->statuses);
         } else if ((code >= 400 && code < 500) || code < 0) {
-            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::shouldnotpost);
+            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::shouldnotpost, *synchronizer->statuses);
         }
     }
     
@@ -104,7 +104,7 @@ extern "C" void load() {
 
     PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
         if (synchronizer == std::nullopt) {
-            synchronizer = ReplaySynchronizer();
+            synchronizer.emplace();
         }
     });
     QuestUI::MainThreadScheduler::Schedule([] {
