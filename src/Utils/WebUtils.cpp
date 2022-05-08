@@ -32,7 +32,7 @@ namespace WebUtils {
     std::string query_encode(std::string_view s)
     {
         std::string ret;
-        ret.reserve(s.size());
+//        ret.reserve(s.size());
 
         #define IS_BETWEEN(ch, low, high) ((ch) >= (low) && (ch) <= (high))
         #define IS_ALPHA(ch) (IS_BETWEEN(ch, 'A', 'Z') || IS_BETWEEN(ch, 'a', 'z'))
@@ -97,11 +97,11 @@ namespace WebUtils {
     }
 
 
-    std::size_t CurlWrite_CallbackFunc_StdString(void *contents, std::size_t size, std::size_t nmemb, std::string *s)
+    std::size_t CurlWrite_CallbackFunc_StdString(void *contents, std::size_t size, std::size_t nmemb, std::string &s)
     {
         std::size_t newLength = size * nmemb;
         try {
-            s->append((char*)contents, newLength);
+            s.append((char*)contents, newLength);
         } catch(std::bad_alloc &e) {
             //handle memory problem
             getLogger().critical("Failed to allocate string of size: %lu", newLength);
@@ -183,7 +183,7 @@ namespace WebUtils {
 
     void GetAsync(std::string_view url, long timeout, const std::function<void(long, std::string_view)>& finished, const std::function<void(float)>& progressUpdate) {
         std::thread t (
-            [url, timeout, progressUpdate, finished] {
+            [url = std::string(url), timeout, progressUpdate, finished] {
                 std::string directory = getDataDir(modInfo) + "cookies/";
                 std::filesystem::create_directories(directory);
                 std::string cookieFile = directory + "cookies.txt";
@@ -210,11 +210,11 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
                 curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWrite_CallbackFunc_StdString);
 
-                ProgressUpdateWrapper* wrapper = new ProgressUpdateWrapper { progressUpdate };
+                ProgressUpdateWrapper wrapper = ProgressUpdateWrapper { progressUpdate };
                 if(progressUpdate) {
                     // Internal CURL progressmeter must be disabled if we provide our own callback
                     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
-                    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, wrapper);
+                    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &wrapper);
                     // Install the callback function
                     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, 
                         +[] (void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
@@ -241,7 +241,6 @@ namespace WebUtils {
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);
-                delete wrapper;
                 finished(httpCode, val);
             }
         );
@@ -259,10 +258,10 @@ namespace WebUtils {
     }
 
     void PostJSONAsync(std::string_view url, std::string_view data, std::function<void(long, std::string_view)> const& finished) {
-        PostJSONAsync(url, data, TIMEOUT, finished);
+        PostJSONAsync(std::string(url), std::string(data), TIMEOUT, finished);
     }
 
-    void PostJSONAsync(std::string_view url, std::string_view data, long timeout, std::function<void(long, std::string_view)> const& finished) {
+    void PostJSONAsync(const std::string& url, std::string data, long timeout, std::function<void(long, std::string_view)> const& finished) {
         std::thread t(
             [url, timeout, data, finished] {
                 std::string val;
@@ -309,7 +308,8 @@ namespace WebUtils {
         t.detach();
     }
 
-    void PostFormAsync(std::string_view url, std::string_view action, std::string_view login, std::string_view password, std::function<void(long, std::string_view)> const& finished) {
+    void PostFormAsync(const std::string& url, const std::string& password, const std::string& login, const std::string& action,
+                       std::function<void(long, std::string_view)> const &finished) {
         std::thread t(
             [url, action, login, password, finished] {
                 long timeout = TIMEOUT;
@@ -398,7 +398,7 @@ namespace WebUtils {
 
     void PostFileAsync(std::string_view url, FILE* data, long length, long timeout, std::function<void(long, std::string_view)> const& finished, std::function<void(float)> const& progressUpdate) {
         std::thread t(
-            [url, timeout, data, finished, length, progressUpdate] {
+            [url = std::string(url), timeout, data, finished, length, progressUpdate] {
                 std::string val;
                 std::string directory = getDataDir(modInfo) + "cookies/";
                 std::filesystem::create_directories(directory);
@@ -429,11 +429,11 @@ namespace WebUtils {
                 // Don't wait forever, time out after TIMEOUT seconds.
                 curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
 
-                ProgressUpdateWrapper* wrapper = new ProgressUpdateWrapper { progressUpdate, length };
+                ProgressUpdateWrapper wrapper { progressUpdate, length };
                 if (progressUpdate) {
                     // Internal CURL progressmeter must be disabled if we provide our own callback
                     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
-                    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, wrapper);
+                    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &wrapper);
                     // Install the callback function
                     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, 
                         +[] (void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
@@ -471,7 +471,6 @@ namespace WebUtils {
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);
-                delete wrapper;
                 //curl_mime_free(form);
                 finished(httpCode, val);
             }

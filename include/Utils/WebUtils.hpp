@@ -25,9 +25,10 @@ namespace WebUtils {
 
     void PostJSONAsync(std::string_view url, std::string_view data, std::function<void(long, std::string_view)> const& finished);
 
-    void PostJSONAsync(std::string_view url, std::string_view data, long timeout, std::function<void(long, std::string_view)> const& finished);
+    void PostJSONAsync(const std::string& url, std::string data, long timeout, std::function<void(long, std::string_view)> const& finished);
 
-    void PostFormAsync(std::string_view url, std::string_view action, std::string_view login, std::string_view password, std::function<void(long, std::string_view)> const& finished);
+    void PostFormAsync(const std::string& url, const std::string& password, const std::string& login, const std::string& action,
+                       std::function<void(long, std::string_view)> const &finished);
 
     void PostFileAsync(std::string_view url, FILE* data, long length, long timeout, std::function<void(long, std::string_view)> const& finished, std::function<void(float)> const& progressUpdate);
 }

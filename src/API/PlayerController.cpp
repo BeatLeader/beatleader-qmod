@@ -61,32 +61,36 @@ string PlayerController::Refresh() {
 void PlayerController::SignUp(string_view login, string_view password, const std::function<void(std::string_view)>& finished) {
     lastErrorDescription = "";
 
-    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", "signup", login, password, [finished] (long statusCode, string_view error) {
-        string result = "";
-        if (statusCode == 200) {
-            result = Refresh();
-        } else {
-            lastErrorDescription = error;
-            getLogger().error("BeatLeader %s", ("signup error" + to_string(statusCode)).c_str());
-        }
-        finished(result);
-    });
+    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", std::string(password), std::string(login), "signup",
+                            [finished](long statusCode, string_view error) {
+                                string result = "";
+                                if (statusCode == 200) {
+                                    result = Refresh();
+                                } else {
+                                    lastErrorDescription = error;
+                                    getLogger().error("BeatLeader %s",
+                                                      ("signup error" + to_string(statusCode)).c_str());
+                                }
+                                finished(result);
+                            });
 }
 
 void PlayerController::LogIn(string_view login, string_view password, const std::function<void(std::string_view)>& finished) {
     lastErrorDescription = "";
 
-    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", "login", login, password, [finished] (long statusCode, string_view error) {
-        string result = "";
-        if (statusCode == 200) {
-            result = Refresh();
-        } else {
-            lastErrorDescription = error;
-            getLogger().error("BeatLeader %s", ("signup error" + to_string(statusCode)).c_str());
-        }
+    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", std::string(password), std::string(login), "login",
+                            [finished](long statusCode, string_view error) {
+                                string result = "";
+                                if (statusCode == 200) {
+                                    result = Refresh();
+                                } else {
+                                    lastErrorDescription = error;
+                                    getLogger().error("BeatLeader %s",
+                                                      ("signup error" + to_string(statusCode)).c_str());
+                                }
 
-        finished(result);
-    });
+                                finished(result);
+                            });
 }
 
 bool PlayerController::LogOut() {

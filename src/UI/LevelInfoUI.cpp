@@ -76,6 +76,8 @@ namespace LevelInfoUI {
             noSubmissionLabel->set_color(UnityEngine::Color(1.0, 0.0, 0.0, 1));
         }
 
+        // TODO: Why not just substr str.substr("custom_level_".size())
+        // essentially, remove prefix
         string hash = regex_replace((string)reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID(), basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(self->selectedDifficultyBeatmap->get_difficulty().value);
         string mode = (string)self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName;

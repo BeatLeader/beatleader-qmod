@@ -145,16 +145,20 @@ namespace ReplayRecorder {
         std::string timeStamp(std::to_string(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
 
         _currentPause = std::nullopt;
-        replay.emplace(Replay(ReplayInfo(modInfo.version,(string)UnityEngine::Application::get_version(), timeStamp)));
+        replay.emplace(ReplayInfo(modInfo.version, (string) UnityEngine::Application::get_version(), timeStamp));
 
         userEnhancer.Enhance(replay.value());
 
-        playerHeightDetector = Resources::FindObjectsOfTypeAll<PlayerHeightDetector*>()[0];
-        if (playerHeightDetector != NULL && playerSettings->get_automaticPlayerHeight()) {
-            _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float>*>(
-                classof(System::Action_1<float>*), 
-                static_cast<Il2CppObject*>(nullptr), OnPlayerHeightChange);
-            playerHeightDetector->add_playerHeightDidChangeEvent(_heightEvent);
+        auto detectors = Resources::FindObjectsOfTypeAll<PlayerHeightDetector*>();
+
+        if (detectors && detectors.size() > 0) {
+            playerHeightDetector = detectors[0];
+            if (playerHeightDetector != nullptr && playerSettings->get_automaticPlayerHeight()) {
+                _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float> *>(
+                        classof(System::Action_1<float>*),
+                        static_cast<Il2CppObject *>(nullptr), OnPlayerHeightChange);
+                playerHeightDetector->add_playerHeightDidChangeEvent(_heightEvent);
+            }
         }
     }
 
