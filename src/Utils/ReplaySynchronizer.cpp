@@ -15,7 +15,7 @@
 
 ReplaySynchronizer::ReplaySynchronizer() noexcept
 {
-    if (PlayerController::currentPlayer == NULL) return;
+    if (PlayerController::currentPlayer == std::nullopt) return;
 
     getLogger().info("Synchronizer init");
 
@@ -67,7 +67,7 @@ void ReplaySynchronizer::Save() {
 void ReplaySynchronizer::Process(DIR *dir, string dirName) {
     struct dirent *ent;
 
-    if ((ent = readdir(dir)) == NULL || PlayerController::currentPlayer == NULL) {
+    if ((ent = readdir(dir)) == NULL || PlayerController::currentPlayer == std::nullopt) {
         closedir(dir);
         return;
     }
@@ -77,10 +77,10 @@ void ReplaySynchronizer::Process(DIR *dir, string dirName) {
     getLogger().info("Processing %s", filename.c_str());
     if (this->statuses.HasMember(filePath)) {
         if (ReplayStatus::topost == (ReplayStatus)this->statuses[filePath].GetInt()) {
-            if (PlayerController::currentPlayer != NULL) {
+            if (PlayerController::currentPlayer != std::nullopt) {
                 ReplaySynchronizer* self = this;
-                ReplayManager::TryPostReplay(filePath, 0, [filePath, dir, dirName, self](bool finished, string description, float progress, int status) {
-                    if (finished) {
+                ReplayManager::TryPostReplay(filePath, 0, [filePath, dir, dirName, self](ReplayUploadStatus finished, string description, float progress, int status) {
+                    if (static_cast<bool>(finished)) {
                         if (status == 200) {
                             self->statuses[filePath].SetInt((int)ReplayStatus::uptodate);
                         } else if (status >= 400 && status < 500) {
@@ -95,20 +95,20 @@ void ReplaySynchronizer::Process(DIR *dir, string dirName) {
             Process(dir, dirName);
         }
     } else {
-        ReplayInfo* info = FileManager::ReadInfo(filePath);
-        if (info == NULL || info->failTime > 0.001 || info->speed > 0.001 || (PlayerController::currentPlayer != NULL && info->playerID != PlayerController::currentPlayer->id)) {
+        auto info = FileManager::ReadInfo(filePath);
+        if (info == std::nullopt || info->failTime > 0.001 || info->speed > 0.001 || (PlayerController::currentPlayer != std::nullopt && info->playerID != PlayerController::currentPlayer->id)) {
             updateStatus(filePath, ReplayStatus::shouldnotpost);
             Process(dir, dirName);
         } else {
             string url = WebUtils::API_URL + "player/" + PlayerController::currentPlayer->id + "/scorevalue/" + info->hash + "/" + info->difficulty + "/" + info->mode;
 
             ReplaySynchronizer* self = this;
-            WebUtils::GetJSONAsync(url, [info, self, dir, dirName, filePath](long status, bool error, rapidjson::Document& result){
+            WebUtils::GetJSONAsync(url, [info = std::move(*info), self, dir, dirName, filePath](long status, bool error, rapidjson::Document const& result){
                 int score = result.GetInt();
                 getLogger().info("Get score %i", score);
-                if ((int)((float)info->score * ReplayManager::GetTotalMultiplier(info->modifiers)) > score) {
-                    ReplayManager::TryPostReplay(filePath, 0, [filePath, dir, dirName, self](bool finished, string description, float progress, int status) {
-                        if (finished) {
+                if ((int)((float)info.score * ReplayManager::GetTotalMultiplier(info.modifiers)) > score) {
+                    ReplayManager::TryPostReplay(filePath, 0, [filePath, dir, dirName, self](ReplayUploadStatus finished, string description, float progress, int status) {
+                        if (static_cast<bool>(finished)) {
                             if (status == 200) {
                                 self->updateStatus(filePath, ReplayStatus::uptodate);
                             } else if (status >= 400 && status < 500) {

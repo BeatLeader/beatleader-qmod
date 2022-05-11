@@ -43,7 +43,7 @@ StringW password;
 string errorDescription = "";
 
 void UpdateUI(string userID) {
-    if (userID.length() > 0) {
+    if (!userID.empty()) {
         label2->SetText(userID);
         label2->get_gameObject()->SetActive(true);
         label1->get_gameObject()->SetActive(true);
@@ -79,7 +79,7 @@ void BeatLeader::PreferencesViewController::DidDeactivate(bool removedFromHierar
 }
 
 void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
-    string userID = PlayerController::currentPlayer != NULL ? PlayerController::currentPlayer->id : "";
+    string userID = PlayerController::currentPlayer != std::nullopt ? PlayerController::currentPlayer->id : "";
 
     if (firstActivation) {
         this->get_gameObject()->AddComponent<HMUI::Touchable*>();
@@ -99,7 +99,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         loginField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), "Login", "", [](StringW value) {
             login = value;
         });
-        login = PlayerController::platformPlayer != NULL ? PlayerController::platformPlayer->name : "";
+        login = PlayerController::platformPlayer != std::nullopt ? PlayerController::platformPlayer->name : "";
         loginField->SetText(login);
         
         passwordField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), "Password", "", [](StringW value) {
@@ -113,7 +113,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                 return;
             }
             PlayerController::LogIn((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
-                if (userID.length() == 0) {
+                if (userID.empty()) {
                     errorDescription = PlayerController::lastErrorDescription;
                 } else {
                     errorDescription = "";
@@ -132,7 +132,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                 return;
             }
             PlayerController::SignUp((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
-                if (userID.length() == 0) {
+                if (userID.empty()) {
                     errorDescription = PlayerController::lastErrorDescription;
                 } else {
                     errorDescription = "";
@@ -150,7 +150,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         //     LevelInfoUI::resetStars();
         //     PlayerController::Refresh();
         // });
-        PlayerController::playerChanged.push_back([](Player* updated) {
+        PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
             UpdateUI(updated->id);
         });
         saveToggle = AddConfigValueToggle(container->get_transform(), getModConfig().Save);

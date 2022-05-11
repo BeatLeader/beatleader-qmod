@@ -37,7 +37,7 @@ namespace FormatUtils {
         const int Year = 365 * Day;
 
         inline string GetRelativeTimeString(string timeSet) {
-            int timeSetSeconds = std::stoi(timeSet);
+            int timeSetSeconds = std::stoi(timeSet.data());
             int nowSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             int delta = nowSeconds - timeSetSeconds;
             if (delta < 1 * Minute) return delta == 1 ? "one second ago" : to_string(delta) + " seconds ago";
@@ -72,7 +72,7 @@ namespace FormatUtils {
         static Color lowAccColor = UnityEngine::Color(0.93, 1, 0.62, 1);
         static Color highAccColor = UnityEngine::Color(1, 0.39, 0.28, 1);
 
-        inline string rgb2hex(Color color) { 
+        inline string rgb2hex(Color const& color) {
             stringstream ss; 
             ss << std::hex << ((int)(color.r * 255.0) << 16 | (int)(color.g * 255.0) << 8 | (int)(color.b * 255.0)); 
             return ss.str();

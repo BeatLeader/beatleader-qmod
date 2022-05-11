@@ -3,8 +3,8 @@
 class UserEnhancer
 {
 private:
-    void EnhanceLocal(Replay* replay);
-    void EnhanceBL(Replay* replay);
+    void EnhanceLocal(Replay& replay);
+    void EnhanceBL(Replay& replay);
 public:
-    void Enhance(Replay* replay);
+    void Enhance(Replay& replay);
 };

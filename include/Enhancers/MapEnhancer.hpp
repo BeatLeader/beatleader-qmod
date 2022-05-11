@@ -25,9 +25,9 @@ public:
     ColorScheme* colorScheme;
     float energy;
 
-    void Enhance(Replay* replay);
+    void Enhance(Replay &replay);
     static string DiffName(int diff);
 private:
-    string Join(vector<string> list);
-    vector<string> Modifiers();
+    static string Join(span<string const> list);
+    [[nodiscard]] vector<string> Modifiers() const;
 };

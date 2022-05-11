@@ -3,12 +3,12 @@
 
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
-map<string, float> ModifiersManager::modifiers;
+unordered_map<string, float> ModifiersManager::modifiers;
 
 void ModifiersManager::Sync() {
     string url = WebUtils::API_URL + "modifiers";
 
-    WebUtils::GetJSONAsync(url, [] (long status, bool error, rapidjson::Document& result){
+    WebUtils::GetJSONAsync(url, [] (long status, bool error, rapidjson::Document const& result){
         for (auto i = result.MemberBegin(); i != result.MemberEnd(); ++i) {
             modifiers[i->name.GetString()] = i->value.GetFloat();
         }

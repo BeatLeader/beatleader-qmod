@@ -9,13 +9,13 @@ class PlayerController
     static string RefreshOnline();
 public:
     static string Refresh();
-    static vector<function<void(Player*)>> playerChanged;
+    static vector<function<void(optional<Player> const&)>> playerChanged;
 
-    static void LogIn(string login, string password, std::function<void(std::string)> finished);
-    static void SignUp(string login, string password, std::function<void(std::string)> finished);
+    static void LogIn(string login, string password, const function<void(string)>& finished);
+    static void SignUp(string login, string password, const function<void(string)>& finished);
     static bool LogOut();
 
-    static Player* currentPlayer;
-    static Player* platformPlayer;
+    static optional<Player> currentPlayer;
+    static optional<Player> platformPlayer;
     static string lastErrorDescription;
 };
