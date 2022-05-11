@@ -11,6 +11,7 @@ struct Player
     string name;
     string country;
     string avatar;
+    string role;
     int rank;
     int countryRank;
     float pp;

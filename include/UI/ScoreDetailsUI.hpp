@@ -12,15 +12,16 @@
 #include "GlobalNamespace/PlayerLevelStatsData.hpp"
 #include "GlobalNamespace/BeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
-#include "include/Models/Score.hpp"
 
+#include "include/Models/Score.hpp"
+#include "include/UI/PlayerAvatar.hpp"
 
 namespace BeatLeader {
     class ModalPopup {
         public:
             HMUI::ModalView* modal;
 
-            HMUI::ImageView* playerAvatar;
+            BeatLeader::PlayerAvatar* playerAvatar;
             UnityEngine::UI::VerticalLayoutGroup* list;
 
             UnityEngine::UI::HorizontalLayoutGroup* header;

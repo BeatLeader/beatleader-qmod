@@ -27,7 +27,9 @@ void BeatLeader::initModalPopup(BeatLeader::ModalPopup** modalUIPointer, Transfo
     UnityEngine::Sprite* roundRect = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Sprite*>().FirstOrDefault([](UnityEngine::Sprite* x) { return x->get_name() == "RoundRect10"; });
     modalUI->modal = CreateModal(parent, UnityEngine::Vector2(60, 30), [](HMUI::ModalView *modal) {}, true);
 
-    modalUI->playerAvatar = ::QuestUI::BeatSaberUI::CreateImage(modalUI->modal->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(0, 30), UnityEngine::Vector2(18, 18));
+    auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(modalUI->modal->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(0, 30), UnityEngine::Vector2(24, 24));
+    modalUI->playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
+    modalUI->playerAvatar->Init(playerAvatarImage);
     
     modalUI->list = CreateVerticalLayoutGroup(modalUI->modal->get_transform());
     modalUI->list->set_spacing(-1.0f);
@@ -91,22 +93,19 @@ string GetDetailsString(Score score) {
         result << "<color=#888888>Modifiers: <color=#FFFFFF>" << score.modifiers << "\n";
     }
 
+    result << "<size=70%>";
     if (score.fullCombo) result << "<color=#88FF88>Full Combo</color>    ";
     if (score.missedNotes > 0) result << "<color=#888888>Misses: <color=#FF8888>" << to_string(score.missedNotes) + "</color>    ";
     if (score.badCuts > 0) result << "<color=#888888>Bad cuts: <color=#FF8888>" << to_string(score.badCuts) + "</color>    \n";
     if (score.bombCuts > 0) result << "<color=#888888>Bomb cuts: <color=#FF8888>" << to_string(score.bombCuts) + "</color>    ";
     if (score.wallsHit > 0) result << "<color=#888888>Walls hit: <color=#FF8888>" << to_string(score.wallsHit) + "</color>    ";
+    result << "</size>";
 
     return result.str();
 }
 
 void BeatLeader::ModalPopup::setScore(const Score& score) {
-    auto avatar = this->playerAvatar;
-    Sprites::get_Icon(score.player.avatar, [avatar](UnityEngine::Sprite* sprite) {
-        if (sprite != NULL) {
-            avatar->set_sprite(sprite);
-        }
-    });
+    playerAvatar->SetPlayer(score.player.avatar, score.player.role);
 
     name->SetText(truncate(score.player.name, 23));
     name->set_alignment(TMPro::TextAlignmentOptions::Center);

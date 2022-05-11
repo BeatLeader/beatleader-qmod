@@ -121,7 +121,7 @@ namespace ReplayRecorder {
 
     void OnPlayerHeightChange(float height)
     {
-        if (audioTimeSyncController && automaticPlayerHeight) {
+        if (audioTimeSyncController && automaticPlayerHeight && replay != nullopt) {
             replay->heights.emplace_back(height, audioTimeSyncController->songTime);
         }
     }
@@ -186,8 +186,11 @@ namespace ReplayRecorder {
         _noteId++;
         _noteIdCache[noteData] = _noteId;
 
-
-        auto noteID = noteData->lineIndex * 1000 + (int)noteData->noteLineLayer * 100 + (int)noteData->colorType * 10 + (int)noteData->cutDirection;
+        int colorType = (int)noteData->colorType;
+        if (colorType < 0) {
+            colorType = 3;
+        }
+        auto noteID = ((int)noteData->scoringType + 2) * 10000 + noteData->lineIndex * 1000 + (int)noteData->noteLineLayer * 100 + colorType * 10 + (int)noteData->cutDirection;
         auto spawnTime = noteData->time;
         _noteEventCache.emplace(_noteId, NoteEvent(noteID, spawnTime));
     }
@@ -240,7 +243,7 @@ namespace ReplayRecorder {
         noteEvent.noteCutInfo = ReplayNoteCutInfo();
         if (noteCutInfo->speedOK && noteCutInfo->directionOK && noteCutInfo->saberTypeOK && !noteCutInfo->wasCutTooSoon) {
             noteEvent.eventType = NoteEventType::GOOD;
-        } else {
+        } else if (replay != nullopt) {
             noteEvent.eventType = NoteEventType::BAD;
             PopulateNoteCutInfo(noteEvent.noteCutInfo, noteCutInfo.heldRef);
             replay->notes.emplace_back(noteEvent);
@@ -324,14 +327,16 @@ namespace ReplayRecorder {
         noteCutInfo.beforeCutRating = _preSwingContainer[(SaberMovementData *)self->saberSwingRatingCounter->saberMovementData];
         noteCutInfo.afterCutRating = _postSwingContainer[self->saberSwingRatingCounter];
 
-        replay->notes.emplace_back(cutEvent);
+        if (replay != nullopt) {
+            replay->notes.emplace_back(cutEvent);
+        }
     }
 
     MAKE_HOOK_MATCH(NoteMiss, &ScoreController::HandleNoteWasMissed, void, ScoreController* self, NoteController* noteController) {
         NoteMiss(self, noteController);
         int noteId = _noteIdCache[noteController->noteData];
 
-        if (noteController->noteData->colorType != ColorType::None)
+        if (noteController->noteData->colorType != ColorType::None && replay != nullopt)
         {
             NoteEvent& noteEvent = _noteEventCache.at(noteId);
             noteEvent.eventTime = audioTimeSyncController->songTime;
@@ -342,7 +347,7 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(ComboMultiplierChanged, &ScoreController::HandlePlayerHeadDidEnterObstacles, void,  ScoreController* self) {
         ComboMultiplierChanged(self);
-        if (self->scoreMultiplierCounter->ProcessMultiplierEvent(ScoreMultiplierCounter::MultiplierEventType::Negative) && self->playerHeadAndObstacleInteraction->intersectingObstacles->get_Count() > 0) {
+        if (self->scoreMultiplierCounter->ProcessMultiplierEvent(ScoreMultiplierCounter::MultiplierEventType::Negative) && self->playerHeadAndObstacleInteraction->intersectingObstacles->get_Count() > 0 && replay != nullopt) {
             auto obstacleEnumerator = self->playerHeadAndObstacleInteraction->intersectingObstacles->GetEnumerator();
             if(obstacleEnumerator.MoveNext()) {
                 WallEvent& wallEvent = _wallEventCache.at(_wallCache[reinterpret_cast<ObstacleController*>(obstacleEnumerator.current)]);
@@ -376,9 +381,11 @@ namespace ReplayRecorder {
         LevelUnpause(self);
 
         _currentPause->duration = (long)chrono::duration_cast<std::chrono::seconds>(chrono::steady_clock::now() - _pauseStartTime).count();
-        replay->pauses.emplace_back(_currentPause.value());
-        _currentPause = nullopt;
-        getLogger().info("current pause is now null");
+
+        if (replay != nullopt) {
+            replay->pauses.emplace_back(_currentPause.value());
+            _currentPause = nullopt;
+        }
     }
 
     MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
