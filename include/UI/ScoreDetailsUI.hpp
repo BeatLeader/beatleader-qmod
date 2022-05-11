@@ -39,7 +39,7 @@ namespace BeatLeader {
             
             UnityEngine::UI::Button* closeButton;
             
-            void setScore(Score score);
+            void setScore(const Score& score);
     };
     void initModalPopup(ModalPopup** modalUI, UnityEngine::Transform* parent);
 }

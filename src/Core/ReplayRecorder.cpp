@@ -63,6 +63,7 @@
 #include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
 #include "GlobalNamespace/SaberMovementData.hpp"
 #include "GlobalNamespace/SaberSwingRating.hpp"
+#include "GlobalNamespace/GameplayCoreSceneSetupData.hpp"
 
 #include "main.hpp"
 
@@ -77,19 +78,18 @@ using UnityEngine::Resources;
 
 namespace ReplayRecorder {
 
-    Replay* replay;
-    std::function<void(Replay*, MapStatus, bool)> replayCallback;
+    optional<Replay> replay;
+    std::function<void(Replay const&, MapStatus, bool)> replayCallback;
 
     MapEnhancer mapEnhancer;
     UserEnhancer userEnhancer;
 
     AudioTimeSyncController* audioTimeSyncController;
-    PlayerSpecificSettings* playerSettings;
-    PlayerHeightDetector* playerHeightDetector;
+    bool automaticPlayerHeight = false;
     PlayerHeadAndObstacleInteraction* phoi;
 
     map<int, NoteCutInfo> _cutInfoCache;
-    map<int, NoteEvent *> _noteEventCache;
+    map<int, NoteEvent> _noteEventCache;
     map<SaberMovementData *, float> _preSwingContainer;
     map<SaberSwingRatingCounter *, float> _postSwingContainer;
 
@@ -98,90 +98,72 @@ namespace ReplayRecorder {
     int _noteId;
 
     map<ObstacleController *, int> _wallCache;
-    map<int, WallEvent *> _wallEventCache;
+    map<int, WallEvent> _wallEventCache;
     int _wallId;
 
-    Pause* _currentPause;
-    WallEvent* _currentWallEvent;
+    optional<Pause> _currentPause;
+    optional<WallEvent> _currentWallEvent;
     chrono::steady_clock::time_point _pauseStartTime;
     System::Action_1<float>* _heightEvent;
 
     bool isOst = false;
-    void collectMapData(StandardLevelScenesTransitionSetupDataSO* self, ::StringW gameMode, IDifficultyBeatmap* difficultyBeatmap, IPreviewBeatmapLevel* previewBeatmapLevel, OverrideEnvironmentSettings* overrideEnvironmentSettings, ColorScheme* overrideColorScheme, GameplayModifiers* gameplayModifiers, PlayerSpecificSettings* playerSpecificSettings, PracticeSettings* practiceSettings, ::StringW backButtonText, bool useTestNoteCutSoundEffects) {
-        EnvironmentInfoSO* environmentInfoSO = BeatmapEnvironmentHelper::GetEnvironmentInfo(difficultyBeatmap);
-        if (overrideEnvironmentSettings != NULL && environmentInfoSO != NULL && overrideEnvironmentSettings->overrideEnvironments)
-        {
-            environmentInfoSO = overrideEnvironmentSettings->GetOverrideEnvironmentInfoForType(environmentInfoSO->environmentType);
-        }
-        isOst = !previewBeatmapLevel->get_levelID().starts_with("custom_level");
 
-        mapEnhancer.difficultyBeatmap = difficultyBeatmap;
-        mapEnhancer.previewBeatmapLevel = previewBeatmapLevel;
-        mapEnhancer.gameplayModifiers = gameplayModifiers;
-        mapEnhancer.playerSpecificSettings = playerSpecificSettings;
-        mapEnhancer.practiceSettings = practiceSettings;
-        mapEnhancer.useTestNoteCutSoundEffects = useTestNoteCutSoundEffects;
-        mapEnhancer.environmentInfo = environmentInfoSO;
-        mapEnhancer.colorScheme = overrideColorScheme;
+    void collectMapData(StandardLevelScenesTransitionSetupDataSO* self) {
+        isOst = !self->gameplayCoreSceneSetupData->previewBeatmapLevel->get_levelID().starts_with("custom_level");
 
-        playerSettings = playerSpecificSettings;
-    }
-
-    MAKE_HOOK_MATCH(TransitionSetupDataInit, &StandardLevelScenesTransitionSetupDataSO::Init, void, StandardLevelScenesTransitionSetupDataSO* self, ::StringW gameMode, IDifficultyBeatmap* difficultyBeatmap, IPreviewBeatmapLevel* previewBeatmapLevel, OverrideEnvironmentSettings* overrideEnvironmentSettings, ColorScheme* overrideColorScheme, GameplayModifiers* gameplayModifiers, PlayerSpecificSettings* playerSpecificSettings, PracticeSettings* practiceSettings, ::StringW backButtonText, bool useTestNoteCutSoundEffects) {
-        TransitionSetupDataInit(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
-        collectMapData(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects);
+        mapEnhancer.difficultyBeatmap = self->difficultyBeatmap;
+        mapEnhancer.previewBeatmapLevel = self->gameplayCoreSceneSetupData->previewBeatmapLevel;
+        mapEnhancer.gameplayModifiers = self->gameplayModifiers;
+        mapEnhancer.playerSpecificSettings = self->gameplayCoreSceneSetupData->playerSpecificSettings;
+        mapEnhancer.practiceSettings = self->practiceSettings;
+        mapEnhancer.environmentInfo = self->environmentInfo;
+        mapEnhancer.colorScheme = self->colorScheme;
     }
 
     void OnPlayerHeightChange(float height)
     {
-        AutomaticHeight* automaticHeight = new AutomaticHeight();
-        automaticHeight->height = height;
-        automaticHeight->time = audioTimeSyncController->get_songTime();
-
-        replay->heights.push_back(automaticHeight);
+        if (audioTimeSyncController && automaticPlayerHeight) {
+            replay->heights.emplace_back(height, audioTimeSyncController->songTime);
+        }
     }
 
     MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLevel, void, SinglePlayerLevelSelectionFlowCoordinator* self, System::Action* beforeSceneSwitchCallback, bool practice) {
         LevelPlay(self, beforeSceneSwitchCallback, practice);
 
-        _currentPause = NULL;
-        replay = new Replay();
-        replay->info->version = modInfo.version;
-        replay->info->gameVersion = (string)UnityEngine::Application::get_version();
+        std::string timeStamp(std::to_string(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
 
-        std::stringstream strm;
-        strm << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        replay->info->timestamp = strm.str();
-        userEnhancer.Enhance(replay);
+        _currentPause = nullopt;
+        replay.emplace(ReplayInfo(modInfo.version, UnityEngine::Application::get_version(), timeStamp));
 
-        playerHeightDetector = Resources::FindObjectsOfTypeAll<PlayerHeightDetector*>()[0];
-        if (playerHeightDetector != NULL && playerSettings->get_automaticPlayerHeight()) {
-            _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float>*>(
-                classof(System::Action_1<float>*), 
-                static_cast<Il2CppObject*>(nullptr), OnPlayerHeightChange);
-            playerHeightDetector->add_playerHeightDidChangeEvent(_heightEvent);
-        }
+        userEnhancer.Enhance(replay.value());
+        automaticPlayerHeight = self->get_playerSettings()->automaticPlayerHeight;
     }
 
-    void processResults(SinglePlayerLevelSelectionFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IDifficultyBeatmap* difficultyBeatmap, bool practice) {
-        if (self->get_gameMode() == "Party") return;
+    MAKE_HOOK_MATCH(PlayerHeightDetectorStart, &PlayerHeightDetector::Start, void, PlayerHeightDetector* self) {
+        PlayerHeightDetectorStart(self);
 
-        replay->info->score = levelCompletionResults->rawScore;
+        _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float> *>(
+                        classof(System::Action_1<float>*),
+                        static_cast<Il2CppObject *>(nullptr), OnPlayerHeightChange);
+        self->add_playerHeightDidChangeEvent(_heightEvent);
+    }
+
+    void processResults(LevelCompletionResults* levelCompletionResults) {
+        replay->info.score = levelCompletionResults->rawScore;
 
         mapEnhancer.energy = levelCompletionResults->energy;
-        mapEnhancer.Enhance(replay);
+        mapEnhancer.Enhance(replay.value());
         
         switch (levelCompletionResults->levelEndStateType)
         {
             case LevelCompletionResults::LevelEndStateType::Cleared:
-                replayCallback(replay, MapStatus::cleared, isOst);
-                
+                replayCallback(*replay, MapStatus::cleared, isOst);
                 break;
             case LevelCompletionResults::LevelEndStateType::Failed:
                 if (levelCompletionResults->levelEndAction != LevelCompletionResults::LevelEndAction::Restart)
                 {
-                    replay->info->failTime = audioTimeSyncController->get_songTime();
-                    replayCallback(replay, MapStatus::failed, isOst);
+                    replay->info.failTime = audioTimeSyncController->songTime;
+                    replayCallback(*replay, MapStatus::failed, isOst);
                 }
                 break;
         }
@@ -189,7 +171,11 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(ProcessResultsSolo, &SoloFreePlayFlowCoordinator::ProcessLevelCompletionResultsAfterLevelDidFinish, void, SoloFreePlayFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IDifficultyBeatmap* difficultyBeatmap, GameplayModifiers* gameplayModifiers, bool practice) {
         ProcessResultsSolo(self, levelCompletionResults, difficultyBeatmap, gameplayModifiers, practice);
-        processResults(self, levelCompletionResults, difficultyBeatmap, practice);
+
+        if (self->gameMode != "Party") {
+            collectMapData(self);
+            processResults(levelCompletionResults);
+        }
     }
 
     MAKE_HOOK_MATCH(SongStart, &AudioTimeSyncController::Start, void, AudioTimeSyncController* self) {
@@ -201,10 +187,10 @@ namespace ReplayRecorder {
         _noteId++;
         _noteIdCache[noteController] = _noteId;
 
-        NoteEvent* noteEvent = new NoteEvent();
-        noteEvent->noteID = noteData->lineIndex * 1000 + (int)noteData->noteLineLayer * 100 + (int)noteData->colorType * 10 + (int)noteData->cutDirection;
-        noteEvent->spawnTime = noteData->time;
-        _noteEventCache[_noteId] = noteEvent;
+
+        auto noteID = noteData->lineIndex * 1000 + (int)noteData->noteLineLayer * 100 + (int)noteData->colorType * 10 + (int)noteData->cutDirection;
+        auto spawnTime = noteData->time;
+        _noteEventCache.emplace(_noteId, NoteEvent(noteID, spawnTime));
     }
 
     MAKE_HOOK_MATCH(SpawnNote, &BeatmapObjectManager::SpawnBasicNote, NoteController*, BeatmapObjectManager* self, NoteData* noteData, BeatmapObjectSpawnMovementData::NoteSpawnData noteSpawnData, float rotation, float cutDirectionAngleOffset) {
@@ -228,51 +214,50 @@ namespace ReplayRecorder {
         int wallId = _wallId++;
         _wallCache[obstacleController] = wallId;
 
-        WallEvent* wallEvent = new WallEvent();
-        wallEvent->wallID = obstacleData->lineIndex * 100 + (int)obstacleData->obstacleType * 10 + obstacleData->width;
-        wallEvent->spawnTime = audioTimeSyncController->get_songTime();
-        _wallEventCache[wallId] = wallEvent;
+        auto wallID = obstacleController->obstacleData->lineIndex * 100 + (int)obstacleController->obstacleData->type * 10 + obstacleController->obstacleData->width;
+        auto spawnTime = audioTimeSyncController->songTime;
+
+        _wallEventCache.emplace(wallId, WallEvent(wallID, spawnTime));
         return obstacleController;
     }
 
-    void PopulateNoteCutInfo(ReplayNoteCutInfo* noteCutInfo, ByRef<NoteCutInfo> cutInfo) {
-        noteCutInfo->speedOK = cutInfo->speedOK;
-        noteCutInfo->directionOK = cutInfo->directionOK;
-        noteCutInfo->saberTypeOK = cutInfo->saberTypeOK;
-        noteCutInfo->wasCutTooSoon = cutInfo->wasCutTooSoon;
-        noteCutInfo->saberSpeed = cutInfo->saberSpeed;
-        noteCutInfo->saberDir = new Vector3(cutInfo->saberDir);
-        noteCutInfo->saberType = (int)cutInfo->saberType;
-        noteCutInfo->timeDeviation = cutInfo->timeDeviation;
-        noteCutInfo->cutDirDeviation = cutInfo->cutDirDeviation;
-        noteCutInfo->cutPoint = new Vector3(cutInfo->cutPoint);
-        noteCutInfo->cutNormal = new Vector3(cutInfo->cutNormal);
-        noteCutInfo->cutDistanceToCenter = cutInfo->cutDistanceToCenter;
-        noteCutInfo->cutAngle = cutInfo->cutAngle;
-    } 
+    void PopulateNoteCutInfo(ReplayNoteCutInfo& noteCutInfo, NoteCutInfo const& cutInfo) {
+        noteCutInfo.speedOK = cutInfo.speedOK;
+        noteCutInfo.directionOK = cutInfo.directionOK;
+        noteCutInfo.saberTypeOK = cutInfo.saberTypeOK;
+        noteCutInfo.wasCutTooSoon = cutInfo.wasCutTooSoon;
+        noteCutInfo.saberSpeed = cutInfo.saberSpeed;
+        noteCutInfo.saberDir = cutInfo.saberDir;
+        noteCutInfo.saberType = (int)cutInfo.saberType;
+        noteCutInfo.timeDeviation = cutInfo.timeDeviation;
+        noteCutInfo.cutDirDeviation = cutInfo.cutDirDeviation;
+        noteCutInfo.cutPoint = cutInfo.cutPoint;
+        noteCutInfo.cutNormal = cutInfo.cutNormal;
+        noteCutInfo.cutDistanceToCenter = cutInfo.cutDistanceToCenter;
+        noteCutInfo.cutAngle = cutInfo.cutAngle;
+    }
 
     MAKE_HOOK_MATCH(NoteCut, &ScoreController::HandleNoteWasCut, void, ScoreController* self, NoteController* noteController, ByRef<NoteCutInfo> noteCutInfo) {
         NoteCut(self, noteController, noteCutInfo);
         
         int noteId = _noteIdCache[noteController];
 
-        NoteEvent* noteEvent = _noteEventCache[noteId];
-        noteEvent->eventTime = audioTimeSyncController->get_songTime();
+        NoteEvent& noteEvent = _noteEventCache.at(noteId);
+        noteEvent.eventTime = audioTimeSyncController->songTime;
 
         if (noteController->noteData->colorType == ColorType::None)
         {
-            noteEvent->eventType = NoteEventType::bomb;
+            noteEvent.eventType = NoteEventType::BOMB;
         }
 
-        replay->notes.push_back(noteEvent);
-
         _cutInfoCache[noteId] = *noteCutInfo;
-        noteEvent->noteCutInfo = new ReplayNoteCutInfo();
+        noteEvent.noteCutInfo = ReplayNoteCutInfo();
         if (noteCutInfo->speedOK && noteCutInfo->directionOK && noteCutInfo->saberTypeOK && !noteCutInfo->wasCutTooSoon) {
-            noteEvent->eventType = NoteEventType::good;
+            noteEvent.eventType = NoteEventType::GOOD;
         } else {
-            noteEvent->eventType = NoteEventType::bad;
-            PopulateNoteCutInfo(noteEvent->noteCutInfo, noteCutInfo);
+            noteEvent.eventType = NoteEventType::BAD;
+            PopulateNoteCutInfo(noteEvent.noteCutInfo, noteCutInfo.heldRef);
+            replay->notes.emplace_back(noteEvent);
         }
 
         _swingIdCache[noteCutInfo->swingRatingCounter] = noteId;
@@ -348,14 +333,16 @@ namespace ReplayRecorder {
         SwingRatingDidFinish(self);
 
         int noteId = _swingIdCache[(ISaberSwingRatingCounter*)self];
-        NoteCutInfo cutInfo = _cutInfoCache[noteId];
+        NoteCutInfo const& cutInfo = _cutInfoCache[noteId];
 
-        NoteEvent* cutEvent = _noteEventCache[noteId];
-        ReplayNoteCutInfo* noteCutInfo = cutEvent->noteCutInfo;
+        NoteEvent& cutEvent = _noteEventCache.at(noteId);
+        ReplayNoteCutInfo& noteCutInfo = cutEvent.noteCutInfo;
         PopulateNoteCutInfo(noteCutInfo, cutInfo);
 
-        noteCutInfo->beforeCutRating = _preSwingContainer[(SaberMovementData *)self->saberMovementData];
-        noteCutInfo->afterCutRating = _postSwingContainer[self];
+        noteCutInfo.beforeCutRating = _preSwingContainer[(SaberMovementData *)self->saberMovementData];
+        noteCutInfo.afterCutRating = _postSwingContainer[self];
+
+        replay->notes.emplace_back(cutEvent);
     }
 
     MAKE_HOOK_MATCH(NoteMiss, &ScoreController::HandleNoteWasMissed, void, ScoreController* self, NoteController* noteController) {
@@ -365,10 +352,10 @@ namespace ReplayRecorder {
 
         if (noteController->noteData->colorType != ColorType::None)
         {
-            NoteEvent* noteEvent = _noteEventCache[noteId];
-            noteEvent->eventTime = audioTimeSyncController->get_songTime();
-            noteEvent->eventType = NoteEventType::miss;
-            replay->notes.push_back(noteEvent);
+            NoteEvent& noteEvent = _noteEventCache.at(noteId);
+            noteEvent.eventTime = audioTimeSyncController->songTime;
+            noteEvent.eventType = NoteEventType::MISS;
+            replay->notes.emplace_back(noteEvent);
         }
     }
 
@@ -376,9 +363,9 @@ namespace ReplayRecorder {
         ComboMultiplierChanged(self, comboChanged, multiplierChanged);
 
         if (comboChanged && self->playerHeadAndObstacleInteraction->get_intersectingObstacles()->get_Count() > 0) {
-            WallEvent* wallEvent = _wallEventCache[_wallCache[self->playerHeadAndObstacleInteraction->get_intersectingObstacles()->get_Item(0)]];
-            wallEvent->time = audioTimeSyncController->get_songTime();
-            replay->walls.push_back(wallEvent);
+            WallEvent& wallEvent = _wallEventCache.at(_wallCache[self->playerHeadAndObstacleInteraction->get_intersectingObstacles()->get_Item(0)]);
+            wallEvent.time = audioTimeSyncController->get_songTime();
+            replay->walls.emplace_back(wallEvent);
             _currentWallEvent = wallEvent;
             phoi = self->playerHeadAndObstacleInteraction;
         }
@@ -387,18 +374,18 @@ namespace ReplayRecorder {
     MAKE_HOOK_MATCH(BeatMapStart, &BeatmapObjectSpawnController::Start, void, BeatmapObjectSpawnController* self) {
         BeatMapStart(self);
 
-        if(replay) {
-            replay->info->jumpDistance = self->get_jumpDistance();
-            _currentPause = NULL;
-            _currentWallEvent = NULL;
+        if(replay != nullopt) {
+            replay->info.jumpDistance = self->get_jumpDistance();
+            _currentPause = nullopt;
+            _currentWallEvent = nullopt;
         }
     }
 
     MAKE_HOOK_MATCH(LevelPause, &PauseMenuManager::ShowMenu, void, PauseMenuManager* self) {
         LevelPause(self);
 
-        _currentPause = new Pause();
-        _currentPause->time = audioTimeSyncController->get_songTime();
+        _currentPause = Pause();
+        _currentPause->time = audioTimeSyncController->songTime;
         _pauseStartTime = chrono::steady_clock::now();
     }
 
@@ -406,50 +393,40 @@ namespace ReplayRecorder {
         LevelUnpause(self);
 
         _currentPause->duration = (long)chrono::duration_cast<std::chrono::seconds>(chrono::steady_clock::now() - _pauseStartTime).count();
-        replay->pauses.push_back(_currentPause);
-        _currentPause = NULL;
+        replay->pauses.emplace_back(_currentPause.value());
+        _currentPause = nullopt;
         getLogger().info("current pause is now null");
     }
 
     MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
         Tick(trans);
-        if (audioTimeSyncController != NULL && _currentPause == NULL && replay) {
-
-            Frame* frame = new Frame();
-            frame->time = audioTimeSyncController->get_songTime();
-            frame->fps = 1.0f / UnityEngine::Time::get_deltaTime();
-
-            frame->head = new Transform();
-            frame->head->rotation = new Quaternion(trans->get_headPseudoLocalRot());
-            frame->head->position = new Vector3(trans->get_headPseudoLocalPos());
-
-            frame->leftHand = new Transform();
-            frame->leftHand->rotation = new Quaternion(trans->get_leftHandPseudoLocalRot());
-            frame->leftHand->position = new Vector3(trans->get_leftHandPseudoLocalPos());
+        if (audioTimeSyncController != nullptr && _currentPause == nullopt && replay != nullopt) {
             
-            frame->rightHand = new Transform();
-            frame->rightHand->rotation = new Quaternion(trans->get_rightHandPseudoLocalRot());
-            frame->rightHand->position = new Vector3(trans->get_rightHandPseudoLocalPos());
+            auto time = audioTimeSyncController->songTime;
+            auto fps = 1.0f / UnityEngine::Time::get_deltaTime();
             
-            replay->frames.push_back(frame);
+            auto head = Transform(trans->get_headPseudoLocalPos(), trans->get_headPseudoLocalRot());
+            auto leftHand = Transform(trans->get_leftHandPseudoLocalPos(), trans->get_leftHandPseudoLocalRot());
+            auto rightHand = Transform(trans->get_rightHandPseudoLocalPos(), trans->get_rightHandPseudoLocalRot());
+            
+            replay->frames.emplace_back(time, fps, head, leftHand, rightHand);
         }
 
-        if (_currentWallEvent != NULL) {
+        if (_currentWallEvent != nullopt) {
             if (phoi->get_intersectingObstacles()->get_Count() == 0)
             {
-                _currentWallEvent->energy = audioTimeSyncController->get_songTime();
-                _currentWallEvent = NULL;
+                _currentWallEvent->energy = audioTimeSyncController->songTime;
+                _currentWallEvent = nullopt;
             }
         }
     }
 
-    void StartRecording(std::function<void(Replay*, MapStatus, bool)> callback) {
+    void StartRecording(function<void(Replay const &, MapStatus, bool)> const &callback) {
         LoggerContextObject logger = getLogger().WithContext("load");
 
         getLogger().info("Installing ReplayRecorder hooks...");
 
         INSTALL_HOOK(logger, ProcessResultsSolo);
-        INSTALL_HOOK(logger, TransitionSetupDataInit);
         INSTALL_HOOK(logger, LevelPlay);
         INSTALL_HOOK(logger, SongStart);
         INSTALL_HOOK(logger, SpawnNote);
@@ -465,6 +442,7 @@ namespace ReplayRecorder {
         INSTALL_HOOK(logger, SwingRatingDidFinish);
         INSTALL_HOOK(logger, ComputeSwingRating);
         INSTALL_HOOK(logger, ProcessNewSwingData);
+        INSTALL_HOOK(logger, PlayerHeightDetectorStart);
 
         getLogger().info("Installed all ReplayRecorder hooks!");
 

@@ -11,6 +11,8 @@
 
 #include "main.hpp"
 
+#include <sstream>
+
 using namespace QuestUI::BeatSaberUI;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
@@ -71,34 +73,34 @@ string FormatScore(int score) {
     return strm.str();
 }
 
-string GetTimeSetString(Score score) {
-    string result = "";
-    result += "<color=#FFFFFF>" + FormatUtils::GetRelativeTimeString(score.timeset);
-    result += "<color=#888888><size=70%>   on   </size>";
-    result += "<color=#FFFFFF>" + FormatUtils::GetHeadsetNameById(score.hmd);
-    return result;
+string GetTimeSetString(Score const& score) {
+    stringstream result;
+    result << "<color=#FFFFFF>" << FormatUtils::GetRelativeTimeString(score.timeset);
+    result << "<color=#888888><size=70%>   on   </size>";
+    result << "<color=#FFFFFF>" << FormatUtils::GetHeadsetNameById(score.hmd);
+    return result.str();
 }
 
 string GetDetailsString(Score score) {
-    string result = "";
+    stringstream result;
 
-    result += "<color=#888888>Pauses: <color=#FFFFFF>" + to_string(score.pauses) + "    ";
+    result << "<color=#888888>Pauses: <color=#FFFFFF>" << to_string(score.pauses) << "    ";
     if (score.modifiers.length() == 0) {
-        result += "<color=#888888>No Modifiers\n";
+        result << "<color=#888888>No Modifiers\n";
     } else {
-        result += "<color=#888888>Modifiers: <color=#FFFFFF>" + score.modifiers + "\n";
+        result << "<color=#888888>Modifiers: <color=#FFFFFF>" << score.modifiers << "\n";
     }
 
-    if (score.fullCombo) result += "<color=#88FF88>Full Combo</color>    ";
-    if (score.missedNotes > 0) result += "<color=#888888>Misses: <color=#FF8888>" + to_string(score.missedNotes) + "</color>    ";
-    if (score.badCuts > 0) result += "<color=#888888>Bad cuts: <color=#FF8888>" + to_string(score.badCuts) + "</color>    \n";
-    if (score.bombCuts > 0) result += "<color=#888888>Bomb cuts: <color=#FF8888>" + to_string(score.bombCuts) + "</color>    ";
-    if (score.wallsHit > 0) result += "<color=#888888>Walls hit: <color=#FF8888>" + to_string(score.wallsHit) + "</color>    ";
+    if (score.fullCombo) result << "<color=#88FF88>Full Combo</color>    ";
+    if (score.missedNotes > 0) result << "<color=#888888>Misses: <color=#FF8888>" << to_string(score.missedNotes) + "</color>    ";
+    if (score.badCuts > 0) result << "<color=#888888>Bad cuts: <color=#FF8888>" << to_string(score.badCuts) + "</color>    \n";
+    if (score.bombCuts > 0) result << "<color=#888888>Bomb cuts: <color=#FF8888>" << to_string(score.bombCuts) + "</color>    ";
+    if (score.wallsHit > 0) result << "<color=#888888>Walls hit: <color=#FF8888>" << to_string(score.wallsHit) + "</color>    ";
 
-    return result;
+    return result.str();
 }
 
-void BeatLeader::ModalPopup::setScore(Score score) {
+void BeatLeader::ModalPopup::setScore(const Score& score) {
     auto avatar = this->playerAvatar;
     Sprites::get_Icon(score.player.avatar, [avatar](UnityEngine::Sprite* sprite) {
         if (sprite != NULL) {

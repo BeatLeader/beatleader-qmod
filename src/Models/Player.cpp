@@ -1,6 +1,6 @@
 #include "include/Models/Player.hpp"
 
-Player::Player(rapidjson::GenericObject<false, rapidjson::GenericValue<rapidjson::UTF8<>>>& document) {
+Player::Player(rapidjson::Value const& document) {
     id = document["id"].GetString();
     name = document["name"].GetString();
     country = document["country"].GetString();
@@ -10,5 +10,3 @@ Player::Player(rapidjson::GenericObject<false, rapidjson::GenericValue<rapidjson
     countryRank = document["countryRank"].GetInt();
     pp = document["pp"].GetFloat();
 }
-
-Player::Player() {}

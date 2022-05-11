@@ -9,14 +9,14 @@
 #include <sstream>
 
 #define TIMEOUT 10
-#define USER_AGENT std::string(ID "/" VERSION " (BeatSaber/" + GameVersion + ") (Oculus)").c_str()
+#define USER_AGENT string(ID "/" VERSION " (BeatSaber/" + GameVersion + ") (Oculus)").c_str()
 #define X_BSSB "X-BSSB: ✔"
 
 namespace WebUtils {
-    std::string GameVersion = "1.19.1";
+    string GameVersion = "1.21.1";
 
-    std::string API_URL = "";
-    std::string WEB_URL = "";
+    string API_URL = "";
+    string WEB_URL = "";
 
     void refresh_urls() {
         if (getModConfig().ServerType.GetValue() == "Test") {
@@ -29,11 +29,11 @@ namespace WebUtils {
     }
 
     //https://stackoverflow.com/a/55660581
-    std::string query_encode(const std::string& s)
+    string query_encode(string s)
     {
-        std::string ret;
+        string ret;
 
-        #define IS_BETWEEN(ch, low, high) (ch >= low && ch <= high)
+        #define IS_BETWEEN(ch, low, high) ((ch) >= (low) && (ch) <= (high))
         #define IS_ALPHA(ch) (IS_BETWEEN(ch, 'A', 'Z') || IS_BETWEEN(ch, 'a', 'z'))
         #define IS_DIGIT(ch) IS_BETWEEN(ch, '0', '9')
         #define IS_HEXDIG(ch) (IS_DIGIT(ch) || IS_BETWEEN(ch, 'A', 'F') || IS_BETWEEN(ch, 'a', 'f'))
@@ -96,11 +96,11 @@ namespace WebUtils {
     }
 
 
-    std::size_t CurlWrite_CallbackFunc_StdString(void *contents, std::size_t size, std::size_t nmemb, std::string *s)
+    std::size_t CurlWrite_CallbackFunc_StdString(void *contents, std::size_t size, std::size_t nmemb, string &s)
     {
         std::size_t newLength = size * nmemb;
         try {
-            s->append((char*)contents, newLength);
+            s.append((char*)contents, newLength);
         } catch(std::bad_alloc &e) {
             //handle memory problem
             getLogger().critical("Failed to allocate string of size: %lu", newLength);
@@ -109,8 +109,8 @@ namespace WebUtils {
         return newLength;
     }
 
-    std::optional<rapidjson::Document> GetJSON(std::string url) {
-        std::string data;
+    std::optional<rapidjson::Document> GetJSON(string url) {
+        string data;
         Get(url, data);
         rapidjson::Document document;
         document.Parse(data);
@@ -119,15 +119,15 @@ namespace WebUtils {
         return document;
     }
 
-    long Get(std::string url, std::string& val) {
+    long Get(string url, string& val) {
         return Get(url, TIMEOUT, val);
     }
 
-    long Get(std::string url, long timeout, std::string& val) {
+    long Get(string url, long timeout, string& val) {
 
-        std::string directory = getDataDir(modInfo) + "cookies/";
+        string directory = getDataDir(modInfo) + "cookies/";
         std::filesystem::create_directories(directory);
-        std::string cookieFile = directory + "cookies.txt";
+        string cookieFile = directory + "cookies.txt";
 
         // Init curl
         auto* curl = curl_easy_init();
@@ -171,21 +171,22 @@ namespace WebUtils {
     }
 
     struct ProgressUpdateWrapper {
-        std::function<void(float)> progressUpdate;
+        function<void(float)> progressUpdate;
         long length;
     };
 
-    void GetAsync(std::string url, std::function<void(long, std::string)> finished, std::function<void(float)> progressUpdate) {
-        GetAsync(url, TIMEOUT, finished, progressUpdate);
+    std::thread GetAsync(string url, function<void(long, string)> const &finished, function<void(
+            float)> const &progressUpdate) {
+        return GetAsync(url, TIMEOUT, finished, progressUpdate);
     }
 
-    void GetAsync(std::string url, long timeout, std::function<void(long, std::string)> finished, std::function<void(float)> progressUpdate) {
+    std::thread GetAsync(string url, long timeout, const function<void(long, string)>& finished, const function<void(float)>& progressUpdate) {
         std::thread t (
-            [url, timeout, progressUpdate, finished] {
-                std::string directory = getDataDir(modInfo) + "cookies/";
+            [url = string(url), timeout, progressUpdate, finished] {
+                string directory = getDataDir(modInfo) + "cookies/";
                 std::filesystem::create_directories(directory);
-                std::string cookieFile = directory + "cookies.txt";
-                std::string val;
+                string cookieFile = directory + "cookies.txt";
+                string val;
                 // Init curl
                 auto* curl = curl_easy_init();
                 struct curl_slist *headers = NULL;
@@ -208,11 +209,11 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
                 curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWrite_CallbackFunc_StdString);
 
-                ProgressUpdateWrapper* wrapper = new ProgressUpdateWrapper { progressUpdate };
+                ProgressUpdateWrapper wrapper = ProgressUpdateWrapper { progressUpdate };
                 if(progressUpdate) {
                     // Internal CURL progressmeter must be disabled if we provide our own callback
                     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
-                    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, wrapper);
+                    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &wrapper);
                     // Install the callback function
                     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, 
                         +[] (void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
@@ -239,31 +240,31 @@ namespace WebUtils {
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);
-                delete wrapper;
                 finished(httpCode, val);
             }
         );
         t.detach();
+        return t;
     }
 
-    void GetJSONAsync(std::string url, std::function<void(long, bool, rapidjson::Document&)> finished) {
-        GetAsync(url,
-            [finished] (long httpCode, std::string data) { 
+    std::thread GetJSONAsync(string url, function<void(long, bool, rapidjson::Document const&)> const& finished) {
+        return GetAsync(url,
+            [finished] (long httpCode, string data) {
                 rapidjson::Document document;
-                document.Parse(data);
+                document.Parse(data.data());
                 finished(httpCode, document.HasParseError() || !document.IsObject(), document);
             }
         );
     }
 
-    void PostJSONAsync(std::string url, std::string data, std::function<void(long, std::string)> finished) {
-        PostJSONAsync(url, data, TIMEOUT, finished);
+    std::thread PostJSONAsync(string url, string data, function<void(long, string)> const& finished) {
+        return PostJSONAsync(string(url), string(data), TIMEOUT, finished);
     }
 
-    void PostJSONAsync(std::string url, std::string data, long timeout, std::function<void(long, std::string)> finished) {
+    std::thread PostJSONAsync(const string& url, string data, long timeout, function<void(long, string)> const& finished) {
         std::thread t(
             [url, timeout, data, finished] {
-                std::string val;
+                string val;
                 // Init curl
                 auto* curl = curl_easy_init();
                 //auto form = curl_mime_init(curl);
@@ -305,16 +306,18 @@ namespace WebUtils {
             }
         );
         t.detach();
+        return t;
     }
 
-    void PostFormAsync(std::string url, std::string action, std::string login, std::string password, std::function<void(long, std::string)> finished) {
+    std::thread PostFormAsync(const string& url, const string& password, const string& login, const string& action,
+                       function<void(long, string)> const &finished) {
         std::thread t(
             [url, action, login, password, finished] {
                 long timeout = TIMEOUT;
-                std::string directory = getDataDir(modInfo) + "cookies/";
+                string directory = getDataDir(modInfo) + "cookies/";
                 std::filesystem::create_directories(directory);
-                std::string cookieFile = directory + "cookies.txt";
-                std::string val;
+                string cookieFile = directory + "cookies.txt";
+                string val;
                 // Init curl
                 auto* curl = curl_easy_init();
                 //auto form = curl_mime_init(curl);
@@ -344,17 +347,17 @@ namespace WebUtils {
                 curl_formadd(&formpost,
                     &lastptr,
                     CURLFORM_COPYNAME, "action",
-                    CURLFORM_COPYCONTENTS, action.c_str(),
+                    CURLFORM_COPYCONTENTS, action.data(),
                     CURLFORM_END);
                     curl_formadd(&formpost,
                     &lastptr,
                     CURLFORM_COPYNAME, "login",
-                    CURLFORM_COPYCONTENTS, login.c_str(),
+                    CURLFORM_COPYCONTENTS, login.data(),
                     CURLFORM_END);
                     curl_formadd(&formpost,
                     &lastptr,
                     CURLFORM_COPYNAME, "password",
-                    CURLFORM_COPYCONTENTS, password.c_str(),
+                    CURLFORM_COPYCONTENTS, password.data(),
                     CURLFORM_END);
                 curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
 
@@ -378,6 +381,7 @@ namespace WebUtils {
             }
         );
         t.detach();
+        return t;
     }
 
     struct input {
@@ -394,13 +398,13 @@ namespace WebUtils {
         return retcode;
     }
 
-    void PostFileAsync(std::string url, FILE* data, long length, long timeout, std::function<void(long, std::string)> finished, std::function<void(float)> progressUpdate) {
+    std::thread PostFileAsync(string url, FILE* data, long length, long timeout, function<void(long, string)> const& finished, function<void(float)> const& progressUpdate) {
         std::thread t(
             [url, timeout, data, finished, length, progressUpdate] {
-                std::string val;
-                std::string directory = getDataDir(modInfo) + "cookies/";
+                string val;
+                string directory = getDataDir(modInfo) + "cookies/";
                 std::filesystem::create_directories(directory);
-                std::string cookieFile = directory + "cookies.txt";
+                string cookieFile = directory + "cookies.txt";
 
                 
                 // Init curl
@@ -427,11 +431,11 @@ namespace WebUtils {
                 // Don't wait forever, time out after TIMEOUT seconds.
                 curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
 
-                ProgressUpdateWrapper* wrapper = new ProgressUpdateWrapper { progressUpdate, length };
+                ProgressUpdateWrapper wrapper { progressUpdate, length };
                 if (progressUpdate) {
                     // Internal CURL progressmeter must be disabled if we provide our own callback
                     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
-                    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, wrapper);
+                    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &wrapper);
                     // Install the callback function
                     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, 
                         +[] (void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
@@ -474,6 +478,7 @@ namespace WebUtils {
             }
         );
         t.detach();
+        return t;
     }
 
 }

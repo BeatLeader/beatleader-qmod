@@ -29,7 +29,7 @@ using namespace QuestUI;
 
 ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
 
-static ReplaySynchronizer* synchronizer;
+static std::optional<ReplaySynchronizer> synchronizer;
 
 DEFINE_CONFIG(ModConfig);
 
@@ -61,7 +61,8 @@ void replayPostCallback(ReplayUploadStatus status, string description, float pro
     if (status == ReplayUploadStatus::finished) {
         PlayerController::Refresh();
     }
-    if (synchronizer != NULL) {
+
+    if (synchronizer != std::nullopt) {
         if (code == 200) {
             synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::uptodate);
         } else if ((code >= 400 && code < 500) || code < 0) {
@@ -102,9 +103,9 @@ extern "C" void load() {
     LevelInfoUI::setup();
     ModifiersUI::setup();
 
-    PlayerController::playerChanged.push_back([](Player* updated) {
-        if (synchronizer == NULL) {
-            synchronizer = new ReplaySynchronizer();
+    PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {
+        if (synchronizer == nullopt) {
+            synchronizer.emplace();
         }
     });
     QuestUI::MainThreadScheduler::Schedule([] {
@@ -113,7 +114,7 @@ extern "C" void load() {
 
     ModifiersManager::Sync();
 
-    ReplayRecorder::StartRecording([](Replay* replay, MapStatus status, bool isOst) {
+    ReplayRecorder::StartRecording([](Replay const& replay, MapStatus status, bool isOst) {
         if (status == MapStatus::cleared) {
             ReplayManager::ProcessReplay(replay, isOst, replayPostCallback);
         } else {

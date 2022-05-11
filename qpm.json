@@ -54,6 +54,16 @@
       "id": "gif-lib",
       "versionRange": "^5.2.1",
       "additionalData": {}
+    },
+    {
+      "id": "bs-utils",
+      "versionRange": "^0.7.0",
+      "additionalData": {}
+    },
+    {
+      "id": "sombrero",
+      "versionRange": "^0.1.30",
+      "additionalData": {}
     }
   ],
   "additionalData": {}

@@ -6,9 +6,8 @@
 #include <string>
 using namespace std;
 
-class Score
+struct Score
 {
-public:
     // int id;
     // int baseScore;
     int modifiedScore;
@@ -31,5 +30,5 @@ public:
 
     Player player;
     Score();
-    Score(rapidjson::GenericObject<false, rapidjson::GenericValue<rapidjson::UTF8<>>>& document);
+    Score(rapidjson::Value const& document);
 };

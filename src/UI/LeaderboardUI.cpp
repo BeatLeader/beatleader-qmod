@@ -129,15 +129,16 @@ namespace LeaderboardUI {
     static UnityEngine::Color ownScoreColor = UnityEngine::Color(0.7, 0.0, 0.7, 0.3);
     static UnityEngine::Color someoneElseScoreColor = UnityEngine::Color(0.07, 0.0, 0.14, 0.05);
 
-    string generateLabel(Score score) {
-        string nameLabel = score.player.name;
+    string generateLabel(Score const& score) {
+        // TODO: Use fmt
+        string const& nameLabel = score.player.name;
         string fcLabel =  "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? ", " : "") + score.modifiers;
         return truncate(nameLabel, 23) + "<pos=45%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
     }
 
     void updatePlayerInfoLabel() {
-        Player* player = PlayerController::currentPlayer;
-        if (player != NULL) {
+        auto const& player = PlayerController::currentPlayer;
+        if (player != std::nullopt) {
             if (player->rank > 0) {
 
                 globalRank->SetText("#" + to_string(player->rank));
@@ -243,7 +244,7 @@ namespace LeaderboardUI {
 
         url += "?page=" + to_string(page) + "&player=" + PlayerController::currentPlayer->id;
 
-        WebUtils::GetJSONAsync(url, [](long status, bool error, rapidjson::Document& result){
+        WebUtils::GetJSONAsync(url, [](long status, bool error, rapidjson::Document const& result){
             auto scores = result["data"].GetArray();
             plvc->scores->Clear();
             if ((int)scores.Size() == 0) {
@@ -257,7 +258,7 @@ namespace LeaderboardUI {
                 return;
             }
 
-            auto metadata = result["metadata"].GetObject();
+            auto const& metadata = result["metadata"].GetObject();
             int perPage = metadata["itemsPerPage"].GetInt();
             int pageNum = metadata["page"].GetInt();
             int total = metadata["total"].GetInt();
@@ -266,7 +267,7 @@ namespace LeaderboardUI {
             {
                 if (index < (int)scores.Size())
                 {
-                    auto score = scores[index].GetObject();
+                    auto const& score = scores[index];
                     
                     Score currentScore = Score(score);
                     scoreVector[index] = currentScore;
@@ -328,7 +329,7 @@ namespace LeaderboardUI {
         page = 1;
         isLocal = false;
 
-        if (PlayerController::currentPlayer == NULL) {
+        if (PlayerController::currentPlayer == std::nullopt) {
             self->loadingControl->ShowText("Please sign up or log in mod settings!", true);
             return;
         }
@@ -360,14 +361,14 @@ namespace LeaderboardUI {
             globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(153, 42.5));
             countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(168, 42.5));
 
-            if (PlayerController::currentPlayer != NULL) {
+            if (PlayerController::currentPlayer != std::nullopt) {
                 updatePlayerInfoLabel();
             }
 
             if (websiteLink) UnityEngine::GameObject::Destroy(websiteLink);
             websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
                 string url = WebUtils::WEB_URL;
-                if (PlayerController::currentPlayer != NULL) {
+                if (PlayerController::currentPlayer != std::nullopt) {
                     url += "u/" + PlayerController::currentPlayer->id;
                 }
                 UnityEngine::Application::OpenURL(url);
@@ -514,7 +515,7 @@ namespace LeaderboardUI {
         INSTALL_HOOK(logger, LeaderboardCellSource);
         INSTALL_HOOK(logger, LocalLeaderboardDidActivate);
 
-        PlayerController::playerChanged.push_back([](Player* updated) {
+        PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
             QuestUI::MainThreadScheduler::Schedule([] {
                 if (playerName != NULL) {
                     updatePlayerInfoLabel();
@@ -527,7 +528,7 @@ namespace LeaderboardUI {
         uploadStatus = NULL;
         plvc = NULL;
         scoreDetailsUI = NULL;
-        cellScores = {};
+        cellScores.clear();
         avatars = {};
         cellHighlights = {};
         cellBackgrounds = {};

@@ -6,7 +6,7 @@ using namespace std;
 
 #include <string>
 
-enum ReplayUploadStatus {
+enum struct ReplayUploadStatus {
     inProgress = 0,
     finished = 1,
     error = 2
@@ -15,10 +15,12 @@ enum ReplayUploadStatus {
 class ReplayManager
 {  
 public:
-   static void ProcessReplay(Replay* replay, bool isOst, std::function<void(ReplayUploadStatus, std::string, float, int)> finished);
-   static void RetryPosting(std::function<void(ReplayUploadStatus, std::string, float, int)> finished);
+   static void ProcessReplay(Replay const &replay, bool isOst, function<void(ReplayUploadStatus, string, float,
+                                                                             int)> const &finished);
+   static void RetryPosting(function<void(ReplayUploadStatus, string, float, int)> const& finished);
 
-   static void TryPostReplay(string name, int tryIndex, std::function<void(ReplayUploadStatus, std::string, float, int)> finished);
+   static void TryPostReplay(string name, int tryIndex, function<void(ReplayUploadStatus, string, float,
+                                                                           int)> const &finished);
    static string lastReplayFilename;
    static float GetTotalMultiplier(string modifiers);
 

@@ -7,45 +7,46 @@
 #include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
 
 #include <regex>
+#include <sstream>
 
-void MapEnhancer::Enhance(Replay* replay)
+void MapEnhancer::Enhance(Replay &replay)
 {
-    ReplayInfo* info = replay->info;
-    info->hash = regex_replace((string)previewBeatmapLevel->get_levelID(), basic_regex("custom_level_"), "");
+    ReplayInfo& info = replay.info;
+    info.hash = regex_replace((string)previewBeatmapLevel->get_levelID(), basic_regex("custom_level_"), "");
     IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(difficultyBeatmap->get_level());
-    info->songName = (string)levelData->get_songName();
-    info->mapper = (string)levelData->get_levelAuthorName();
-    info->difficulty = DiffName(difficultyBeatmap->get_difficulty().value);
+    info.songName = (string)levelData->get_songName();
+    info.mapper = (string)levelData->get_levelAuthorName();
+    info.difficulty = DiffName(difficultyBeatmap->get_difficulty().value);
 
-    info->mode = (string)difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
-    info->environment = (string)environmentInfo->get_environmentName();
-    info->modifiers = Join(Modifiers());
-    info->leftHanded = playerSpecificSettings->leftHanded;
-    info->height = playerSpecificSettings->automaticPlayerHeight ? 0 : playerSpecificSettings->playerHeight;
+    info.mode = (string)difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
+    info.environment = (string)environmentInfo->get_environmentName();
+    info.modifiers = Join(Modifiers());
+    info.leftHanded = playerSpecificSettings->leftHanded;
+    info.height = playerSpecificSettings->automaticPlayerHeight ? 0 : playerSpecificSettings->playerHeight;
 
     if (practiceSettings != NULL)
     {
-        info->startTime = practiceSettings->startSongTime;
-        info->speed = practiceSettings->songSpeedMul;
+        info.startTime = practiceSettings->startSongTime;
+        info.speed = practiceSettings->songSpeedMul;
     }
 }
 
-vector<string> MapEnhancer::Modifiers() {
+vector<string> MapEnhancer::Modifiers() const {
     vector<string> result;
 
-    if (gameplayModifiers->disappearingArrows) { result.push_back("DA"); }
-    if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Faster) { result.push_back("FS"); }
-    if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Slower) { result.push_back("SS"); }
-    if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::SuperFast) { result.push_back("SF"); }
-    if (gameplayModifiers->strictAngles) { result.push_back("SA"); }
-    if (gameplayModifiers->proMode) { result.push_back("PM"); }
-    if (gameplayModifiers->smallCubes) { result.push_back("SC"); }
-    if (gameplayModifiers->failOnSaberClash) { result.push_back("CS"); }
-    if (gameplayModifiers->ghostNotes) { result.push_back("GN"); }
-    if (gameplayModifiers->noArrows) { result.push_back("NA"); }
-    if (gameplayModifiers->noBombs) { result.push_back("NB"); }
-    if (gameplayModifiers->noFailOn0Energy && energy == 0) { result.push_back("NF"); }
-    if (gameplayModifiers->enabledObstacleType == GameplayModifiers::EnabledObstacleType::NoObstacles) { result.push_back("NO"); }
+    if (gameplayModifiers->disappearingArrows) { result.emplace_back("DA"); }
+    if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Faster) { result.emplace_back("FS"); }
+    if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Slower) { result.emplace_back("SS"); }
+    if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::SuperFast) { result.emplace_back("SF"); }
+    if (gameplayModifiers->strictAngles) { result.emplace_back("SA"); }
+    if (gameplayModifiers->proMode) { result.emplace_back("PM"); }
+    if (gameplayModifiers->smallCubes) { result.emplace_back("SC"); }
+    if (gameplayModifiers->failOnSaberClash) { result.emplace_back("CS"); }
+    if (gameplayModifiers->ghostNotes) { result.emplace_back("GN"); }
+    if (gameplayModifiers->noArrows) { result.emplace_back("NA"); }
+    if (gameplayModifiers->noBombs) { result.emplace_back("NB"); }
+    if (gameplayModifiers->noFailOn0Energy && energy == 0) { result.emplace_back("NF"); }
+    if (gameplayModifiers->enabledObstacleType == GameplayModifiers::EnabledObstacleType::NoObstacles) { result.emplace_back("NO"); }
 
     return result;
 }
@@ -74,14 +75,16 @@ string MapEnhancer::DiffName(int diff) {
     return "Error";
 }
 
-string MapEnhancer::Join(vector<string> list) {
-    string result = "";
-    for(size_t i = 0; i < list.size(); ++i) {
-        result += list[i];
-        result += ",";
+string MapEnhancer::Join(span<string const> const list) {
+    stringstream ss;
+
+    for (auto const& s : list) {
+        ss << s << ",";
     }
 
-    result.pop_back();
 
-    return result;
+    auto str = ss.str();
+    str.pop_back();
+
+    return str;
 }
