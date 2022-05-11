@@ -65,7 +65,7 @@ void Replay::Encode(bool value, ofstream& stream) {
 void Replay::Encode(float value, ofstream& stream) {
     stream.write(reinterpret_cast<const char *>(&value), sizeof(int));
 }
-void Replay::Encode(string_view value, ofstream& stream) {
+void Replay::Encode(string value, ofstream& stream) {
     const char* cstring = value.data();
     size_t stringLength = value.size();
     Encode((int)stringLength, stream);

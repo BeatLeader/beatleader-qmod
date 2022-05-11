@@ -57,16 +57,16 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
     Sprites::ResetCache();
 }
 
-void replayPostCallback(ReplayUploadStatus status, string_view description, float progress, int code) {
+void replayPostCallback(ReplayUploadStatus status, string description, float progress, int code) {
     if (status == ReplayUploadStatus::finished) {
         PlayerController::Refresh();
     }
 
     if (synchronizer != std::nullopt) {
         if (code == 200) {
-            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::uptodate, *synchronizer->statuses);
+            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::uptodate);
         } else if ((code >= 400 && code < 500) || code < 0) {
-            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::shouldnotpost, *synchronizer->statuses);
+            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::shouldnotpost);
         }
     }
     
@@ -102,8 +102,8 @@ extern "C" void load() {
     LevelInfoUI::setup();
     ModifiersUI::setup();
 
-    PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
-        if (synchronizer == std::nullopt) {
+    PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {
+        if (synchronizer == nullopt) {
             synchronizer.emplace();
         }
     });
@@ -117,7 +117,7 @@ extern "C" void load() {
         if (status == MapStatus::cleared) {
             ReplayManager::ProcessReplay(replay, isOst, replayPostCallback);
         } else {
-            ReplayManager::ProcessReplay(replay, isOst, [](ReplayUploadStatus finished, string_view description, float progress, int code) {
+            ReplayManager::ProcessReplay(replay, isOst, [](ReplayUploadStatus finished, string description, float progress, int code) {
                 QuestUI::MainThreadScheduler::Schedule([description, progress, finished] {
                     LeaderboardUI::updateStatus(finished, description, progress);
                 });

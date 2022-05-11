@@ -17,7 +17,7 @@ struct ReplayInfo {
     string gameVersion;
     string timestamp;
 
-    ReplayInfo(string_view version, string_view gameVersion, string_view timestamp) : version(version),
+    ReplayInfo(string version, string gameVersion, string timestamp) : version(version),
                                                                                             gameVersion(gameVersion),
                                                                                             timestamp(timestamp) {}
 
@@ -148,7 +148,7 @@ private:
     static void Encode(long value, ofstream& stream);
     static void Encode(bool value, ofstream& stream);
     static void Encode(float value, ofstream& stream);
-    static void Encode(string_view value, ofstream& stream);
+    static void Encode(string value, ofstream& stream);
 
     // template methods MUST be header only
     template<class T>

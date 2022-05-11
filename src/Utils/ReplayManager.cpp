@@ -14,7 +14,7 @@
 
 string ReplayManager::lastReplayFilename = "";
 
-void ReplayManager::ProcessReplay(Replay const &replay, bool isOst, function<void(ReplayUploadStatus, string_view, float,
+void ReplayManager::ProcessReplay(Replay const &replay, bool isOst, function<void(ReplayUploadStatus, string, float,
                                                                                   int)> const &finished) {
 
     string filename = FileManager::ToFilePath(replay);
@@ -46,7 +46,7 @@ void ReplayManager::ProcessReplay(Replay const &replay, bool isOst, function<voi
         TryPostReplay(filename, 0, finished);
 }
 
-void ReplayManager::TryPostReplay(string_view name, int tryIndex, function<void(ReplayUploadStatus, string_view, float,
+void ReplayManager::TryPostReplay(string name, int tryIndex, function<void(ReplayUploadStatus, string, float,
                                                                                 int)> const &finished) {
     struct stat file_info;
     stat(name.data(), &file_info);
@@ -54,10 +54,9 @@ void ReplayManager::TryPostReplay(string_view name, int tryIndex, function<void(
         getLogger().info("%s",("Started posting " + to_string(file_info.st_size)).c_str());
         finished(ReplayUploadStatus::inProgress, "<color=#b103fcff>Posting replay...", 0, 0);
     }
-
     FILE *replayFile = fopen(name.data(), "rb");
     
-    WebUtils::PostFileAsync(WebUtils::API_URL + "replayoculus", replayFile, (long)file_info.st_size, 100, [name, tryIndex, finished, replayFile](long statusCode, string_view result) {
+    WebUtils::PostFileAsync(WebUtils::API_URL + "replayoculus", replayFile, (long)file_info.st_size, 100, [name, tryIndex, finished, replayFile](long statusCode, string result) {
         fclose(replayFile);
         if (statusCode != 200 && tryIndex < 2) {
             getLogger().info("%s", ("Retrying posting replay after " + to_string(statusCode) + " #" + to_string(tryIndex) + " " + std::string(result)).c_str());
@@ -84,11 +83,11 @@ void ReplayManager::TryPostReplay(string_view name, int tryIndex, function<void(
     });
 }
 
-void ReplayManager::RetryPosting(const std::function<void(ReplayUploadStatus, std::string_view, float, int)>& finished) {
+void ReplayManager::RetryPosting(const std::function<void(ReplayUploadStatus, std::string, float, int)>& finished) {
     TryPostReplay(lastReplayFilename, 0, finished);
 };
 
-int ReplayManager::GetLocalScore(string_view filename) {
+int ReplayManager::GetLocalScore(string filename) {
     struct stat buffer;
     if ((stat (filename.data(), &buffer) == 0)) {
         auto info = FileManager::ReadInfo(filename);
@@ -100,7 +99,7 @@ int ReplayManager::GetLocalScore(string_view filename) {
     return 0;
 } 
 
-float ReplayManager::GetTotalMultiplier(string_view modifiers) {
+float ReplayManager::GetTotalMultiplier(string modifiers) {
     float multiplier = 1;
 
     auto modifierValues = ModifiersManager::modifiers;

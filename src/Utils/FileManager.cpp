@@ -19,7 +19,7 @@ void FileManager::WriteReplay(Replay const &replay) {
     stream.flush();
 }
 
-std::optional<ReplayInfo> FileManager::ReadInfo(string_view replayPath) {
+std::optional<ReplayInfo> FileManager::ReadInfo(string replayPath) {
     ifstream stream(replayPath, ios::binary);
 
     std::locale utf8_locale(std::locale(), new codecvt_utf8<char16_t>);
@@ -29,8 +29,8 @@ std::optional<ReplayInfo> FileManager::ReadInfo(string_view replayPath) {
 }
 
 string FileManager::ToFilePath(Replay const &replay) {
-    string_view practice = replay.info.speed > 0.0001 ? "-practice" : "";
-    string_view fail = replay.info.failTime > 0.0001 ? "-fail" : "";
+    string practice = replay.info.speed > 0.0001 ? "-practice" : "";
+    string fail = replay.info.failTime > 0.0001 ? "-fail" : "";
     // TODO: Use fmt
     string filename = replay.info.playerID + std::string(practice + fail) + "-" + replay.info.songName + "-" + replay.info.difficulty + "-" + replay.info.mode + "-" + replay.info.hash + ".bsor";
     string directory = getDataDir(modInfo) + "replays/";

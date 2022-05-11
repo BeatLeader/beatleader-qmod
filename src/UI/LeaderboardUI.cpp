@@ -121,7 +121,7 @@ namespace LeaderboardUI {
     map<LeaderboardTableCell*, HMUI::ImageView*> cellBackgrounds;
     map<LeaderboardTableCell*, QuestUI::ClickableImage*> cellHighlights;
     map<LeaderboardTableCell*, Score> cellScores;
-    map<string_view, int> imageRows;
+    map<string, int> imageRows;
 
     static UnityEngine::Color underlineDefaultColor = UnityEngine::Color(0.1, 0.3, 0.4, 0.0);
     static UnityEngine::Color underlineHoverColor = UnityEngine::Color(0.0, 0.4, 1.0, 0.8);
@@ -483,7 +483,7 @@ namespace LeaderboardUI {
         return (TableCell *)result;
     }
 
-    void updateStatus(ReplayUploadStatus status, string_view description, float progress) {
+    void updateStatus(ReplayUploadStatus status, string description, float progress) {
         uploadStatus->SetText(description);
         switch (status)
         {

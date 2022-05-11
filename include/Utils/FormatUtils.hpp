@@ -13,7 +13,7 @@ using namespace UnityEngine;
 
 namespace FormatUtils {
 
-        constexpr string_view GetHeadsetNameById(int id) {
+        inline string GetHeadsetNameById(int id) {
             switch (id) {
                 case 1: return "Rift";
                 case 2: return "Vive";
@@ -36,7 +36,7 @@ namespace FormatUtils {
         const int Month = 30 * Day;
         const int Year = 365 * Day;
 
-        inline string GetRelativeTimeString(string_view timeSet) {
+        inline string GetRelativeTimeString(string timeSet) {
             int timeSetSeconds = std::stoi(timeSet.data());
             int nowSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             int delta = nowSeconds - timeSetSeconds;
@@ -59,13 +59,13 @@ namespace FormatUtils {
             return (withPrefix ? "<size=70%>#</size>" : "") + to_string(rank);
         }
 
-        inline string FormatUserName(string_view userName) {
+        inline string FormatUserName(string userName) {
             return "<noparse>" + userName + "</noparse>";
         }
 
         const string ModifiersColor = "";
 
-        inline string FormatModifiers(string_view modifiers) {
+        inline string FormatModifiers(string modifiers) {
             return modifiers.length() == 0 ? "" : "<color=#999999>" + modifiers;
         }
 

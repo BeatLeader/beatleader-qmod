@@ -17,12 +17,12 @@
 using UnityEngine::Resources;
 using namespace GlobalNamespace;
 
-std::optional<Player> PlayerController::currentPlayer = std::nullopt;
-std::optional<Player> PlayerController::platformPlayer = std::nullopt;
+optional<Player> PlayerController::currentPlayer = nullopt;
+optional<Player> PlayerController::platformPlayer = nullopt;
 string PlayerController::lastErrorDescription = "";
-vector<function<void(std::optional<Player> const&)>> PlayerController::playerChanged;
+vector<function<void(optional<Player> const&)>> PlayerController::playerChanged;
 
-void callbackWrapper(std::optional<Player> const& player) {
+void callbackWrapper(optional<Player> const& player) {
     for (auto && fn : PlayerController::playerChanged)
         fn(player);
 }
@@ -41,7 +41,7 @@ string PlayerController::RefreshOnline() {
             }
         });
     } else {
-        currentPlayer = std::nullopt;
+        currentPlayer = nullopt;
     }
     return result;
 }
@@ -51,18 +51,18 @@ void PlayerController::RefreshPlatform() {
 }
 
 string PlayerController::Refresh() {
-    if (platformPlayer == std::nullopt) {
+    if (platformPlayer == nullopt) {
         RefreshPlatform();
     }
     
     return RefreshOnline();
 }
 
-void PlayerController::SignUp(string_view login, string_view password, const std::function<void(std::string_view)>& finished) {
+void PlayerController::SignUp(string login, string password, const function<void(string)>& finished) {
     lastErrorDescription = "";
 
-    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", std::string(password), std::string(login), "signup",
-                            [finished](long statusCode, string_view error) {
+    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", password, login, "signup",
+                            [finished](long statusCode, string error) {
                                 string result = "";
                                 if (statusCode == 200) {
                                     result = Refresh();
@@ -75,11 +75,11 @@ void PlayerController::SignUp(string_view login, string_view password, const std
                             });
 }
 
-void PlayerController::LogIn(string_view login, string_view password, const std::function<void(std::string_view)>& finished) {
+void PlayerController::LogIn(string login, string password, const function<void(string)>& finished) {
     lastErrorDescription = "";
 
-    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", std::string(password), std::string(login), "login",
-                            [finished](long statusCode, string_view error) {
+    WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", password, login, "login",
+                            [finished](long statusCode, string error) {
                                 string result = "";
                                 if (statusCode == 200) {
                                     result = Refresh();
@@ -99,7 +99,7 @@ bool PlayerController::LogOut() {
     lastErrorDescription = result;
     WebUtils::Get(WebUtils::API_URL + "user/id", result);
     if (result.length() == 0) {
-        currentPlayer = std::nullopt;
+        currentPlayer = nullopt;
         callbackWrapper(currentPlayer);
         return true;
     } else {

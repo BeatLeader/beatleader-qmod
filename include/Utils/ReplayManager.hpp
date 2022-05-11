@@ -15,14 +15,14 @@ enum struct ReplayUploadStatus {
 class ReplayManager
 {  
 public:
-   static void ProcessReplay(Replay const &replay, bool isOst, function<void(ReplayUploadStatus, string_view, float,
+   static void ProcessReplay(Replay const &replay, bool isOst, function<void(ReplayUploadStatus, string, float,
                                                                              int)> const &finished);
-   static void RetryPosting(std::function<void(ReplayUploadStatus, std::string_view, float, int)> const& finished);
+   static void RetryPosting(function<void(ReplayUploadStatus, string, float, int)> const& finished);
 
-   static void TryPostReplay(string_view name, int tryIndex, function<void(ReplayUploadStatus, string_view, float,
+   static void TryPostReplay(string name, int tryIndex, function<void(ReplayUploadStatus, string, float,
                                                                            int)> const &finished);
    static string lastReplayFilename;
-   static float GetTotalMultiplier(string_view modifiers);
+   static float GetTotalMultiplier(string modifiers);
 
-   int GetLocalScore(string_view filename);
+   int GetLocalScore(string filename);
 };

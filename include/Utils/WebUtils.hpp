@@ -3,32 +3,34 @@
 
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
+using namespace std;
+
 namespace WebUtils {
-    extern std::string GameVersion;
-    extern std::string API_URL;
-    extern std::string WEB_URL;
+    extern string GameVersion;
+    extern string API_URL;
+    extern string WEB_URL;
 
     void refresh_urls();
 
-    std::optional<rapidjson::Document> GetJSON(std::string_view url);
+    std::optional<rapidjson::Document> GetJSON(string url);
 
-    long Get(std::string_view url, std::string& val);
+    long Get(string url, string& val);
 
-    long Get(std::string_view url, long timeout, std::string& val);
+    long Get(string url, long timeout, string& val);
 
-    std::thread GetAsync(std::string_view url, std::function<void(long, std::string_view)> const &finished, std::function<void(
+    std::thread GetAsync(string url, function<void(long, string)> const &finished, function<void(
             float)> const &progressUpdate = nullptr);
 
-    std::thread GetAsync(std::string_view url, long timeout, std::function<void(long, std::string_view)> const& finished, std::function<void(float)> const& progressUpdate = nullptr);
+    std::thread GetAsync(string url, long timeout, function<void(long, string)> const& finished, function<void(float)> const& progressUpdate = nullptr);
 
-    std::thread GetJSONAsync(std::string_view url, std::function<void(long, bool, rapidjson::Document const&)> const& finished);
+    std::thread GetJSONAsync(string url, function<void(long, bool, rapidjson::Document const&)> const& finished);
 
-    std::thread PostJSONAsync(std::string_view url, std::string_view data, std::function<void(long, std::string_view)> const& finished);
+    std::thread PostJSONAsync(string url, string data, function<void(long, string)> const& finished);
 
-    std::thread PostJSONAsync(const std::string& url, std::string data, long timeout, std::function<void(long, std::string_view)> const& finished);
+    std::thread PostJSONAsync(const string& url, string data, long timeout, function<void(long, string)> const& finished);
 
-    std::thread PostFormAsync(const std::string& url, const std::string& password, const std::string& login, const std::string& action,
-                       std::function<void(long, std::string_view)> const &finished);
+    std::thread PostFormAsync(const string& url, const string& password, const string& login, const string& action,
+                       function<void(long, string)> const &finished);
 
-    std::thread PostFileAsync(std::string_view url, FILE* data, long length, long timeout, std::function<void(long, std::string_view)> const& finished, std::function<void(float)> const& progressUpdate);
+    std::thread PostFileAsync(string url, FILE* data, long length, long timeout, function<void(long, string)> const& finished, function<void(float)> const& progressUpdate);
 }

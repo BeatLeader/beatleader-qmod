@@ -12,6 +12,6 @@ private:
     /* data */
 public:
    static void WriteReplay(Replay const &replay);
-   static std::optional<ReplayInfo> ReadInfo(string_view replayPath);
+   static optional<ReplayInfo> ReadInfo(string replayPath);
    static string ToFilePath(Replay const &replay);
 };

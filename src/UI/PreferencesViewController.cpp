@@ -42,7 +42,7 @@ StringW password;
 
 string errorDescription = "";
 
-void UpdateUI(string_view userID) {
+void UpdateUI(string userID) {
     if (!userID.empty()) {
         label2->SetText(userID);
         label2->get_gameObject()->SetActive(true);
@@ -112,7 +112,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                 UpdateUI("");
                 return;
             }
-            PlayerController::LogIn((string)login, (string)password, [](string_view userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
+            PlayerController::LogIn((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
                 if (userID.empty()) {
                     errorDescription = PlayerController::lastErrorDescription;
                 } else {
@@ -131,7 +131,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                 UpdateUI("");
                 return;
             }
-            PlayerController::SignUp((string)login, (string)password, [](string_view userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
+            PlayerController::SignUp((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
                 if (userID.empty()) {
                     errorDescription = PlayerController::lastErrorDescription;
                 } else {

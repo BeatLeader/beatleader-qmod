@@ -19,7 +19,7 @@ class Sprites {
     static const string CellBGB64;
     static const string ModifiersIconB64;
 
-    static map<string_view, std::vector<uint8_t>> iconCache;
+    static map<string, std::vector<uint8_t>> iconCache;
 public:
     static UnityEngine::Sprite* get_BeatLeaderIcon();
     static UnityEngine::Sprite* get_StarIcon();
@@ -29,7 +29,7 @@ public:
     static UnityEngine::Sprite* get_CellBG();
     static UnityEngine::Sprite* get_ModifiersIcon();
 
-    static void get_Icon(string_view url, const std::function<void(UnityEngine::Sprite*)>& completion);
-    static void GetCountryIcon(string_view country, const std::function<void(UnityEngine::Sprite*)>& completion);
+    static void get_Icon(string url, const std::function<void(UnityEngine::Sprite*)>& completion);
+    static void GetCountryIcon(string country, const std::function<void(UnityEngine::Sprite*)>& completion);
     static void ResetCache();
 };
