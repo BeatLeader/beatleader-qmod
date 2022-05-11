@@ -5,6 +5,7 @@
 
 #include "UnityEngine/Texture2D.hpp"
 #include "UnityEngine/SpriteMeshType.hpp"
+#include "UnityEngine/ImageConversion.hpp"
 
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
@@ -43,6 +44,48 @@ void Sprites::get_Icon(string url, const std::function<void(UnityEngine::Sprite*
                 iconCache[url] = {data.begin(), data.end()};
                 QuestUI::MainThreadScheduler::Schedule([completion, url] {
                     get_Icon(url, completion);
+                });
+            }
+        });
+    }
+}
+
+void Sprites::get_AnimatedIcon(string url, const std::function<void(AllFramesResult)>& completion) {
+    if (iconCache.contains(url)) {
+        std::vector<uint8_t> bytes = iconCache[url];
+        Array<uint8_t>* spriteArray = il2cpp_utils::vectorToArray(bytes);
+        AllFramesResult result;
+        Gif gif = Gif(spriteArray);
+        bool isOK = false;
+        if (gif.Parse() == 0 && gif.Slurp() == 1) {
+            result = gif.get_all_frames();
+            isOK = true;
+            
+        } else {
+            Texture2D* texture = Texture2D::New_ctor(0, 0, TextureFormat::RGBA32, false, false);
+            if (UnityEngine::ImageConversion::LoadImage(texture, spriteArray, false)) {
+                texture->set_wrapMode(TextureWrapMode::Clamp);
+                ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(1);
+                ArrayW<float> timings = ArrayW<float> (1);
+
+                frames[0] = texture;
+                timings[0] = 0;
+                result = {
+                    frames, timings
+                };
+                isOK = true;
+            }
+        }
+
+        if (isOK) {
+            completion(result);
+        }
+    } else {
+        WebUtils::GetAsync(url, [completion, url](long code, string data) {
+            if (code == 200) {
+                iconCache[url] = {data.begin(), data.end()};
+                QuestUI::MainThreadScheduler::Schedule([completion, url] {
+                    get_AnimatedIcon(url, completion);
                 });
             }
         });

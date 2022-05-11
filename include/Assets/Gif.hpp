@@ -1,12 +1,21 @@
 #include "gif-lib/shared/gif_lib.h"
-
 #include <string>
 #include <vector>
 #include <sstream>
-#include "UnityEngine/Texture2D.hpp"
+
 #include "UnityEngine/Color32.hpp"
+#include "UnityEngine/TextureWrapMode.hpp"
+#include "UnityEngine/FilterMode.hpp"
+#include "AllFrameResult.hpp"
 
 using namespace UnityEngine;
+// raw PVRTC bytes for Unity
+struct TextureColor {
+    uint8_t Red;
+    uint8_t Green;
+    uint8_t Blue;
+    uint8_t Transparency;
+};
 
 struct Gif
 {
@@ -119,6 +128,107 @@ struct Gif
         texture->Apply();
         return texture;
     }
+    
+    // Stolen from Nya: https://github.com/FrozenAlex/Nya-utils :lovege:
+    /// @brief gets the frame @ idx
+    /// @return texture2d or nullptr on fail
+    AllFramesResult get_all_frames() {
+        // Not sure if it helps but everything works
+        const char * GifVersion = DGifGetGifVersion(gif);
+        int length = get_length();
+        if (!gif || length == 0) return {
+            nullptr, nullptr
+        };
+
+        int width = get_width();
+        int height = get_height();
+        
+        ::ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(length);
+        ArrayW<float> timings = ArrayW<float> (length);
+
+        // FrameBuffer
+        TextureColor *pixelData = new TextureColor[width * height];
+
+        // Persist data from the previous frame
+        GifColorType* color;
+        SavedImage* frame;
+        ExtensionBlock* ext = nullptr;
+        GifImageDesc* frameInfo;
+        ColorMapObject* colorMap;
+        // Graphic control ext block
+        GraphicsControlBlock GCB;
+        int GCBResult = GIF_ERROR;
+
+        for (int idx = 0; idx < length; idx++) {
+            int x, y, j, loc;
+
+            frame = &(gif->SavedImages[idx]);
+            frameInfo = &(frame->ImageDesc);
+            if (frameInfo->ColorMap) {
+                colorMap = frameInfo->ColorMap;
+            } else {
+                colorMap = gif->SColorMap;
+            }
+            for (j = 0; j < frame->ExtensionBlockCount; ++j) {
+                if (frame->ExtensionBlocks[j].Function == GRAPHICS_EXT_FUNC_CODE) {
+                    ext = &(frame->ExtensionBlocks[j]);
+                    break;
+                }
+            }
+        
+
+            // Get additional info about the frame
+            if (ext != nullptr) {
+                GCBResult = DGifExtensionToGCB(ext->ByteCount, (const GifByteType*)ext->Bytes, &GCB);
+            }
+            // gif->SWidth is not neccesarily the same as FrameInfo->Width due to a frame possibly describing a smaller block of pixels than the entire gif size
+        
+            UnityEngine::Texture2D* texture = UnityEngine::Texture2D::New_ctor(width, height, UnityEngine::TextureFormat::RGBA32, false);
+            // This is the same size as the entire size of the gif :)
+            // offset into the entire image, might need to also have it's y value flipped? need to test
+            long flippedFrameTop = height - frameInfo->Top - frameInfo->Height;
+            long pixelDataOffset = flippedFrameTop * width + frameInfo->Left;
+            // it's easier to understand iteration from 0 -> value, than it is to understand value -> value
+            for (y = 0; y < frameInfo->Height; ++y) {
+                for (x = 0; x < frameInfo->Width; ++x) {
+                    // Weirdness here is to flip Y coordinate
+                    loc = ( frameInfo->Height-y-1 ) * frameInfo->Width + x;
+                    // Checks if the pixel is transparent
+                    if (GCB.TransparentColor >=0 && frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0]) {
+                        continue;
+                    }
+
+                    color = &colorMap->Colors[frame->RasterBits[loc]];
+                    // for now we just use this method to determine where to draw on the image, we will probably come across a better way though
+                    long locWithinFrame = x + pixelDataOffset;
+                    pixelData[locWithinFrame] = {
+                        color->Red, color->Green, color->Blue, 0xff
+                    };
+                }
+
+                // Goes to a new row (saves compute power)
+                pixelDataOffset = pixelDataOffset + width;
+            }
+
+            // Copy raw pixel data to texture
+            texture->LoadRawTextureData(pixelData,  width * height * 4);
+            // texture->set_filterMode(UnityEngine::FilterMode::Trilinear);
+            // Compress texture
+            texture->Compress(false);
+            // Upload to GPU
+            texture->Apply();
+
+            frames[idx] = texture;
+            timings[idx] = static_cast<float>(GCB.DelayTime);        
+        };
+        // Clear FrameBuffer to not leak things
+        delete[] pixelData;
+        return {
+            frames, timings
+        };
+    }
+    
+
     int get_width() { return gif ? gif->SWidth : 0; };
     int get_height() { return gif ? gif->SHeight : 0; };
     int get_length() { return gif ? gif->ImageCount : 0; };
@@ -129,21 +239,17 @@ public:
 private:
     // wrapper type to wrap any datatype for use within a stream
     template <typename CharT, typename TraitsT = std::char_traits<CharT>>
-    class vectorwrapbuf : public std::basic_streambuf<CharT, TraitsT>
-    {
+    class vectorwrapbuf : public std::basic_streambuf<CharT, TraitsT> {
     public:
-        vectorwrapbuf(std::string& text)
-        {
+        vectorwrapbuf(std::string& text) {
             this->std::basic_streambuf<CharT, TraitsT>::setg(text.data(), text.data(), text.data() + text.size());
         }
 
-        vectorwrapbuf(std::span<CharT> vec)
-        {
+        vectorwrapbuf(std::span<CharT> vec) {
             this->std::basic_streambuf<CharT, TraitsT>::setg(vec.data(), vec.data(), vec.data() + vec.size());
         }
 
-        vectorwrapbuf(Array<CharT>* arr)
-        {
+        vectorwrapbuf(Array<CharT>* arr) {
             this->std::basic_streambuf<CharT, TraitsT>::setg(arr->values, arr->values, arr->values + arr->Length());
         }
     };

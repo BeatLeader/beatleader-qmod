@@ -5,6 +5,7 @@ Player::Player(rapidjson::Value const& document) {
     name = document["name"].GetString();
     country = document["country"].GetString();
     avatar = document["avatar"].GetString();
+    role = document["role"].GetString();
 
     rank = document["rank"].GetInt();
     countryRank = document["countryRank"].GetInt();

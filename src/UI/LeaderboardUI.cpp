@@ -9,6 +9,9 @@
 
 #include "include/UI/UIUtils.hpp"
 #include "include/UI/ScoreDetailsUI.hpp"
+#include "include/UI/LogoAnimation.hpp"
+#include "include/UI/PlayerAvatar.hpp"
+
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
 #include "include/Utils/FormatUtils.hpp"
@@ -92,7 +95,7 @@ namespace LeaderboardUI {
     TMPro::TextMeshProUGUI* uploadStatus = NULL;
 
     TMPro::TextMeshProUGUI* playerName = NULL;
-    HMUI::ImageView* playerAvatar = NULL;
+    BeatLeader::PlayerAvatar* playerAvatar = NULL;
 
     TMPro::TextMeshProUGUI* globalRank = NULL;
     HMUI::ImageView* globalRankIcon = NULL;
@@ -145,10 +148,7 @@ namespace LeaderboardUI {
                 countryRankAndPp->SetText("#" + to_string(player->countryRank) + "        <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp");
                 playerName->set_alignment(TMPro::TextAlignmentOptions::Center);
                 playerName->SetText(player->name);
-
-                Sprites::get_Icon(player->avatar, [](UnityEngine::Sprite* sprite) {
-                    playerAvatar->set_sprite(sprite);
-                });
+                playerAvatar->SetPlayer(player->avatar, "supporter"); // player->role);
                 
                 if (plvc != NULL) {
                     auto countryControl = plvc->scopeSegmentedControl->dataItems.get(3);
@@ -168,7 +168,7 @@ namespace LeaderboardUI {
         } else {
             globalRank->SetText("#0");
             countryRankAndPp->SetText("#0");
-            playerAvatar->set_sprite(plvc->aroundPlayerLeaderboardIcon);
+            // playerAvatar->set_sprite(plvc->aroundPlayerLeaderboardIcon);
             countryRankIcon->set_sprite(plvc->friendsLeaderboardIcon);
             playerName->SetText("");
         }
@@ -352,7 +352,10 @@ namespace LeaderboardUI {
 
             BeatLeader::initModalPopup(&scoreDetailsUI, self->get_transform());
 
-            playerAvatar = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(12, 12));
+            auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(20, 20));
+            playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
+            playerAvatar->Init(playerAvatarImage);
+
             globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->globalLeaderboardIcon, UnityEngine::Vector2(120, 45), UnityEngine::Vector2(4, 4));
             countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->friendsLeaderboardIcon, UnityEngine::Vector2(135, 45), UnityEngine::Vector2(4, 4));
             playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
@@ -373,6 +376,7 @@ namespace LeaderboardUI {
                 }
                 UnityEngine::Application::OpenURL(url);
             });
+            BeatLeader::LogoAnimation* logoAnimation = websiteLink->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
 
             if (retryButton) UnityEngine::GameObject::Destroy(retryButton);
             retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){
@@ -402,10 +406,12 @@ namespace LeaderboardUI {
 
             modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 25), UnityEngine::Vector2(4, 4), [](){
                 modifiers = !modifiers;
+                getModConfig().Modifiers.SetValue(modifiers);
                 clearTable();
                 updateModifiersButton();
                 refreshFromTheServer();
             });
+            modifiers = getModConfig().Modifiers.GetValue();
             ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard without positive modifiers");
             updateModifiersButton();
         }
@@ -473,12 +479,12 @@ namespace LeaderboardUI {
                 }
             });
         } else {
-            cellBackgrounds[result]->get_gameObject()->set_active(false);
-            avatars[result]->get_gameObject()->set_active(false);
-            cellHighlights[result]->get_gameObject()->set_active(false);
+            if (cellBackgrounds.count(result)) {
+                cellBackgrounds[result]->get_gameObject()->set_active(false);
+                avatars[result]->get_gameObject()->set_active(false);
+                cellHighlights[result]->get_gameObject()->set_active(false);
+            }
         }
-
-        
 
         return (TableCell *)result;
     }

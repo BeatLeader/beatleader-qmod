@@ -99,7 +99,7 @@ void ReplaySynchronizer::Process(DIR *dir, string dirName) {
         if (info == std::nullopt || info->failTime > 0.001 || info->speed > 0.001 || (PlayerController::currentPlayer != std::nullopt && info->playerID != PlayerController::currentPlayer->id)) {
             updateStatus(filePath, ReplayStatus::shouldnotpost);
             Process(dir, dirName);
-        } else {
+        } else if (PlayerController::currentPlayer != nullopt) {
             string url = WebUtils::API_URL + "player/" + PlayerController::currentPlayer->id + "/scorevalue/" + info->hash + "/" + info->difficulty + "/" + info->mode;
 
             ReplaySynchronizer* self = this;
