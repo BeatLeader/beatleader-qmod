@@ -1,6 +1,7 @@
 #include "include/UI/ScoreDetailsUI.hpp"
 #include "include/Utils/FormatUtils.hpp"
 #include "include/Assets/Sprites.hpp"
+#include "include/UI/EmojiSupport.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
@@ -40,6 +41,8 @@ void BeatLeader::initModalPopup(BeatLeader::ModalPopup** modalUIPointer, Transfo
     modalUI->rank = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(6.0, 16.0));
     
     modalUI->name = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(0.0, 18.0));
+    EmojiSupport::AddSupport(modalUI->name);
+
     modalUI->pp = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(45.0, 16.0));
 
     modalUI->datePlayed = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(0.0, 11.0));

@@ -11,6 +11,7 @@
 #include "include/UI/ScoreDetailsUI.hpp"
 #include "include/UI/LogoAnimation.hpp"
 #include "include/UI/PlayerAvatar.hpp"
+#include "include/UI/EmojiSupport.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -360,6 +361,8 @@ namespace LeaderboardUI {
             countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->friendsLeaderboardIcon, UnityEngine::Vector2(135, 45), UnityEngine::Vector2(4, 4));
             playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
+
+            EmojiSupport::AddSupport(playerName);
             
             globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(153, 42.5));
             countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(168, 42.5));
@@ -436,6 +439,7 @@ namespace LeaderboardUI {
         if (result->playerNameText->get_fontSize() > 3) {
             result->playerNameText->set_enableAutoSizing(false);
             result->playerNameText->set_richText(true);
+            EmojiSupport::AddSupport(result->playerNameText);
             resize(result->playerNameText, 13, 0);
             move(result->playerNameText, -2, 0);
             move(result->fullComboText, 0.2, 0);

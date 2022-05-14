@@ -14,6 +14,8 @@ Sprite* BundleLoader::transparentPixel;
 Sprite* BundleLoader::fileError;
 Sprite* BundleLoader::modifiersIcon;
 
+Shader* BundleLoader::TMP_SpriteCurved;
+
 custom_types::Helpers::Coroutine BundleLoader::LoadBundle()
 {
     if (bundle == NULL) {
@@ -45,4 +47,6 @@ void BundleLoader::LoadAssets(AssetBundle* assetBundle) {
     transparentPixel = assetBundle->LoadAsset<Sprite*>("TransparentPixel");
     fileError = assetBundle->LoadAsset<Sprite*>("FileError");
     modifiersIcon = assetBundle->LoadAsset<Sprite*>("ModifiersIcon");
+
+    TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
 }
