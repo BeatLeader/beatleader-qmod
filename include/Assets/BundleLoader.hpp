@@ -1,6 +1,7 @@
 #include "UnityEngine/AssetBundle.hpp"
 #include "UnityEngine/Material.hpp"
 #include "UnityEngine/Sprite.hpp"
+#include "UnityEngine/Shader.hpp"
 #include "UnityEngine/AssetBundleCreateRequest.hpp"
 
 #include "custom-types/shared/coroutine.hpp"
@@ -24,6 +25,8 @@ public:
     static Sprite *transparentPixel;
     static Sprite *fileError;
     static Sprite *modifiersIcon;
+
+    static Shader* TMP_SpriteCurved;
 
     static custom_types::Helpers::Coroutine LoadBundle();
     static void LoadAssets(AssetBundle* assetBundle);
