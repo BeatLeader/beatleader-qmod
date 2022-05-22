@@ -12,6 +12,7 @@
 #include "include/UI/LogoAnimation.hpp"
 #include "include/UI/PlayerAvatar.hpp"
 #include "include/UI/EmojiSupport.hpp"
+#include "UI/RoleColorScheme.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -127,8 +128,7 @@ namespace LeaderboardUI {
     map<LeaderboardTableCell*, Score> cellScores;
     map<string, int> imageRows;
 
-    static UnityEngine::Color underlineDefaultColor = UnityEngine::Color(0.1, 0.3, 0.4, 0.0);
-    static UnityEngine::Color underlineHoverColor = UnityEngine::Color(0.0, 0.4, 1.0, 0.8);
+    static UnityEngine::Color underlineHoverColor = UnityEngine::Color(1.0, 0.0, 0.0, 1.0);
 
     static UnityEngine::Color ownScoreColor = UnityEngine::Color(0.7, 0.0, 0.7, 0.3);
     static UnityEngine::Color someoneElseScoreColor = UnityEngine::Color(0.07, 0.0, 0.14, 0.05);
@@ -136,8 +136,9 @@ namespace LeaderboardUI {
     string generateLabel(Score const& score) {
         // TODO: Use fmt
         string const& nameLabel = score.player.name;
-        string fcLabel =  "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? ", " : "") + score.modifiers;
-        return truncate(nameLabel, 23) + "<pos=45%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
+
+        string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? ", " : "") + score.modifiers;
+        return FormatUtils::FormatNameWithClans(score.player) + "<pos=45%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
     }
 
     void updatePlayerInfoLabel() {
@@ -148,8 +149,8 @@ namespace LeaderboardUI {
                 globalRank->SetText("#" + to_string(player->rank));
                 countryRankAndPp->SetText("#" + to_string(player->countryRank) + "        <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp");
                 playerName->set_alignment(TMPro::TextAlignmentOptions::Center);
-                playerName->SetText(player->name);
-                playerAvatar->SetPlayer(player->avatar, "supporter"); // player->role);
+                playerName->SetText(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value()));
+                playerAvatar->SetPlayer(player->avatar, player->role);
                 
                 if (plvc != NULL) {
                     auto countryControl = plvc->scopeSegmentedControl->dataItems.get(3);
@@ -436,6 +437,7 @@ namespace LeaderboardUI {
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
         LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
 
+        auto player = scoreVector[row].player;
         if (result->playerNameText->get_fontSize() > 3) {
             result->playerNameText->set_enableAutoSizing(false);
             result->playerNameText->set_richText(true);
@@ -455,21 +457,22 @@ namespace LeaderboardUI {
 
                 scoreDetailsUI->setScore(cellScores[result]);
             });
-            scoreSelector->set_material(BundleLoader::scoreUnderlineMaterial);
-            scoreSelector->set_defaultColor(underlineDefaultColor);
-            scoreSelector->set_highlightColor(underlineHoverColor);
+            scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::scoreUnderlineMaterial));
             cellHighlights[result] = scoreSelector;
 
             auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
             backgroundImage->set_material(BundleLoader::scoreBackgroundMaterial);
             backgroundImage->get_transform()->SetAsFirstSibling();
-            cellBackgrounds[result] = backgroundImage;            
+            cellBackgrounds[result] = backgroundImage;  
+
+            // auto tagsList = QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(result->get_transform());
+            // clanGroups[result] = tagsList;         
         }
 
         if (!isLocal) {
             cellBackgrounds[result]->get_gameObject()->set_active(true);
             avatars[result]->get_gameObject()->set_active(true);
-            cellHighlights[result]->get_gameObject()->set_active(true);
+            
             if (row == selectedScore) {
                 cellBackgrounds[result]->set_color(ownScoreColor);
             } else {
@@ -477,11 +480,33 @@ namespace LeaderboardUI {
             }
             cellScores[result] = scoreVector[row];
             avatars[result]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
-            Sprites::get_Icon(scoreVector[row].player.avatar, [result](UnityEngine::Sprite* sprite) {
+            
+            Sprites::get_Icon(player.avatar, [result](UnityEngine::Sprite* sprite) {
                 if (sprite != NULL && avatars[result] != NULL && sprite->get_texture() != NULL) {
                     avatars[result]->set_sprite(sprite);
                 }
             });
+
+            // TODO
+            // auto tagList = clanGroups[result];
+            // for (int i = 0; i < tagList->get_transform()->get_childCount(); i++)
+            //  UnityEngine::GameObject::Destroy(tagList->get_transform()->GetChild(i)->get_gameObject());
+            // for (size_t i = 0; i < player.clans.size(); i++) {
+            //     getLogger().info("%s", player.clans[i].tag.c_str());
+            //     auto text = ::QuestUI::BeatSaberUI::CreateText(tagList->get_transform(), player.clans[i].tag, false);
+            //     text->set_alignment(TMPro::TextAlignmentOptions::Center);
+            //     auto background = text->get_gameObject()->AddComponent<HMUI::ImageView*>();
+                
+            //     background->set_material(BundleLoader::clanTagBackgroundMaterial);
+            //     background->set_color(FormatUtils::hex2rgb(player.clans[i].color));
+            // }
+
+            auto scoreSelector = cellHighlights[result];
+            scoreSelector->get_gameObject()->set_active(true);
+            float hg = idleHighlight(player.role);
+            scoreSelector->set_defaultColor(UnityEngine::Color(hg, 0.0, 0.0, 1.0));
+            scoreSelector->set_highlightColor(underlineHoverColor);
+            schemeForRole(player.role, false).Apply(scoreSelector->get_material());
         } else {
             if (cellBackgrounds.count(result)) {
                 cellBackgrounds[result]->get_gameObject()->set_active(false);

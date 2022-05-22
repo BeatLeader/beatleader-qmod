@@ -10,6 +10,8 @@
 #include "UnityEngine/Component.hpp"
 #include "UnityEngine/UI/ColorBlock.hpp"
 
+#include "questui/shared/CustomTypes/Components/Backgroundable.hpp"
+
 #include "main.hpp"
 
 #include <sstream>
@@ -31,16 +33,12 @@ void BeatLeader::initModalPopup(BeatLeader::ModalPopup** modalUIPointer, Transfo
     auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(modalUI->modal->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(0, 30), UnityEngine::Vector2(24, 24));
     modalUI->playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
     modalUI->playerAvatar->Init(playerAvatarImage);
-    
-    modalUI->list = CreateVerticalLayoutGroup(modalUI->modal->get_transform());
-    modalUI->list->set_spacing(-1.0f);
-    modalUI->list->set_padding(RectOffset::New_ctor(7, 0, 10, 1));
-    modalUI->list->set_childForceExpandWidth(true);
-    modalUI->list->set_childControlWidth(false);
 
     modalUI->rank = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(6.0, 16.0));
     
     modalUI->name = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(0.0, 18.0));
+    modalUI->name->get_gameObject()->AddComponent<::QuestUI::Backgroundable*>()->ApplyBackground("round-rect-panel");
+
     EmojiSupport::AddSupport(modalUI->name);
 
     modalUI->pp = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(45.0, 16.0));
@@ -52,6 +50,8 @@ void BeatLeader::initModalPopup(BeatLeader::ModalPopup** modalUIPointer, Transfo
     modalUI->scorePp = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(46.0, 2.0));
 
     modalUI->scoreDetails = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(5, -8));
+
+    modalUI->sponsorMessage = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(5, -20));
 
     modalUI->modal->set_name("ScoreDetailsModal");
     *modalUIPointer = modalUI;
@@ -110,7 +110,7 @@ string GetDetailsString(Score score) {
 void BeatLeader::ModalPopup::setScore(const Score& score) {
     playerAvatar->SetPlayer(score.player.avatar, score.player.role);
 
-    name->SetText(truncate(score.player.name, 23));
+    name->SetText(FormatUtils::FormatNameWithClans(score.player));
     name->set_alignment(TMPro::TextAlignmentOptions::Center);
     rank->SetText(FormatUtils::FormatRank(score.player.rank, true));
     pp->SetText(FormatUtils::FormatPP(score.player.pp));
@@ -123,4 +123,7 @@ void BeatLeader::ModalPopup::setScore(const Score& score) {
     scorePp->SetText(GetStringWithLabel(FormatUtils::FormatPP(score.pp), "pp"));
 
     scoreDetails->SetText(GetDetailsString(score));
+
+    sponsorMessage->SetText(score.player.sponsorMessage);
+    sponsorMessage->set_alignment(TMPro::TextAlignmentOptions::Center);
 }
