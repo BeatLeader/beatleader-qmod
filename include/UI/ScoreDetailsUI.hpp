@@ -22,21 +22,19 @@ namespace BeatLeader {
             HMUI::ModalView* modal;
 
             BeatLeader::PlayerAvatar* playerAvatar;
-            UnityEngine::UI::VerticalLayoutGroup* list;
 
-            UnityEngine::UI::HorizontalLayoutGroup* header;
             TMPro::TextMeshProUGUI* rank;
             TMPro::TextMeshProUGUI* name;
             TMPro::TextMeshProUGUI* pp;
 
             TMPro::TextMeshProUGUI* datePlayed;
             
-            UnityEngine::UI::HorizontalLayoutGroup* header2;
             TMPro::TextMeshProUGUI* modifiedScore;
             TMPro::TextMeshProUGUI* accuracy;
             TMPro::TextMeshProUGUI* scorePp;
 
             TMPro::TextMeshProUGUI* scoreDetails;
+            TMPro::TextMeshProUGUI* sponsorMessage;
             
             UnityEngine::UI::Button* closeButton;
             

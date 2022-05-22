@@ -62,16 +62,23 @@ TMPro::TMP_SpriteAsset* CreateTMP_SpriteAsset() {
     return spriteAsset;
 }
 
-void DrawSprite(UnityEngine::Texture* emojiTex, int emojiIndex, TMPro::TMP_SpriteAsset* emojiAsset) {
+void DrawSprite(
+    UnityEngine::Texture* emojiTex,
+    int emojiIndex, 
+    TMPro::TMP_SpriteGlyph* glyph,
+    TMPro::TMP_SpriteAsset* emojiAsset) {
     int row = emojiIndex % SHEET_TILES;
     int column = emojiIndex / SHEET_TILES;
+    int width = emojiTex->get_width();
     static auto CopyTexture_Region = reinterpret_cast<function_ptr_t<void, UnityEngine::Texture*, int, int, int, int, int, int, UnityEngine::Texture*, int, int, int, int>>(il2cpp_functions::resolve_icall("UnityEngine.Graphics::CopyTexture_Region"));
-    CopyTexture_Region(emojiTex, 0, 0, 0, 0, emojiTex->get_width(), emojiTex->get_height(),
+    CopyTexture_Region(emojiTex, 0, 0, 0, 0, width, emojiTex->get_height(),
                                 currentEmojiAsset->spriteSheet, 0, 0, row * EMOJI_SIZE,
                                 (SHEET_SIZE) - ((column + 1) * EMOJI_SIZE));
+    glyph->set_metrics(UnityEngine::TextCore::GlyphMetrics(width, EMOJI_SIZE, 0.25f * width, EMOJI_SIZE * 0.75f, width));
+    glyph->set_glyphRect(UnityEngine::TextCore::GlyphRect(row * EMOJI_SIZE, (SHEET_SIZE) - ((column + 1) * EMOJI_SIZE), width, EMOJI_SIZE));
 }
 
-void PushSprite(int unicode) {
+TMPro::TMP_SpriteGlyph* PushSprite(int unicode) {
     if (currentEmojiIndex >= SHEET_TILES * SHEET_TILES) {
         auto newSheet = CreateTMP_SpriteAsset();
         rootEmojiAsset->fallbackSpriteAssets->Add(newSheet);
@@ -106,13 +113,15 @@ void PushSprite(int unicode) {
 
     currentEmojiAsset->SortGlyphTable();
     currentEmojiAsset->UpdateLookupTables();
+
+    return sprite;
 }
 
 MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpriteByUnicode, TMPro::TMP_SpriteAsset*, TMPro::TMP_SpriteAsset* spriteAsset, uint unicode, bool includeFallbacks, ByRef<int> spriteIndex) {
     TMPro::TMP_SpriteAsset* result = SearchForSpriteByUnicode(spriteAsset, unicode, includeFallbacks, spriteIndex);
     
     if (result == NULL) {
-        PushSprite(unicode);
+        auto glyph = PushSprite(unicode);
 
         *spriteIndex = currentEmojiIndex;
         result = currentEmojiAsset;
@@ -122,8 +131,10 @@ MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpri
 
         getLogger().info("%s", ("https://cdn.beatleader.xyz/unicode/" + utf8ToHex(unicode) + ".png").c_str());
         
-        Sprites::get_Icon("https://cdn.beatleader.xyz/unicode/" + utf8ToHex(unicode) + ".png", [indexToUse, assetToUse](UnityEngine::Sprite* sprite) {
-            DrawSprite((UnityEngine::Texture*)sprite->get_texture(), indexToUse, assetToUse);
+        Sprites::get_Icon("https://cdn.beatleader.xyz/unicode/" + utf8ToHex(unicode) + ".png", [indexToUse, assetToUse, glyph](UnityEngine::Sprite* sprite) {
+            DrawSprite((UnityEngine::Texture*)sprite->get_texture(), indexToUse, glyph, assetToUse);
+
+            // TODO: Redraw the textfield
         });
 
         currentEmojiIndex++;

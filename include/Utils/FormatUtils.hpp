@@ -7,6 +7,8 @@
 #include "UnityEngine/Color.hpp"
 
 #include "include/Utils/StringUtils.hpp"
+#include "include/Models/Player.hpp"
+#include "include/Models/Clan.hpp"
 
 using namespace std;
 using namespace UnityEngine;
@@ -90,5 +92,19 @@ namespace FormatUtils {
 
         inline string FormatPP(float value) {
             return "<color=#B856FF>" + to_string_wprecision(value, 2) + "<size=70%>pp</size>";
+        }
+
+        inline string FormatClanTag(string tag) {
+            return "<alpha=#00>.<alpha=#FF><b><noparse>" + tag + "</noparse></b><alpha=#00>.<alpha=#FF>";
+        }
+
+        inline string FormatNameWithClans(Player player) {
+            string clansLabel = "";
+            for (size_t i = 0; i < player.clans.size(); i++) {
+                Clan clan = player.clans[i];
+                clansLabel += "  <color=" + clan.color + ">" + clan.tag + "</color>";
+            }
+
+            return truncate(player.name, 23 - clansLabel.size()) + clansLabel;
         }
     }

@@ -13,79 +13,17 @@
 
 #include "Utils/ModConfig.hpp"
 #include "Utils/WebUtils.hpp"
+#include "UI/RoleColorScheme.hpp"
+#include "UI/PlayerAvatar.hpp"
 #include "API/PlayerController.hpp"
-
-#include "include/UI/PlayerAvatar.hpp"
-#include "include/Assets/Sprites.hpp"
-#include "include/Assets/BundleLoader.hpp"
+#include "Assets/Sprites.hpp"
+#include "Assets/BundleLoader.hpp"
 
 #include "main.hpp"
 
 using namespace QuestUI;
 
 DEFINE_TYPE(BeatLeader, PlayerAvatar);
-
-struct ColorScheme {
-    int BackgroundColorPropertyId;
-    int RimColorPropertyId;
-    int HaloColorPropertyId;
-    int WavesAmplitudePropertyId;
-
-    UnityEngine::Color _backgroundColor;
-    UnityEngine::Color _rimColor;
-    UnityEngine::Color _haloColor;
-    float _wavesAmplitude;
-
-    ColorScheme(UnityEngine::Color backgroundColor, UnityEngine::Color rimColor, UnityEngine::Color haloColor, float wavesAmplitude) {
-        BackgroundColorPropertyId = UnityEngine::Shader::PropertyToID("_BackgroundColor");
-        RimColorPropertyId = UnityEngine::Shader::PropertyToID("_RimColor");
-        HaloColorPropertyId = UnityEngine::Shader::PropertyToID("_HaloColor");
-        WavesAmplitudePropertyId = UnityEngine::Shader::PropertyToID("_WavesAmplitude");
-        _backgroundColor = backgroundColor;
-        _rimColor = rimColor;
-        _haloColor = haloColor;
-        _wavesAmplitude = wavesAmplitude;
-    }
-
-    void Apply(UnityEngine::Material* material) {
-        material->SetColor(BackgroundColorPropertyId, _backgroundColor);
-        material->SetColor(RimColorPropertyId, _rimColor);
-        material->SetColor(HaloColorPropertyId, _haloColor);
-        material->SetFloat(WavesAmplitudePropertyId, _wavesAmplitude);
-    }
-};
-
-ColorScheme schemeForRole(string roles) {
-    if (roles.find("tipper") != string::npos) {
-        return ColorScheme(
-            UnityEngine::Color(0.0f, 0.0f, 0.0f, 0.4f),
-            UnityEngine::Color(1.0f, 1.0f, 0.7f, 1.0f),
-            UnityEngine::Color(1.0f, 0.6f, 0.0f, 1.0f),
-            0.3f
-        );
-    } else if (roles.find("supporter") != string::npos) {
-        return ColorScheme(
-            UnityEngine::Color(0.0f, 0.0f, 0.0f, 0.4f),
-            UnityEngine::Color(1.0f, 1.0f, 0.7f, 1.0f),
-            UnityEngine::Color(1.0f, 0.6f, 0.0f, 1.0f),
-            0.8f
-        );
-    } else if (roles.find("sponsor") != string::npos) {
-        return ColorScheme(
-            UnityEngine::Color(0.0f, 0.0f, 0.1f, 0.4f),
-            UnityEngine::Color(1.0f, 1.0f, 0.6f, 1.0f),
-            UnityEngine::Color(1.0f, 0.3f, 0.0f, 1.0f),
-            1.0f
-        );
-    } else {
-        return ColorScheme(
-            UnityEngine::Color(0.0f, 0.0f, 0.1f, 0.3f),
-            UnityEngine::Color(0.0f, 0.0f, 0.0f, 1.0f),
-            UnityEngine::Color(0.0f, 0.0f, 0.0f, 1.0f),
-            0.0f
-        );
-    }
-}
 
 void BeatLeader::PlayerAvatar::Init(HMUI::ImageView* imageView) {
     this->imageView = imageView;
