@@ -15,6 +15,11 @@ string ReplayManager::lastReplayFilename = "";
 void ReplayManager::ProcessReplay(Replay const &replay, bool isOst, function<void(ReplayUploadStatus, string, float,
                                                                                   int)> const &finished) {
 
+    if(!UploadEnabled()) {
+        finished(ReplayUploadStatus::finished, "<color=#008000ff>Upload disabled</color>", 0, -1);
+        return;
+    }
+    
     string filename = FileManager::ToFilePath(replay);
     lastReplayFilename = filename;
 
@@ -37,8 +42,6 @@ void ReplayManager::ProcessReplay(Replay const &replay, bool isOst, function<voi
         return; 
     }
     if(isOst)
-        return;
-    if(!UploadEnabled())
         return;
     if(PlayerController::currentPlayer != std::nullopt)
         TryPostReplay(filename, 0, finished);

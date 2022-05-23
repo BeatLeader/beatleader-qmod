@@ -31,6 +31,8 @@ const int EMOJI_SIZE = 72;
 const int SHEET_TILES = 4;
 const int SHEET_SIZE = SHEET_TILES * EMOJI_SIZE;
 
+static bool hooksInstalled = false;
+
 static int currentEmojiIndex;
 static bool textureNeedsApply;
 static TMPro::TMP_SpriteAsset* rootEmojiAsset;
@@ -165,16 +167,22 @@ MAKE_HOOK_MATCH(SetArraySizes, &TMPro::TextMeshProUGUI::SetArraySizes, int, TMPr
 }
 
 void EmojiSupport::AddSupport(TMPro::TextMeshProUGUI* text) {
-    if (rootEmojiAsset == NULL)
-    {
+    if (rootEmojiAsset == NULL) {
         rootEmojiAsset = CreateTMP_SpriteAsset();
         currentEmojiAsset = rootEmojiAsset;
         currentEmojiIndex = 0;
-
+    }
+    if (!hooksInstalled) {
         LoggerContextObject logger = getLogger().WithContext("load");
         INSTALL_HOOK(logger, SearchForSpriteByUnicode);
         INSTALL_HOOK(logger, SetArraySizes);
+
+        hooksInstalled = true;
     }
 
     text->set_spriteAsset(rootEmojiAsset);
+}
+
+void EmojiSupport::Reset() {
+    rootEmojiAsset = NULL;
 }
