@@ -35,6 +35,10 @@ static int currentEmojiIndex;
 static bool textureNeedsApply;
 static TMPro::TMP_SpriteAsset* rootEmojiAsset;
 static TMPro::TMP_SpriteAsset* currentEmojiAsset;
+
+TMPro::TextMeshProUGUI* lastText;
+static vector<TMPro::TextMeshProUGUI*> textToUpdate;
+static int loadingCount = 0;
   
 std::string utf8ToInt(int unicode) {
     std::stringstream strm;
@@ -128,18 +132,36 @@ MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpri
 
         int indexToUse = currentEmojiIndex;
         auto assetToUse = currentEmojiAsset;
+        loadingCount++;
 
         getLogger().info("%s", ("https://cdn.beatleader.xyz/unicode/" + utf8ToHex(unicode) + ".png").c_str());
         
         Sprites::get_Icon("https://cdn.beatleader.xyz/unicode/" + utf8ToHex(unicode) + ".png", [indexToUse, assetToUse, glyph](UnityEngine::Sprite* sprite) {
             DrawSprite((UnityEngine::Texture*)sprite->get_texture(), indexToUse, glyph, assetToUse);
-
-            // TODO: Redraw the textfield
+            loadingCount--;
+            if (loadingCount == 0) {
+                for (size_t i = 0; i < textToUpdate.size(); i++) {
+                    textToUpdate[i]->ForceMeshUpdate();
+                }
+                textToUpdate = {};
+            }
+            
         });
 
         currentEmojiIndex++;
     }
+
+    if (result == currentEmojiAsset && loadingCount > 0) {
+        textToUpdate.push_back(lastText);
+    }
+
     return result;
+}
+
+MAKE_HOOK_MATCH(SetArraySizes, &TMPro::TextMeshProUGUI::SetArraySizes, int, TMPro::TextMeshProUGUI* self, ::ArrayW<::TMPro::TMP_Text::UnicodeChar> chars) {
+    lastText = self; 
+    
+    return SetArraySizes(self, chars);
 }
 
 void EmojiSupport::AddSupport(TMPro::TextMeshProUGUI* text) {
@@ -151,6 +173,7 @@ void EmojiSupport::AddSupport(TMPro::TextMeshProUGUI* text) {
 
         LoggerContextObject logger = getLogger().WithContext("load");
         INSTALL_HOOK(logger, SearchForSpriteByUnicode);
+        INSTALL_HOOK(logger, SetArraySizes);
     }
 
     text->set_spriteAsset(rootEmojiAsset);

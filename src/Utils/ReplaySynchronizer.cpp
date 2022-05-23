@@ -95,7 +95,14 @@ void ReplaySynchronizer::Process(DIR *dir, string dirName) {
             Process(dir, dirName);
         }
     } else {
-        auto info = FileManager::ReadInfo(filePath);
+        std::optional<ReplayInfo> info = nullopt;
+        try {
+            info = FileManager::ReadInfo(filePath);
+	    } catch (const std::exception& e) {
+            updateStatus(filePath, ReplayStatus::shouldnotpost);
+            Process(dir, dirName);
+        }
+        
         if (info == std::nullopt || info->failTime > 0.001 || info->speed > 0.001 || (PlayerController::currentPlayer != std::nullopt && info->playerID != PlayerController::currentPlayer->id)) {
             updateStatus(filePath, ReplayStatus::shouldnotpost);
             Process(dir, dirName);
