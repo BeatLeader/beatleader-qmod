@@ -112,15 +112,18 @@ struct Gif
             for (x = 0; x < frameInfo->Width; ++x)
             {
                 loc = y * frameInfo->Width + x;
-                if (frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0])
-                {
-                    continue;
-                }
-
-                color = &colorMap->Colors[frame->RasterBits[loc]];
+                
                 // for now we just use this method to determine where to draw on the image, we will probably come across a better way though
                 long locWithinFrame = (frameInfo->Height - y - 1) * frameInfo->Width + x + pixelDataOffset;
-                pixelData[locWithinFrame] = Color32(color->Red, color->Green, color->Blue, 0xff);
+
+                if (frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0])
+                {
+                    pixelData[locWithinFrame] = Color32(0xff, 0xff, 0xff, 0);
+                } else {
+                    color = &colorMap->Colors[frame->RasterBits[loc]];
+                    pixelData[locWithinFrame] = Color32(color->Red, color->Green, color->Blue, 0xff);
+                }
+                
             }
         }
 
@@ -193,17 +196,22 @@ struct Gif
                 for (x = 0; x < frameInfo->Width; ++x) {
                     // Weirdness here is to flip Y coordinate
                     loc = ( frameInfo->Height-y-1 ) * frameInfo->Width + x;
-                    // Checks if the pixel is transparent
-                    if (GCB.TransparentColor >=0 && frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0]) {
-                        continue;
-                    }
-
-                    color = &colorMap->Colors[frame->RasterBits[loc]];
+                    
                     // for now we just use this method to determine where to draw on the image, we will probably come across a better way though
                     long locWithinFrame = x + pixelDataOffset;
-                    pixelData[locWithinFrame] = {
-                        color->Red, color->Green, color->Blue, 0xff
-                    };
+
+                    // Checks if the pixel is transparent
+                    if (GCB.TransparentColor >=0 && frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0]) {
+                        pixelData[locWithinFrame] = {
+                            0xff, 0xff, 0xff, 0
+                        };
+                    } else {
+                        color = &colorMap->Colors[frame->RasterBits[loc]];
+                        pixelData[locWithinFrame] = {
+                            color->Red, color->Green, color->Blue, 0xff
+                        };
+                    }
+                    
                 }
 
                 // Goes to a new row (saves compute power)

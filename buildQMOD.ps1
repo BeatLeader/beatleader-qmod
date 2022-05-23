@@ -58,10 +58,10 @@ foreach ($mod in $modJson.modFiles)
 
 foreach ($lib in $modJson.libraryFiles)
 {
-    $path = "./extern/libs/" + $lib
+    $path = "./build/" + $lib
     if (-not (Test-Path $path))
     {
-        $path = "./build/" + $lib
+        $path = "./extern/libs/" + $lib
     }
     $filelist += $path
 }

@@ -12,6 +12,7 @@
 #include "include/Enhancers/UserEnhancer.hpp"
 
 #include "include/Utils/ReplayManager.hpp"
+#include "include/Utils/RecorderUtils.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 
@@ -170,8 +171,7 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(ProcessResultsSolo, &StandardLevelScenesTransitionSetupDataSO::Finish, void, StandardLevelScenesTransitionSetupDataSO* self, LevelCompletionResults* levelCompletionResults) {
         ProcessResultsSolo(self, levelCompletionResults);
-
-        if (self->gameMode != "Party") {
+        if (RecorderUtils::shouldRecord && self->gameMode != "Party" && replay != nullopt) {
             collectMapData(self);
             processResults(levelCompletionResults);
         }

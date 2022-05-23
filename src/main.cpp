@@ -15,6 +15,7 @@
 #include "include/Utils/ReplaySynchronizer.hpp"
 #include "include/Utils/ModifiersManager.hpp"
 #include "include/Utils/WebUtils.hpp"
+#include "include/Utils/RecorderUtils.hpp"
 
 #include "config-utils/shared/config-utils.hpp"
 #include "custom-types/shared/register.hpp"
@@ -101,6 +102,7 @@ extern "C" void load() {
 
     LevelInfoUI::setup();
     ModifiersUI::setup();
+    RecorderUtils::StartRecorderUtils();
 
     PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {
         if (synchronizer == nullopt) {
