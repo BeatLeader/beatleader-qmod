@@ -19,6 +19,7 @@
 #include "include/Assets/Sprites.hpp"
 #include "include/UI/LevelInfoUI.hpp"
 #include "include/Utils/WebUtils.hpp"
+#include "include/Utils/ModConfig.hpp"
 #include "include/Utils/StringUtils.hpp"
 #include "include/Enhancers/MapEnhancer.hpp"
 #include "main.hpp"
@@ -30,8 +31,6 @@
 #include "questui/shared/ArrayUtil.hpp"
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
-
-#include "bs-utils/shared/utils.hpp"
 
 #include <map>
 #include <string>
@@ -108,7 +107,8 @@ namespace LevelInfoUI {
             });
         }
 
-        noSubmissionLabel->get_gameObject()->SetActive(!bs_utils::Submission::getEnabled());
+        
+        noSubmissionLabel->get_gameObject()->SetActive(!UploadEnabled());
     }
 
     void setup() {
