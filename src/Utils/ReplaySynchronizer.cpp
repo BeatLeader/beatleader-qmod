@@ -33,7 +33,7 @@ ReplaySynchronizer::ReplaySynchronizer() noexcept
             fclose(fp);
         }
 
-        if (!self->statuses.HasParseError() && self->statuses.IsObject()) {
+        if (self->statuses.HasParseError() || !self->statuses.IsObject()) {
             self->statuses.SetObject();
         }
 

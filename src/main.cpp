@@ -4,6 +4,7 @@
 #include "include/UI/LeaderboardUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/PreferencesViewController.hpp"
+#include "include/UI/EmojiSupport.hpp"
 
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
@@ -55,6 +56,7 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
 
     LeaderboardUI::reset();
     LevelInfoUI::reset();
+    EmojiSupport::Reset();
     Sprites::ResetCache();
 }
 
