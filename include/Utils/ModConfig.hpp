@@ -13,3 +13,9 @@ DECLARE_CONFIG(ModConfig,
         CONFIG_INIT_VALUE(Modifiers);
     )
 )
+
+inline bool UploadEnabled() {
+    char* value = getenv("disable_ss_upload");
+
+    return value == NULL || strcmp(value, "0") == 0;
+}

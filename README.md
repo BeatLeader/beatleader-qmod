@@ -1,6 +1,7 @@
 # BeatLeader Quest Mod
 
 Oculus Quest native mod for the BeatLeader.
+
 ![cover](./cover.png)
 
 Beat Saber custom songs leaderboard service. It records your plays and sends them to the server.
@@ -8,15 +9,14 @@ Beat Saber custom songs leaderboard service. It records your plays and sends the
 ## Usage
 
 Download .qmod file from the [Releases](/releases) tab and install it using BMBF. Use the appropriate version for your Beat Saber version!
-In order to see leaderboards and post scores, you need to login into your Oculus account in preferences. You may create a new account if you forgot your password, but avatar and other oculus things will not synchronize.
+In order to see leaderboards and post scores, you need to login in preferences. Sign up with any login and password if your are using mod in the first time. You can migrate to Steam profile on the website.
 
 Go to the https://beatleader.xyz/ to see your scores on the web.
 
 ## Roadmap
 
-- Replay synchronization
-- Profile viewer
-- Score statistic viewer
+- Profile viewer (WIP)
+- Score statistic viewer (WIP)
 - In-game replay player
 - Friends management
 - Playlist management and synchronization

@@ -7,8 +7,6 @@
 #include "include/API/PlayerController.hpp"
 #include "include/main.hpp"
 
-#include "bs-utils/shared/utils.hpp"
-
 #include <sys/stat.h>
 #include <stdio.h>
 
@@ -40,7 +38,7 @@ void ReplayManager::ProcessReplay(Replay const &replay, bool isOst, function<voi
     }
     if(isOst)
         return;
-    if(!bs_utils::Submission::getEnabled())
+    if(!UploadEnabled())
         return;
     if(PlayerController::currentPlayer != std::nullopt)
         TryPostReplay(filename, 0, finished);
