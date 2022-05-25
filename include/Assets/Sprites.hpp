@@ -12,7 +12,6 @@ using namespace std;
 /// Copyright (c) 2018 andruzzzhka (MIT Licensed)
 /// </summary>
 class Sprites {
-    static const string BeatLeaderB64;
     static const string StarB64;
     static const string GraphB64;
     static const string DownB64;
@@ -22,7 +21,6 @@ class Sprites {
 
     static map<string, std::vector<uint8_t>> iconCache;
 public:
-    static UnityEngine::Sprite* get_BeatLeaderIcon();
     static UnityEngine::Sprite* get_StarIcon();
     static UnityEngine::Sprite* get_GraphIcon();
     static UnityEngine::Sprite* get_DownIcon();

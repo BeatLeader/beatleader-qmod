@@ -119,15 +119,18 @@ namespace WebUtils {
         return document;
     }
 
+    string getCookieFile() {
+        string directory = getDataDir(modInfo) + "cookies/";
+        std::filesystem::create_directories(directory);
+        return directory + "cookies.txt";
+    }
+
     long Get(string url, string& val) {
         return Get(url, TIMEOUT, val);
     }
 
     long Get(string url, long timeout, string& val) {
-
-        string directory = getDataDir(modInfo) + "cookies/";
-        std::filesystem::create_directories(directory);
-        string cookieFile = directory + "cookies.txt";
+        string cookieFile = getCookieFile();
 
         // Init curl
         auto* curl = curl_easy_init();
@@ -183,9 +186,7 @@ namespace WebUtils {
     std::thread GetAsync(string url, long timeout, const function<void(long, string)>& finished, const function<void(float)>& progressUpdate) {
         std::thread t (
             [url = string(url), timeout, progressUpdate, finished] {
-                string directory = getDataDir(modInfo) + "cookies/";
-                std::filesystem::create_directories(directory);
-                string cookieFile = directory + "cookies.txt";
+                string cookieFile = getCookieFile();
                 string val;
                 // Init curl
                 auto* curl = curl_easy_init();
@@ -314,9 +315,7 @@ namespace WebUtils {
         std::thread t(
             [url, action, login, password, finished] {
                 long timeout = TIMEOUT;
-                string directory = getDataDir(modInfo) + "cookies/";
-                std::filesystem::create_directories(directory);
-                string cookieFile = directory + "cookies.txt";
+                string cookieFile = getCookieFile();
                 string val;
                 // Init curl
                 auto* curl = curl_easy_init();
@@ -402,11 +401,8 @@ namespace WebUtils {
         std::thread t(
             [url, timeout, data, finished, length, progressUpdate] {
                 string val;
-                string directory = getDataDir(modInfo) + "cookies/";
-                std::filesystem::create_directories(directory);
-                string cookieFile = directory + "cookies.txt";
+                string cookieFile = getCookieFile();
 
-                
                 // Init curl
                 auto* curl = curl_easy_init();
 

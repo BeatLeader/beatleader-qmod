@@ -66,6 +66,11 @@
 #include "GlobalNamespace/SaberSwingRating.hpp"
 #include "GlobalNamespace/GameplayCoreSceneSetupData.hpp"
 
+#include "GlobalNamespace/ScoringElement.hpp"
+#include "GlobalNamespace/BadCutScoringElement.hpp"
+#include "GlobalNamespace/GoodCutScoringElement.hpp"
+#include "GlobalNamespace/MissScoringElement.hpp"
+
 #include "main.hpp"
 
 #include <map>
@@ -89,12 +94,12 @@ namespace ReplayRecorder {
     bool automaticPlayerHeight = false;
     PlayerHeadAndObstacleInteraction* phoi;
 
-    map<int, NoteCutInfo> _cutInfoCache;
     map<int, NoteEvent> _noteEventCache;
     map<SaberMovementData *, float> _preSwingContainer;
     map<SaberSwingRatingCounter *, float> _postSwingContainer;
 
     static map<NoteData *, int> _noteIdCache;
+    static map<NoteData *, int> _replayNoteIdCache;
     map<ISaberSwingRatingCounter*, int> _swingIdCache;
     int _noteId;
 
@@ -106,6 +111,7 @@ namespace ReplayRecorder {
     optional<WallEvent> _currentWallEvent;
     chrono::steady_clock::time_point _pauseStartTime;
     System::Action_1<float>* _heightEvent;
+    System::Action_1<ScoringElement*>* _scoreEvent;
 
     bool isOst = false;
     void collectMapData(StandardLevelScenesTransitionSetupDataSO* self) {
@@ -171,15 +177,10 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(ProcessResultsSolo, &StandardLevelScenesTransitionSetupDataSO::Finish, void, StandardLevelScenesTransitionSetupDataSO* self, LevelCompletionResults* levelCompletionResults) {
         ProcessResultsSolo(self, levelCompletionResults);
-        if (RecorderUtils::shouldRecord && self->gameMode != "Party" && replay != nullopt) {
+        if (self->gameMode != "Party" && replay != nullopt) {
             collectMapData(self);
             processResults(levelCompletionResults);
         }
-    }
-
-    MAKE_HOOK_MATCH(SongStart, &AudioTimeSyncController::Start, void, AudioTimeSyncController* self) {
-        SongStart(self);
-        audioTimeSyncController = self;
     }
 
     void NoteSpawned(NoteController* noteController, NoteData* noteData) {
@@ -227,27 +228,83 @@ namespace ReplayRecorder {
         noteCutInfo.cutAngle = cutInfo.cutAngle;
     }
 
-    MAKE_HOOK_MATCH(NoteCut, &ScoreController::HandleNoteWasCut, void, ScoreController* self, NoteController* noteController, ByRef<NoteCutInfo> noteCutInfo) {
-        NoteCut(self, noteController, noteCutInfo);
-        int noteId = _noteIdCache[noteCutInfo->noteData];
+    static float ChooseSwingRating(float real, float unclamped) {
+        return real < 1 ? real : max(real, unclamped);
+    }
 
-        NoteEvent& noteEvent = _noteEventCache.at(noteId);
-        noteEvent.eventTime = audioTimeSyncController->songTime;
+    void scoringElementFinished(ScoringElement* scoringElement) {
+        if (replay == nullopt) return;
 
-        if (noteController->noteData->colorType == ColorType::None)
-        {
-            noteEvent.eventType = NoteEventType::BOMB;
+        auto noteData = scoringElement->noteData;
+
+        int noteId = _replayNoteIdCache[noteData];
+        NoteEvent& noteEvent = replay->notes.at(noteId);
+        bool isBomb = noteData->colorType == ColorType::None;
+        
+        if (il2cpp_utils::try_cast<MissScoringElement>(scoringElement) != nullopt) {
+            if (isBomb) return;
+
+            noteEvent.eventType = NoteEventType::MISS;
+        } else if (il2cpp_utils::try_cast<BadCutScoringElement>(scoringElement) != nullopt) {
+            noteEvent.eventType = isBomb ? NoteEventType::BOMB : NoteEventType::BAD;
+        } else if (il2cpp_utils::try_cast<GoodCutScoringElement>(scoringElement) != nullopt) {
+            GoodCutScoringElement* goodCut = il2cpp_utils::try_cast<GoodCutScoringElement>(scoringElement).value();
+            CutScoreBuffer* cutScoreBuffer = goodCut->cutScoreBuffer;
+            SaberSwingRatingCounter* saberSwingRatingCounter = cutScoreBuffer->saberSwingRatingCounter;
+
+            ReplayNoteCutInfo& noteCutInfo = noteEvent.noteCutInfo;
+            PopulateNoteCutInfo(noteCutInfo, cutScoreBuffer->noteCutInfo);
+            
+            noteCutInfo.beforeCutRating = ChooseSwingRating(saberSwingRatingCounter->beforeCutRating, _preSwingContainer[(SaberMovementData *)saberSwingRatingCounter->saberMovementData]);
+            noteCutInfo.afterCutRating = ChooseSwingRating(saberSwingRatingCounter->afterCutRating, _postSwingContainer[saberSwingRatingCounter]);
+
+            _preSwingContainer[(SaberMovementData *)saberSwingRatingCounter->saberMovementData] = 0;
+            _postSwingContainer[saberSwingRatingCounter] = 0;
+        }
+    }
+
+    MAKE_HOOK_MATCH(ScoreControllerLateUpdate, &ScoreController::LateUpdate, void, ScoreController* self) {
+        auto sortedScoringElementsWithoutMultiplier = self->sortedScoringElementsWithoutMultiplier;
+        auto sortedNoteTimesWithoutScoringElements = self->sortedNoteTimesWithoutScoringElements;
+
+        if (sortedScoringElementsWithoutMultiplier != NULL 
+            && sortedNoteTimesWithoutScoringElements != NULL
+            && self->audioTimeSyncController != NULL) {
+            auto songTime = self->audioTimeSyncController->songTime;
+
+            float nearestNotCutNoteTime = sortedNoteTimesWithoutScoringElements->get_Count() > 0 ? sortedNoteTimesWithoutScoringElements->get_Item(0) : 10000000;
+            float skipAfter = songTime + 0.15f;
+
+            for (int i = 0; i < sortedScoringElementsWithoutMultiplier->get_Count(); i++) {
+                auto scoringElement = sortedScoringElementsWithoutMultiplier->get_Item(i);
+                if (scoringElement->get_time() >= skipAfter && scoringElement->get_time() <= nearestNotCutNoteTime) break;
+                
+                auto noteData = scoringElement->noteData;
+                if (il2cpp_utils::try_cast<MissScoringElement>(scoringElement) != nullopt && noteData->scoringType == NoteData::ScoringType::NoScore) continue;
+
+                int noteId = _noteIdCache[noteData];
+                NoteEvent& noteEvent = _noteEventCache.at(noteId);
+                noteEvent.eventTime = songTime;
+
+                if (replay != nullopt) {
+                    replay->notes.push_back(noteEvent);
+                    _replayNoteIdCache[noteData] = replay->notes.size() - 1;
+                }
+            }
         }
 
-        _cutInfoCache[noteId] = *noteCutInfo;
-        noteEvent.noteCutInfo = ReplayNoteCutInfo();
-        if (noteCutInfo->speedOK && noteCutInfo->directionOK && noteCutInfo->saberTypeOK && !noteCutInfo->wasCutTooSoon) {
-            noteEvent.eventType = NoteEventType::GOOD;
-        } else if (replay != nullopt) {
-            noteEvent.eventType = NoteEventType::BAD;
-            PopulateNoteCutInfo(noteEvent.noteCutInfo, noteCutInfo.heldRef);
-            replay->notes.emplace_back(noteEvent);
-        }
+        ScoreControllerLateUpdate(self);
+    }
+
+    MAKE_HOOK_MATCH(ScoreControllerStart, &ScoreController::Start, void, ScoreController* self) {
+        ScoreControllerStart(self);
+
+        _scoreEvent = il2cpp_utils::MakeDelegate<System::Action_1<ScoringElement*> *>(
+                        classof(System::Action_1<ScoringElement*>*),
+                        static_cast<Il2CppObject *>(nullptr), scoringElementFinished);
+        self->add_scoringForNoteFinishedEvent(_scoreEvent);
+
+        audioTimeSyncController = self->audioTimeSyncController;
     }
 
     MAKE_HOOK_MATCH(ComputeSwingRating, static_cast<float (SaberMovementData::*)(bool, float)>(&SaberMovementData::ComputeSwingRating), float, SaberMovementData* self, bool overrideSegmenAngle, float overrideValue) {
@@ -314,35 +371,6 @@ namespace ReplayRecorder {
         }
 
         _postSwingContainer[self] = postSwing;
-    }
-
-    MAKE_HOOK_MATCH(SwingRatingDidFinish, &CutScoreBuffer::HandleSaberSwingRatingCounterDidFinish, void, CutScoreBuffer* self, ISaberSwingRatingCounter* swingRatingCounter) {
-        SwingRatingDidFinish(self, swingRatingCounter);
-        int noteId = _noteIdCache[self->noteCutInfo.noteData];
-        NoteCutInfo const& cutInfo = self->noteCutInfo;
-
-        NoteEvent& cutEvent = _noteEventCache.at(noteId);
-        ReplayNoteCutInfo& noteCutInfo = cutEvent.noteCutInfo;
-        PopulateNoteCutInfo(noteCutInfo, cutInfo);
-        noteCutInfo.beforeCutRating = _preSwingContainer[(SaberMovementData *)self->saberSwingRatingCounter->saberMovementData];
-        noteCutInfo.afterCutRating = _postSwingContainer[self->saberSwingRatingCounter];
-
-        if (replay != nullopt) {
-            replay->notes.emplace_back(cutEvent);
-        }
-    }
-
-    MAKE_HOOK_MATCH(NoteMiss, &ScoreController::HandleNoteWasMissed, void, ScoreController* self, NoteController* noteController) {
-        NoteMiss(self, noteController);
-        int noteId = _noteIdCache[noteController->noteData];
-
-        if (noteController->noteData->colorType != ColorType::None && replay != nullopt)
-        {
-            NoteEvent& noteEvent = _noteEventCache.at(noteId);
-            noteEvent.eventTime = audioTimeSyncController->songTime;
-            noteEvent.eventType = NoteEventType::MISS;
-            replay->notes.emplace_back(noteEvent);
-        }
     }
 
     MAKE_HOOK_MATCH(ComboMultiplierChanged, &ScoreController::HandlePlayerHeadDidEnterObstacles, void,  ScoreController* self) {
@@ -418,20 +446,18 @@ namespace ReplayRecorder {
 
         INSTALL_HOOK(logger, ProcessResultsSolo);
         INSTALL_HOOK(logger, LevelPlay);
-        INSTALL_HOOK(logger, SongStart);
         INSTALL_HOOK(logger, SpawnNote);
         INSTALL_HOOK(logger, SpawnObstacle);
-        INSTALL_HOOK(logger, NoteCut);
-        INSTALL_HOOK(logger, NoteMiss);
         INSTALL_HOOK(logger, ComboMultiplierChanged);
         INSTALL_HOOK(logger, BeatMapStart);
         INSTALL_HOOK(logger, LevelPause);
         INSTALL_HOOK(logger, LevelUnpause);
         INSTALL_HOOK(logger, Tick);
-        INSTALL_HOOK(logger, SwingRatingDidFinish);
         INSTALL_HOOK(logger, ComputeSwingRating);
         INSTALL_HOOK(logger, ProcessNewSwingData);
         INSTALL_HOOK(logger, PlayerHeightDetectorStart);
+        INSTALL_HOOK(logger, ScoreControllerStart);
+        INSTALL_HOOK(logger, ScoreControllerLateUpdate);
 
         getLogger().info("Installed all ReplayRecorder hooks!");
 
