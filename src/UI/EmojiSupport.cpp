@@ -82,6 +82,9 @@ void DrawSprite(
                                 (SHEET_SIZE) - ((column + 1) * EMOJI_SIZE));
     glyph->set_metrics(UnityEngine::TextCore::GlyphMetrics(width, EMOJI_SIZE, 0.25f * width, EMOJI_SIZE * 0.75f, width));
     glyph->set_glyphRect(UnityEngine::TextCore::GlyphRect(row * EMOJI_SIZE, (SHEET_SIZE) - ((column + 1) * EMOJI_SIZE), width, EMOJI_SIZE));
+
+    emojiAsset->SortGlyphTable();
+    emojiAsset->UpdateLookupTables();
 }
 
 TMPro::TMP_SpriteGlyph* PushSprite(int unicode) {

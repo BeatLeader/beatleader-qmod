@@ -47,7 +47,10 @@ ReplaySynchronizer::ReplaySynchronizer() noexcept
 }
 
 void ReplaySynchronizer::updateStatus(string path, ReplayStatus status) {
-    this->statuses.AddMember(rapidjson::StringRef(path), status, statuses.GetAllocator());
+    rapidjson::Value rj_key;
+    rj_key.SetString(path.c_str(), path.length(), statuses.GetAllocator());
+
+    this->statuses.AddMember(rj_key, status, statuses.GetAllocator());
     Save();
 }
 
@@ -74,9 +77,10 @@ void ReplaySynchronizer::Process(DIR *dir, string dirName) {
 
     string filename = ent->d_name;
     string filePath = dirName + filename;
-    getLogger().info("Processing %s", filename.c_str());
+    
     if (this->statuses.HasMember(filePath)) {
         if (ReplayStatus::topost == (ReplayStatus)this->statuses[filePath].GetInt()) {
+            getLogger().info("Processing %s", filename.c_str());
             if (PlayerController::currentPlayer != std::nullopt) {
                 ReplaySynchronizer* self = this;
                 ReplayManager::TryPostReplay(filePath, 0, [filePath, dir, dirName, self](ReplayUploadStatus finished, string description, float progress, int status) {
@@ -95,6 +99,7 @@ void ReplaySynchronizer::Process(DIR *dir, string dirName) {
             Process(dir, dirName);
         }
     } else {
+        getLogger().info("Processing %s", filename.c_str());
         std::optional<ReplayInfo> info = nullopt;
         try {
             info = FileManager::ReadInfo(filePath);

@@ -95,10 +95,10 @@ MAKE_HOOK_MATCH(ScenesTransitionCoroutine, &GameScenesManager::ScenesTransitionC
 void RecorderUtils::StartRecorderUtils() {
     LoggerContextObject logger = getLogger().WithContext("load");
 
-    INSTALL_HOOK(logger, ActionButtonWasPressed);
-    INSTALL_HOOK(logger, PlayButtonPressed);
-    INSTALL_HOOK(logger, RestartButtonPressed);
-    INSTALL_HOOK(logger, RestartButtonPressed2);
-    INSTALL_HOOK(logger, LevelFailedCoroutine);
-    INSTALL_HOOK(logger, ScenesTransitionCoroutine);
+    // INSTALL_HOOK(logger, ActionButtonWasPressed);
+    // INSTALL_HOOK(logger, PlayButtonPressed);
+    // INSTALL_HOOK(logger, RestartButtonPressed);
+    // INSTALL_HOOK(logger, RestartButtonPressed2);
+    // INSTALL_HOOK(logger, LevelFailedCoroutine);
+    // INSTALL_HOOK(logger, ScenesTransitionCoroutine);
 }
