@@ -12,6 +12,8 @@ namespace WebUtils {
 
     void refresh_urls();
 
+    string getCookieFile();
+
     std::optional<rapidjson::Document> GetJSON(string url);
 
     long Get(string url, string& val);

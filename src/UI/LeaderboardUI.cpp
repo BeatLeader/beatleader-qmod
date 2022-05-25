@@ -105,7 +105,7 @@ namespace LeaderboardUI {
     HMUI::ImageView* countryRankIcon = NULL;
     
     UnityEngine::UI::Button* retryButton = NULL;
-    QuestUI::ClickableImage* websiteLink = NULL;
+    BeatLeader::LogoAnimation* logoAnimation = NULL;
     
     QuestUI::ClickableImage* upPageButton = NULL;
     QuestUI::ClickableImage* downPageButton = NULL;
@@ -137,7 +137,7 @@ namespace LeaderboardUI {
         // TODO: Use fmt
         string const& nameLabel = score.player.name;
 
-        string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? ", " : "") + score.modifiers;
+        string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
         return FormatUtils::FormatNameWithClans(score.player) + "<pos=45%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
     }
 
@@ -214,6 +214,8 @@ namespace LeaderboardUI {
         return gameObject;
     }
 
+    static string lastUrl = "";
+
     void refreshFromTheServer() {
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level());
         string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
@@ -246,7 +248,11 @@ namespace LeaderboardUI {
 
         url += "?page=" + to_string(page) + "&player=" + PlayerController::currentPlayer->id;
 
-        WebUtils::GetJSONAsync(url, [](long status, bool error, rapidjson::Document const& result){
+        lastUrl = url;
+
+        WebUtils::GetJSONAsync(url, [url](long status, bool error, rapidjson::Document const& result){
+            if (url != lastUrl) return; 
+
             auto scores = result["data"].GetArray();
             plvc->scores->Clear();
             if ((int)scores.Size() == 0) {
@@ -372,15 +378,15 @@ namespace LeaderboardUI {
                 updatePlayerInfoLabel();
             }
 
-            if (websiteLink) UnityEngine::GameObject::Destroy(websiteLink);
-            websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_BeatLeaderIcon(), UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
+            auto websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
                 string url = WebUtils::WEB_URL;
                 if (PlayerController::currentPlayer != std::nullopt) {
                     url += "u/" + PlayerController::currentPlayer->id;
                 }
                 UnityEngine::Application::OpenURL(url);
             });
-            BeatLeader::LogoAnimation* logoAnimation = websiteLink->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
+            logoAnimation = websiteLink->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
+            logoAnimation->Init(websiteLink);
 
             if (retryButton) UnityEngine::GameObject::Destroy(retryButton);
             retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){
@@ -445,7 +451,7 @@ namespace LeaderboardUI {
             resize(result->playerNameText, 13, 0);
             move(result->playerNameText, -2, 0);
             move(result->fullComboText, 0.2, 0);
-            move(result->scoreText, 5, 0);
+            move(result->scoreText, 4, 0);
             result->playerNameText->set_fontSize(3);
             result->fullComboText->set_fontSize(3);
             result->scoreText->set_fontSize(2);
@@ -457,7 +463,10 @@ namespace LeaderboardUI {
 
                 scoreDetailsUI->setScore(cellScores[result]);
             });
-            scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::scoreUnderlineMaterial));
+            if (BundleLoader::scoreUnderlineMaterial != NULL) {
+                scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::scoreUnderlineMaterial));
+            }
+            
             cellHighlights[result] = scoreSelector;
 
             auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
@@ -523,12 +532,15 @@ namespace LeaderboardUI {
         switch (status)
         {
             case ReplayUploadStatus::finished:
+                logoAnimation->SetAnimating(false);
                 plvc->Refresh(true, true);
                 break;
             case ReplayUploadStatus::error:
+                logoAnimation->SetAnimating(false);
                 retryButton->get_gameObject()->SetActive(true);
                 break;
             case ReplayUploadStatus::inProgress:
+                logoAnimation->SetAnimating(true);
                 if (progress >= 100)
                     uploadStatus->SetText("<color=#b103fcff>Posting replay: Finishing up...");
                 break;

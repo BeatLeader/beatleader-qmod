@@ -119,6 +119,7 @@ void PlayerController::LogIn(string login, string password, const function<void(
 bool PlayerController::LogOut() {
     string result = "";
     WebUtils::Get(WebUtils::API_URL + "signout", result);
+    remove(WebUtils::getCookieFile().data());
     lastErrorDescription = result;
     WebUtils::Get(WebUtils::API_URL + "user/id", result);
     if (result.length() == 0) {
