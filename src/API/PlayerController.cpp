@@ -64,7 +64,7 @@ void PlayerController::RefreshPlatform() {
     auto action = il2cpp_utils::MakeDelegate<System::Action_1<System::Threading::Tasks::Task*>*>(classof(System::Action_1<System::Threading::Tasks::Task*>*), (std::function<void(System::Threading::Tasks::Task_1<GlobalNamespace::UserInfo*>*)>)[&](System::Threading::Tasks::Task_1<GlobalNamespace::UserInfo*>* userInfoTask) {
             UserInfo *ui = userInfoTask->get_Result();
             if (ui != nullptr) {
-                platformPlayer = new Player();
+                platformPlayer = Player();
                 platformPlayer->name = (string)ui->userName;
                 platformPlayer->id = (string)ui->platformUserId;
             }

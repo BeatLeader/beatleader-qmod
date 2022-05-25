@@ -331,6 +331,8 @@ namespace LeaderboardUI {
         plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
     }
 
+    static bool bundleLoaded = false;
+
     MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
         plvc = self;
         clearTable();
@@ -436,6 +438,10 @@ namespace LeaderboardUI {
             self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
             self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
         } else {
+            if (!bundleLoaded) {
+                self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
+                bundleLoaded = true;
+            }
             refreshFromTheServer();
         }
     }
@@ -463,9 +469,7 @@ namespace LeaderboardUI {
 
                 scoreDetailsUI->setScore(cellScores[result]);
             });
-            if (BundleLoader::scoreUnderlineMaterial != NULL) {
-                scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::scoreUnderlineMaterial));
-            }
+            scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::scoreUnderlineMaterial));
             
             cellHighlights[result] = scoreSelector;
 
@@ -579,5 +583,6 @@ namespace LeaderboardUI {
         avatars = {};
         cellHighlights = {};
         cellBackgrounds = {};
+        bundleLoaded = false;
     }    
 }

@@ -50,55 +50,55 @@ static void OnSceneTransitionStarted(bool menuToGame, bool gameToMenu) {
 */
 
 // Play button from a level selection screen
-MAKE_HOOK_MATCH(ActionButtonWasPressed, &SinglePlayerLevelSelectionFlowCoordinator::ActionButtonWasPressed, void, SinglePlayerLevelSelectionFlowCoordinator* self) {
-    ActionButtonWasPressed(self);
-    OnActionButtonWasPressed();
-}
+// MAKE_HOOK_MATCH(ActionButtonWasPressed, &SinglePlayerLevelSelectionFlowCoordinator::ActionButtonWasPressed, void, SinglePlayerLevelSelectionFlowCoordinator* self) {
+//     ActionButtonWasPressed(self);
+//     OnActionButtonWasPressed();
+// }
 
-// Play button from a practice mode setting screen
-MAKE_HOOK_MATCH(PlayButtonPressed, &PracticeViewController::PlayButtonPressed, void, PracticeViewController* self) {
-    PlayButtonPressed(self);
-    OnActionButtonWasPressed();
-}
+// // Play button from a practice mode setting screen
+// MAKE_HOOK_MATCH(PlayButtonPressed, &PracticeViewController::PlayButtonPressed, void, PracticeViewController* self) {
+//     PlayButtonPressed(self);
+//     OnActionButtonWasPressed();
+// }
 
-// Restart button from a GameCore paused screen
-MAKE_HOOK_MATCH(RestartButtonPressed, &PauseMenuManager::RestartButtonPressed, void, PauseMenuManager* self) {
-    RestartButtonPressed(self);
-    OnRestartPauseButtonWasPressed();
-}
+// // Restart button from a GameCore paused screen
+// MAKE_HOOK_MATCH(RestartButtonPressed, &PauseMenuManager::RestartButtonPressed, void, PauseMenuManager* self) {
+//     RestartButtonPressed(self);
+//     OnRestartPauseButtonWasPressed();
+// }
 
-// Restart button from a level result screen
-MAKE_HOOK_MATCH(RestartButtonPressed2, &ResultsViewController::RestartButtonPressed, void, ResultsViewController* self) {
-    RestartButtonPressed2(self);
-    OnActionButtonWasPressed();
-}
+// // Restart button from a level result screen
+// MAKE_HOOK_MATCH(RestartButtonPressed2, &ResultsViewController::RestartButtonPressed, void, ResultsViewController* self) {
+//     RestartButtonPressed2(self);
+//     OnActionButtonWasPressed();
+// }
 
-MAKE_HOOK_MATCH(LevelFailedCoroutine, &StandardLevelFailedController::LevelFailedCoroutine, System::Collections::IEnumerator*, StandardLevelFailedController* self) {
+// MAKE_HOOK_MATCH(LevelFailedCoroutine, &StandardLevelFailedController::LevelFailedCoroutine, System::Collections::IEnumerator*, StandardLevelFailedController* self) {
     
-    if (self->initData->autoRestart) {
-        OnRestartPauseButtonWasPressed();
-    }
+//     if (self->initData->autoRestart) {
+//         OnRestartPauseButtonWasPressed();
+//     }
 
-    return LevelFailedCoroutine(self);
-}
+//     return LevelFailedCoroutine(self);
+// }
 
-MAKE_HOOK_MATCH(ScenesTransitionCoroutine, &GameScenesManager::ScenesTransitionCoroutine, System::Collections::IEnumerator*, GameScenesManager* self, ::GlobalNamespace::ScenesTransitionSetupDataSO* newScenesTransitionSetupData, ::System::Collections::Generic::List_1<::StringW>* scenesToPresent, ::GlobalNamespace::GameScenesManager::ScenePresentType presentType, ::System::Collections::Generic::List_1<::StringW>* scenesToDismiss, ::GlobalNamespace::GameScenesManager::SceneDismissType dismissType, float minDuration, ::System::Action* afterMinDurationCallback, ::System::Action_1<::Zenject::DiContainer*>* extraBindingsCallback, ::System::Action_1<::Zenject::DiContainer*>* finishCallback) {
+// MAKE_HOOK_MATCH(ScenesTransitionCoroutine, &GameScenesManager::ScenesTransitionCoroutine, System::Collections::IEnumerator*, GameScenesManager* self, ::GlobalNamespace::ScenesTransitionSetupDataSO* newScenesTransitionSetupData, ::System::Collections::Generic::List_1<::StringW>* scenesToPresent, ::GlobalNamespace::GameScenesManager::ScenePresentType presentType, ::System::Collections::Generic::List_1<::StringW>* scenesToDismiss, ::GlobalNamespace::GameScenesManager::SceneDismissType dismissType, float minDuration, ::System::Action* afterMinDurationCallback, ::System::Action_1<::Zenject::DiContainer*>* extraBindingsCallback, ::System::Action_1<::Zenject::DiContainer*>* finishCallback) {
     
-    bool menuToGame = scenesToDismiss->Contains("MainMenu") && scenesToPresent->Contains("StandardGameplay");
-    bool gameToMenu = scenesToDismiss->Contains("StandardGameplay") && scenesToPresent->Contains("MainMenu");
+//     bool menuToGame = scenesToDismiss->Contains("MainMenu") && scenesToPresent->Contains("StandardGameplay");
+//     bool gameToMenu = scenesToDismiss->Contains("StandardGameplay") && scenesToPresent->Contains("MainMenu");
 
-    OnSceneTransitionStarted(menuToGame, gameToMenu);
+//     OnSceneTransitionStarted(menuToGame, gameToMenu);
 
-    return ScenesTransitionCoroutine(self, newScenesTransitionSetupData, scenesToPresent, presentType, scenesToDismiss, dismissType, minDuration, afterMinDurationCallback, extraBindingsCallback, finishCallback);
-}
+//     return ScenesTransitionCoroutine(self, newScenesTransitionSetupData, scenesToPresent, presentType, scenesToDismiss, dismissType, minDuration, afterMinDurationCallback, extraBindingsCallback, finishCallback);
+// }
 
 void RecorderUtils::StartRecorderUtils() {
     LoggerContextObject logger = getLogger().WithContext("load");
 
-    INSTALL_HOOK(logger, ActionButtonWasPressed);
-    INSTALL_HOOK(logger, PlayButtonPressed);
-    INSTALL_HOOK(logger, RestartButtonPressed);
-    INSTALL_HOOK(logger, RestartButtonPressed2);
-    INSTALL_HOOK(logger, LevelFailedCoroutine);
-    INSTALL_HOOK(logger, ScenesTransitionCoroutine);
+    // INSTALL_HOOK(logger, ActionButtonWasPressed);
+    // INSTALL_HOOK(logger, PlayButtonPressed);
+    // INSTALL_HOOK(logger, RestartButtonPressed);
+    // INSTALL_HOOK(logger, RestartButtonPressed2);
+    // INSTALL_HOOK(logger, LevelFailedCoroutine);
+    // INSTALL_HOOK(logger, ScenesTransitionCoroutine);
 }

@@ -110,12 +110,14 @@ namespace ReplayRecorder {
     bool isOst = false;
 
     void collectMapData(StandardLevelScenesTransitionSetupDataSO* self) {
-        isOst = !self->gameplayCoreSceneSetupData->previewBeatmapLevel->get_levelID().starts_with("custom_level");
+        GameplayCoreSceneSetupData* gameplayCoreSceneSetupData = reinterpret_cast<GameplayCoreSceneSetupData*>(self->sceneSetupDataArray.get(2));
+
+        isOst = !gameplayCoreSceneSetupData->previewBeatmapLevel->get_levelID().starts_with("custom_level");
 
         mapEnhancer.difficultyBeatmap = self->difficultyBeatmap;
-        mapEnhancer.previewBeatmapLevel = self->gameplayCoreSceneSetupData->previewBeatmapLevel;
-        mapEnhancer.gameplayModifiers = self->gameplayModifiers;
-        mapEnhancer.playerSpecificSettings = self->gameplayCoreSceneSetupData->playerSpecificSettings;
+        mapEnhancer.previewBeatmapLevel = gameplayCoreSceneSetupData->previewBeatmapLevel;
+        mapEnhancer.gameplayModifiers = gameplayCoreSceneSetupData->gameplayModifiers;
+        mapEnhancer.playerSpecificSettings = gameplayCoreSceneSetupData->playerSpecificSettings;
         mapEnhancer.practiceSettings = self->practiceSettings;
         mapEnhancer.environmentInfo = self->environmentInfo;
         mapEnhancer.colorScheme = self->colorScheme;
@@ -170,10 +172,10 @@ namespace ReplayRecorder {
         }
     }
 
-    MAKE_HOOK_MATCH(ProcessResultsSolo, &SoloFreePlayFlowCoordinator::ProcessLevelCompletionResultsAfterLevelDidFinish, void, SoloFreePlayFlowCoordinator* self, LevelCompletionResults* levelCompletionResults, IDifficultyBeatmap* difficultyBeatmap, GameplayModifiers* gameplayModifiers, bool practice) {
-        ProcessResultsSolo(self, levelCompletionResults, difficultyBeatmap, gameplayModifiers, practice);
+    MAKE_HOOK_MATCH(ProcessResultsSolo, &StandardLevelScenesTransitionSetupDataSO::Finish, void, StandardLevelScenesTransitionSetupDataSO* self, LevelCompletionResults* levelCompletionResults) {
+        ProcessResultsSolo(self, levelCompletionResults);
 
-        if (RecorderUtils::shouldRecord && self->gameMode != "Party" && replay != nullopt) {
+        if (self->gameMode != "Party" && replay != nullopt) {
             collectMapData(self);
             processResults(levelCompletionResults);
         }
@@ -192,7 +194,7 @@ namespace ReplayRecorder {
         if (colorType < 0) {
             colorType = 3;
         }
-        auto noteID = ((int)noteData->scoringType + 2) * 10000 + noteData->lineIndex * 1000 + (int)noteData->noteLineLayer * 100 + colorType * 10 + (int)noteData->cutDirection;
+        auto noteID = noteData->lineIndex * 1000 + (int)noteData->noteLineLayer * 100 + colorType * 10 + (int)noteData->cutDirection;
         auto spawnTime = noteData->time;
         _noteEventCache.emplace(_noteId, NoteEvent(noteID, spawnTime));
     }
@@ -218,7 +220,7 @@ namespace ReplayRecorder {
         int wallId = _wallId++;
         _wallCache[obstacleController] = wallId;
 
-        auto wallID = obstacleController->obstacleData->lineIndex * 100 + (int)obstacleController->obstacleData->type * 10 + obstacleController->obstacleData->width;
+        auto wallID = obstacleController->obstacleData->lineIndex * 100 + (int)obstacleController->obstacleData->obstacleType * 10 + obstacleController->obstacleData->width;
         auto spawnTime = audioTimeSyncController->songTime;
 
         _wallEventCache.emplace(wallId, WallEvent(wallID, spawnTime));
@@ -249,22 +251,18 @@ namespace ReplayRecorder {
         NoteEvent& noteEvent = _noteEventCache.at(noteId);
         noteEvent.eventTime = audioTimeSyncController->songTime;
 
-        if (noteController->noteData->colorType == ColorType::None)
-        {
-            noteEvent.eventType = NoteEventType::BOMB;
-        }
-
-        _cutInfoCache[noteId] = *noteCutInfo;
         noteEvent.noteCutInfo = ReplayNoteCutInfo();
         if (noteCutInfo->speedOK && noteCutInfo->directionOK && noteCutInfo->saberTypeOK && !noteCutInfo->wasCutTooSoon) {
             noteEvent.eventType = NoteEventType::GOOD;
         } else if (replay != nullopt) {
-            noteEvent.eventType = NoteEventType::BAD;
+            noteEvent.eventType = noteController->noteData->colorType == ColorType::None ? noteEvent.eventType = NoteEventType::BOMB : NoteEventType::BAD;
             PopulateNoteCutInfo(noteEvent.noteCutInfo, noteCutInfo.heldRef);
-            replay->notes.emplace_back(noteEvent);
         }
 
-        _swingIdCache[noteCutInfo->swingRatingCounter] = noteId;
+        replay->notes.emplace_back(noteEvent);
+
+        _swingIdCache[noteCutInfo->swingRatingCounter] = replay->notes.size() - 1;
+        _cutInfoCache[replay->notes.size() - 1] = *noteCutInfo;
     }
 
     MAKE_HOOK_MATCH(ComputeSwingRating, static_cast<float (SaberMovementData::*)(bool, float)>(&SaberMovementData::ComputeSwingRating), float, SaberMovementData* self, bool overrideSegmenAngle, float overrideValue) {
@@ -333,21 +331,29 @@ namespace ReplayRecorder {
         _postSwingContainer[self] = postSwing;
     }
 
+    static float ChooseSwingRating(float real, float unclamped) {
+        return real < 1 ? real : max(real, unclamped);
+    }
+
     MAKE_HOOK_MATCH(SwingRatingDidFinish, &SaberSwingRatingCounter::Finish, void, SaberSwingRatingCounter* self) {
         SwingRatingDidFinish(self);
 
         int noteId = _swingIdCache[(ISaberSwingRatingCounter*)self];
-        NoteCutInfo const& cutInfo = _cutInfoCache[noteId];
-
-        NoteEvent& cutEvent = _noteEventCache.at(noteId);
-        ReplayNoteCutInfo& noteCutInfo = cutEvent.noteCutInfo;
-        PopulateNoteCutInfo(noteCutInfo, cutInfo);
-
-        noteCutInfo.beforeCutRating = _preSwingContainer[(SaberMovementData *)self->saberMovementData];
-        noteCutInfo.afterCutRating = _postSwingContainer[self];
-
+        
         if (replay != nullopt) {
-            replay->notes.emplace_back(cutEvent);
+            NoteEvent& cutEvent = replay->notes.at(noteId);
+            NoteCutInfo const& cutInfo = _cutInfoCache[noteId];
+            ReplayNoteCutInfo& noteCutInfo = cutEvent.noteCutInfo;
+            PopulateNoteCutInfo(noteCutInfo, cutInfo);
+
+            noteCutInfo.beforeCutRating = _preSwingContainer[(SaberMovementData *)self->saberMovementData];
+            noteCutInfo.afterCutRating = _postSwingContainer[self];
+
+            noteCutInfo.beforeCutRating = ChooseSwingRating(self->beforeCutRating, _preSwingContainer[(SaberMovementData *)self->saberMovementData]);
+            noteCutInfo.afterCutRating = ChooseSwingRating(self->afterCutRating, _postSwingContainer[self]);
+
+            _preSwingContainer[(SaberMovementData *)self->saberMovementData] = 0;
+            _postSwingContainer[self] = 0;
         }
     }
 
