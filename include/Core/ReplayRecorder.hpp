@@ -9,4 +9,5 @@ enum MapStatus {
 
 namespace ReplayRecorder {
     void StartRecording(function<void(Replay const &, MapStatus, bool)> const &callback);
+    static bool recording;
 }

@@ -449,8 +449,7 @@ namespace LeaderboardUI {
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
         LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
 
-        auto player = scoreVector[row].player;
-        if (result->playerNameText->get_fontSize() > 3) {
+        if (!isLocal && result->playerNameText->get_fontSize() > 3) {
             result->playerNameText->set_enableAutoSizing(false);
             result->playerNameText->set_richText(true);
             EmojiSupport::AddSupport(result->playerNameText);
@@ -464,7 +463,7 @@ namespace LeaderboardUI {
 
             avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-32, 0), UnityEngine::Vector2(4, 4));
 
-            auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
+            auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
                 scoreDetailsUI->modal->Show(true, true, nullptr);
 
                 scoreDetailsUI->setScore(cellScores[result]);
@@ -473,7 +472,7 @@ namespace LeaderboardUI {
             
             cellHighlights[result] = scoreSelector;
 
-            auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), BundleLoader::transparentPixel, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
+            auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
             backgroundImage->set_material(BundleLoader::scoreBackgroundMaterial);
             backgroundImage->get_transform()->SetAsFirstSibling();
             cellBackgrounds[result] = backgroundImage;  
@@ -483,6 +482,7 @@ namespace LeaderboardUI {
         }
 
         if (!isLocal) {
+            auto player = scoreVector[row].player;
             cellBackgrounds[result]->get_gameObject()->set_active(true);
             avatars[result]->get_gameObject()->set_active(true);
             
