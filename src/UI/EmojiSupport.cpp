@@ -112,7 +112,7 @@ TMPro::TMP_SpriteGlyph* PushSprite(int unicode) {
     currentEmojiAsset->m_SpriteGlyphTable->Add(sprite);
     
     TMPro::TMP_SpriteCharacter* character = TMPro::TMP_SpriteCharacter::New_ctor(unicode, sprite);
-    character->set_name(text);
+    character->set_name(il2cpp_utils::createcsstr(text));
     character->set_scale(1);
 
     if (currentEmojiAsset->m_SpriteCharacterTable == NULL) {
@@ -132,7 +132,7 @@ MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpri
     if (result == NULL) {
         auto glyph = PushSprite(unicode);
 
-        *spriteIndex = currentEmojiIndex;
+        spriteIndex.heldRef = currentEmojiIndex;
         result = currentEmojiAsset;
 
         int indexToUse = currentEmojiIndex;
@@ -163,7 +163,7 @@ MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpri
     return result;
 }
 
-MAKE_HOOK_MATCH(SetArraySizes, &TMPro::TextMeshProUGUI::SetArraySizes, int, TMPro::TextMeshProUGUI* self, ::ArrayW<::TMPro::TMP_Text::UnicodeChar> chars) {
+MAKE_HOOK_MATCH(SetArraySizes, &TMPro::TextMeshProUGUI::SetArraySizes, int, TMPro::TextMeshProUGUI* self, ::Array<::TMPro::TMP_Text::UnicodeChar>* chars) {
     lastText = self; 
     
     return SetArraySizes(self, chars);

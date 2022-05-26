@@ -12,7 +12,8 @@
 #include "include/UI/LogoAnimation.hpp"
 #include "include/UI/PlayerAvatar.hpp"
 #include "include/UI/EmojiSupport.hpp"
-#include "UI/RoleColorScheme.hpp"
+#include "include/UI/ClickableImage.hpp"
+#include "include/UI/RoleColorScheme.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -27,6 +28,7 @@
 #include "questui/shared/ArrayUtil.hpp"
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "UI/ClickableImage.hpp"
 
 #include "HMUI/TableView.hpp"
 #include "HMUI/TableCell.hpp"
@@ -71,6 +73,7 @@
 #include "GlobalNamespace/LeaderboardTableCell.hpp"
 #include "GlobalNamespace/SinglePlayerLevelSelectionFlowCoordinator.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
+#include "GlobalNamespace/MenuShockwave.hpp"
 
 #include "TMPro/TMP_Sprite.hpp"
 #include "TMPro/TMP_SpriteGlyph.hpp"
@@ -89,6 +92,66 @@ using namespace HMUI;
 using namespace QuestUI;
 using namespace BeatLeader;
 using UnityEngine::Resources;
+
+using HapticPresetSO = Libraries::HM::HMLib::VR::HapticPresetSO;
+static SafePtr<HapticPresetSO> hapticFeedbackPresetSO;
+
+QuestUI::ClickableImage* CreateClickableImage(UnityEngine::Transform* parent, UnityEngine::Sprite* sprite, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta, std::function<void()> onClick)
+    {
+        auto go = UnityEngine::GameObject::New_ctor(il2cpp_utils::createcsstr("QuestUIClickableImage"));
+
+        auto image = go->AddComponent<QuestUI::ClickableImage*>();
+        auto mat_UINoGlows = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Material*>();
+        UnityEngine::Material* mat_UINoGlow = NULL;
+        for (int i = 0; i < mat_UINoGlows->Length(); i++) {
+            if (to_utf8(csstrtostr(mat_UINoGlows->get(i)->get_name())) == "UINoGlow") {
+                mat_UINoGlow = mat_UINoGlows->get(i);
+                break;
+            }
+        }
+
+        image->set_material(mat_UINoGlow);
+
+        go->get_transform()->SetParent(parent, false);
+        image->get_rectTransform()->set_sizeDelta(sizeDelta);
+        image->get_rectTransform()->set_anchoredPosition(anchoredPosition);
+        image->set_sprite(sprite);
+
+        go->AddComponent<UnityEngine::UI::LayoutElement*>();
+
+        if (onClick)
+            image->get_onPointerClickEvent() += [onClick](auto _){ onClick(); };
+        
+        try
+        {
+            auto menuShockWave = UnityEngine::Resources::FindObjectsOfTypeAll<GlobalNamespace::MenuShockwave*>()->get(0);
+            auto buttonClickedSignal = menuShockWave->dyn__buttonClickEvents()->get(menuShockWave->dyn__buttonClickEvents()->Length() - 1);
+            image->buttonClickedSignal = buttonClickedSignal;
+        }
+        catch(const std::exception& e)
+        {
+            getLogger().error("%s", e.what());
+        }
+
+        if (!hapticFeedbackPresetSO)
+        {
+            hapticFeedbackPresetSO.emplace(UnityEngine::ScriptableObject::CreateInstance<HapticPresetSO*>());
+            hapticFeedbackPresetSO->duration = 0.01f;
+            hapticFeedbackPresetSO->strength = 0.75f;
+            hapticFeedbackPresetSO->frequency = 0.5f;
+        }
+
+        auto hapticFeedbackController = UnityEngine::Object::FindObjectOfType<GlobalNamespace::HapticFeedbackController*>();
+        image->hapticFeedbackController = hapticFeedbackController;
+        image->hapticFeedbackPresetSO = (HapticPresetSO*)hapticFeedbackPresetSO;
+
+        return image;
+    }
+
+    QuestUI::ClickableImage* CreateClickableImage(UnityEngine::Transform* parent, UnityEngine::Sprite* sprite, std::function<void()> onClick)
+    {
+        return CreateClickableImage(parent, sprite, {0, 0}, {0, 0}, onClick);
+    }
 
 namespace LeaderboardUI {
     function<void()> retryCallback;
@@ -146,17 +209,17 @@ namespace LeaderboardUI {
         if (player != std::nullopt) {
             if (player->rank > 0) {
 
-                globalRank->SetText("#" + to_string(player->rank));
-                countryRankAndPp->SetText("#" + to_string(player->countryRank) + "        <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp");
+                globalRank->SetText(il2cpp_utils::createcsstr("#" + to_string(player->rank)));
+                countryRankAndPp->SetText(il2cpp_utils::createcsstr("#" + to_string(player->countryRank) + "        <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp"));
                 playerName->set_alignment(TMPro::TextAlignmentOptions::Center);
-                playerName->SetText(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value()));
-                playerAvatar->SetPlayer(player->avatar, player->role);
+                playerName->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value())));
+                playerAvatar->SetPlayer(il2cpp_utils::createcsstr(player->avatar), il2cpp_utils::createcsstr(player->role));
                 
                 if (plvc != NULL) {
-                    auto countryControl = plvc->scopeSegmentedControl->dataItems.get(3);
-                    countryControl->set_hintText("Country");
+                    auto countryControl = plvc->scopeSegmentedControl->dataItems->get(3);
+                    countryControl->set_hintText(il2cpp_utils::createcsstr("Country"));
                     Sprites::GetCountryIcon(player->country, [countryControl](UnityEngine::Sprite* sprite) {
-                        plvc->scopeSegmentedControl->dataItems.get(3)->set_icon(sprite);
+                        plvc->scopeSegmentedControl->dataItems->get(3)->set_icon(sprite);
                         plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
 
                         countryRankIcon->set_sprite(sprite);
@@ -165,21 +228,21 @@ namespace LeaderboardUI {
                 }
 
             } else {
-                playerName->SetText(player->name + ", play something!");
+                playerName->SetText(il2cpp_utils::createcsstr(player->name + ", play something!"));
             }
         } else {
-            globalRank->SetText("#0");
-            countryRankAndPp->SetText("#0");
+            globalRank->SetText(il2cpp_utils::createcsstr("#0"));
+            countryRankAndPp->SetText(il2cpp_utils::createcsstr("#0"));
             // playerAvatar->set_sprite(plvc->aroundPlayerLeaderboardIcon);
             countryRankIcon->set_sprite(plvc->friendsLeaderboardIcon);
-            playerName->SetText("");
+            playerName->SetText(il2cpp_utils::createcsstr(""));
         }
     }
 
     MAKE_HOOK_MATCH(LeaderboardActivate, &PlatformLeaderboardViewController::DidActivate, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHeirarchy, bool screenSystemEnabling) {
         LeaderboardActivate(self, firstActivation, addedToHeirarchy, screenSystemEnabling);
         if (firstActivation) {
-            HMUI::ImageView* imageView = self->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
+            HMUI::ImageView* imageView = self->get_gameObject()->get_transform()->Find(il2cpp_utils::createcsstr("HeaderPanel"))->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
             imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
             imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
             imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
@@ -206,7 +269,7 @@ namespace LeaderboardUI {
         curvedCanvasSettings->SetRadius(curvatureRadius);
 
         auto transform = gameObject->get_transform();
-        UnityEngine::GameObject* screenSystem = UnityEngine::GameObject::Find("ScreenContainer");
+        UnityEngine::GameObject* screenSystem = UnityEngine::GameObject::Find(il2cpp_utils::createcsstr("ScreenContainer"));
         if(screenSystem) {
             transform->set_position(screenSystem->get_transform()->get_position());
             screen->get_gameObject()->GetComponent<UnityEngine::RectTransform*>()->set_sizeDelta(screenSize);
@@ -218,9 +281,9 @@ namespace LeaderboardUI {
 
     void refreshFromTheServer() {
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level());
-        string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
+        string hash = regex_replace(to_utf8(csstrtostr(levelData->get_levelID())), basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(plvc->difficultyBeatmap->get_difficulty().value);
-        string mode = (string)plvc->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
+        string mode = to_utf8(csstrtostr(plvc->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName));
         string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode;
 
         if (modifiers) {
@@ -259,7 +322,7 @@ namespace LeaderboardUI {
                 QuestUI::MainThreadScheduler::Schedule([status] {
                     plvc->loadingControl->Hide();
                     plvc->hasScoresData = false;
-                    plvc->loadingControl->ShowText("No scores were found!", true);
+                    plvc->loadingControl->ShowText(il2cpp_utils::createcsstr("No scores were found!"), true);
                     
                     plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
                 });
@@ -286,7 +349,7 @@ namespace LeaderboardUI {
 
                     LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
                         currentScore.modifiedScore, 
-                        generateLabel(currentScore), 
+                        il2cpp_utils::createcsstr(generateLabel(currentScore)), 
                         currentScore.rank, 
                         false);
                     plvc->scores->Add(scoreData);
@@ -305,7 +368,7 @@ namespace LeaderboardUI {
             });
         });
 
-        plvc->loadingControl->ShowText("Loading", true);
+        plvc->loadingControl->ShowText(il2cpp_utils::createcsstr("Loading"), true);
     }
 
     static UnityEngine::Color selectedColor = UnityEngine::Color(0.0, 0.4, 1.0, 1.0);
@@ -316,11 +379,11 @@ namespace LeaderboardUI {
         modifiersButton->set_defaultColor(modifiers ? selectedColor : fadedColor);
         modifiersButton->set_highlightColor(modifiers ? selectedColor : fadedHoverColor);
 
-        if (modifiers) {
-            ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard without positive modifiers");
-        } else {
-            ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard with positive modifiers");
-        }
+        // if (modifiers) {
+        //     ::QuestUI::BeatSaberUI::AddHoverHint((UnityEngine::GameObject *)modifiersButton, "Show leaderboard without positive modifiers");
+        // } else {
+        //     ::QuestUI::BeatSaberUI::AddHoverHint((UnityEngine::GameObject *)modifiersButton, "Show leaderboard with positive modifiers");
+        // }
     }
 
     static bool isLocal = false;
@@ -340,20 +403,20 @@ namespace LeaderboardUI {
         isLocal = false;
 
         if (PlayerController::currentPlayer == std::nullopt) {
-            self->loadingControl->ShowText("Please sign up or log in mod settings!", true);
+            self->loadingControl->ShowText(il2cpp_utils::createcsstr("Please sign up or log in mod settings!"), true);
             return;
         }
         
         if (uploadStatus == NULL) {
-            ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(4);
-            ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(4);
+            Array<::HMUI::IconSegmentedControl::DataItem*>* dataItems = Array<::HMUI::IconSegmentedControl::DataItem*>::NewLength(4);
+            Array<PlatformLeaderboardsModel::ScoresScope>* scoreScopes = Array<PlatformLeaderboardsModel::ScoresScope>::NewLength(4);
             for (int index = 0; index < 3; ++index)
             {
-                dataItems[index] = self->scopeSegmentedControl->dataItems.get(index);
-                scoreScopes[index] = self->scoreScopes.get(index);
+                dataItems->values[index] = self->scopeSegmentedControl->dataItems->get(index);
+                scoreScopes->values[index] = self->scoreScopes->get(index);
             }
-            dataItems[3] = HMUI::IconSegmentedControl::DataItem::New_ctor(self->friendsLeaderboardIcon, "Country");
-            scoreScopes[3] = PlatformLeaderboardsModel::ScoresScope(3);
+            dataItems->values[3] = HMUI::IconSegmentedControl::DataItem::New_ctor(self->friendsLeaderboardIcon, il2cpp_utils::createcsstr("Country"));
+            scoreScopes->values[3] = PlatformLeaderboardsModel::ScoresScope(3);
 
             self->scopeSegmentedControl->SetData(dataItems);
             self->scoreScopes = scoreScopes;
@@ -380,12 +443,12 @@ namespace LeaderboardUI {
                 updatePlayerInfoLabel();
             }
 
-            auto websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
+            auto websiteLink = CreateClickableImage(parentScreen->get_transform(), BundleLoader::beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
                 string url = WebUtils::WEB_URL;
                 if (PlayerController::currentPlayer != std::nullopt) {
                     url += "u/" + PlayerController::currentPlayer->id;
                 }
-                UnityEngine::Application::OpenURL(url);
+                UnityEngine::Application::OpenURL(il2cpp_utils::createcsstr(url));
             });
             logoAnimation = websiteLink->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
             logoAnimation->Init(websiteLink);
@@ -405,18 +468,18 @@ namespace LeaderboardUI {
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
 
-            upPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
+            upPageButton = CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
                 page--;
                 clearTable();
                 refreshFromTheServer();
             });
-            downPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -17), UnityEngine::Vector2(8, 5.12), [](){
+            downPageButton = CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -17), UnityEngine::Vector2(8, 5.12), [](){
                 page++;
                 clearTable();
                 refreshFromTheServer();
             });
 
-            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 25), UnityEngine::Vector2(4, 4), [](){
+            modifiersButton = CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 25), UnityEngine::Vector2(4, 4), [](){
                 modifiers = !modifiers;
                 getModConfig().Modifiers.SetValue(modifiers);
                 clearTable();
@@ -424,7 +487,7 @@ namespace LeaderboardUI {
                 refreshFromTheServer();
             });
             modifiers = getModConfig().Modifiers.GetValue();
-            ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard without positive modifiers");
+            // ::QuestUI::BeatSaberUI::AddHoverHint((UnityEngine::GameObject *)modifiersButton, "Show leaderboard without positive modifiers");
             updateModifiersButton();
         }
 
@@ -432,14 +495,14 @@ namespace LeaderboardUI {
         downPageButton->get_gameObject()->SetActive(false);
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
-        if (!levelData->get_levelID().starts_with("custom_level")) {
+        if (!to_utf8(csstrtostr(levelData->get_levelID())).starts_with("custom_level")) {
             self->loadingControl->Hide();
             self->hasScoresData = false;
-            self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
+            self->loadingControl->ShowText(il2cpp_utils::createcsstr("Leaderboards for this map are not supported!"), false);
             self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
         } else {
             if (!bundleLoaded) {
-                self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
+                self->StartCoroutine(reinterpret_cast<System::Collections::IEnumerator*>(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle())));
                 bundleLoaded = true;
             }
             refreshFromTheServer();
@@ -463,7 +526,7 @@ namespace LeaderboardUI {
 
             avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-32, 0), UnityEngine::Vector2(4, 4));
 
-            auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
+            auto scoreSelector = CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
                 scoreDetailsUI->modal->Show(true, true, nullptr);
 
                 scoreDetailsUI->setScore(cellScores[result]);
@@ -532,7 +595,7 @@ namespace LeaderboardUI {
     }
 
     void updateStatus(ReplayUploadStatus status, string description, float progress) {
-        uploadStatus->SetText(description);
+        uploadStatus->SetText(il2cpp_utils::createcsstr(description));
         switch (status)
         {
             case ReplayUploadStatus::finished:
@@ -546,7 +609,7 @@ namespace LeaderboardUI {
             case ReplayUploadStatus::inProgress:
                 logoAnimation->SetAnimating(true);
                 if (progress >= 100)
-                    uploadStatus->SetText("<color=#b103fcff>Posting replay: Finishing up...");
+                    uploadStatus->SetText(il2cpp_utils::createcsstr("<color=#b103fcff>Posting replay: Finishing up..."));
                 break;
         }
     }

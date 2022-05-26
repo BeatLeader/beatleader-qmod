@@ -16,7 +16,7 @@
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 
-#include "config-utils/shared/config-utils.hpp"
+// #include "config-utils/shared/config-utils.hpp"
 #include "custom-types/shared/register.hpp"
 
 #include "UnityEngine/Application.hpp"
@@ -110,9 +110,9 @@ namespace ReplayRecorder {
     bool isOst = false;
 
     void collectMapData(StandardLevelScenesTransitionSetupDataSO* self) {
-        GameplayCoreSceneSetupData* gameplayCoreSceneSetupData = reinterpret_cast<GameplayCoreSceneSetupData*>(self->sceneSetupDataArray.get(2));
+        GameplayCoreSceneSetupData* gameplayCoreSceneSetupData = reinterpret_cast<GameplayCoreSceneSetupData*>(self->sceneSetupDataArray->get(2));
 
-        isOst = !gameplayCoreSceneSetupData->previewBeatmapLevel->get_levelID().starts_with("custom_level");
+        isOst = !to_utf8(csstrtostr(gameplayCoreSceneSetupData->previewBeatmapLevel->get_levelID())).starts_with("custom_level");
 
         mapEnhancer.difficultyBeatmap = self->difficultyBeatmap;
         mapEnhancer.previewBeatmapLevel = gameplayCoreSceneSetupData->previewBeatmapLevel;
@@ -137,7 +137,7 @@ namespace ReplayRecorder {
 
         recording = true;
         _currentPause = nullopt;
-        replay.emplace(ReplayInfo(modInfo.version, UnityEngine::Application::get_version(), timeStamp));
+        replay.emplace(ReplayInfo(modInfo.version, to_utf8(csstrtostr(UnityEngine::Application::get_version())), timeStamp));
 
         userEnhancer.Enhance(replay.value());
         automaticPlayerHeight = self->get_playerSettings()->automaticPlayerHeight;
@@ -176,7 +176,7 @@ namespace ReplayRecorder {
     MAKE_HOOK_MATCH(ProcessResultsSolo, &StandardLevelScenesTransitionSetupDataSO::Finish, void, StandardLevelScenesTransitionSetupDataSO* self, LevelCompletionResults* levelCompletionResults) {
         ProcessResultsSolo(self, levelCompletionResults);
         recording = false;
-        if (self->gameMode != "Party" && replay != nullopt) {
+        if (to_utf8(csstrtostr(self->gameMode)) != "Party" && replay != nullopt) {
             collectMapData(self);
             processResults(levelCompletionResults);
         }
@@ -249,21 +249,23 @@ namespace ReplayRecorder {
         
         int noteId = _noteIdCache[noteController];
 
+        NoteCutInfo derefCutInfo = noteCutInfo.heldRef;
+
         NoteEvent& noteEvent = _noteEventCache.at(noteId);
         noteEvent.eventTime = audioTimeSyncController->songTime;
 
         noteEvent.noteCutInfo = ReplayNoteCutInfo();
-        if (noteCutInfo->speedOK && noteCutInfo->directionOK && noteCutInfo->saberTypeOK && !noteCutInfo->wasCutTooSoon) {
+        if (derefCutInfo.speedOK && derefCutInfo.directionOK && derefCutInfo.saberTypeOK && !derefCutInfo.wasCutTooSoon) {
             noteEvent.eventType = NoteEventType::GOOD;
         } else if (replay != nullopt) {
             noteEvent.eventType = noteController->noteData->colorType == ColorType::None ? noteEvent.eventType = NoteEventType::BOMB : NoteEventType::BAD;
-            PopulateNoteCutInfo(noteEvent.noteCutInfo, noteCutInfo.heldRef);
+            PopulateNoteCutInfo(noteEvent.noteCutInfo, derefCutInfo);
         }
 
         replay->notes.emplace_back(noteEvent);
 
-        _swingIdCache[noteCutInfo->swingRatingCounter] = replay->notes.size() - 1;
-        _cutInfoCache[replay->notes.size() - 1] = *noteCutInfo;
+        _swingIdCache[derefCutInfo.swingRatingCounter] = replay->notes.size() - 1;
+        _cutInfoCache[replay->notes.size() - 1] = derefCutInfo;
     }
 
     MAKE_HOOK_MATCH(ComputeSwingRating, static_cast<float (SaberMovementData::*)(bool, float)>(&SaberMovementData::ComputeSwingRating), float, SaberMovementData* self, bool overrideSegmenAngle, float overrideValue) {
@@ -272,30 +274,30 @@ namespace ReplayRecorder {
         int _nextAddIndex = self->nextAddIndex;
         int _validCount = self->validCount;
 
-        int length = _data.Length();
+        int length = _data->Length();
 
         int index = _nextAddIndex - 1;
         if (index < 0) index += length;
 
-        float startTime = _data[index].time;
+        float startTime = _data->get(index).time;
         float time = startTime;
 
-        UnityEngine::Vector3 segmentNormal1 = _data[index].segmentNormal;
-        float angleDiff = overrideSegmenAngle ? overrideValue : _data[index].segmentAngle;
+        UnityEngine::Vector3 segmentNormal1 = _data->get(index).segmentNormal;
+        float angleDiff = overrideSegmenAngle ? overrideValue : _data->get(index).segmentAngle;
         float swingRating = SaberSwingRating::BeforeCutStepRating(angleDiff, 0.0f);
         for (int i = 2; (double)startTime - (double)time < 0.4 && i < _validCount; ++i)
         {
             --index;
             if (index < 0) index += length;
 
-            UnityEngine::Vector3 segmentNormal2 = _data[index].segmentNormal;
-            float segmentAngle = _data[index].segmentAngle;
+            UnityEngine::Vector3 segmentNormal2 = _data->get(index).segmentNormal;
+            float segmentAngle = _data->get(index).segmentAngle;
 
             float normalDiff = UnityEngine::Vector3::Angle(segmentNormal2, segmentNormal1);
             if ((double)normalDiff <= 90.0)
             {
                 swingRating += SaberSwingRating::BeforeCutStepRating(segmentAngle, normalDiff);
-                time = _data[index].time;
+                time = _data->get(index).time;
             }
             else {
                 break;

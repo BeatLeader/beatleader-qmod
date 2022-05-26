@@ -37,14 +37,14 @@ TMPro::TextMeshProUGUI* errorDescriptionLabel;
 HMUI::SimpleTextDropdown* serverDropdown;
 UnityEngine::UI::Toggle* saveToggle;
 
-StringW login;
-StringW password;
+string login;
+string password;
 
 string errorDescription = "";
 
 void UpdateUI(string userID) {
     if (!userID.empty()) {
-        label2->SetText(userID);
+        label2->SetText(il2cpp_utils::createcsstr(userID));
         label2->get_gameObject()->SetActive(true);
         label1->get_gameObject()->SetActive(true);
         label3->get_gameObject()->SetActive(false);
@@ -66,7 +66,7 @@ void UpdateUI(string userID) {
         signupButton->get_gameObject()->SetActive(true);
     }
 
-    errorDescriptionLabel->SetText(errorDescription);
+    errorDescriptionLabel->SetText(il2cpp_utils::createcsstr(errorDescription));
     if (errorDescription.length() > 0) {
         errorDescriptionLabel->get_gameObject()->SetActive(true);
     } else {
@@ -96,50 +96,50 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
             }
         });
 
-        loginField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), "Login", "", [](StringW value) {
+        loginField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), (std::string_view)"Login", (std::string_view)"", [](std::string_view value) {
             login = value;
         });
         login = PlayerController::platformPlayer != std::nullopt ? PlayerController::platformPlayer->name : "";
-        loginField->SetText(login);
+        loginField->SetText(il2cpp_utils::createcsstr(login));
         
-        passwordField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), "Password", "", [](StringW value) {
+        passwordField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), (std::string_view)"Password", (std::string_view)"", [](std::string_view value) {
             password = value;
         });
 
         loginButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Log in", []() {
-            if (!login || !password) {
+            if (login.empty() || password.empty()) {
                 errorDescription = "Enter a username and/or password!";
                 UpdateUI("");
                 return;
             }
-            PlayerController::LogIn((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
+            PlayerController::LogIn(login, password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
                 if (userID.empty()) {
                     errorDescription = PlayerController::lastErrorDescription;
                 } else {
                     errorDescription = "";
                     login = "";
-                    loginField->SetText("");
+                    loginField->SetText(il2cpp_utils::createcsstr(""));
                     password = "";
-                    passwordField->SetText("");
+                    passwordField->SetText(il2cpp_utils::createcsstr(""));
                 }
                 UpdateUI(userID);      
             });});
         });
         signupButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Sign up", []() {
-            if (!login || !password) {
+            if (login.empty() || password.empty()) {
                 errorDescription = "Enter a username and/or password!";
                 UpdateUI("");
                 return;
             }
-            PlayerController::SignUp((string)login, (string)password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
+            PlayerController::SignUp(login, password, [](string userID) { QuestUI::MainThreadScheduler::Schedule([userID] {
                 if (userID.empty()) {
                     errorDescription = PlayerController::lastErrorDescription;
                 } else {
                     errorDescription = "";
                     login = "";
-                    loginField->SetText("");
+                    loginField->SetText(il2cpp_utils::createcsstr(""));
                     password = "";
-                    passwordField->SetText("");
+                    passwordField->SetText(il2cpp_utils::createcsstr(""));
                 }
                 UpdateUI(userID);
             });});

@@ -65,11 +65,11 @@ void Sprites::get_AnimatedIcon(string url, const std::function<void(AllFramesRes
             Texture2D* texture = Texture2D::New_ctor(0, 0, TextureFormat::RGBA32, false, false);
             if (UnityEngine::ImageConversion::LoadImage(texture, spriteArray, false)) {
                 texture->set_wrapMode(TextureWrapMode::Clamp);
-                ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(1);
-                ArrayW<float> timings = ArrayW<float> (1);
+                Array<UnityEngine::Texture2D*>* frames = Array<UnityEngine::Texture2D*>::NewLength(1);
+                Array<float>* timings = Array<float>::NewLength(1);
 
-                frames[0] = texture;
-                timings[0] = 0;
+                frames->values[0] = texture;
+                timings->values[0] = 0;
                 result = {
                     frames, timings
                 };

@@ -2,10 +2,10 @@ name: CI build
 
 on:
   push:
-    branches: [ master, 1191support ]
+    branches: [ master, 1171support2 ]
     tags: v*
   pull_request:
-    branches: [ master, 1191support ]
+    branches: [ master, 1171support2 ]
 
 jobs:
   build:
@@ -42,7 +42,10 @@ jobs:
       run: |
         chmod +x ./qpm-rust
         ./qpm-rust restore
-        ./qpm-rust qmod build
+    
+    - name: Fix dependency
+      run: cp -a ./extern/includes/beatsaber-hook/. ./extern/beatsaber-hook/
+
     - uses: seanmiddleditch/gha-setup-ninja@master
     - name: Build
       run: pwsh -Command ./buildQMOD.ps1

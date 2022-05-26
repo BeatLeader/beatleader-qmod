@@ -12,14 +12,14 @@
 void MapEnhancer::Enhance(Replay &replay)
 {
     ReplayInfo& info = replay.info;
-    info.hash = regex_replace((string)previewBeatmapLevel->get_levelID(), basic_regex("custom_level_"), "");
+    info.hash = regex_replace(to_utf8(csstrtostr(previewBeatmapLevel->get_levelID())), basic_regex("custom_level_"), "");
     IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(difficultyBeatmap->get_level());
-    info.songName = (string)levelData->get_songName();
-    info.mapper = (string)levelData->get_levelAuthorName();
+    info.songName = to_utf8(csstrtostr(levelData->get_songName()));
+    info.mapper = to_utf8(csstrtostr(levelData->get_levelAuthorName()));
     info.difficulty = DiffName(difficultyBeatmap->get_difficulty().value);
 
-    info.mode = (string)difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
-    info.environment = (string)environmentInfo->get_environmentName();
+    info.mode = to_utf8(csstrtostr(difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName));
+    info.environment = to_utf8(csstrtostr(environmentInfo->get_environmentName()));
     info.modifiers = Join(Modifiers());
     info.leftHanded = playerSpecificSettings->leftHanded;
     info.height = playerSpecificSettings->automaticPlayerHeight ? 0 : playerSpecificSettings->playerHeight;

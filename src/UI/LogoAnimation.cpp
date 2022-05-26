@@ -67,13 +67,13 @@ void BeatLeader::LogoAnimation::Init(HMUI::ImageView* imageView) {
     this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::logoMaterial);
     imageView->set_material(this->materialInstance);
 
-    GlowPropertyId = UnityEngine::Shader::PropertyToID("_Glow");
-    DotScalePropertyId = UnityEngine::Shader::PropertyToID("_DotScale");
-    BlockScalePropertyId = UnityEngine::Shader::PropertyToID("_BlockScale");
-    CornerRadiusPropertyId = UnityEngine::Shader::PropertyToID("_CornerRadius");
-    ThicknessPropertyId = UnityEngine::Shader::PropertyToID("_Thickness");
-    SpinnerRotationPropertyId = UnityEngine::Shader::PropertyToID("_SpinnerRotation");
-    SpinnerAmplitudePropertyId = UnityEngine::Shader::PropertyToID("_SpinnerAmplitude");
+    GlowPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_Glow"));
+    DotScalePropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_DotScale"));
+    BlockScalePropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_BlockScale"));
+    CornerRadiusPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_CornerRadius"));
+    ThicknessPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_Thickness"));
+    SpinnerRotationPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_SpinnerRotation"));
+    SpinnerAmplitudePropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_SpinnerAmplitude"));
 }
 
 void BeatLeader::LogoAnimation::SetAnimating(bool animating) {

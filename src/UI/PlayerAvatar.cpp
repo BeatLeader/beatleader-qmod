@@ -29,22 +29,22 @@ void BeatLeader::PlayerAvatar::Init(HMUI::ImageView* imageView) {
     this->imageView = imageView;
 
     this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::playerAvatarMaterial);
-    this->AvatarTexturePropertyId = UnityEngine::Shader::PropertyToID("_AvatarTexture");
-    this->FadeValuePropertyId = UnityEngine::Shader::PropertyToID("_FadeValue");
+    this->AvatarTexturePropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_AvatarTexture"));
+    this->FadeValuePropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_FadeValue"));
     imageView->set_material(this->materialInstance);
 }
 
-void BeatLeader::PlayerAvatar::SetPlayer(StringW url, StringW roles) {
+void BeatLeader::PlayerAvatar::SetPlayer(Il2CppString* url, Il2CppString* roles) {
     materialInstance->SetTexture(FadeValuePropertyId, 0);
     play = false;
     currentFrame = 0;
     frameTime = 0;
 
     auto self = this;
-    Sprites::get_AnimatedIcon(url, [self, roles](AllFramesResult result) {
+    Sprites::get_AnimatedIcon(to_utf8(csstrtostr(url)), [self, roles](AllFramesResult result) {
         self->imageView->set_sprite(UnityEngine::Sprite::Create(
-                result.frames[0], 
-                UnityEngine::Rect(0.0, 0.0, (float)result.frames[0]->get_width(), (float)result.frames[0]->get_height()), 
+                result.frames->get(0), 
+                UnityEngine::Rect(0.0, 0.0, (float)result.frames->get(0)->get_width(), (float)result.frames->get(0)->get_height()), 
                 UnityEngine::Vector2(0.5, 0.5), 
                 100.0, 
                 0, 
@@ -56,39 +56,39 @@ void BeatLeader::PlayerAvatar::SetPlayer(StringW url, StringW roles) {
         self->materialInstance->SetFloat(self->FadeValuePropertyId, 1.0f);
         self->play = true;
 
-        schemeForRole(roles).Apply(self->materialInstance);
+        schemeForRole(to_utf8(csstrtostr(roles))).Apply(self->materialInstance);
     });
 }
 
 // Stolen from Nya: https://github.com/FrozenAlex/Nya-utils :lovege:
 void BeatLeader::PlayerAvatar::Update() {
   if (play) {
-    int length = animationFrames.Length();
+    int length = animationFrames->Length();
     if (length > 0) {
       float deltaTime = UnityEngine::Time::get_deltaTime();
 
       bool isFrameNeeded = false;
 
       // Count frame length
-      float frameLength = animationTimings[currentFrame] / 100;
+      float frameLength = animationTimings->get(currentFrame) / 100;
       if (frameLength > 0.0f) {
         // Basic delta time based frame switching
         while (frameTime > frameLength) {
           currentFrame = (currentFrame + 1) % length;
           isFrameNeeded = true;
           frameTime = frameTime - frameLength;
-          frameLength = animationTimings[currentFrame] / 100;
+          frameLength = animationTimings->get(currentFrame) / 100;
         }
       } else {
         // Skip the frame with 0 ms
         currentFrame = (currentFrame + 1) % length;
         isFrameNeeded = true;
-        frameLength = animationTimings[currentFrame] / 100;
+        frameLength = animationTimings->get(currentFrame) / 100;
       }
 
       if (isFrameNeeded) {
-        if (animationFrames.Length() > currentFrame) {
-          auto frame = animationFrames.get(currentFrame);
+        if (animationFrames->Length() > currentFrame) {
+          auto frame = animationFrames->get(currentFrame);
 
           if (frame != nullptr) {
             materialInstance->SetTexture(AvatarTexturePropertyId, frame);

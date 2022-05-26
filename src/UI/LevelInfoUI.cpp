@@ -60,14 +60,14 @@ namespace LevelInfoUI {
             starsLabel = CreateText(self->levelParamsPanel->get_transform(), "0.00", true, UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
             starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            AddHoverHint(starsLabel, "BeatLeader ranked stars");
+            // AddHoverHint(starsLabel, "BeatLeader ranked stars");
 
             starsImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3));
 
             ppLabel = CreateText(self->levelParamsPanel->get_transform(), "0", true, UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
             ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             ppLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            AddHoverHint(ppLabel, "BeatLeader pp for 100%");
+            // AddHoverHint(ppLabel, "BeatLeader pp for 100%");
             
             ppImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-15.5, 5.6), UnityEngine::Vector2(3, 3));
 
@@ -77,15 +77,15 @@ namespace LevelInfoUI {
 
         // TODO: Why not just substr str.substr("custom_level_".size())
         // essentially, remove prefix
-        string hash = regex_replace((string)reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID(), basic_regex("custom_level_"), "");
+        string hash = regex_replace(to_utf8(csstrtostr(reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID())), basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(self->selectedDifficultyBeatmap->get_difficulty().value);
-        string mode = (string)self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName;
+        string mode = to_utf8(csstrtostr(self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName));
 
         string key = hash + difficulty + mode;
 
         if (_mapInfos.contains(key)) {
-            starsLabel->SetText(to_string_wprecision(_mapInfos[key], 2));
-            ppLabel->SetText(to_string_wprecision(_mapInfos[key] * 44.0f, 2));
+            starsLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(_mapInfos[key], 2)));
+            ppLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(_mapInfos[key] * 44.0f, 2)));
         } else {
             string url = WebUtils::API_URL + "map/hash/" + hash;
 
@@ -101,8 +101,8 @@ namespace LevelInfoUI {
                 float stars = _mapInfos[key];
 
                 QuestUI::MainThreadScheduler::Schedule([stars] () {
-                    starsLabel->SetText(to_string_wprecision(stars, 2));
-                    ppLabel->SetText(to_string_wprecision(stars * 44.0f, 2));
+                    starsLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(stars, 2)));
+                    ppLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(stars * 44.0f, 2)));
                 });
             });
         }

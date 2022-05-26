@@ -27,7 +27,16 @@ void BeatLeader::initModalPopup(BeatLeader::ModalPopup** modalUIPointer, Transfo
         UnityEngine::GameObject::Destroy(modalUI->modal->get_gameObject());
     }
     if (modalUI == nullptr) modalUI = (BeatLeader::ModalPopup*) malloc(sizeof(BeatLeader::ModalPopup));
-    UnityEngine::Sprite* roundRect = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Sprite*>().FirstOrDefault([](UnityEngine::Sprite* x) { return x->get_name() == "RoundRect10"; });
+    UnityEngine::Sprite* roundRect = NULL;
+    auto roundRects = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Sprite*>();
+    for (int i = 0; i < roundRects->Length(); i++)
+    {
+        if (roundRects->get(i)->get_name() == il2cpp_utils::createcsstr("RoundRect10")) {
+            roundRect = roundRects->get(i);
+            break;
+        }
+    }
+    
     modalUI->modal = CreateModal(parent, UnityEngine::Vector2(60, 30), [](HMUI::ModalView *modal) {}, true);
 
     auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(modalUI->modal->get_transform(), NULL, UnityEngine::Vector2(0, 30), UnityEngine::Vector2(24, 24));
@@ -37,7 +46,7 @@ void BeatLeader::initModalPopup(BeatLeader::ModalPopup** modalUIPointer, Transfo
     modalUI->rank = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(6.0, 16.0));
     
     modalUI->name = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(0.0, 18.0));
-    modalUI->name->get_gameObject()->AddComponent<::QuestUI::Backgroundable*>()->ApplyBackground("round-rect-panel");
+    modalUI->name->get_gameObject()->AddComponent<::QuestUI::Backgroundable*>()->ApplyBackground(il2cpp_utils::createcsstr("round-rect-panel"));
 
     EmojiSupport::AddSupport(modalUI->name);
 
@@ -53,7 +62,7 @@ void BeatLeader::initModalPopup(BeatLeader::ModalPopup** modalUIPointer, Transfo
 
     modalUI->sponsorMessage = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(5, -20));
 
-    modalUI->modal->set_name("ScoreDetailsModal");
+    modalUI->modal->set_name(il2cpp_utils::createcsstr("ScoreDetailsModal"));
     *modalUIPointer = modalUI;
 }
 
@@ -108,22 +117,22 @@ string GetDetailsString(Score score) {
 }
 
 void BeatLeader::ModalPopup::setScore(const Score& score) {
-    playerAvatar->SetPlayer(score.player.avatar, score.player.role);
+    playerAvatar->SetPlayer(il2cpp_utils::createcsstr(score.player.avatar), il2cpp_utils::createcsstr(score.player.role));
 
-    name->SetText(FormatUtils::FormatNameWithClans(score.player));
+    name->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatNameWithClans(score.player)));
     name->set_alignment(TMPro::TextAlignmentOptions::Center);
-    rank->SetText(FormatUtils::FormatRank(score.player.rank, true));
-    pp->SetText(FormatUtils::FormatPP(score.player.pp));
+    rank->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatRank(score.player.rank, true)));
+    pp->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatPP(score.player.pp)));
 
-    datePlayed->SetText(GetTimeSetString(score));
+    datePlayed->SetText(il2cpp_utils::createcsstr(GetTimeSetString(score)));
     datePlayed->set_alignment(TMPro::TextAlignmentOptions::Center);
 
-    modifiedScore->SetText(GetStringWithLabel(FormatScore(score.modifiedScore), "score"));
-    accuracy->SetText(GetStringWithLabel(FormatUtils::formatAcc(score.accuracy), "accuracy"));
-    scorePp->SetText(GetStringWithLabel(FormatUtils::FormatPP(score.pp), "pp"));
+    modifiedScore->SetText(il2cpp_utils::createcsstr(GetStringWithLabel(FormatScore(score.modifiedScore), "score")));
+    accuracy->SetText(il2cpp_utils::createcsstr(GetStringWithLabel(FormatUtils::formatAcc(score.accuracy), "accuracy")));
+    scorePp->SetText(il2cpp_utils::createcsstr(GetStringWithLabel(FormatUtils::FormatPP(score.pp), "pp")));
 
-    scoreDetails->SetText(GetDetailsString(score));
+    scoreDetails->SetText(il2cpp_utils::createcsstr(GetDetailsString(score)));
 
-    sponsorMessage->SetText(score.player.sponsorMessage);
+    sponsorMessage->SetText(il2cpp_utils::createcsstr(score.player.sponsorMessage));
     sponsorMessage->set_alignment(TMPro::TextAlignmentOptions::Center);
 }

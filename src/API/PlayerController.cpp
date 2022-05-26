@@ -48,11 +48,11 @@ string PlayerController::RefreshOnline() {
 
 void PlayerController::RefreshPlatform() {
     IPlatformUserModel* userModel = NULL;
-    ::ArrayW<PlatformLeaderboardsModel *> pmarray = Resources::FindObjectsOfTypeAll<PlatformLeaderboardsModel*>();
-    for (size_t i = 0; i < pmarray.Length(); i++)
+    ::Array<PlatformLeaderboardsModel *>* pmarray = Resources::FindObjectsOfTypeAll<PlatformLeaderboardsModel*>();
+    for (size_t i = 0; i < pmarray->Length(); i++)
     {
-        if (pmarray.get(i)->platformUserModel != NULL) {
-            userModel = pmarray.get(i)->platformUserModel;
+        if (pmarray->get(i)->platformUserModel != NULL) {
+            userModel = pmarray->get(i)->platformUserModel;
             break;
         }
     }
@@ -65,8 +65,8 @@ void PlayerController::RefreshPlatform() {
             UserInfo *ui = userInfoTask->get_Result();
             if (ui != nullptr) {
                 platformPlayer = Player();
-                platformPlayer->name = (string)ui->userName;
-                platformPlayer->id = (string)ui->platformUserId;
+                platformPlayer->name = to_utf8(csstrtostr(ui->userName));
+                platformPlayer->id = to_utf8(csstrtostr(ui->platformUserId));
             }
         }
     );

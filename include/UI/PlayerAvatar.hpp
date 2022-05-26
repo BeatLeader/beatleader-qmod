@@ -23,10 +23,10 @@ DECLARE_CLASS_CODEGEN(BeatLeader, PlayerAvatar, UnityEngine::MonoBehaviour,
     DECLARE_INSTANCE_FIELD(float, frameTime);
     DECLARE_INSTANCE_FIELD(bool, play);
     
-    DECLARE_INSTANCE_FIELD(ArrayW<UnityEngine::Texture2D*>, animationFrames);
-    DECLARE_INSTANCE_FIELD(ArrayW<float>, animationTimings);
+    DECLARE_INSTANCE_FIELD(Array<UnityEngine::Texture2D*>*, animationFrames);
+    DECLARE_INSTANCE_FIELD(Array<float>*, animationTimings);
      
     DECLARE_INSTANCE_METHOD(void, Init, HMUI::ImageView* imageView);
-    DECLARE_INSTANCE_METHOD(void, SetPlayer, StringW url, StringW roles);
+    DECLARE_INSTANCE_METHOD(void, SetPlayer, Il2CppString* url, Il2CppString* roles);
     DECLARE_INSTANCE_METHOD(void, Update);
 )

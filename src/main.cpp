@@ -22,6 +22,7 @@
 #include "custom-types/shared/register.hpp"
 
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
+#include "GlobalNamespace/MainMenuViewController.hpp"
 
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 #include "questui/shared/QuestUI.hpp"
@@ -86,7 +87,7 @@ MAKE_HOOK_MATCH(MainMenuViewControllerDidActivate, &MainMenuViewController::DidA
      MainMenuViewControllerDidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
      if (firstActivation) {
-        self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
+        self->StartCoroutine(reinterpret_cast<System::Collections::IEnumerator*>(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle())));
      }
 }
 

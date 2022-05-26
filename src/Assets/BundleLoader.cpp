@@ -19,10 +19,10 @@ Shader* BundleLoader::TMP_SpriteCurved;
 custom_types::Helpers::Coroutine BundleLoader::LoadBundle()
 {
     if (bundle == NULL) {
-        ArrayW<uint8_t> bytes(bl_bundle::getLength());
-        std::copy(bl_bundle::getData(), bl_bundle::getData() + bl_bundle::getLength(), bytes.begin());
-
-        using AssetBundle_LoadFromMemoryAsync = function_ptr_t<UnityEngine::AssetBundleCreateRequest*, ArrayW<uint8_t>, int>;
+        Array<uint8_t>* bytes = Array<uint8_t>::NewLength(bl_bundle::getLength());
+        
+        std::copy(bl_bundle::getData(), bl_bundle::getData() + bl_bundle::getLength(), bytes->values);
+        using AssetBundle_LoadFromMemoryAsync = function_ptr_t<UnityEngine::AssetBundleCreateRequest*, Array<uint8_t>*, int>;
         static auto assetBundle_LoadFromMemoryAsync = reinterpret_cast<AssetBundle_LoadFromMemoryAsync>(il2cpp_functions::resolve_icall("UnityEngine.AssetBundle::LoadFromMemoryAsync_Internal"));
 
         auto req = assetBundle_LoadFromMemoryAsync(bytes, 0);
@@ -35,18 +35,18 @@ custom_types::Helpers::Coroutine BundleLoader::LoadBundle()
 }
 
 void BundleLoader::LoadAssets(AssetBundle* assetBundle) {
-    logoMaterial = assetBundle->LoadAsset<Material*>("LogoMaterial");
-    playerAvatarMaterial = assetBundle->LoadAsset<Material*>("PlayerAvatarMaterial");
-    UIAdditiveGlowMaterial = assetBundle->LoadAsset<Material*>("UIAdditiveGlow");
-    scoreBackgroundMaterial = assetBundle->LoadAsset<Material*>("ScoreBackgroundMaterial");
-    scoreUnderlineMaterial = assetBundle->LoadAsset<Material*>("ScoreUnderlineMaterial");
+    logoMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("LogoMaterial"));
+    playerAvatarMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("PlayerAvatarMaterial"));
+    UIAdditiveGlowMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("UIAdditiveGlow"));
+    scoreBackgroundMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("ScoreBackgroundMaterial"));
+    scoreUnderlineMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("ScoreUnderlineMaterial"));
 
-    locationIcon = assetBundle->LoadAsset<Sprite*>("LocationIcon");
-    rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>("RowSeparatorIcon");
-    beatLeaderLogoGradient = assetBundle->LoadAsset<Sprite*>("BeatLeaderLogoGradient");
-    transparentPixel = assetBundle->LoadAsset<Sprite*>("TransparentPixel");
-    fileError = assetBundle->LoadAsset<Sprite*>("FileError");
-    modifiersIcon = assetBundle->LoadAsset<Sprite*>("ModifiersIcon");
+    locationIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("LocationIcon"));
+    rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("RowSeparatorIcon"));
+    beatLeaderLogoGradient = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("BeatLeaderLogoGradient"));
+    transparentPixel = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("TransparentPixel"));
+    fileError = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("FileError"));
+    modifiersIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("ModifiersIcon"));
 
-    TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
+    TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>(il2cpp_utils::createcsstr("TMP_SpriteCurved"));
 }

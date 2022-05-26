@@ -77,7 +77,7 @@ namespace ModifiersUI {
             auto param = modifierParams->get_Item(i);
 
             if (!param->multiplierConditionallyValid) { // for now only NoFail being ignored
-                string key = modifierKeyFromName(param->get_modifierNameLocalizationKey());
+                string key = modifierKeyFromName(to_utf8(csstrtostr(param->get_modifierNameLocalizationKey())));
                 if (ModifiersManager::modifiers.count(key)) {
                     totalMultiplier += ModifiersManager::modifiers[key];
                 } else {
@@ -88,21 +88,21 @@ namespace ModifiersUI {
 
         if (totalMultiplier < 0) totalMultiplier = 0;  // thanks Beat Games for Zen mode -1000%
 
-        self->totalMultiplierValueText->SetText((totalMultiplier > 1 ? "+" : "") + to_string_wprecision(totalMultiplier * 100.0f, 1) + "%");
+        self->totalMultiplierValueText->SetText(il2cpp_utils::createcsstr((totalMultiplier > 1 ? "+" : "") + to_string_wprecision(totalMultiplier * 100.0f, 1) + "%"));
         //self->totalMultiplierValueText->set_color(totalMultiplier > 1 ? positiveColor : negativeColor);
         
-        self->maxRankValueText->SetText(getRankForMultiplier(totalMultiplier));
+        self->maxRankValueText->SetText(il2cpp_utils::createcsstr(getRankForMultiplier(totalMultiplier)));
         //self->maxRankValueText->set_color(totalMultiplier > 1 ? positiveColor : negativeColor);
     }
 
     MAKE_HOOK_MATCH(ModifierStart, &GameplayModifierToggle::Start, void, GameplayModifierToggle* self) {
         ModifierStart(self);
 
-        string key = modifierKeyFromName(self->get_gameplayModifier()->get_modifierNameLocalizationKey());
+        string key = modifierKeyFromName(to_utf8(csstrtostr(self->get_gameplayModifier()->get_modifierNameLocalizationKey())));
         getLogger().info("%s", key.c_str());
         if (ModifiersManager::modifiers.count(key)) {
             float value = ModifiersManager::modifiers[key];
-            self->multiplierText->SetText((value > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(value * 100.0f, 1) + "%");
+            self->multiplierText->SetText(il2cpp_utils::createcsstr((value > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(value * 100.0f, 1) + "%"));
         }
     }
 

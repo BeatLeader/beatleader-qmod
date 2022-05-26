@@ -102,7 +102,7 @@ struct Gif
         int height = get_height();
         auto texture = Texture2D::New_ctor(width, height);
         // This is the same size as the entire size of the gif :)
-        ::ArrayW<Color32> pixelData = texture->GetPixels32();
+        ::Array<UnityEngine::Color32>* pixelData = texture->GetPixels32();
         
         // offset into the entire image, might need to also have it's y value flipped? need to test
         long pixelDataOffset = frameInfo->Top * width + frameInfo->Left;
@@ -118,10 +118,10 @@ struct Gif
 
                 if (frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0])
                 {
-                    pixelData[locWithinFrame] = Color32(0xff, 0xff, 0xff, 0);
+                    pixelData->values[locWithinFrame] = Color32(0xff, 0xff, 0xff, 0);
                 } else {
                     color = &colorMap->Colors[frame->RasterBits[loc]];
-                    pixelData[locWithinFrame] = Color32(color->Red, color->Green, color->Blue, 0xff);
+                    pixelData->values[locWithinFrame] = Color32(color->Red, color->Green, color->Blue, 0xff);
                 }
                 
             }
@@ -146,8 +146,8 @@ struct Gif
         int width = get_width();
         int height = get_height();
         
-        ::ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(length);
-        ArrayW<float> timings = ArrayW<float> (length);
+        ::Array<UnityEngine::Texture2D*>* frames = Array<UnityEngine::Texture2D*>::NewLength(length);
+        Array<float>* timings = Array<float>::NewLength(length);
 
         // FrameBuffer
         TextureColor *pixelData = new TextureColor[width * height];
@@ -226,8 +226,8 @@ struct Gif
             // Upload to GPU
             texture->Apply();
 
-            frames[idx] = texture;
-            timings[idx] = static_cast<float>(GCB.DelayTime);        
+            frames->values[idx] = texture;
+            timings->values[idx] = static_cast<float>(GCB.DelayTime);        
         };
         // Clear FrameBuffer to not leak things
         delete[] pixelData;
