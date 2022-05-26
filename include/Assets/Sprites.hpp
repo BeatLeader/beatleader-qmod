@@ -18,6 +18,7 @@ class Sprites {
     static const string UpB64;
     static const string CellBGB64;
     static const string ModifiersIconB64;
+    static const string PixelB64;
 
     static map<string, std::vector<uint8_t>> iconCache;
 public:
@@ -27,6 +28,7 @@ public:
     static UnityEngine::Sprite* get_UpIcon();
     static UnityEngine::Sprite* get_CellBG();
     static UnityEngine::Sprite* get_ModifiersIcon();
+    static UnityEngine::Sprite* get_TransparentPixel();
 
     static void get_Icon(string url, const std::function<void(UnityEngine::Sprite*)>& completion);
     static void get_AnimatedIcon(string url, const std::function<void(AllFramesResult)>& completion);

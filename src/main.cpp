@@ -61,10 +61,6 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
 }
 
 void replayPostCallback(ReplayUploadStatus status, string description, float progress, int code) {
-    if (status == ReplayUploadStatus::finished) {
-        PlayerController::Refresh();
-    }
-
     if (synchronizer != std::nullopt) {
         if (code == 200) {
             synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::uptodate);
@@ -72,10 +68,16 @@ void replayPostCallback(ReplayUploadStatus status, string description, float pro
             synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::shouldnotpost);
         }
     }
-    
-    QuestUI::MainThreadScheduler::Schedule([status, description, progress] {
-        LeaderboardUI::updateStatus(status, description, progress);
-    });
+
+    if (!ReplayRecorder::recording) {
+        if (status == ReplayUploadStatus::finished) {
+            PlayerController::Refresh();
+        }
+        
+        QuestUI::MainThreadScheduler::Schedule([status, description, progress] {
+            LeaderboardUI::updateStatus(status, description, progress);
+        });
+    }
 }
 
 MAKE_HOOK_MATCH(MainMenuViewControllerDidActivate, &MainMenuViewController::DidActivate, void,

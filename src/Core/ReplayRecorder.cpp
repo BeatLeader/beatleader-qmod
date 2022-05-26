@@ -135,6 +135,7 @@ namespace ReplayRecorder {
 
         std::string timeStamp(std::to_string(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
 
+        recording = true;
         _currentPause = nullopt;
         replay.emplace(ReplayInfo(modInfo.version, UnityEngine::Application::get_version(), timeStamp));
 
@@ -174,7 +175,7 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(ProcessResultsSolo, &StandardLevelScenesTransitionSetupDataSO::Finish, void, StandardLevelScenesTransitionSetupDataSO* self, LevelCompletionResults* levelCompletionResults) {
         ProcessResultsSolo(self, levelCompletionResults);
-
+        recording = false;
         if (self->gameMode != "Party" && replay != nullopt) {
             collectMapData(self);
             processResults(levelCompletionResults);
