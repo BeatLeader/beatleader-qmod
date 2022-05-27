@@ -133,6 +133,8 @@ namespace LeaderboardUI {
     static UnityEngine::Color ownScoreColor = UnityEngine::Color(0.7, 0.0, 0.7, 0.3);
     static UnityEngine::Color someoneElseScoreColor = UnityEngine::Color(0.07, 0.0, 0.14, 0.05);
 
+    static bool bundleLoaded = false;
+
     string generateLabel(Score const& score) {
         // TODO: Use fmt
         string const& nameLabel = score.player.name;
@@ -193,6 +195,7 @@ namespace LeaderboardUI {
     MAKE_HOOK_MATCH(LeaderboardDeactivate, &PlatformLeaderboardViewController::DidDeactivate, void, PlatformLeaderboardViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
         LeaderboardDeactivate(self, removedFromHierarchy, screenSystemDisabling);
 
+        bundleLoaded = false;
         if (parentScreen != NULL) {
             parentScreen->SetActive(false);
         }
@@ -331,8 +334,6 @@ namespace LeaderboardUI {
         plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
     }
 
-    static bool bundleLoaded = false;
-
     MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
         plvc = self;
         clearTable();
@@ -342,6 +343,11 @@ namespace LeaderboardUI {
         if (PlayerController::currentPlayer == std::nullopt) {
             self->loadingControl->ShowText("Please sign up or log in mod settings!", true);
             return;
+        }
+
+        if (!bundleLoaded) {
+            self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
+            bundleLoaded = true;
         }
         
         if (uploadStatus == NULL) {
@@ -433,15 +439,12 @@ namespace LeaderboardUI {
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
         if (!levelData->get_levelID().starts_with("custom_level")) {
+            bundleLoaded = false;
             self->loadingControl->Hide();
             self->hasScoresData = false;
             self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
             self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
         } else {
-            if (!bundleLoaded) {
-                self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
-                bundleLoaded = true;
-            }
             refreshFromTheServer();
         }
     }

@@ -53,7 +53,7 @@ void BeatLeader::initModalPopup(BeatLeader::ModalPopup** modalUIPointer, Transfo
 
     modalUI->sponsorMessage = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(5, -20));
 
-    modalUI->modal->set_name("ScoreDetailsModal");
+    modalUI->modal->set_name("BLScoreDetailsModal");
     *modalUIPointer = modalUI;
 }
 
