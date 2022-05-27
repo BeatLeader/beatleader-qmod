@@ -239,6 +239,7 @@ namespace ReplayRecorder {
 
         auto noteData = scoringElement->noteData;
 
+        if (!_replayNoteIdCache.count(noteData)) return;
         int noteId = _replayNoteIdCache[noteData];
         NoteEvent& noteEvent = replay->notes.at(noteId);
         bool isBomb = noteData->colorType == ColorType::None;
@@ -282,7 +283,7 @@ namespace ReplayRecorder {
                 if (scoringElement->get_time() >= skipAfter && scoringElement->get_time() <= nearestNotCutNoteTime) break;
                 
                 auto noteData = scoringElement->noteData;
-                if (il2cpp_utils::try_cast<MissScoringElement>(scoringElement) != nullopt && noteData->scoringType == NoteData::ScoringType::NoScore) continue;
+                if (il2cpp_utils::try_cast<MissScoringElement>(scoringElement) != nullopt && (noteData->colorType == ColorType::None || noteData->scoringType == NoteData::ScoringType::NoScore)) continue;
 
                 int noteId = _noteIdCache[noteData];
                 NoteEvent& noteEvent = _noteEventCache.at(noteId);

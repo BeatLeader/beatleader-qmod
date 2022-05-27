@@ -133,6 +133,8 @@ namespace LeaderboardUI {
     static UnityEngine::Color ownScoreColor = UnityEngine::Color(0.7, 0.0, 0.7, 0.3);
     static UnityEngine::Color someoneElseScoreColor = UnityEngine::Color(0.07, 0.0, 0.14, 0.05);
 
+    static bool bundleLoaded = false;
+
     string generateLabel(Score const& score) {
         // TODO: Use fmt
         string const& nameLabel = score.player.name;
@@ -193,6 +195,7 @@ namespace LeaderboardUI {
     MAKE_HOOK_MATCH(LeaderboardDeactivate, &PlatformLeaderboardViewController::DidDeactivate, void, PlatformLeaderboardViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
         LeaderboardDeactivate(self, removedFromHierarchy, screenSystemDisabling);
 
+        bundleLoaded = false;
         if (parentScreen != NULL) {
             parentScreen->SetActive(false);
         }
@@ -330,8 +333,6 @@ namespace LeaderboardUI {
         plvc->scores->Clear();
         plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
     }
-
-    static bool bundleLoaded = false;
 
     MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
         plvc = self;
