@@ -343,6 +343,11 @@ namespace LeaderboardUI {
             self->loadingControl->ShowText("Please sign up or log in mod settings!", true);
             return;
         }
+
+        if (!bundleLoaded) {
+            self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
+            bundleLoaded = true;
+        }
         
         if (uploadStatus == NULL) {
             ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(4);
@@ -433,15 +438,12 @@ namespace LeaderboardUI {
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
         if (!levelData->get_levelID().starts_with("custom_level")) {
+            bundleLoaded = false;
             self->loadingControl->Hide();
             self->hasScoresData = false;
             self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
             self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
         } else {
-            if (!bundleLoaded) {
-                self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
-                bundleLoaded = true;
-            }
             refreshFromTheServer();
         }
     }
