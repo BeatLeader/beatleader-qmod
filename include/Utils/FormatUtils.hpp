@@ -99,12 +99,19 @@ namespace FormatUtils {
         }
 
         inline string FormatNameWithClans(Player player) {
-            string clansLabel = "";
-            for (size_t i = 0; i < player.clans.size(); i++) {
+            string clansLabel = "<size=90%>";
+            int clanCount = player.clans.size();
+            if (clanCount == 2) {
+                clansLabel = "<size=80%>";
+            } else if (clanCount == 3) {
+                clansLabel = "<size=70%>";
+            }
+            for (size_t i = 0; i < clanCount; i++) {
                 Clan clan = player.clans[i];
                 clansLabel += "  <color=" + clan.color + ">" + clan.tag + "</color>";
             }
+            clansLabel += "</size>";
 
-            return truncate(player.name, 23 - clansLabel.size()) + clansLabel;
+            return truncate(player.name, 20 - clanCount * 3) + clansLabel;
         }
     }
