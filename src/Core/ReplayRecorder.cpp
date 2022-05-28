@@ -205,13 +205,16 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(SpawnObstacle, &BeatmapObjectManager::AddSpawnedObstacleController, void, BeatmapObjectManager* self, ObstacleController* obstacleController, BeatmapObjectSpawnMovementData::ObstacleSpawnData obstacleSpawnData, float rotation) {
         SpawnObstacle(self, obstacleController, obstacleSpawnData, rotation);
-        int wallId = _wallId++;
-        _wallCache[obstacleController] = wallId;
 
-        auto wallID = obstacleController->obstacleData->lineIndex * 100 + (int)obstacleController->obstacleData->type * 10 + obstacleController->obstacleData->width;
-        auto spawnTime = audioTimeSyncController->songTime;
+        if (replay != nullopt && audioTimeSyncController != NULL && obstacleController->obstacleData != NULL) {
+            int wallId = _wallId++;
+            _wallCache[obstacleController] = wallId;
 
-        _wallEventCache.emplace(wallId, WallEvent(wallID, spawnTime));
+            auto wallID = obstacleController->obstacleData->lineIndex * 100 + (int)obstacleController->obstacleData->type * 10 + obstacleController->obstacleData->width;
+            auto spawnTime = audioTimeSyncController->songTime;
+
+            _wallEventCache.emplace(wallId, WallEvent(wallID, spawnTime));
+        }
     }
 
     void PopulateNoteCutInfo(ReplayNoteCutInfo& noteCutInfo, NoteCutInfo const& cutInfo) {
