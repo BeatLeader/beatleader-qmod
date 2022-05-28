@@ -187,7 +187,6 @@ namespace LeaderboardUI {
     BeatLeader::ModalPopup* scoreDetailsUI = NULL;
 
     int page = 1;
-    bool pageChange = false;
     bool showRetryButton = false;
     int selectedScore = 11;
     bool modifiers = true;
@@ -272,7 +271,7 @@ namespace LeaderboardUI {
         plvc = self;
 
         if (parentScreen != NULL) {
-            parentScreen->SetActive(true);
+            parentScreen->SetActive(showBeatLeader);
         }
     }
 
@@ -303,22 +302,6 @@ namespace LeaderboardUI {
     }
 
     static string lastUrl = "";
-
-    void PageUp() {
-        pageChange = true;
-        page++;
-
-        plvc->Refresh(true, true);
-    }
-
-    void PageDown() {
-        pageChange = true;
-        if (page > 1) {
-            page--;
-        }
-
-        plvc->Refresh(true, true);
-    }
 
     void refreshFromTheServer() {
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level());
@@ -360,9 +343,7 @@ namespace LeaderboardUI {
             if (!showBeatLeader) return;
 
             auto scores = result["data"].GetArray();
-            if (plvc->leaderboardTableView->scores != NULL) {
-                plvc->leaderboardTableView->scores->Clear();
-            }
+            
             if ((int)scores.Size() == 0) {
                 QuestUI::MainThreadScheduler::Schedule([status] {
                     plvc->loadingControl->Hide();
@@ -381,6 +362,7 @@ namespace LeaderboardUI {
             int perPage = metadata["itemsPerPage"].GetInt();
             int pageNum = metadata["page"].GetInt();
             int total = metadata["total"].GetInt();
+            plvc->scores->Clear();
 
             for (int index = 0; index < 10; ++index)
             {
@@ -447,6 +429,22 @@ namespace LeaderboardUI {
             plvc->leaderboardTableView->scores->Clear();
         }
         plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
+    }
+
+    void PageUp() {
+        page++;
+
+        clearTable();
+        refreshFromTheServer();
+    }
+
+    void PageDown() {
+        if (page > 1) {
+            page--;
+        }
+
+        clearTable();
+        refreshFromTheServer();
     }
 
     void updateLeaderboard(PlatformLeaderboardViewController* self) {
@@ -595,10 +593,7 @@ namespace LeaderboardUI {
             }
         }
 
-        if (sspageUpButton != NULL) {
-            sspageUpButton->set_interactable(false);
-            sspageDownButton->set_interactable(false);
-        } else {
+        if (upPageButton != NULL) {
             upPageButton->get_gameObject()->SetActive(false);
             downPageButton->get_gameObject()->SetActive(false);
         }
@@ -624,6 +619,7 @@ namespace LeaderboardUI {
         if (ssInstalled && showBeatLeaderButton == NULL) {
             showBeatLeaderButton = ::QuestUI::BeatSaberUI::CreateToggle(self->get_gameObject()->get_transform()->Find(il2cpp_utils::createcsstr("HeaderPanel"))->get_transform(), "Show BL", UnityEngine::Vector2(0, 0), [](bool changed){
                 showBeatLeader = !showBeatLeader;
+                getModConfig().ShowBeatleader.SetValue(showBeatLeader);
                 plvc->Refresh(true, true);
                 if (uploadStatus != NULL) {
                     parentScreen->get_gameObject()->SetActive(showBeatLeader);
@@ -637,12 +633,25 @@ namespace LeaderboardUI {
                         ssElements[i]->get_gameObject()->SetActive(!showBeatLeader);
                     }
 
+                    if (showBeatLeader) {
+                        blDownAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
+
+                        auto delegate = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), sspageDownButton, PageDown);
+                        blDownAction->AddListener(delegate);
+
+                        blUpAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
+
+                        auto delegate2 = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), sspageUpButton, PageUp);
+                        blUpAction->AddListener(delegate2);
+                    }
+
                     sspageUpButton->set_onClick(showBeatLeader ? blUpAction : ssUpAction);
                     sspageDownButton->set_onClick(showBeatLeader ? blDownAction : ssDownAction);
+                    sspageDownButton->set_interactable(!showBeatLeader);
+                    sspageUpButton->set_interactable(!showBeatLeader);
 
                     HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find(il2cpp_utils::createcsstr("HeaderPanel"))->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
-
-
+                    
                     if (showBeatLeader) {
                         imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
                         imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
@@ -680,10 +689,10 @@ namespace LeaderboardUI {
         LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
 
         if (showBeatLeader) {
-            if (!isLocal && result->playerNameText->get_fontSize() > 3) {
+            if (!isLocal && result->scoreText->get_fontSize() != 2) {
                 result->playerNameText->set_enableAutoSizing(false);
                 result->playerNameText->set_richText(true);
-                EmojiSupport::AddSupport(result->playerNameText);
+                
                 resize(result->playerNameText, 13, 0);
                 move(result->playerNameText, -2, 0);
                 move(result->fullComboText, 0.2, 0);
@@ -691,6 +700,10 @@ namespace LeaderboardUI {
                 result->playerNameText->set_fontSize(3);
                 result->fullComboText->set_fontSize(3);
                 result->scoreText->set_fontSize(2);
+            }
+
+            if (!isLocal && !cellBackgrounds.count(result)) {
+                EmojiSupport::AddSupport(result->playerNameText);
 
                 avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-32, 0), UnityEngine::Vector2(4, 4));
 
@@ -712,7 +725,7 @@ namespace LeaderboardUI {
                 // clanGroups[result] = tagsList;         
             }
         } else {
-            if (result->scoreText->get_fontSize() == 3) {
+            if (result->scoreText->get_fontSize() == 2) {
                 result->playerNameText->set_enableAutoSizing(true);
                 resize(result->playerNameText, -13, 0);
                 move(result->playerNameText, 2, 0);
@@ -817,13 +830,16 @@ namespace LeaderboardUI {
                 if (playerName != NULL) {
                     updatePlayerInfoLabel();
                 }
-
-                LoggerContextObject logger = getLogger().WithContext("load");
-                INSTALL_HOOK(logger, RefreshLeaderboard);
-                INSTALL_HOOK(logger, LeaderboardCellSource);
-
             });
         });
+
+        QuestUI::MainThreadScheduler::Schedule([] {
+            LoggerContextObject logger = getLogger().WithContext("load");
+            INSTALL_HOOK(logger, RefreshLeaderboard);
+            INSTALL_HOOK(logger, LeaderboardCellSource);
+        });
+
+        showBeatLeader = false; // getModConfig().ShowBeatleader.GetValue();
     }
 
     void reset() {
@@ -837,7 +853,7 @@ namespace LeaderboardUI {
         bundleLoaded = false;
         showBeatLeaderButton = NULL;
         ssInstalled = true;
-        showBeatLeader = false;
+        showBeatLeader = false; // getModConfig().ShowBeatleader.GetValue();
         ssElements = vector<UnityEngine::Transform*>();
         ModifiersUI::ResetModifiersUI();
     }    

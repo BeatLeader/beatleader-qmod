@@ -218,13 +218,17 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(SpawnObstacle, &BeatmapObjectManager::SpawnObstacle, ObstacleController*, BeatmapObjectManager* self, ObstacleData* obstacleData, BeatmapObjectSpawnMovementData::ObstacleSpawnData obstacleSpawnData, float rotation) {
         ObstacleController* obstacleController = SpawnObstacle(self, obstacleData, obstacleSpawnData, rotation);
-        int wallId = _wallId++;
-        _wallCache[obstacleController] = wallId;
 
-        auto wallID = obstacleController->obstacleData->lineIndex * 100 + (int)obstacleController->obstacleData->obstacleType * 10 + obstacleController->obstacleData->width;
-        auto spawnTime = audioTimeSyncController->songTime;
+        if (replay != nullopt) {
+            int wallId = _wallId++;
+            _wallCache[obstacleController] = wallId;
 
-        _wallEventCache.emplace(wallId, WallEvent(wallID, spawnTime));
+            auto wallID = obstacleController->obstacleData->lineIndex * 100 + (int)obstacleController->obstacleData->obstacleType * 10 + obstacleController->obstacleData->width;
+            auto spawnTime = audioTimeSyncController->songTime;
+
+            _wallEventCache.emplace(wallId, WallEvent(wallID, spawnTime));
+        }
+        
         return obstacleController;
     }
 

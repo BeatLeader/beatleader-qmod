@@ -170,20 +170,20 @@ MAKE_HOOK_MATCH(SetArraySizes, &TMPro::TextMeshProUGUI::SetArraySizes, int, TMPr
 }
 
 void EmojiSupport::AddSupport(TMPro::TextMeshProUGUI* text) {
-    if (rootEmojiAsset == NULL) {
-        rootEmojiAsset = CreateTMP_SpriteAsset();
-        currentEmojiAsset = rootEmojiAsset;
-        currentEmojiIndex = 0;
-    }
-    if (!hooksInstalled) {
-        LoggerContextObject logger = getLogger().WithContext("load");
-        INSTALL_HOOK(logger, SearchForSpriteByUnicode);
-        INSTALL_HOOK(logger, SetArraySizes);
+    // if (rootEmojiAsset == NULL) {
+    //     rootEmojiAsset = CreateTMP_SpriteAsset();
+    //     currentEmojiAsset = rootEmojiAsset;
+    //     currentEmojiIndex = 0;
+    // }
+    // if (!hooksInstalled) {
+    //     LoggerContextObject logger = getLogger().WithContext("load");
+    //     INSTALL_HOOK(logger, SearchForSpriteByUnicode);
+    //     INSTALL_HOOK(logger, SetArraySizes);
 
-        hooksInstalled = true;
-    }
+    //     hooksInstalled = true;
+    // }
 
-    text->set_spriteAsset(rootEmojiAsset);
+    // text->set_spriteAsset(rootEmojiAsset);
 }
 
 void EmojiSupport::Reset() {
