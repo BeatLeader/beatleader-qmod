@@ -609,11 +609,9 @@ namespace LeaderboardUI {
         }
     }
 
-    MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
+    void refreshLeaderboardCall(PlatformLeaderboardViewController* self) {
         if (showBeatLeader) {
             updateLeaderboard(self);
-        } else {
-            RefreshLeaderboard(self, showLoadingIndicator, clear);
         }
 
         if (ssInstalled && showBeatLeaderButton == NULL) {
@@ -677,12 +675,38 @@ namespace LeaderboardUI {
         }
     }
 
-    MAKE_HOOK_MATCH(ScoreSaberDetector, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy) {
-        plvc = self;
-        ssInstalled = false;
-        showBeatLeader = true;
+    MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
+        if (!showBeatLeader) {
+            RefreshLeaderboard(self, showLoadingIndicator, clear);
+        }
 
-        updateLeaderboard(self);
+        refreshLeaderboardCall(self);
+    }
+
+    MAKE_HOOK_MATCH(ScoreSaberDetector, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
+        plvc = self;
+        if (ssInstalled) {
+            ssInstalled = false;
+            showBeatLeader = true;
+            Array<UnityEngine::Transform*> *transforms = plvc->get_gameObject()->get_transform()->FindObjectsOfType<UnityEngine::Transform*>();
+            for (size_t i = 0; i < transforms->Length(); i++)
+            {
+                auto transform = transforms->get(i);
+                auto name =  transform->get_name();
+                if (name != NULL && to_utf8(csstrtostr(name)) == "ScoreSaberClickableImage") {
+                    getLogger().info("WHAT");
+                    ssInstalled = true;
+                    showBeatLeader = false;
+                    break;
+                }
+            }
+        }
+        
+        refreshLeaderboardCall(self);
+        
+        if (!showBeatLeader) {
+            ScoreSaberDetector(self, showLoadingIndicator, clear);
+        }
     }
 
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
