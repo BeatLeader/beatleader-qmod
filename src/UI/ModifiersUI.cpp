@@ -45,6 +45,8 @@ namespace ModifiersUI {
         return "UD";
     }
 
+    static vector<GameplayModifierToggle*> modifiers;
+
     string getRankForMultiplier(float modifier) {
         if (modifier > 0.9) {
             return "SS";
@@ -95,8 +97,7 @@ namespace ModifiersUI {
         //self->maxRankValueText->set_color(totalMultiplier > 1 ? positiveColor : negativeColor);
     }
 
-    MAKE_HOOK_MATCH(ModifierStart, &GameplayModifierToggle::Start, void, GameplayModifierToggle* self) {
-        ModifierStart(self);
+    void SetCustomModifier(GameplayModifierToggle* self) {
 
         string key = modifierKeyFromName(to_utf8(csstrtostr(self->get_gameplayModifier()->get_modifierNameLocalizationKey())));
         getLogger().info("%s", key.c_str());
@@ -106,10 +107,43 @@ namespace ModifiersUI {
         }
     }
 
+    MAKE_HOOK_MATCH(ModifierStart, &GameplayModifierToggle::Start, void, GameplayModifierToggle* self) {
+        ModifierStart(self);
+
+        SetCustomModifier(self);
+
+        modifiers.push_back(self);
+    }
+
     void setup() {
         LoggerContextObject logger = getLogger().WithContext("load");
 
         INSTALL_HOOK(logger, ModifierStart);
         INSTALL_HOOK(logger, RefreshMultipliers);
     }
+
+    void ResetCustomModifier(GameplayModifierToggle* self) {
+        string key = modifierKeyFromName(to_utf8(csstrtostr(self->get_gameplayModifier()->get_modifierNameLocalizationKey())));
+        if (ModifiersManager::modifiers.count(key)) {
+            float value = self->gameplayModifier->multiplier;
+            self->multiplierText->SetText(il2cpp_utils::createcsstr((value > 0 ? "+" : "") + to_string_wprecision(value * 100.0f, 1) + "%"));
+        }
+    }
+
+    void SetModifiersActive(bool active) {
+        for (size_t i = 0; i < modifiers.size(); i++)
+        {
+            if (active) {
+                SetCustomModifier(modifiers[i]);
+            } else {
+                ResetCustomModifier(modifiers[i]);
+            }
+        }
+        
+    }
+
+    void ResetModifiersUI() {
+        modifiers = vector<GameplayModifierToggle*>();
+    }
+
 }

@@ -77,11 +77,14 @@ namespace LevelInfoUI {
 
         // TODO: Why not just substr str.substr("custom_level_".size())
         // essentially, remove prefix
-        string hash = regex_replace(to_utf8(csstrtostr(reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID())), basic_regex("custom_level_"), "");
+        IPreviewBeatmapLevel* level = reinterpret_cast<IPreviewBeatmapLevel*>(self->level);
+        if (level == NULL) return;
+        string hash = regex_replace(to_utf8(csstrtostr(level->get_levelID())), basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(self->selectedDifficultyBeatmap->get_difficulty().value);
         string mode = to_utf8(csstrtostr(self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName));
 
         string key = hash + difficulty + mode;
+        selectedMap = key;
 
         if (_mapInfos.contains(key)) {
             starsLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(_mapInfos[key], 2)));
@@ -89,25 +92,23 @@ namespace LevelInfoUI {
         } else {
             string url = WebUtils::API_URL + "map/hash/" + hash;
 
-            WebUtils::GetJSONAsync(url, [difficulty, mode, key, hash](long status, bool error, rapidjson::Document const& result){
+            WebUtils::GetJSONAsync(url, [key, hash](long status, bool error, rapidjson::Document const& result){
                 auto const& difficulties = result["difficulties"].GetArray();
+                QuestUI::MainThreadScheduler::Schedule([difficulties, key, hash] () {
+                if (key != selectedMap) return;
+                    for (int index = 0; index < (int)difficulties.Size(); ++index)
+                    {
+                        auto const& value = difficulties[index].GetObject();
+                        _mapInfos[hash + value["difficultyName"].GetString() + value["modeName"].GetString()] = value["stars"].GetFloat();
+                    }
 
-                for (int index = 0; index < (int)difficulties.Size(); ++index)
-                {
-                    auto const& value = difficulties[index].GetObject();
-                    _mapInfos[hash + value["difficultyName"].GetString() + value["modeName"].GetString()] = value["stars"].GetFloat();
-                }
-
-                float stars = _mapInfos[key];
-
-                QuestUI::MainThreadScheduler::Schedule([stars] () {
+                    float stars = _mapInfos[key];
                     starsLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(stars, 2)));
                     ppLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(stars * 44.0f, 2)));
                 });
             });
         }
 
-        
         noSubmissionLabel->get_gameObject()->SetActive(!UploadEnabled());
     }
 
@@ -115,6 +116,13 @@ namespace LevelInfoUI {
         LoggerContextObject logger = getLogger().WithContext("load");
 
         INSTALL_HOOK(logger, LevelRefreshContent);
+    }
+
+    void SetLevelInfoActive(bool active) {
+        starsLabel->get_gameObject()->SetActive(active);
+        starsImage->get_gameObject()->SetActive(active);
+        ppLabel->get_gameObject()->SetActive(active);
+        ppImage->get_gameObject()->SetActive(active);
     }
 
     void resetStars() {

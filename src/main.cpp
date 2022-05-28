@@ -71,12 +71,11 @@ void replayPostCallback(ReplayUploadStatus status, string description, float pro
     }
 
     if (!ReplayRecorder::recording) {
-        if (status == ReplayUploadStatus::finished) {
-            PlayerController::Refresh();
-        }
-        
         QuestUI::MainThreadScheduler::Schedule([status, description, progress] {
             LeaderboardUI::updateStatus(status, description, progress);
+            if (status == ReplayUploadStatus::finished) {
+                PlayerController::Refresh();
+            }
         });
     }
 }
