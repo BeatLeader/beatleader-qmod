@@ -110,9 +110,9 @@ extern "C" void load() {
     RecorderUtils::StartRecorderUtils();
 
     PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {
-        if (synchronizer == nullopt) {
-            synchronizer.emplace();
-        }
+        // if (synchronizer == nullopt) {
+        //     synchronizer.emplace();
+        // }
     });
     QuestUI::MainThreadScheduler::Schedule([] {
         PlayerController::Refresh();
