@@ -26,6 +26,7 @@
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson/include/rapidjson/filereadstream.h"
 
 #include "questui/shared/QuestUI.hpp"
 #include "questui/shared/ArrayUtil.hpp"
@@ -676,37 +677,12 @@ namespace LeaderboardUI {
     }
 
     MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
+        plvc = self;
         if (!showBeatLeader) {
             RefreshLeaderboard(self, showLoadingIndicator, clear);
         }
 
         refreshLeaderboardCall(self);
-    }
-
-    MAKE_HOOK_MATCH(ScoreSaberDetector, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
-        plvc = self;
-        if (ssInstalled) {
-            ssInstalled = false;
-            showBeatLeader = true;
-            Array<UnityEngine::Transform*> *transforms = plvc->get_gameObject()->get_transform()->FindObjectsOfType<UnityEngine::Transform*>();
-            for (size_t i = 0; i < transforms->Length(); i++)
-            {
-                auto transform = transforms->get(i);
-                auto name =  transform->get_name();
-                if (name != NULL && to_utf8(csstrtostr(name)) == "ScoreSaberClickableImage") {
-                    getLogger().info("WHAT");
-                    ssInstalled = true;
-                    showBeatLeader = false;
-                    break;
-                }
-            }
-        }
-        
-        refreshLeaderboardCall(self);
-        
-        if (!showBeatLeader) {
-            ScoreSaberDetector(self, showLoadingIndicator, clear);
-        }
     }
 
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
@@ -846,7 +822,6 @@ namespace LeaderboardUI {
 
         INSTALL_HOOK(logger, LeaderboardActivate);
         INSTALL_HOOK(logger, LeaderboardDeactivate);
-        INSTALL_HOOK(logger, ScoreSaberDetector);
         INSTALL_HOOK(logger, LocalLeaderboardDidActivate);
 
         PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
@@ -857,13 +832,37 @@ namespace LeaderboardUI {
             });
         });
 
+        ssInstalled = false;
+        showBeatLeader = true;
+
         QuestUI::MainThreadScheduler::Schedule([] {
             LoggerContextObject logger = getLogger().WithContext("load");
             INSTALL_HOOK(logger, RefreshLeaderboard);
             INSTALL_HOOK(logger, LeaderboardCellSource);
-        });
 
-        showBeatLeader = false; // getModConfig().ShowBeatleader.GetValue();
+            FILE *fp = fopen("/sdcard/BMBFData/config.json", "r");
+            rapidjson::Document config;
+            if (fp != NULL) {
+                char buf[0XFFFF];
+                rapidjson::FileReadStream input(fp, buf, sizeof(buf));
+                config.ParseStream(input);
+                fclose(fp);
+            }
+
+            if (!config.HasParseError() && config.IsObject()) {
+                auto mods = config["Mods"].GetArray();
+                for (int index = 0; index < (int)mods.Size(); ++index)
+                {
+                    auto const& mod = mods[index];
+                    
+                    if (strcmp(mod["Id"].GetString(), "scoresaber") == 0 && mod["Installed"].GetBool()) {
+                        ssInstalled = true;
+                        showBeatLeader = false;
+                        break;
+                    }
+                }
+            }
+        });
     }
 
     void reset() {
@@ -876,8 +875,9 @@ namespace LeaderboardUI {
         cellBackgrounds = {};
         bundleLoaded = false;
         showBeatLeaderButton = NULL;
-        ssInstalled = true;
-        showBeatLeader = false; // getModConfig().ShowBeatleader.GetValue();
+        if (ssInstalled) {
+            showBeatLeader = false;
+        }
         ssElements = vector<UnityEngine::Transform*>();
         ModifiersUI::ResetModifiersUI();
     }    
