@@ -265,6 +265,7 @@ namespace WebUtils {
     std::thread PostJSONAsync(const string& url, string data, long timeout, function<void(long, string)> const& finished) {
         std::thread t(
             [url, timeout, data, finished] {
+                string cookieFile = getCookieFile();
                 string val;
                 // Init curl
                 auto* curl = curl_easy_init();
@@ -277,6 +278,9 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
                 curl_easy_setopt(curl, CURLOPT_URL, query_encode(url).c_str());
+
+                curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str());
+                curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFile.c_str());
 
                 // Don't wait forever, time out after TIMEOUT seconds.
                 curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);

@@ -19,6 +19,7 @@ public:
     static Material *UIAdditiveGlowMaterial;
     static Material *scoreBackgroundMaterial;
     static Material *scoreUnderlineMaterial;
+    static Material *VotingButtonMaterial;
     static Sprite *locationIcon;
     static Sprite *rowSeparatorIcon;
     static Sprite *beatLeaderLogoGradient;

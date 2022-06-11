@@ -9,10 +9,12 @@
 
 #include "include/UI/UIUtils.hpp"
 #include "include/UI/ScoreDetailsUI.hpp"
+#include "include/UI/VotingButton.hpp"
+#include "include/UI/VotingUI.hpp"
 #include "include/UI/LogoAnimation.hpp"
 #include "include/UI/PlayerAvatar.hpp"
 #include "include/UI/EmojiSupport.hpp"
-#include "UI/RoleColorScheme.hpp"
+#include "include/UI/RoleColorScheme.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -110,12 +112,11 @@ namespace LeaderboardUI {
     QuestUI::ClickableImage* upPageButton = NULL;
     QuestUI::ClickableImage* downPageButton = NULL;
     QuestUI::ClickableImage* modifiersButton = NULL;
+    BeatLeader::VotingButton* votingButton = NULL;
     UnityEngine::GameObject* parentScreen = NULL;
 
-    HMUI::ModalView* scoreDetails = NULL;
-    TMPro::TextMeshProUGUI* scorePlayerName = NULL;
-
-    BeatLeader::ModalPopup* scoreDetailsUI = NULL;
+    BeatLeader::ScoreDetailsPopup* scoreDetailsUI = NULL;
+    BeatLeader::RankVotingPopup* votingUI = NULL;
 
     int page = 1;
     int selectedScore = 11;
@@ -218,6 +219,8 @@ namespace LeaderboardUI {
     }
 
     static string lastUrl = "";
+    static string lastVotingStatusUrl = "";
+    static string votingUrl = "";
 
     void refreshFromTheServer() {
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level());
@@ -307,6 +310,18 @@ namespace LeaderboardUI {
                 plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
             });
         });
+        
+        string votingStatusUrl = WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode;
+        votingUrl = WebUtils::API_URL + "vote/" + hash + "/" + difficulty + "/" + mode;
+        if (lastVotingStatusUrl != votingStatusUrl) {
+            votingButton->SetState(0);
+            lastVotingStatusUrl = votingStatusUrl;
+            WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
+                if (votingStatusUrl == lastVotingStatusUrl && status == 200) {
+                    votingButton->SetState(stoi(response));
+                }
+            }, [](float progress){});
+        }
 
         plvc->loadingControl->ShowText("Loading", true);
     }
@@ -324,6 +339,27 @@ namespace LeaderboardUI {
         } else {
             ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard with positive modifiers");
         }
+    }
+
+    void voteCallback(bool voted, bool rankable, float stars, int type) {
+        if (voted) {
+            votingButton->SetState(0);
+            string rankableString = "?rankability=" + (rankable ? (string)"1.0" : (string)"0.0");
+            string starsString = stars > 0 ? "&stars=" + to_string_wprecision(stars, 2) : "";
+            string typeString = type > 0 ? "&type=" + to_string(type) : "";
+            string currentVotingUrl = votingUrl;
+            WebUtils::PostJSONAsync(votingUrl + rankableString + starsString + typeString, "", [currentVotingUrl](long status, string response) {
+                if (votingUrl != currentVotingUrl) return;
+
+                if (status == 200) {
+                    votingButton->SetState(stoi(response));
+                } else {
+                    votingButton->SetState(1);
+                }
+            });
+        }
+
+        votingUI->modal->Hide(true, nullptr);
     }
 
     static bool isLocal = false;
@@ -366,7 +402,8 @@ namespace LeaderboardUI {
 
             parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(480, 160), self->screen->get_transform()->get_position(), 140);
 
-            BeatLeader::initModalPopup(&scoreDetailsUI, self->get_transform());
+            BeatLeader::initScoreDetailsPopup(&scoreDetailsUI, self->get_transform());
+            BeatLeader::initVotingPopup(&votingUI, self->get_transform(), voteCallback);
 
             auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(20, 20));
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
@@ -422,7 +459,7 @@ namespace LeaderboardUI {
                 refreshFromTheServer();
             });
 
-            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 25), UnityEngine::Vector2(4, 4), [](){
+            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
                 modifiers = !modifiers;
                 getModConfig().Modifiers.SetValue(modifiers);
                 clearTable();
@@ -432,6 +469,14 @@ namespace LeaderboardUI {
             modifiers = getModConfig().Modifiers.GetValue();
             ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard without positive modifiers");
             updateModifiersButton();
+
+            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 22), UnityEngine::Vector2(4, 4), []() {
+                votingUI->reset();
+                
+                votingUI->modal->Show(true, true, nullptr);
+            });
+            votingButton = websiteLink->get_gameObject()->AddComponent<BeatLeader::VotingButton*>();
+            votingButton->Init(votingButtonImage);
         }
 
         upPageButton->get_gameObject()->SetActive(false);
@@ -582,6 +627,7 @@ namespace LeaderboardUI {
         uploadStatus = NULL;
         plvc = NULL;
         scoreDetailsUI = NULL;
+        votingUI = NULL;
         cellScores.clear();
         avatars = {};
         cellHighlights = {};
