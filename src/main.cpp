@@ -14,6 +14,7 @@
 
 #include "include/Utils/ModConfig.hpp"
 #include "include/Utils/ReplaySynchronizer.hpp"
+#include "include/Utils/PlaylistSynchronizer.hpp"
 #include "include/Utils/ModifiersManager.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/RecorderUtils.hpp"
@@ -118,6 +119,7 @@ extern "C" void load() {
     });
 
     ModifiersManager::Sync();
+    PlaylistSynchronizer::SyncPlaylist();
 
     ReplayRecorder::StartRecording([](Replay const& replay, MapStatus status, bool isOst) {
         if (status == MapStatus::cleared) {

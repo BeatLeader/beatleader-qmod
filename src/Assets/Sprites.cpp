@@ -93,11 +93,7 @@ void Sprites::get_AnimatedIcon(string url, const std::function<void(AllFramesRes
 }
 
 void Sprites::GetCountryIcon(string country, const std::function<void(UnityEngine::Sprite*)>& completion) {
-    string lowerCountry;
-    lowerCountry.resize(country.size());
-    transform(country.begin(), country.end(), lowerCountry.begin(), asciitolower);
-    
-    get_Icon("https://cdn.beatleader.xyz/flags/" + lowerCountry + ".png", completion);
+    get_Icon("https://cdn.beatleader.xyz/flags/" + toLower(country) + ".png", completion);
 }
 
 void Sprites::ResetCache() {

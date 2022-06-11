@@ -20,6 +20,14 @@ inline char asciitolower(char in) {
     return in;
 }
 
+inline string toLower(string value) {
+    string result = "";
+    result.resize(value.size());
+    transform(value.begin(), value.end(), result.begin(), asciitolower);
+
+    return result;
+}
+
 inline size_t findCutPosition(string str, size_t max_size) {
   max_size -= 3;
   for (size_t pos = max_size; pos > 0; --pos)

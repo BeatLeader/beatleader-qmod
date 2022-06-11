@@ -34,6 +34,7 @@ add_compile_definitions(USE_CODEGEN_FIELDS)
 # recursively get all src files
 RECURSE_FILES(cpp_file_list ${SOURCE_DIR}/*.cpp)
 RECURSE_FILES(c_file_list ${SOURCE_DIR}/*.c)
+list(APPEND c_file_list ${INCLUDE_DIR}/zip/src/zip.c)
 
 # add all src files to compile
 add_library(
@@ -55,6 +56,8 @@ target_include_directories(${COMPILE_ID} PRIVATE ${INCLUDE_DIR})
 target_include_directories(${COMPILE_ID} PUBLIC ${SHARED_DIR})
 # codegen includes 
 target_include_directories(${COMPILE_ID} PRIVATE ${EXTERN_DIR}/includes/${CODEGEN_ID}/include)
+# zip includes
+target_include_directories(${COMPILE_ID} PRIVATE include/zip/src)
 
 target_link_libraries(${COMPILE_ID} PRIVATE -llog -lz)
 # add extern stuff like libs and other includes
