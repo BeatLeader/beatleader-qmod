@@ -25,14 +25,15 @@ using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
 
-void setupTypeButton(UnityEngine::UI::Button* button) {
-    auto title = button->get_transform()->GetComponentsInChildren<TMPro::TextMeshProUGUI*>()->get(0);
-    title->set_fontSize(3);
-}
+void setupButtonTitle(UnityEngine::UI::Button* button, float offset, int fontSize = 0) {
+    UnityEngine::Object::Destroy(button->get_transform()->Find("Content")->GetComponent<UnityEngine::UI::LayoutElement*>());
 
-void moveTitelButton(UnityEngine::UI::Button* button) {
     auto title = button->get_transform()->GetComponentsInChildren<TMPro::TextMeshProUGUI*>()->get(0);
-    title->set_alignment(TMPro::TextAlignmentOptions::Right);
+    if (fontSize > 0) {
+        title->set_fontSize(fontSize);
+    }
+    
+    title->set_margin(offset);
 }
 
 void setButtonTitleColor(UnityEngine::UI::Button* button, UnityEngine::Color32 color) {
@@ -92,42 +93,42 @@ void BeatLeader::initVotingPopup(
     modalUI->accButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "acc", UnityEngine::Vector2(-20, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::acc, modalUI->accButton);
     });
-    setupTypeButton(modalUI->accButton);
+    setupButtonTitle(modalUI->accButton, -0.5, 3);
 
     modalUI->techButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "tech", UnityEngine::Vector2(-6, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::tech, modalUI->techButton);
     });
-    setupTypeButton(modalUI->techButton);
+    setupButtonTitle(modalUI->techButton, -0.5, 3);
 
     modalUI->midspeedButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "midspeed", UnityEngine::Vector2(8, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::midspeed, modalUI->midspeedButton);
     });
-    setupTypeButton(modalUI->midspeedButton);
+    setupButtonTitle(modalUI->midspeedButton, -0.5, 3);
 
     modalUI->speedButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "speed", UnityEngine::Vector2(22, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::speed, modalUI->speedButton);
     });
-    setupTypeButton(modalUI->speedButton);
+    setupButtonTitle(modalUI->speedButton, -0.5, 3);
 
     modalUI->voteButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Vote", UnityEngine::Vector2(-12.0, -10.0), UnityEngine::Vector2(15.0, 8.0), [callback, modalUI]() {
         callback(true, modalUI->rankable, modalUI->stars, modalUI->type);
     });
-    moveTitelButton(modalUI->voteButton);
+    setupButtonTitle(modalUI->voteButton, -0.5);
 
     modalUI->cancelButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Cancel", UnityEngine::Vector2(12.0, -10.0), UnityEngine::Vector2(15.0, 8.0), [callback]() {
         callback(false, false, 0, 0);
     });
-    moveTitelButton(modalUI->cancelButton);
+    setupButtonTitle(modalUI->cancelButton, -0.5);
 
     modalUI->leftButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "<", UnityEngine::Vector2(-27.0, -10.0), UnityEngine::Vector2(5.0, 6.0), [modalUI]() {
         modalUI->left();
     });
-    setupTypeButton(modalUI->leftButton);
+    setupButtonTitle(modalUI->leftButton, -1.5, 3);
 
     modalUI->rightButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), ">", UnityEngine::Vector2(26.0, -10.0), UnityEngine::Vector2(5.0, 6.0), [modalUI]() {
         modalUI->right();
     });
-    setupTypeButton(modalUI->rightButton);
+    setupButtonTitle(modalUI->rightButton, -1.5, 3);
 
     modalUI->modal->set_name("BLVotingModal");
     *modalUIPointer = modalUI;
@@ -157,6 +158,7 @@ void BeatLeader::RankVotingPopup::reset() {
     noButton->get_gameObject()->SetActive(true);
 
     starSlider->get_gameObject()->SetActive(false);
+    starSlider->set_value(0);
 
     voteButton->set_interactable(false);
 

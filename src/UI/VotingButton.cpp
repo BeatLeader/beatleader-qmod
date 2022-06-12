@@ -34,6 +34,8 @@ void BeatLeader::VotingButton::Init(QuestUI::ClickableImage* imageView) {
     imageView->set_defaultColor(UnityEngine::Color(0.0, 0.0, 0.0, 1.0));
     imageView->set_highlightColor(UnityEngine::Color(1.0, 0.0, 0.0, 1.0));
 
+    this->hoverHint = QuestUI::BeatSaberUI::AddHoverHint(imageView, "Rank voring");
+
     SpinnerValuePropertyId = UnityEngine::Shader::PropertyToID("_SpinnerValue");
     GradientValuePropertyId = UnityEngine::Shader::PropertyToID("_GradientValue");
     StatePropertyId = UnityEngine::Shader::PropertyToID("_State");
@@ -48,20 +50,24 @@ void UpdateMaterial(UnityEngine::Material* materialInstance, float spinnerValue,
 }
 
 void BeatLeader::VotingButton::SetState(int state) {
-
+    this->state = state;
     switch (state)
     {
     case 0:
         UpdateMaterial(materialInstance, 1, 0, 0, UnityEngine::Color(0.2f, 0.2f, 0.2f, 0.0f));
+        hoverHint->set_text("Loading vote status");
         break;
     case 1:
         UpdateMaterial(materialInstance, 0, 0, 0, UnityEngine::Color(0.2f, 0.2f, 0.2f, 0.0f));
+        hoverHint->set_text("Pass this map to vote it for ranked");
         break;
     case 2:
         UpdateMaterial(materialInstance, 0, 1, 1, UnityEngine::Color(1.0f, 1.0f, 1.0f, 0.7f));
+        hoverHint->set_text("Vote for this map ranking status and stars");
         break;
     case 3:
         UpdateMaterial(materialInstance, 0, 0, 2, UnityEngine::Color(0.2f, 0.8f, 0.2f, 0.4f));
+        hoverHint->set_text("Thank you for the vote!");
         break;
     
     default:

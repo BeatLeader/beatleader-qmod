@@ -22,7 +22,7 @@ void ReplayManager::ProcessReplay(Replay const &replay, bool isOst, function<voi
     
     string filename = FileManager::ToFilePath(replay);
     lastReplayFilename = filename;
-    
+
     FileManager::WriteReplay(replay);
 
     getLogger().info("%s",("Replay saved " + filename).c_str());
@@ -46,8 +46,9 @@ void ReplayManager::TryPostReplay(string name, int tryIndex, function<void(Repla
         finished(ReplayUploadStatus::inProgress, "<color=#b103fcff>Posting replay...", 0, 0);
     }
     FILE *replayFile = fopen(name.data(), "rb");
+    chrono::steady_clock::time_point replayPostStart = chrono::steady_clock::now();
     
-    WebUtils::PostFileAsync(WebUtils::API_URL + "replayoculus", replayFile, (long)file_info.st_size, 100, [name, tryIndex, finished, replayFile](long statusCode, string result) {
+    WebUtils::PostFileAsync(WebUtils::API_URL + "replayoculus", replayFile, (long)file_info.st_size, 100, [name, tryIndex, finished, replayFile, replayPostStart](long statusCode, string result, string headers) {
         fclose(replayFile);
         if (statusCode != 200 && tryIndex < 2) {
             getLogger().info("%s", ("Retrying posting replay after " + to_string(statusCode) + " #" + to_string(tryIndex) + " " + std::string(result)).c_str());
@@ -57,7 +58,8 @@ void ReplayManager::TryPostReplay(string name, int tryIndex, function<void(Repla
             finished(ReplayUploadStatus::inProgress, "<color=#ffff00ff>Retrying posting replay after " + to_string(statusCode) + " try #" + to_string(tryIndex) + " " + std::string(result) + "</color>", 0, statusCode);
             TryPostReplay(name, tryIndex + 1, finished);
         } else if (statusCode == 200) {
-            getLogger().info("Replay was posted!");
+            auto duration = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now() - replayPostStart).count();
+            getLogger().info("%s", ("Replay was posted! It took: " + to_string((int)duration) + "msec. \n Headers:\n" + headers).c_str());
             finished(ReplayUploadStatus::finished, "<color=#008000ff>Replay was posted!</color>", 100, statusCode);
             if (!getModConfig().Save.GetValue()) {
                 remove(name.data());

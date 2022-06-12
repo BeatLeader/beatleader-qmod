@@ -64,6 +64,11 @@
       "id": "songloader",
       "versionRange": "=0.9.3",
       "additionalData": {}
+    },
+    {
+      "id": "playlistmanager",
+      "versionRange": "=0.2.3",
+      "additionalData": {}
     }
     
   ],

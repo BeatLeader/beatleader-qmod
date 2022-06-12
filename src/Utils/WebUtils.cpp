@@ -401,7 +401,15 @@ namespace WebUtils {
         return retcode;
     }
 
-    std::thread PostFileAsync(string url, FILE* data, long length, long timeout, function<void(long, string)> const& finished, function<void(float)> const& progressUpdate) {
+    static size_t header_callback(char* buffer, size_t size,
+    size_t nitems, void* userdata)
+    {
+        std::string *headers = (std::string*) userdata;
+        headers->append(buffer, nitems * size);
+        return nitems * size;
+    }
+
+    std::thread PostFileAsync(string url, FILE* data, long length, long timeout, function<void(long, string, string)> const& finished, function<void(float)> const& progressUpdate) {
         std::thread t(
             [url, timeout, data, finished, length, progressUpdate] {
                 string val;
@@ -466,6 +474,10 @@ namespace WebUtils {
                 /* binary data */
                 curl_easy_setopt(curl, CURLOPT_READDATA, &i);
 
+                string responseHeaders;
+                curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);
+                curl_easy_setopt(curl, CURLOPT_HEADERDATA, &responseHeaders);
+
                 CURLcode res = curl_easy_perform(curl);
                 /* Check for errors */
                 if (res != CURLE_OK) {
@@ -474,7 +486,7 @@ namespace WebUtils {
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);
                 //curl_mime_free(form);
-                finished(httpCode, val);
+                finished(httpCode, val, responseHeaders);
             }
         );
         t.detach();
