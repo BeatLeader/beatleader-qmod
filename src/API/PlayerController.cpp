@@ -83,6 +83,7 @@ string PlayerController::Refresh() {
 
 void PlayerController::SignUp(string login, string password, const function<void(string)>& finished) {
     lastErrorDescription = "";
+    remove(WebUtils::getCookieFile().data());
 
     WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", password, login, "signup",
                             [finished](long statusCode, string error) {
@@ -100,6 +101,7 @@ void PlayerController::SignUp(string login, string password, const function<void
 
 void PlayerController::LogIn(string login, string password, const function<void(string)>& finished) {
     lastErrorDescription = "";
+    remove(WebUtils::getCookieFile().data());
 
     WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", password, login, "login",
                             [finished](long statusCode, string error) {
