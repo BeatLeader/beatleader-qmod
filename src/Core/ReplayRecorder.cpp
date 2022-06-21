@@ -14,9 +14,9 @@
 #include "include/Utils/ReplayManager.hpp"
 #include "include/Utils/RecorderUtils.hpp"
 
-#include "beatsaber-hook/shared/utils/hooking.hpp"
+#include "include/API/PlayerController.hpp"
 
-// #include "config-utils/shared/config-utils.hpp"
+#include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "custom-types/shared/register.hpp"
 
 #include "UnityEngine/Application.hpp"
@@ -132,6 +132,8 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLevel, void, SinglePlayerLevelSelectionFlowCoordinator* self, System::Action* beforeSceneSwitchCallback, bool practice) {
         LevelPlay(self, beforeSceneSwitchCallback, practice);
+
+        if (PlayerController::currentPlayer == std::nullopt) return;
 
         std::string timeStamp(std::to_string(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
 

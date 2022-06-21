@@ -18,7 +18,6 @@ using UnityEngine::Resources;
 using namespace GlobalNamespace;
 
 optional<Player> PlayerController::currentPlayer = nullopt;
-optional<Player> PlayerController::platformPlayer = nullopt;
 string PlayerController::lastErrorDescription = "";
 vector<function<void(optional<Player> const&)>> PlayerController::playerChanged;
 
@@ -44,40 +43,9 @@ string PlayerController::RefreshOnline() {
         currentPlayer = nullopt;
     }
     return result;
-}
-
-void PlayerController::RefreshPlatform() {
-    IPlatformUserModel* userModel = NULL;
-    ::Array<PlatformLeaderboardsModel *>* pmarray = Resources::FindObjectsOfTypeAll<PlatformLeaderboardsModel*>();
-    for (size_t i = 0; i < pmarray->Length(); i++)
-    {
-        if (pmarray->get(i)->platformUserModel != NULL) {
-            userModel = pmarray->get(i)->platformUserModel;
-            break;
-        }
-    }
-
-    if (userModel == NULL) { return; }
-
-    auto userInfoTask = userModel->GetUserInfo();
-
-    auto action = il2cpp_utils::MakeDelegate<System::Action_1<System::Threading::Tasks::Task*>*>(classof(System::Action_1<System::Threading::Tasks::Task*>*), (std::function<void(System::Threading::Tasks::Task_1<GlobalNamespace::UserInfo*>*)>)[&](System::Threading::Tasks::Task_1<GlobalNamespace::UserInfo*>* userInfoTask) {
-            UserInfo *ui = userInfoTask->get_Result();
-            if (ui != nullptr) {
-                platformPlayer = Player();
-                platformPlayer->name = to_utf8(csstrtostr(ui->userName));
-                platformPlayer->id = to_utf8(csstrtostr(ui->platformUserId));
-            }
-        }
-    );
-    reinterpret_cast<System::Threading::Tasks::Task*>(userInfoTask)->ContinueWith(action);
-}
+}  
 
 string PlayerController::Refresh() {
-    if (platformPlayer == nullopt) {
-        RefreshPlatform();
-    }
-    
     return RefreshOnline();
 }
 

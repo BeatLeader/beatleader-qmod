@@ -99,7 +99,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         loginField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), (std::string_view)"Login", (std::string_view)"", [](std::string_view value) {
             login = value;
         });
-        login = PlayerController::platformPlayer != std::nullopt ? PlayerController::platformPlayer->name : "";
+        login = "";
         loginField->SetText(il2cpp_utils::createcsstr(login));
         
         passwordField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), (std::string_view)"Password", (std::string_view)"", [](std::string_view value) {

@@ -60,14 +60,14 @@ namespace LevelInfoUI {
             starsLabel = CreateText(self->levelParamsPanel->get_transform(), "0.00", true, UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
             starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            // AddHoverHint(starsLabel, "BeatLeader ranked stars");
+            AddHoverHint(starsLabel->get_gameObject(), "BeatLeader ranked stars");
 
             starsImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3));
 
             ppLabel = CreateText(self->levelParamsPanel->get_transform(), "0", true, UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
             ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             ppLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            // AddHoverHint(ppLabel, "BeatLeader pp for 100%");
+            AddHoverHint(ppLabel->get_gameObject(), "BeatLeader pp for 100%");
             
             ppImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-15.5, 5.6), UnityEngine::Vector2(3, 3));
 

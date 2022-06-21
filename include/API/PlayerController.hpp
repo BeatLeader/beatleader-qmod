@@ -5,7 +5,6 @@ using namespace std;
 
 class PlayerController
 {
-    static void RefreshPlatform();
     static string RefreshOnline();
 public:
     static string Refresh();
@@ -16,6 +15,5 @@ public:
     static bool LogOut();
 
     static optional<Player> currentPlayer;
-    static optional<Player> platformPlayer;
     static string lastErrorDescription;
 };
