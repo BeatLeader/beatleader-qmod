@@ -1,14 +1,12 @@
-#include "include/UI/ScoreDetailsUI.hpp"
+#include "include/UI/ScoreDetails/ScoreDetailsUI.hpp"
 #include "include/Utils/FormatUtils.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/UI/EmojiSupport.hpp"
+#include "include/UI/ScoreDetails/GeneralScoreDetails.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
-#include "UnityEngine/Material.hpp"
-#include "UnityEngine/Rect.hpp"
 #include "UnityEngine/Component.hpp"
-#include "UnityEngine/UI/ColorBlock.hpp"
 
 #include "questui/shared/CustomTypes/Components/Backgroundable.hpp"
 
@@ -21,40 +19,17 @@ using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
 
-void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPointer, Transform* parent){
-    auto modalUI = *modalUIPointer;
-    if (modalUI != nullptr){
-        UnityEngine::GameObject::Destroy(modalUI->modal->get_gameObject());
-    }
-    if (modalUI == nullptr) modalUI = (BeatLeader::ScoreDetailsPopup*) malloc(sizeof(BeatLeader::ScoreDetailsPopup));
-    UnityEngine::Sprite* roundRect = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Sprite*>().FirstOrDefault([](UnityEngine::Sprite* x) { return x->get_name() == "RoundRect10"; });
-    modalUI->modal = CreateModal(parent, UnityEngine::Vector2(60, 30), [](HMUI::ModalView *modal) {}, true);
+BeatLeader::GeneralScoreDetails::GeneralScoreDetails(HMUI::ModalView *modal) noexcept {
 
-    auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(modalUI->modal->get_transform(), NULL, UnityEngine::Vector2(0, 30), UnityEngine::Vector2(24, 24));
-    modalUI->playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
-    modalUI->playerAvatar->Init(playerAvatarImage);
+    datePlayed = CreateText(modal->get_transform(), "", UnityEngine::Vector2(0.0, 11.0));
 
-    modalUI->rank = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(6.0, 16.0));
-    
-    modalUI->name = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(0.0, 18.0));
-    modalUI->name->get_gameObject()->AddComponent<::QuestUI::Backgroundable*>()->ApplyBackground("round-rect-panel");
+    modifiedScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5.0, 2.0));
+    accuracy = CreateText(modal->get_transform(), "", UnityEngine::Vector2(26.0, 2.0));
+    scorePp = CreateText(modal->get_transform(), "", UnityEngine::Vector2(46.0, 2.0));
 
-    EmojiSupport::AddSupport(modalUI->name);
+    scoreDetails = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5, -8));
 
-    modalUI->pp = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(45.0, 16.0));
-
-    modalUI->datePlayed = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(0.0, 11.0));
-
-    modalUI->modifiedScore = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(5.0, 2.0));
-    modalUI->accuracy = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(26.0, 2.0));
-    modalUI->scorePp = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(46.0, 2.0));
-
-    modalUI->scoreDetails = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(5, -8));
-
-    modalUI->sponsorMessage = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(5, -20));
-
-    modalUI->modal->set_name("BLScoreDetailsModal");
-    *modalUIPointer = modalUI;
+    sponsorMessage = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5, -20));
 }
 
 string GetStringWithLabel(string value, string label) {
@@ -107,14 +82,7 @@ string GetDetailsString(Score score) {
     return result.str();
 }
 
-void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
-    playerAvatar->SetPlayer(score.player.avatar, score.player.role);
-
-    name->SetText(FormatUtils::FormatNameWithClans(score.player));
-    name->set_alignment(TMPro::TextAlignmentOptions::Center);
-    rank->SetText(FormatUtils::FormatRank(score.player.rank, true));
-    pp->SetText(FormatUtils::FormatPP(score.player.pp));
-
+void BeatLeader::GeneralScoreDetails::setScore(const Score& score) {
     datePlayed->SetText(GetTimeSetString(score));
     datePlayed->set_alignment(TMPro::TextAlignmentOptions::Center);
 
@@ -126,4 +94,13 @@ void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
 
     sponsorMessage->SetText(score.player.sponsorMessage);
     sponsorMessage->set_alignment(TMPro::TextAlignmentOptions::Center);
+}
+
+void BeatLeader::GeneralScoreDetails::setSelected(bool selected) {
+    datePlayed->get_gameObject()->SetActive(selected);
+    modifiedScore->get_gameObject()->SetActive(selected);
+    accuracy->get_gameObject()->SetActive(selected);
+    scorePp->get_gameObject()->SetActive(selected);
+    scoreDetails->get_gameObject()->SetActive(selected);
+    sponsorMessage->get_gameObject()->SetActive(selected);
 }

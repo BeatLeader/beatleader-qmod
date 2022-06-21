@@ -8,7 +8,7 @@
 #include "include/Enhancers/MapEnhancer.hpp"
 
 #include "include/UI/UIUtils.hpp"
-#include "include/UI/ScoreDetailsUI.hpp"
+#include "include/UI/ScoreDetails/ScoreDetailsUI.hpp"
 #include "include/UI/VotingButton.hpp"
 #include "include/UI/VotingUI.hpp"
 #include "include/UI/LogoAnimation.hpp"

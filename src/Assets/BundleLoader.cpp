@@ -8,12 +8,22 @@ Material* BundleLoader::UIAdditiveGlowMaterial;
 Material* BundleLoader::scoreBackgroundMaterial;
 Material* BundleLoader::scoreUnderlineMaterial;
 Material* BundleLoader::VotingButtonMaterial;
+Material* BundleLoader::handAccIndicatorMaterial;
+Material* BundleLoader::accGridBackgroundMaterial;
 Sprite* BundleLoader::locationIcon;
 Sprite* BundleLoader::rowSeparatorIcon;
 Sprite* BundleLoader::beatLeaderLogoGradient;
 Sprite* BundleLoader::transparentPixel;
 Sprite* BundleLoader::fileError;
 Sprite* BundleLoader::modifiersIcon;
+
+Sprite* BundleLoader::overviewIcon;
+Sprite* BundleLoader::detailsIcon;
+Sprite* BundleLoader::gridIcon;
+Sprite* BundleLoader::graphIcon;
+Sprite* BundleLoader::websiteLinkIcon;
+Sprite* BundleLoader::discordLinkIcon;
+Sprite* BundleLoader::patreonLinkIcon;
 
 Shader* BundleLoader::TMP_SpriteCurved;
 
@@ -42,6 +52,8 @@ void BundleLoader::LoadAssets(AssetBundle* assetBundle) {
     scoreBackgroundMaterial = assetBundle->LoadAsset<Material*>("ScoreBackgroundMaterial");
     scoreUnderlineMaterial = assetBundle->LoadAsset<Material*>("ScoreUnderlineMaterial");
     VotingButtonMaterial = assetBundle->LoadAsset<Material*>("VotingButtonMaterial");
+    handAccIndicatorMaterial = assetBundle->LoadAsset<Material*>("HandAccIndicatorMaterial");
+    accGridBackgroundMaterial = assetBundle->LoadAsset<Material*>("AccGridBackgroundMaterial");
 
     locationIcon = assetBundle->LoadAsset<Sprite*>("LocationIcon");
     rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>("RowSeparatorIcon");
@@ -49,6 +61,14 @@ void BundleLoader::LoadAssets(AssetBundle* assetBundle) {
     transparentPixel = assetBundle->LoadAsset<Sprite*>("TransparentPixel");
     fileError = assetBundle->LoadAsset<Sprite*>("FileError");
     modifiersIcon = assetBundle->LoadAsset<Sprite*>("ModifiersIcon");
+
+    overviewIcon = assetBundle->LoadAsset<Sprite*>("BL_OverviewIcon");
+    detailsIcon = assetBundle->LoadAsset<Sprite*>("BL_DetailsIcon");
+    gridIcon = assetBundle->LoadAsset<Sprite*>("BL_GridIcon");
+    graphIcon = assetBundle->LoadAsset<Sprite*>("BL_GraphIcon");
+    websiteLinkIcon = assetBundle->LoadAsset<Sprite*>("BL_Website");
+    discordLinkIcon = assetBundle->LoadAsset<Sprite*>("BL_Discord");
+    patreonLinkIcon = assetBundle->LoadAsset<Sprite*>("BL_Patreon");
 
     TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
 }

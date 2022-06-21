@@ -244,6 +244,7 @@ namespace ReplayRecorder {
 
         if (!_replayNoteIdCache.count(noteData)) return;
         int noteId = _replayNoteIdCache[noteData];
+        if (replay->notes.size() <= noteId) return;
         NoteEvent& noteEvent = replay->notes.at(noteId);
         bool isBomb = noteData->colorType == ColorType::None;
         
