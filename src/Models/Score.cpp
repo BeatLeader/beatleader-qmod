@@ -6,6 +6,7 @@ Score::Score(rapidjson::Value const& document) {
     auto const& playerObject = document["player"];
     player = Player(playerObject);
 
+    id = document["id"].GetInt();
     pp = document["pp"].GetFloat();
     rank = document["rank"].GetInt();
     accuracy = document["accuracy"].GetFloat();

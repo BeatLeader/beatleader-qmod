@@ -8,12 +8,22 @@ Material* BundleLoader::UIAdditiveGlowMaterial;
 Material* BundleLoader::scoreBackgroundMaterial;
 Material* BundleLoader::scoreUnderlineMaterial;
 Material* BundleLoader::VotingButtonMaterial;
+Material* BundleLoader::handAccIndicatorMaterial;
+Material* BundleLoader::accGridBackgroundMaterial;
 Sprite* BundleLoader::locationIcon;
 Sprite* BundleLoader::rowSeparatorIcon;
 Sprite* BundleLoader::beatLeaderLogoGradient;
 Sprite* BundleLoader::transparentPixel;
 Sprite* BundleLoader::fileError;
 Sprite* BundleLoader::modifiersIcon;
+
+Sprite* BundleLoader::overviewIcon;
+Sprite* BundleLoader::detailsIcon;
+Sprite* BundleLoader::gridIcon;
+Sprite* BundleLoader::graphIcon;
+Sprite* BundleLoader::websiteLinkIcon;
+Sprite* BundleLoader::discordLinkIcon;
+Sprite* BundleLoader::patreonLinkIcon;
 
 Shader* BundleLoader::TMP_SpriteCurved;
 
@@ -42,6 +52,8 @@ void BundleLoader::LoadAssets(AssetBundle* assetBundle) {
     scoreBackgroundMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("ScoreBackgroundMaterial"));
     scoreUnderlineMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("ScoreUnderlineMaterial"));
     VotingButtonMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("VotingButtonMaterial"));
+    handAccIndicatorMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("HandAccIndicatorMaterial"));
+    accGridBackgroundMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("AccGridBackgroundMaterial"));
 
     locationIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("LocationIcon"));
     rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("RowSeparatorIcon"));
@@ -51,4 +63,12 @@ void BundleLoader::LoadAssets(AssetBundle* assetBundle) {
     modifiersIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("ModifiersIcon"));
 
     TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>(il2cpp_utils::createcsstr("TMP_SpriteCurved"));
+
+    overviewIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("BL_OverviewIcon"));
+    detailsIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("BL_DetailsIcon"));
+    gridIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("BL_GridIcon"));
+    graphIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("BL_GraphIcon"));
+    websiteLinkIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("BL_Website"));
+    discordLinkIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("BL_Discord"));
+    patreonLinkIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("BL_Patreon"));
 }

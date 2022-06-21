@@ -14,18 +14,28 @@ DECLARE_FILE(bl_bundle,)
 class BundleLoader {
 public:
     static AssetBundle* bundle;
-    static Material *logoMaterial;
-    static Material *playerAvatarMaterial;
-    static Material *UIAdditiveGlowMaterial;
-    static Material *scoreBackgroundMaterial;
-    static Material *scoreUnderlineMaterial;
-    static Material *VotingButtonMaterial;
-    static Sprite *locationIcon;
-    static Sprite *rowSeparatorIcon;
-    static Sprite *beatLeaderLogoGradient;
-    static Sprite *transparentPixel;
-    static Sprite *fileError;
-    static Sprite *modifiersIcon;
+    static Material* logoMaterial;
+    static Material* playerAvatarMaterial;
+    static Material* UIAdditiveGlowMaterial;
+    static Material* scoreBackgroundMaterial;
+    static Material* scoreUnderlineMaterial;
+    static Material* VotingButtonMaterial;
+    static Material* handAccIndicatorMaterial;
+    static Material* accGridBackgroundMaterial;
+    static Sprite* locationIcon;
+    static Sprite* rowSeparatorIcon;
+    static Sprite* beatLeaderLogoGradient;
+    static Sprite* transparentPixel;
+    static Sprite* fileError;
+    static Sprite* modifiersIcon;
+
+    static Sprite* overviewIcon;
+    static Sprite* detailsIcon;
+    static Sprite* gridIcon;
+    static Sprite* graphIcon;
+    static Sprite* websiteLinkIcon;
+    static Sprite* discordLinkIcon;
+    static Sprite* patreonLinkIcon;
 
     static Shader* TMP_SpriteCurved;
 

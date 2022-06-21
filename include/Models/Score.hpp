@@ -8,7 +8,7 @@ using namespace std;
 
 struct Score
 {
-    // int id;
+    int id;
     // int baseScore;
     int modifiedScore;
     float accuracy;
