@@ -59,7 +59,13 @@
       "id": "sombrero",
       "versionRange": "^0.1.30",
       "additionalData": {}
+    },
+    {
+      "id": "songloader",
+      "versionRange": "=0.7.1",
+      "additionalData": {}
     }
+    
   ],
   "additionalData": {}
 }
