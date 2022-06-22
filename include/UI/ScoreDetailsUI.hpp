@@ -17,7 +17,7 @@
 #include "include/UI/PlayerAvatar.hpp"
 
 namespace BeatLeader {
-    class ModalPopup {
+    class ScoreDetailsPopup {
         public:
             HMUI::ModalView* modal;
 
@@ -40,5 +40,5 @@ namespace BeatLeader {
             
             void setScore(const Score& score);
     };
-    void initModalPopup(ModalPopup** modalUI, UnityEngine::Transform* parent);
+    void initScoreDetailsPopup(ScoreDetailsPopup** modalUI, UnityEngine::Transform* parent);
 }

@@ -9,6 +9,8 @@
 
 #include "include/UI/UIUtils.hpp"
 #include "include/UI/ScoreDetailsUI.hpp"
+#include "include/UI/VotingButton.hpp"
+#include "include/UI/VotingUI.hpp"
 #include "include/UI/LogoAnimation.hpp"
 #include "include/UI/PlayerAvatar.hpp"
 #include "include/UI/EmojiSupport.hpp"
@@ -181,12 +183,11 @@ namespace LeaderboardUI {
     QuestUI::ClickableImage* downPageButton = NULL;
     QuestUI::ClickableImage* modifiersButton = NULL;
     HMUI::HoverHint* modifiersButtonHover;
+    BeatLeader::VotingButton* votingButton = NULL;
     UnityEngine::GameObject* parentScreen = NULL;
 
-    HMUI::ModalView* scoreDetails = NULL;
-    TMPro::TextMeshProUGUI* scorePlayerName = NULL;
-
-    BeatLeader::ModalPopup* scoreDetailsUI = NULL;
+    BeatLeader::ScoreDetailsPopup* scoreDetailsUI = NULL;
+    BeatLeader::RankVotingPopup* votingUI = NULL;
 
     int page = 1;
     bool showRetryButton = false;
@@ -306,6 +307,8 @@ namespace LeaderboardUI {
     }
 
     static string lastUrl = "";
+    static string lastVotingStatusUrl = "";
+    static string votingUrl = "";
 
     void refreshFromTheServer() {
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level());
@@ -406,6 +409,18 @@ namespace LeaderboardUI {
                 plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
             });
         });
+        
+        string votingStatusUrl = WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode;
+        votingUrl = WebUtils::API_URL + "vote/" + hash + "/" + difficulty + "/" + mode;
+        if (lastVotingStatusUrl != votingStatusUrl) {
+            votingButton->SetState(0);
+            lastVotingStatusUrl = votingStatusUrl;
+            WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
+                if (votingStatusUrl == lastVotingStatusUrl && status == 200) {
+                    votingButton->SetState(stoi(response));
+                }
+            }, [](float progress){});
+        }
 
         plvc->loadingControl->ShowText(il2cpp_utils::createcsstr("Loading"), true);
     }
@@ -423,6 +438,27 @@ namespace LeaderboardUI {
         } else {
             modifiersButtonHover->set_text(il2cpp_utils::createcsstr("Show leaderboard with positive modifiers"));
         }
+    }
+
+    void voteCallback(bool voted, bool rankable, float stars, int type) {
+        if (voted) {
+            votingButton->SetState(0);
+            string rankableString = "?rankability=" + (rankable ? (string)"1.0" : (string)"0.0");
+            string starsString = stars > 0 ? "&stars=" + to_string_wprecision(stars, 2) : "";
+            string typeString = type > 0 ? "&type=" + to_string(type) : "";
+            string currentVotingUrl = votingUrl;
+            WebUtils::PostJSONAsync(votingUrl + rankableString + starsString + typeString, "", [currentVotingUrl](long status, string response) {
+                if (votingUrl != currentVotingUrl) return;
+
+                if (status == 200) {
+                    votingButton->SetState(stoi(response));
+                } else {
+                    votingButton->SetState(1);
+                }
+            });
+        }
+
+        votingUI->modal->Hide(true, nullptr);
     }
 
     static bool isLocal = false;
@@ -484,7 +520,8 @@ namespace LeaderboardUI {
 
             parentScreen = CreateCustomScreen(plvc, UnityEngine::Vector2(480, 160), plvc->screen->get_transform()->get_position(), 140);
 
-            BeatLeader::initModalPopup(&scoreDetailsUI, plvc->get_transform());
+            BeatLeader::initScoreDetailsPopup(&scoreDetailsUI, self->get_transform());
+            BeatLeader::initVotingPopup(&votingUI, self->get_transform(), voteCallback);
 
             auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(20, 20));
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
@@ -539,7 +576,7 @@ namespace LeaderboardUI {
                 });
             }
 
-            modifiersButton = CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 25), UnityEngine::Vector2(4, 4), [](){
+            modifiersButton = CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
                 modifiers = !modifiers;
                 getModConfig().Modifiers.SetValue(modifiers);
                 clearTable();
@@ -549,6 +586,14 @@ namespace LeaderboardUI {
             modifiers = getModConfig().Modifiers.GetValue();
             modifiersButtonHover = ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton->get_gameObject(), "Show leaderboard without positive modifiers");
             updateModifiersButton();
+
+            auto votingButtonImage = CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 22), UnityEngine::Vector2(4, 4), []() {
+                votingUI->reset();
+                
+                votingUI->modal->Show(true, true, nullptr);
+            });
+            votingButton = websiteLink->get_gameObject()->AddComponent<BeatLeader::VotingButton*>();
+            votingButton->Init(votingButtonImage);
 
             if (PlayerController::currentPlayer != std::nullopt) {
                 updatePlayerInfoLabel();
@@ -676,14 +721,14 @@ namespace LeaderboardUI {
             });
             resize(showBeatLeaderButton, 170, 0);
 
-            if (!showBeatLeader) {
-                QuestUI::MainThreadScheduler::Schedule([] {
-                    HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find(il2cpp_utils::createcsstr("HeaderPanel"))->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
-                    imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
-                    imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
-                    imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
-                });
-            }
+            // if (!showBeatLeader) {
+            //     QuestUI::MainThreadScheduler::Schedule([] {
+            //         HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find(il2cpp_utils::createcsstr("HeaderPanel"))->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
+            //         imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
+            //         imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
+            //         imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
+            //     });
+            // }
             
             updateSelectedLeaderboard();
         }
@@ -889,6 +934,7 @@ namespace LeaderboardUI {
         uploadStatus = NULL;
         plvc = NULL;
         scoreDetailsUI = NULL;
+        votingUI = NULL;
         cellScores.clear();
         avatars = {};
         cellHighlights = {};

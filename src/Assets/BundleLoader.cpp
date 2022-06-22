@@ -7,6 +7,7 @@ Material* BundleLoader::playerAvatarMaterial;
 Material* BundleLoader::UIAdditiveGlowMaterial;
 Material* BundleLoader::scoreBackgroundMaterial;
 Material* BundleLoader::scoreUnderlineMaterial;
+Material* BundleLoader::VotingButtonMaterial;
 Sprite* BundleLoader::locationIcon;
 Sprite* BundleLoader::rowSeparatorIcon;
 Sprite* BundleLoader::beatLeaderLogoGradient;
@@ -40,6 +41,7 @@ void BundleLoader::LoadAssets(AssetBundle* assetBundle) {
     UIAdditiveGlowMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("UIAdditiveGlow"));
     scoreBackgroundMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("ScoreBackgroundMaterial"));
     scoreUnderlineMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("ScoreUnderlineMaterial"));
+    VotingButtonMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("VotingButtonMaterial"));
 
     locationIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("LocationIcon"));
     rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("RowSeparatorIcon"));

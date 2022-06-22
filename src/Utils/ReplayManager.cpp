@@ -22,17 +22,7 @@ void ReplayManager::ProcessReplay(Replay const &replay, bool isOst, function<voi
     
     string filename = FileManager::ToFilePath(replay);
     lastReplayFilename = filename;
-
-    struct stat buffer;
-    if ((stat (filename.c_str(), &buffer) == 0)) {
-        auto info = FileManager::ReadInfo(filename);
-        getLogger().info("%s",("Modifiers " + info->modifiers + " " + replay.info.modifiers).c_str());
-        if (info != std::nullopt &&
-        (float)info->score * GetTotalMultiplier(info->modifiers) >= (float)replay.info.score * GetTotalMultiplier(replay.info.modifiers)) {
-            finished(ReplayUploadStatus::finished, "<color=#008000ff>Score not beaten</color>", 0, -1);
-            return; 
-        }
-    }
+    
     FileManager::WriteReplay(replay);
 
     getLogger().info("%s",("Replay saved " + filename).c_str());

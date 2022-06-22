@@ -21,12 +21,13 @@ using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
 
-void BeatLeader::initModalPopup(BeatLeader::ModalPopup** modalUIPointer, Transform* parent){
+void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPointer, Transform* parent){
     auto modalUI = *modalUIPointer;
     if (modalUI != nullptr){
         UnityEngine::GameObject::Destroy(modalUI->modal->get_gameObject());
     }
-    if (modalUI == nullptr) modalUI = (BeatLeader::ModalPopup*) malloc(sizeof(BeatLeader::ModalPopup));
+
+    if (modalUI == nullptr) modalUI = (BeatLeader::ScoreDetailsPopup*) malloc(sizeof(BeatLeader::ScoreDetailsPopup));
     UnityEngine::Sprite* roundRect = NULL;
     auto roundRects = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Sprite*>();
     for (int i = 0; i < roundRects->Length(); i++)
@@ -116,7 +117,7 @@ string GetDetailsString(Score score) {
     return result.str();
 }
 
-void BeatLeader::ModalPopup::setScore(const Score& score) {
+void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
     playerAvatar->SetPlayer(il2cpp_utils::createcsstr(score.player.avatar), il2cpp_utils::createcsstr(score.player.role));
 
     name->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatNameWithClans(score.player)));
