@@ -13,6 +13,7 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include "songloader/shared/API.hpp"
+#include "playlistmanager/shared/PlaylistManager.hpp"
 
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
@@ -42,7 +43,6 @@ void DownloadBeatmap(string path, string hash) {
             QuestUI::MainThreadScheduler::Schedule([] {
                 getLogger().info("%s", "Refreshing songs");
                 RuntimeSongLoader::API::RefreshSongs(false);
-                // RuntimeSongLoader::API::RefreshPacks(false);
             });
         }
     });
@@ -60,9 +60,7 @@ void GetBeatmap(std::string hash) {
 void ActuallySyncPlaylist() {
     if (PlayerController::currentPlayer == std::nullopt) return;
 
-    WebUtils::GetAsync("https://cdn.beatleader.xyz/playlists/" + PlayerController::currentPlayer->id + "oneclick.bplist", 64, [](long status, string result) {
-        string playlistPath = "sdcard/ModData/com.beatgames.beatsaber/Mods/PlaylistManager/Playlists/BLSynced.json";
-        
+    WebUtils::GetAsync(WebUtils::API_URL + "user/oneclickplaylist", 64, [](long status, string result) {
         rapidjson::Document playlist;
         playlist.Parse(result.data());
         if (playlist.HasParseError() || !playlist.IsObject()) return;
@@ -71,7 +69,7 @@ void ActuallySyncPlaylist() {
         if ((int)songs.Size() == 0) return;
 
         ofstream outfile;
-        outfile.open(playlistPath);
+        outfile.open("sdcard/ModData/com.beatgames.beatsaber/Mods/PlaylistManager/Playlists/BLSynced.json");
         outfile << result << endl;
         outfile.close();
         
@@ -87,12 +85,16 @@ void ActuallySyncPlaylist() {
     });
 }
 
-void PlaylistSynchronizer::SyncPlaylist()
-{
+void PlaylistSynchronizer::SyncPlaylist() {
     RuntimeSongLoader::API::AddSongsLoadedEvent(
         [] (auto songs) {
             if (mapsSynchronized) return;
             ActuallySyncPlaylist();
+        }
+    );
+    RuntimeSongLoader::API::AddRefreshLevelPacksEvent(
+        [] (RuntimeSongLoader::SongLoaderBeatmapLevelPackCollectionSO* customBeatmapLevelPackCollectionSO) {
+            PlaylistManager::LoadPlaylists(customBeatmapLevelPackCollectionSO, true);
         }
     );
 }

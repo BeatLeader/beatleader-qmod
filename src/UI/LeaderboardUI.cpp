@@ -207,6 +207,9 @@ namespace LeaderboardUI {
     static UnityEngine::Color someoneElseScoreColor = UnityEngine::Color(0.07, 0.0, 0.14, 0.05);
 
     static bool bundleLoaded = false;
+    static string lastUrl = "";
+    static string lastVotingStatusUrl = "";
+    static string votingUrl = "";
 
     static vector<UnityEngine::Transform*> ssElements;
     bool ssInstalled = true;
@@ -290,6 +293,18 @@ namespace LeaderboardUI {
         }
     }
 
+    void updateVotingButton(string votingStatusUrl) {
+        votingButton->SetState(0);
+        votingUI->modal->Hide(true, nullptr);
+
+        lastVotingStatusUrl = votingStatusUrl;
+        WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
+            if (votingStatusUrl == lastVotingStatusUrl && status == 200) {
+                votingButton->SetState(stoi(response));
+            }
+        }, [](float progress){});
+    }
+
     UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootView, UnityEngine::Vector2 screenSize, UnityEngine::Vector3 position, float curvatureRadius) {
         auto gameObject = QuestUI::BeatSaberUI::CreateCanvas();
         auto screen = gameObject->AddComponent<HMUI::Screen*>();
@@ -305,10 +320,6 @@ namespace LeaderboardUI {
         }
         return gameObject;
     }
-
-    static string lastUrl = "";
-    static string lastVotingStatusUrl = "";
-    static string votingUrl = "";
 
     void refreshFromTheServer() {
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level());
@@ -413,13 +424,7 @@ namespace LeaderboardUI {
         string votingStatusUrl = WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode;
         votingUrl = WebUtils::API_URL + "vote/" + hash + "/" + difficulty + "/" + mode;
         if (lastVotingStatusUrl != votingStatusUrl) {
-            votingButton->SetState(0);
-            lastVotingStatusUrl = votingStatusUrl;
-            WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
-                if (votingStatusUrl == lastVotingStatusUrl && status == 200) {
-                    votingButton->SetState(stoi(response));
-                }
-            }, [](float progress){});
+            updateVotingButton(votingStatusUrl);
         }
 
         plvc->loadingControl->ShowText(il2cpp_utils::createcsstr("Loading"), true);
@@ -588,8 +593,9 @@ namespace LeaderboardUI {
             updateModifiersButton();
 
             auto votingButtonImage = CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 22), UnityEngine::Vector2(4, 4), []() {
-                votingUI->reset();
+                if (votingButton->state != 2) return;
                 
+                votingUI->reset();
                 votingUI->modal->Show(true, true, nullptr);
             });
             votingButton = websiteLink->get_gameObject()->AddComponent<BeatLeader::VotingButton*>();
@@ -860,6 +866,7 @@ namespace LeaderboardUI {
             {
                 case ReplayUploadStatus::finished:
                     logoAnimation->SetAnimating(false);
+                    updateVotingButton(lastVotingStatusUrl);
                     plvc->Refresh(true, true);
                     break;
                 case ReplayUploadStatus::error:
