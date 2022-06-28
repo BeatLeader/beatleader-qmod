@@ -13,6 +13,7 @@
 
 #include "include/Utils/ReplayManager.hpp"
 #include "include/Utils/RecorderUtils.hpp"
+#include "include/API/PlayerController.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 
@@ -70,6 +71,13 @@
 #include "GlobalNamespace/BadCutScoringElement.hpp"
 #include "GlobalNamespace/GoodCutScoringElement.hpp"
 #include "GlobalNamespace/MissScoringElement.hpp"
+#include "GlobalNamespace/MultiplayerController.hpp"
+#include "GlobalNamespace/MultiplayerLevelScenesTransitionSetupDataSO.hpp"
+#include "GlobalNamespace/MultiplayerResultsData.hpp"
+#include "GlobalNamespace/MultiplayerPlayerResultsData.hpp"
+#include "GlobalNamespace/MultiplayerLevelCompletionResults.hpp"
+#include "GlobalNamespace/PlayersSpecificSettingsAtGameStartModel.hpp"
+#include "GlobalNamespace/PlayerSpecificSettingsNetSerializable.hpp"
 
 #include "main.hpp"
 
@@ -126,6 +134,20 @@ namespace ReplayRecorder {
         mapEnhancer.colorScheme = self->colorScheme;
     }
 
+    void collectMultiplayerMapData(MultiplayerLevelScenesTransitionSetupDataSO* self) {
+        GameplayCoreSceneSetupData* gameplayCoreSceneSetupData = reinterpret_cast<GameplayCoreSceneSetupData*>(self->sceneSetupDataArray->get(2));
+
+        isOst = !to_utf8(csstrtostr(gameplayCoreSceneSetupData->previewBeatmapLevel->get_levelID())).starts_with("custom_level");
+
+        mapEnhancer.difficultyBeatmap = self->difficultyBeatmap;
+        mapEnhancer.previewBeatmapLevel = gameplayCoreSceneSetupData->previewBeatmapLevel;
+        mapEnhancer.gameplayModifiers = gameplayCoreSceneSetupData->gameplayModifiers;
+        mapEnhancer.playerSpecificSettings = gameplayCoreSceneSetupData->playerSpecificSettings;
+        mapEnhancer.practiceSettings = NULL;
+        mapEnhancer.environmentInfo = self->multiplayerEnvironmentInfo;
+        mapEnhancer.colorScheme = self->colorScheme;
+    }
+
     void OnPlayerHeightChange(float height)
     {
         if (audioTimeSyncController && automaticPlayerHeight && replay != nullopt) {
@@ -133,9 +155,7 @@ namespace ReplayRecorder {
         }
     }
 
-    MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLevel, void, SinglePlayerLevelSelectionFlowCoordinator* self, System::Action* beforeSceneSwitchCallback, bool practice) {
-        LevelPlay(self, beforeSceneSwitchCallback, practice);
-
+    void startReplay() {
         std::string timeStamp(std::to_string(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
 
         recording = true;
@@ -143,6 +163,25 @@ namespace ReplayRecorder {
         replay.emplace(ReplayInfo(modInfo.version, UnityEngine::Application::get_version(), timeStamp));
 
         userEnhancer.Enhance(replay.value());
+       
+    }
+
+    MAKE_HOOK_MATCH(MultiplayerLevelPlay, &MultiplayerController::StartGameplay, void, MultiplayerController* self, float syncTime) {
+        MultiplayerLevelPlay(self, syncTime);
+
+        if (PlayerController::currentPlayer == std::nullopt) return;
+
+        startReplay();
+        
+        automaticPlayerHeight = self->playersSpecificSettingsAtGameStartModel->localPlayerSpecificSettings->automaticPlayerHeight;;
+    }
+
+    MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLevel, void, SinglePlayerLevelSelectionFlowCoordinator* self, System::Action* beforeSceneSwitchCallback, bool practice) {
+        LevelPlay(self, beforeSceneSwitchCallback, practice);
+
+        if (PlayerController::currentPlayer == std::nullopt) return;
+
+        startReplay();
         automaticPlayerHeight = self->get_playerSettings()->automaticPlayerHeight;
     }
 
@@ -182,6 +221,31 @@ namespace ReplayRecorder {
         if (self->gameMode != "Party" && replay != nullopt) {
             collectMapData(self);
             processResults(levelCompletionResults);
+        }
+    }
+
+    void processMultiplayerResults(MultiplayerResultsData* levelCompletionResults) {
+        auto results = levelCompletionResults->localPlayerResultData->multiplayerLevelCompletionResults->levelCompletionResults; 
+
+        replay->info.score = results->multipliedScore;
+
+        mapEnhancer.energy = results->energy;
+        mapEnhancer.Enhance(replay.value());
+        
+        switch (levelCompletionResults->localPlayerResultData->multiplayerLevelCompletionResults->playerLevelEndReason)
+        {
+            case MultiplayerLevelCompletionResults::MultiplayerPlayerLevelEndReason::Cleared:
+                replayCallback(*replay, MapStatus::cleared, isOst);
+                break;
+        }
+    }
+
+    MAKE_HOOK_MATCH(ProcessResultsMultiplayer, &MultiplayerLevelScenesTransitionSetupDataSO::Finish, void, MultiplayerLevelScenesTransitionSetupDataSO* self, MultiplayerResultsData* levelCompletionResults) {
+        ProcessResultsMultiplayer(self, levelCompletionResults);
+        recording = false;
+        if (replay != nullopt) {
+            collectMultiplayerMapData(self);
+            processMultiplayerResults(levelCompletionResults);
         }
     }
 
@@ -465,6 +529,8 @@ namespace ReplayRecorder {
         INSTALL_HOOK(logger, PlayerHeightDetectorStart);
         INSTALL_HOOK(logger, ScoreControllerStart);
         INSTALL_HOOK(logger, ScoreControllerLateUpdate);
+        INSTALL_HOOK(logger, MultiplayerLevelPlay);
+        INSTALL_HOOK(logger, ProcessResultsMultiplayer);
 
         getLogger().info("Installed all ReplayRecorder hooks!");
 

@@ -117,6 +117,7 @@ namespace LeaderboardUI {
 
     BeatLeader::ScoreDetailsPopup* scoreDetailsUI = NULL;
     BeatLeader::RankVotingPopup* votingUI = NULL;
+    bool visible = false;
 
     int page = 1;
     int selectedScore = 11;
@@ -192,6 +193,7 @@ namespace LeaderboardUI {
         }
 
         if (parentScreen != NULL) {
+            visible = true;
             parentScreen->SetActive(true);
         }
     }
@@ -201,6 +203,7 @@ namespace LeaderboardUI {
 
         bundleLoaded = false;
         if (parentScreen != NULL) {
+            visible = false;
             parentScreen->SetActive(false);
         }
     }
@@ -439,6 +442,7 @@ namespace LeaderboardUI {
             self->scoreScopes = scoreScopes;
 
             parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(480, 160), self->screen->get_transform()->get_position(), 140);
+            visible = true;
 
             BeatLeader::initScoreDetailsPopup(&scoreDetailsUI, self->get_transform());
             BeatLeader::initVotingPopup(&votingUI, self->get_transform(), voteCallback);
@@ -619,7 +623,8 @@ namespace LeaderboardUI {
     }
 
     void updateStatus(ReplayUploadStatus status, string description, float progress) {
-        uploadStatus->SetText(description);
+        if (visible) {
+             uploadStatus->SetText(description);
         switch (status)
         {
             case ReplayUploadStatus::finished:
@@ -637,6 +642,9 @@ namespace LeaderboardUI {
                     uploadStatus->SetText("<color=#b103fcff>Posting replay: Finishing up...");
                 break;
         }
+
+        }
+       
     }
 
     MAKE_HOOK_MATCH(LocalLeaderboardDidActivate, &LocalLeaderboardViewController::DidActivate, void, LocalLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
