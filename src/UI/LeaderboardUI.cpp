@@ -193,7 +193,7 @@ namespace LeaderboardUI {
     bool showRetryButton = false;
     int selectedScore = 11;
     bool modifiers = true;
-    static vector<Score> scoreVector = vector<Score>(10);
+    static vector<Score> scoreVector = vector<Score>(11);
 
     map<LeaderboardTableCell*, HMUI::ImageView*> avatars;
     map<LeaderboardTableCell*, HMUI::ImageView*> cellBackgrounds;
@@ -381,6 +381,7 @@ namespace LeaderboardUI {
             int pageNum = metadata["page"].GetInt();
             int total = metadata["total"].GetInt();
             plvc->scores->Clear();
+            int topRank = 0;
 
             for (int index = 0; index < 10; ++index)
             {
@@ -390,6 +391,10 @@ namespace LeaderboardUI {
                     
                     Score currentScore = Score(score);
                     scoreVector[index] = currentScore;
+
+                    if (index == 0) {
+                        topRank = currentScore.rank;
+                    }
                     
                     if (currentScore.playerId.compare(PlayerController::currentPlayer->id) == 0) {
                         selectedScore = index;
@@ -403,9 +408,37 @@ namespace LeaderboardUI {
                     plvc->scores->Add(scoreData);
                 }
             }
+            plvc->leaderboardTableView->rowHeight = 6;
+
+            if (selectedScore == 11 && !result["selection"].IsNull()) {
+                Score currentScore = Score(result["selection"]);
+
+                LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
+                        currentScore.modifiedScore, 
+                        generateLabel(currentScore), 
+                        currentScore.rank, 
+                        false);
+                
+                if (currentScore.rank > topRank) {
+                    plvc->scores->Add(scoreData);
+                    scoreVector[10] = currentScore;
+                    selectedScore = 10;
+                } else {
+                    for (size_t i = 10; i > 0; i--)
+                    {
+                        scoreVector[i] = scoreVector[i - 1];
+                    }
+                    plvc->scores->Insert(0, scoreData);
+                    scoreVector[0] = currentScore;
+                    selectedScore = 0;
+                }
+                if (plvc->scores->get_Count() > 10) {
+                    plvc->leaderboardTableView->rowHeight = 5.5;
+                }
+            }
                 
             plvc->leaderboardTableView->scores = plvc->scores;
-            plvc->leaderboardTableView->specialScorePos = 10;
+            plvc->leaderboardTableView->specialScorePos = 12;
             QuestUI::MainThreadScheduler::Schedule([pageNum, perPage, total] {
                 if (sspageUpButton != NULL) {
                     sspageDownButton->set_interactable(pageNum != 1);
@@ -469,7 +502,7 @@ namespace LeaderboardUI {
     static bool isLocal = false;
 
     void clearTable() {
-        selectedScore = 10;
+        selectedScore = 11;
         if (plvc->leaderboardTableView->scores != NULL) {
             plvc->leaderboardTableView->scores->Clear();
         }
