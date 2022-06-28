@@ -22,6 +22,10 @@ public:
     static Material* VotingButtonMaterial;
     static Material* handAccIndicatorMaterial;
     static Material* accGridBackgroundMaterial;
+    static Material* accuracyGraphMaterial;
+    static Material* accuracyGraphLine;
+    static Material* accDetailsRowMaterial;
+
     static Sprite* locationIcon;
     static Sprite* rowSeparatorIcon;
     static Sprite* beatLeaderLogoGradient;

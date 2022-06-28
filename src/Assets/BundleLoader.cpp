@@ -10,6 +10,10 @@ Material* BundleLoader::scoreUnderlineMaterial;
 Material* BundleLoader::VotingButtonMaterial;
 Material* BundleLoader::handAccIndicatorMaterial;
 Material* BundleLoader::accGridBackgroundMaterial;
+Material* BundleLoader::accuracyGraphMaterial;
+Material* BundleLoader::accuracyGraphLine;
+Material* BundleLoader::accDetailsRowMaterial;
+
 Sprite* BundleLoader::locationIcon;
 Sprite* BundleLoader::rowSeparatorIcon;
 Sprite* BundleLoader::beatLeaderLogoGradient;
@@ -54,6 +58,9 @@ void BundleLoader::LoadAssets(AssetBundle* assetBundle) {
     VotingButtonMaterial = assetBundle->LoadAsset<Material*>("VotingButtonMaterial");
     handAccIndicatorMaterial = assetBundle->LoadAsset<Material*>("HandAccIndicatorMaterial");
     accGridBackgroundMaterial = assetBundle->LoadAsset<Material*>("AccGridBackgroundMaterial");
+    accuracyGraphMaterial = assetBundle->LoadAsset<Material*>("AccuracyGraphBackground");
+    accuracyGraphLine = assetBundle->LoadAsset<Material*>("AccuracyGraphLine");
+    accDetailsRowMaterial = assetBundle->LoadAsset<Material*>("AccDetailsRowMaterial");
 
     locationIcon = assetBundle->LoadAsset<Sprite*>("LocationIcon");
     rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>("RowSeparatorIcon");

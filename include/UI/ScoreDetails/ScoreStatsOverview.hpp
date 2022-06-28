@@ -26,6 +26,21 @@ namespace BeatLeader {
             TMPro::TextMeshProUGUI* rightPreScore;
             TMPro::TextMeshProUGUI* rightAccScore;
             TMPro::TextMeshProUGUI* rightPostScore;
+
+            TMPro::TextMeshProUGUI* tdTitle;
+            HMUI::ImageView* tdBackground;
+            TMPro::TextMeshProUGUI* preTitle;
+            HMUI::ImageView* preBackground;
+            TMPro::TextMeshProUGUI* postTitle;
+            HMUI::ImageView* postBackground;
+
+            TMPro::TextMeshProUGUI* leftTd;
+            TMPro::TextMeshProUGUI* leftPre;
+            TMPro::TextMeshProUGUI* leftPost;
+
+            TMPro::TextMeshProUGUI* rightTd;
+            TMPro::TextMeshProUGUI* rightPre;
+            TMPro::TextMeshProUGUI* rightPost;
             
             void setScore(optional<ScoreStats> score);
             void setSelected(bool selected);
