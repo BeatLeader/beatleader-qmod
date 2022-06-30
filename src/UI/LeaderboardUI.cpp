@@ -145,7 +145,7 @@ namespace LeaderboardUI {
         string const& nameLabel = score.player.name;
 
         string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
-        return FormatUtils::FormatNameWithClans(score.player) + "<pos=45%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
+        return FormatUtils::FormatNameWithClans(score.player, 30) + "<pos=52%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
     }
 
     void updatePlayerInfoLabel() {
@@ -156,7 +156,7 @@ namespace LeaderboardUI {
                 globalRank->SetText("#" + to_string(player->rank));
                 countryRankAndPp->SetText("#" + to_string(player->countryRank) + "        <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp");
                 playerName->set_alignment(TMPro::TextAlignmentOptions::Center);
-                playerName->SetText(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value()));
+                playerName->SetText(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value(), 25));
                 playerAvatar->SetPlayer(player->avatar, player->role);
                 
                 if (plvc != NULL) {
@@ -422,12 +422,11 @@ namespace LeaderboardUI {
             return;
         }
 
-        if (!bundleLoaded) {
-            self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
-            bundleLoaded = true;
-        }
-        
         if (uploadStatus == NULL) {
+            if (!bundleLoaded) {
+                self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
+                bundleLoaded = true;
+            }
             ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(4);
             ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(4);
             for (int index = 0; index < 3; ++index)
@@ -527,7 +526,6 @@ namespace LeaderboardUI {
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
         if (!levelData->get_levelID().starts_with("custom_level")) {
-            bundleLoaded = false;
             self->loadingControl->Hide();
             self->hasScoresData = false;
             self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
@@ -544,7 +542,7 @@ namespace LeaderboardUI {
             result->playerNameText->set_enableAutoSizing(false);
             result->playerNameText->set_richText(true);
             EmojiSupport::AddSupport(result->playerNameText);
-            resize(result->playerNameText, 13, 0);
+            resize(result->playerNameText, 24, 0);
             move(result->playerNameText, -2, 0);
             move(result->fullComboText, 0.2, 0);
             move(result->scoreText, 4, 0);
@@ -624,25 +622,24 @@ namespace LeaderboardUI {
 
     void updateStatus(ReplayUploadStatus status, string description, float progress) {
         if (visible) {
-             uploadStatus->SetText(description);
-        switch (status)
-        {
-            case ReplayUploadStatus::finished:
-                logoAnimation->SetAnimating(false);
-                updateVotingButton(lastVotingStatusUrl);
-                plvc->Refresh(true, true);
-                break;
-            case ReplayUploadStatus::error:
-                logoAnimation->SetAnimating(false);
-                retryButton->get_gameObject()->SetActive(true);
-                break;
-            case ReplayUploadStatus::inProgress:
-                logoAnimation->SetAnimating(true);
-                if (progress >= 100)
-                    uploadStatus->SetText("<color=#b103fcff>Posting replay: Finishing up...");
-                break;
-        }
-
+            uploadStatus->SetText(description);
+            switch (status)
+            {
+                case ReplayUploadStatus::finished:
+                    logoAnimation->SetAnimating(false);
+                    updateVotingButton(lastVotingStatusUrl);
+                    plvc->Refresh(true, true);
+                    break;
+                case ReplayUploadStatus::error:
+                    logoAnimation->SetAnimating(false);
+                    retryButton->get_gameObject()->SetActive(true);
+                    break;
+                case ReplayUploadStatus::inProgress:
+                    logoAnimation->SetAnimating(true);
+                    if (progress >= 100)
+                        uploadStatus->SetText("<color=#b103fcff>Posting replay: Finishing up...");
+                    break;
+            }
         }
        
     }

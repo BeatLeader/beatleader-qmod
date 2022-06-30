@@ -27,24 +27,22 @@ BeatLeader::ScoreStatsGrid::ScoreStatsGrid(HMUI::ModalView *modal) noexcept {
 }
 
 void BeatLeader::ScoreStatsGrid::setScore(optional<ScoreStats> scoreStats) {
-    if (scoreStats.has_value()) {
-        float max = 10000;
-        float min = -10000;
-        auto scores = scoreStats->accuracyTracker.gridAcc;
+    float max = 10000;
+    float min = -10000;
+    auto scores = scoreStats->accuracyTracker.gridAcc;
 
-        for (int i = 0; i < 12; i++)
-        {
-            float score = scores[i];
-            if (score == 0) continue;
-            if (score > max) max = score;
-            if (score < min) min = score;
-        }
+    for (int i = 0; i < 12; i++)
+    {
+        float score = scores[i];
+        if (score == 0) continue;
+        if (score > max) max = score;
+        if (score < min) min = score;
+    }
 
-        for (int i = 0; i < 12; i++) {
-            float score = scores[i];
-            float ratio = (score - min) / (max - min);
-            accuracyGridCells[i].setScore(score, ratio > 1 ? 1 : (ratio < 0 ? 0 : ratio));
-        }
+    for (int i = 0; i < 12; i++) {
+        float score = scores[i];
+        float ratio = (score - min) / (max - min);
+        accuracyGridCells[i].setScore(score, ratio > 1 ? 1 : (ratio < 0 ? 0 : ratio));
     }
 }
 

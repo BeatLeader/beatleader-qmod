@@ -75,22 +75,18 @@ void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPo
 }
 
 void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
-    // if (score.id != newScore.id) {
-    //     score = newScore;
+    scoreId = score.id;
 
-        scoreId = score.id;
+    playerAvatar->SetPlayer(score.player.avatar, score.player.role);
 
-        playerAvatar->SetPlayer(score.player.avatar, score.player.role);
+    name->SetText(FormatUtils::FormatNameWithClans(score.player, 20));
+    name->set_alignment(TMPro::TextAlignmentOptions::Center);
+    rank->SetText(FormatUtils::FormatRank(score.player.rank, true));
+    pp->SetText(FormatUtils::FormatPP(score.player.pp));
 
-        name->SetText(FormatUtils::FormatNameWithClans(score.player));
-        name->set_alignment(TMPro::TextAlignmentOptions::Center);
-        rank->SetText(FormatUtils::FormatRank(score.player.rank, true));
-        pp->SetText(FormatUtils::FormatPP(score.player.pp));
+    general.setScore(score);
 
-        general.setScore(score);
-
-        scoreStats = nullopt;
-    // }
+    scoreStats = nullopt;
 
     selectTab(0);
 }
@@ -120,20 +116,24 @@ void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
         break;
     case 1:
         selectButton(overviewButton, true);
-        
-        overview.setScore(scoreStats);
-        overview.setSelected(true);
+        if (scoreStats != nullopt) {
+            overview.setScore(scoreStats);
+            overview.setSelected(true);
+        }
         break;
     case 2:
         selectButton(gridButton, true);
-
-        grid.setScore(scoreStats);
-        grid.setSelected(true);
+        if (scoreStats != nullopt) {
+            grid.setScore(scoreStats);
+            grid.setSelected(true);
+        }
         break;
     case 3:
         selectButton(graphButton, true);
-        graph.setSelected(true);
-        graph.setScore(scoreStats);
+        if (scoreStats != nullopt) {
+            graph.setScore(scoreStats);
+            graph.setSelected(true);
+        }
         break;
     }
 

@@ -50,7 +50,7 @@ void ReplayManager::TryPostReplay(string name, int tryIndex, function<void(Repla
     
     WebUtils::PostFileAsync(WebUtils::API_URL + "replayoculus", replayFile, (long)file_info.st_size, 100, [name, tryIndex, finished, replayFile, replayPostStart](long statusCode, string result, string headers) {
         fclose(replayFile);
-        if (statusCode != 200 && tryIndex < 2) {
+        if (statusCode >= 450 && tryIndex < 2) {
             getLogger().info("%s", ("Retrying posting replay after " + to_string(statusCode) + " #" + to_string(tryIndex) + " " + std::string(result)).c_str());
             if (statusCode == 100) {
                 result = "Timed out";
@@ -69,7 +69,7 @@ void ReplayManager::TryPostReplay(string name, int tryIndex, function<void(Repla
             if (statusCode == 100) {
                 result = "Timed out";
             }
-            finished(ReplayUploadStatus::error, std::string("<color=#ff0000ff>Replay was not posted! Error: " + result), 0, statusCode);
+            finished(ReplayUploadStatus::error, std::string("<color=#ff0000ff>Replay was not posted! " + result), 0, statusCode);
         }
     }, [finished](float percent) {
         finished(ReplayUploadStatus::inProgress, "<color=#b103fcff>Posting replay: " + to_string_wprecision(percent, 2) + "%", percent, 0);
