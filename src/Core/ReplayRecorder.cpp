@@ -225,25 +225,28 @@ namespace ReplayRecorder {
     }
 
     void processMultiplayerResults(MultiplayerResultsData* levelCompletionResults) {
-        auto results = levelCompletionResults->localPlayerResultData->multiplayerLevelCompletionResults->levelCompletionResults; 
+        auto results = levelCompletionResults->localPlayerResultData->multiplayerLevelCompletionResults;
 
-        replay->info.score = results->multipliedScore;
+        if (results->get_hasAnyResults()) {
+            switch (results->playerLevelEndReason)
+            {
+                case MultiplayerLevelCompletionResults::MultiplayerPlayerLevelEndReason::Cleared:
+                    auto results = levelCompletionResults->localPlayerResultData->multiplayerLevelCompletionResults->levelCompletionResults; 
 
-        mapEnhancer.energy = results->energy;
-        mapEnhancer.Enhance(replay.value());
-        
-        switch (levelCompletionResults->localPlayerResultData->multiplayerLevelCompletionResults->playerLevelEndReason)
-        {
-            case MultiplayerLevelCompletionResults::MultiplayerPlayerLevelEndReason::Cleared:
-                replayCallback(*replay, MapStatus::cleared, isOst);
-                break;
+                    replay->info.score = results->multipliedScore;
+
+                    mapEnhancer.energy = results->energy;
+                    mapEnhancer.Enhance(replay.value());
+                    replayCallback(*replay, MapStatus::cleared, isOst);
+                    break;
+            }
         }
     }
 
     MAKE_HOOK_MATCH(ProcessResultsMultiplayer, &MultiplayerLevelScenesTransitionSetupDataSO::Finish, void, MultiplayerLevelScenesTransitionSetupDataSO* self, MultiplayerResultsData* levelCompletionResults) {
         ProcessResultsMultiplayer(self, levelCompletionResults);
         recording = false;
-        if (replay != nullopt) {
+        if (replay != nullopt && levelCompletionResults != NULL) {
             collectMultiplayerMapData(self);
             processMultiplayerResults(levelCompletionResults);
         }

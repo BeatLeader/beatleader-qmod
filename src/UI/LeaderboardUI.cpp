@@ -145,7 +145,7 @@ namespace LeaderboardUI {
         string const& nameLabel = score.player.name;
 
         string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
-        return FormatUtils::FormatNameWithClans(score.player, 30) + "<pos=52%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
+        return FormatUtils::FormatNameWithClans(score.player, 30) + "<pos=50%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
     }
 
     void updatePlayerInfoLabel() {
@@ -422,11 +422,12 @@ namespace LeaderboardUI {
             return;
         }
 
+        if (!bundleLoaded) {
+            self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
+            bundleLoaded = true;
+        }
+
         if (uploadStatus == NULL) {
-            if (!bundleLoaded) {
-                self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
-                bundleLoaded = true;
-            }
             ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(4);
             ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(4);
             for (int index = 0; index < 3; ++index)

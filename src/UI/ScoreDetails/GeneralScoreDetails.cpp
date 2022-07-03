@@ -29,7 +29,7 @@ BeatLeader::GeneralScoreDetails::GeneralScoreDetails(HMUI::ModalView *modal) noe
 
     scoreDetails = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5, -8));
 
-    sponsorMessage = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5, -20));
+    sponsorMessage = CreateText(modal->get_transform(), "", UnityEngine::Vector2(0, 30));
 }
 
 string GetStringWithLabel(string value, string label) {
@@ -45,11 +45,17 @@ protected:
     virtual std::string do_grouping() const { return "\03"; }
 };
 
-string FormatScore(int score) {
+string FormatScore(Score const& score) {
     std::stringstream strm;
     strm.imbue( std::locale( std::locale::classic(), new MyNumPunct ) );
 
-    strm << score << std::endl;
+    strm << score.modifiedScore;
+    if (score.scoreImprovement.score > 0) {
+        strm << " <color=#008800><size=55%>\n+";
+        strm << score.scoreImprovement.score;
+        strm << "</size></color>";
+    }
+    strm << std::endl;
     return strm.str();
 }
 
@@ -82,13 +88,31 @@ string GetDetailsString(Score score) {
     return result.str();
 }
 
+inline string FormatAcc(const Score& score) {
+    string result = FormatUtils::formatAcc(score.accuracy);
+
+    if (score.scoreImprovement.score > 0) {
+       result += "<color=#008800><size=55%>\n+" + to_string_wprecision(score.scoreImprovement.accuracy * 100, 2) + "</size></color>";
+    }
+
+    return result;
+}
+
+inline string FormatPP(const Score& score) {
+    string result = FormatUtils::FormatPP(score.pp);
+    if (score.scoreImprovement.score > 0) {
+       result += "<color=#008800><size=55%>\n+" + to_string_wprecision(score.scoreImprovement.pp, 2) + "</size></color>";
+    }
+    return result;
+}
+
 void BeatLeader::GeneralScoreDetails::setScore(const Score& score) {
     datePlayed->SetText(GetTimeSetString(score));
     datePlayed->set_alignment(TMPro::TextAlignmentOptions::Center);
 
-    modifiedScore->SetText(GetStringWithLabel(FormatScore(score.modifiedScore), "score"));
-    accuracy->SetText(GetStringWithLabel(FormatUtils::formatAcc(score.accuracy), "accuracy"));
-    scorePp->SetText(GetStringWithLabel(FormatUtils::FormatPP(score.pp), "pp"));
+    modifiedScore->SetText(GetStringWithLabel(FormatScore(score), "score"));
+    accuracy->SetText(GetStringWithLabel(FormatAcc(score), "accuracy"));
+    scorePp->SetText(GetStringWithLabel(FormatPP(score), "pp"));
 
     scoreDetails->SetText(GetDetailsString(score));
 

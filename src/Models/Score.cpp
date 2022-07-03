@@ -23,4 +23,20 @@ Score::Score(rapidjson::Value const& document) {
 
     hmd = document["hmd"].GetInt();
     timeset = document["timeset"].GetString();
+
+    if (!document["scoreImprovement"].IsNull()) {
+        scoreImprovement = ScoreImprovement(document["scoreImprovement"]);
+    }
+}
+
+ScoreImprovement::ScoreImprovement() {}
+
+ScoreImprovement::ScoreImprovement(rapidjson::Value const& document) {
+    score = document["score"].GetInt();
+    accuracy = document["accuracy"].GetFloat();
+    rank = document["rank"].GetInt();
+    pp = document["pp"].GetFloat();
+
+    totalRank = document["totalRank"].GetInt();
+    totalPp = document["totalPp"].GetFloat();
 }

@@ -89,11 +89,11 @@ namespace FormatUtils {
         }
 
         inline string formatAcc(float accuracy) {
-            return "<color=#" + getAccColorString(accuracy) + ">" + to_string_wprecision(accuracy * 100, 2) + "<size=70%>%</size>";
+            return "<color=#" + getAccColorString(accuracy) + ">" + to_string_wprecision(accuracy * 100, 2) + "<size=70%>%</size></color>";
         }
 
         inline string FormatPP(float value) {
-            return "<color=#B856FF>" + to_string_wprecision(value, 2) + "<size=70%>pp</size>";
+            return "<color=#B856FF>" + to_string_wprecision(value, 2) + "<size=70%>pp</size></color>";
         }
 
         inline string FormatClanTag(string tag) {
