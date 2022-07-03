@@ -8,8 +8,6 @@
 using namespace std;
 
 namespace AccuracyGraphUtils {
-    
-
     inline float Clamp01(float value) {
         if (value < 0)
             return 0;
@@ -70,11 +68,13 @@ namespace AccuracyGraphUtils {
 
     const float MinimalXForScaling = 0.05;
 
-    inline void PostProcessPoints(float* points, int length, vector<UnityEngine::Vector2>* positions, UnityEngine::Rect* viewRect) {
+    inline void PostProcessPoints(ArrayW<float> points, vector<UnityEngine::Vector2>* positions, UnityEngine::Rect* viewRect) {
         auto result = vector<UnityEngine::Vector2>();
 
         float yMin = 1000000;
         float yMax = -1000000;
+
+        int length = points.Length();
 
         for (auto i = 0; i < length; i++) {
             auto x = (float) i / (length - 1);

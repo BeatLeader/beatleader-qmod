@@ -6,9 +6,6 @@ BeatLeader::GraphSpline::GraphSpline(int capacity) noexcept : segments(capacity)
 }
 
 bool BeatLeader::GraphSpline::Add(UnityEngine::Vector2 node) {
-    
-    getLogger().info("%s", ("n x" + to_string(node.x) + " y" + to_string(node.y)).c_str());
-
     if (!handles.Add(node)) return false;
     auto buffer = handles.GetBuffer();
     segments.Add(BeatLeader::GraphSplineSegment(

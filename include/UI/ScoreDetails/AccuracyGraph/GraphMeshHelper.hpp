@@ -16,7 +16,7 @@ namespace BeatLeader {
         public:
         GraphMeshHelper(int horizontalResolution, int verticalResolution, float lineThickness) noexcept;
 
-        void SetPoints(UnityEngine::Vector2* points, int length);
+        void SetPoints(ArrayW<UnityEngine::Vector2> points);
         void PopulateMesh(UnityEngine::UI::VertexHelper* vh, ScreenViewTransform svt, float canvasRadius);
 
         private:
@@ -34,7 +34,6 @@ namespace BeatLeader {
         void PopulateTrianglesArray(int horizontalResolution, int verticalResolution);
         int GetVertexIndex(int columnIndex, int rowIndex);
 
-        int trianglesLength;
-        int* triangles;
+        vector<int> triangles;
     };
 }
