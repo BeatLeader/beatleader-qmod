@@ -14,6 +14,8 @@ set(MOD_ID "bl")
 # - Fern
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
 cmake_minimum_required(VERSION 3.21)
 project(${COMPILE_ID})
 
