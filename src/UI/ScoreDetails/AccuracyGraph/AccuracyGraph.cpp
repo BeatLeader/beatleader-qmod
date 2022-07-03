@@ -35,7 +35,6 @@ static int CursorPositionPropertyId;
 
 UnityEngine::Rect viewRect;
 
-::ArrayW<UnityEngine::Vector3> corners = ::ArrayW<UnityEngine::Vector3>(new UnityEngine::Vector3(4));
 UnityEngine::Vector3 lastPosition3D;
 float* points;
 
@@ -72,19 +71,13 @@ float BeatLeader::AccuracyGraph::GetCanvasRadius() {
     return canvasSettings == NULL ? 100 : canvasSettings->radius;
 }
 
-void BeatLeader::AccuracyGraph::Setup(
-    float* pointsArray, 
-    int length,
-    float songDuration) {
-
-    points = new float[length];
-    std::copy(pointsArray, pointsArray + length, points);
-    this->pointsLength = length;
+void BeatLeader::AccuracyGraph::Setup(ArrayW<float> points, float songDuration) {
+    this->points = points;
 
     vector<UnityEngine::Vector2> positions;
-    AccuracyGraphUtils::PostProcessPoints(points, length, &positions, &viewRect);
+    AccuracyGraphUtils::PostProcessPoints(points, &positions, &viewRect);
     
-    this->graphLine->Setup(&positions[0], positions.size(), viewRect, GetCanvasRadius());
+    this->graphLine->Setup(ArrayW<UnityEngine::Vector2>(il2cpp_utils::vectorToArray(positions)), viewRect, GetCanvasRadius());
     this->songDuration = songDuration;
 
     auto viewRectVector = UnityEngine::Vector4(viewRect.get_xMin(), viewRect.get_yMin(), viewRect.get_xMax(), viewRect.get_yMax());
@@ -99,7 +92,7 @@ static string FormatCursorText(float songTime, float accuracy) {
 }
 
 void BeatLeader::AccuracyGraph::Update() {
-    if (!modal->isShown || isnan(abs(targetViewTime)) || targetViewTime < 0 || targetViewTime > 1) return;
+    if (!modal->isShown || isnan(abs(targetViewTime))) return;
 
     currentViewTime = AccuracyGraphUtils::Lerp(currentViewTime, targetViewTime, UnityEngine::Time::get_deltaTime() * 10.0);
     auto songTime = currentViewTime * songDuration;
@@ -113,6 +106,7 @@ Vector2 CalculateCursorPosition(Vector3 worldCursor, BeatLeader::AccuracyGraphLi
 
     auto nonCurved = AccuracyGraphUtils::TransformPointFrom3DToCanvas(worldCursor, canvasRadius * graphContainer->get_lossyScale().x);
 
+    auto corners = ::ArrayW<UnityEngine::Vector3>(4);
     graphContainer->GetWorldCorners(corners);
 
     return Vector2(
@@ -143,6 +137,7 @@ void BeatLeader::AccuracyGraph::LateUpdate() {
 }
 
 float BeatLeader::AccuracyGraph::GetAccuracy(float viewTime) {
+    int pointsLength = points.Length();
     if (pointsLength == 0) return 1.0;
 
     auto xStep = 1.0 / (float)pointsLength;
