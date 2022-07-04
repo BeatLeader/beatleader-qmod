@@ -27,7 +27,7 @@ BeatLeader::GeneralScoreDetails::GeneralScoreDetails(HMUI::ModalView *modal) noe
     accuracy = CreateText(modal->get_transform(), "", UnityEngine::Vector2(26.0, 2.0));
     scorePp = CreateText(modal->get_transform(), "", UnityEngine::Vector2(46.0, 2.0));
 
-    scoreDetails = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5, -8));
+    scoreDetails = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5, -12));
 
     sponsorMessage = CreateText(modal->get_transform(), "", UnityEngine::Vector2(0, 30));
 }
@@ -45,18 +45,22 @@ protected:
     virtual std::string do_grouping() const { return "\03"; }
 };
 
-string FormatScore(Score const& score) {
+string FormatInt(int score) {
     std::stringstream strm;
     strm.imbue( std::locale( std::locale::classic(), new MyNumPunct ) );
+    strm << score;
 
-    strm << score.modifiedScore;
-    if (score.scoreImprovement.score > 0) {
-        strm << " <color=#008800><size=55%>\n+";
-        strm << score.scoreImprovement.score;
-        strm << "</size></color>";
-    }
     strm << std::endl;
     return strm.str();
+}
+
+string FormatScore(Score const& score) {
+    string result = FormatInt(score.modifiedScore);
+
+    if (score.scoreImprovement.score > 0) {
+        result += " <color=#008800><size=55%>" + FormatInt(score.scoreImprovement.score) + "</size></color>";
+    }
+    return result;
 }
 
 string GetTimeSetString(Score const& score) {

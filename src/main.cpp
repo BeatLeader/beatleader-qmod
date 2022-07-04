@@ -7,6 +7,7 @@
 #include "include/UI/EmojiSupport.hpp"
 
 #include "include/API/PlayerController.hpp"
+#include "include/API/MultiplayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
 
 #include "include/Assets/BundleLoader.hpp"
@@ -75,8 +76,8 @@ void replayPostCallback(ReplayUploadStatus status, string description, float pro
             PlayerController::Refresh();
         }
         
-        QuestUI::MainThreadScheduler::Schedule([status, description, progress] {
-            LeaderboardUI::updateStatus(status, description, progress);
+        QuestUI::MainThreadScheduler::Schedule([status, description, progress, code] {
+            LeaderboardUI::updateStatus(status, description, progress, code > 450);
         });
     }
 }
@@ -107,6 +108,7 @@ extern "C" void load() {
 
     LevelInfoUI::setup();
     ModifiersUI::setup();
+    MultiplayerController::setup();
     RecorderUtils::StartRecorderUtils();
 
     PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {
@@ -126,8 +128,8 @@ extern "C" void load() {
             ReplayManager::ProcessReplay(replay, isOst, replayPostCallback);
         } else {
             ReplayManager::ProcessReplay(replay, isOst, [](ReplayUploadStatus finished, string description, float progress, int code) {
-                QuestUI::MainThreadScheduler::Schedule([description, progress, finished] {
-                    LeaderboardUI::updateStatus(finished, description, progress);
+                QuestUI::MainThreadScheduler::Schedule([description, progress, finished, code] {
+                    LeaderboardUI::updateStatus(finished, description, progress, code > 450);
                 });
             });
         }

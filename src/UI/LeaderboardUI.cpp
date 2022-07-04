@@ -40,6 +40,7 @@
 #include "HMUI/ViewController_AnimationType.hpp"
 #include "HMUI/CurvedTextMeshPro.hpp"
 
+#include "System/Action.hpp"
 #include "UnityEngine/Resources.hpp"
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/Time.hpp"
@@ -527,6 +528,7 @@ namespace LeaderboardUI {
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
         if (!levelData->get_levelID().starts_with("custom_level")) {
+            bundleLoaded = false;
             self->loadingControl->Hide();
             self->hasScoresData = false;
             self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
@@ -534,6 +536,12 @@ namespace LeaderboardUI {
         } else {
             refreshFromTheServer();
         }
+    }
+
+    Score detailsTextWorkaround;
+
+    void setTheScoreAgain() {
+        scoreDetailsUI->setScore(detailsTextWorkaround);
     }
 
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
@@ -544,6 +552,7 @@ namespace LeaderboardUI {
             result->playerNameText->set_richText(true);
             EmojiSupport::AddSupport(result->playerNameText);
             resize(result->playerNameText, 24, 0);
+            move(result->rankText, -0.6, 0);
             move(result->playerNameText, -2, 0);
             move(result->fullComboText, 0.2, 0);
             move(result->scoreText, 4, 0);
@@ -554,9 +563,14 @@ namespace LeaderboardUI {
             avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-32, 0), UnityEngine::Vector2(4, 4));
 
             auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
-                scoreDetailsUI->modal->Show(true, true, nullptr);
+                auto openEvent = il2cpp_utils::MakeDelegate<System::Action *>(
+                    classof(System::Action*),
+                    static_cast<Il2CppObject *>(nullptr), setTheScoreAgain);
+                detailsTextWorkaround = cellScores[result];
 
+                scoreDetailsUI->modal->Show(true, true, openEvent);
                 scoreDetailsUI->setScore(cellScores[result]);
+                
             });
             scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::scoreUnderlineMaterial));
             
@@ -621,7 +635,7 @@ namespace LeaderboardUI {
         return (TableCell *)result;
     }
 
-    void updateStatus(ReplayUploadStatus status, string description, float progress) {
+    void updateStatus(ReplayUploadStatus status, string description, float progress, bool showRestart) {
         if (visible) {
             uploadStatus->SetText(description);
             switch (status)
@@ -633,7 +647,9 @@ namespace LeaderboardUI {
                     break;
                 case ReplayUploadStatus::error:
                     logoAnimation->SetAnimating(false);
-                    retryButton->get_gameObject()->SetActive(true);
+                    if (showRestart) {
+                        retryButton->get_gameObject()->SetActive(true);
+                    }
                     break;
                 case ReplayUploadStatus::inProgress:
                     logoAnimation->SetAnimating(true);

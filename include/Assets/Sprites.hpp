@@ -30,7 +30,7 @@ public:
     static UnityEngine::Sprite* get_ModifiersIcon();
     static UnityEngine::Sprite* get_TransparentPixel();
 
-    static void get_Icon(string url, const std::function<void(UnityEngine::Sprite*)>& completion);
+    static void get_Icon(string url, const std::function<void(UnityEngine::Sprite*)>& completion, bool nullable = false);
     static void get_AnimatedIcon(string url, const std::function<void(AllFramesResult)>& completion);
     static void GetCountryIcon(string country, const std::function<void(UnityEngine::Sprite*)>& completion);
     static void ResetCache();
