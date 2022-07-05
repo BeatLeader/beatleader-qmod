@@ -545,15 +545,17 @@ namespace LeaderboardUI {
             result->playerNameText->set_richText(true);
             EmojiSupport::AddSupport(result->playerNameText);
             resize(result->playerNameText, 24, 0);
-            move(result->rankText, -0.6, 0);
-            move(result->playerNameText, -2, 0);
+            move(result->rankText, -6.2, -0.1);
+            result->rankText->set_alignment(TMPro::TextAlignmentOptions::Right);
+
+            move(result->playerNameText, -0.5, 0);
             move(result->fullComboText, 0.2, 0);
             move(result->scoreText, 4, 0);
             result->playerNameText->set_fontSize(3);
             result->fullComboText->set_fontSize(3);
             result->scoreText->set_fontSize(2);
 
-            avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-32, 0), UnityEngine::Vector2(4, 4));
+            avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
 
             auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
                 scoreDetailsUI->modal->Show(true, true, nullptr);
