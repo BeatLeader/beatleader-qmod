@@ -7,7 +7,6 @@
 #include "include/UI/EmojiSupport.hpp"
 
 #include "include/API/PlayerController.hpp"
-#include "include/API/MultiplayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
 
 #include "include/Assets/BundleLoader.hpp"
@@ -108,7 +107,6 @@ extern "C" void load() {
 
     LevelInfoUI::setup();
     ModifiersUI::setup();
-    MultiplayerController::setup();
     RecorderUtils::StartRecorderUtils();
 
     PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {
