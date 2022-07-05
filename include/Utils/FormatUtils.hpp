@@ -100,7 +100,7 @@ namespace FormatUtils {
             return "<alpha=#00>.<alpha=#FF><b><noparse>" + tag + "</noparse></b><alpha=#00>.<alpha=#FF>";
         }
 
-        inline string FormatNameWithClans(Player player) {
+        inline string FormatNameWithClans(Player player, int limit) {
             string clansLabel = "<size=90%>";
             int clanCount = player.clans.size();
             if (clanCount == 2) {
@@ -114,6 +114,6 @@ namespace FormatUtils {
             }
             clansLabel += "</size>";
 
-            return truncate(player.name, 20 - clanCount * 3) + clansLabel;
+            return truncate(player.name, limit - clanCount * 3) + clansLabel;
         }
     }

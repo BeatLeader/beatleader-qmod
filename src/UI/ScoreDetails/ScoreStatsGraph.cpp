@@ -43,15 +43,13 @@ BeatLeader::ScoreStatsGraph::ScoreStatsGraph(HMUI::ModalView *modal) noexcept {
     rectTransform->set_sizeDelta(UnityEngine::Vector2(60, 30));
     gameObj->AddComponent<LayoutElement*>();
 
-    this->accuracyGraph->Construct(graphBackground, graphLine);
+    this->accuracyGraph->Construct(graphBackground, graphLine, modal);
 }
 
 void BeatLeader::ScoreStatsGraph::setScore(optional<ScoreStats> score) {
-    if (score != nullopt) {
-        auto points = score->scoreGraphTracker.graph;
-        
-        accuracyGraph->Setup(&points[0], points.size(), score->winTracker.endTime);
-    }
+    auto points = score->scoreGraphTracker.graph;
+    
+    accuracyGraph->Setup(&points[0], points.size(), score->winTracker.endTime);
 }
 
 void BeatLeader::ScoreStatsGraph::setSelected(bool selected) {

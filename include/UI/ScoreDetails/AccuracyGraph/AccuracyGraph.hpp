@@ -3,6 +3,7 @@
 #include "AccuracyGraphLine.hpp"
 
 #include "HMUI/ImageView.hpp"
+#include "HMUI/ModalView.hpp"
 
 #include "UnityEngine/EventSystems/UIBehaviour.hpp"
 #include "UnityEngine/MonoBehaviour.hpp"
@@ -41,8 +42,13 @@ using namespace std;
 DECLARE_CLASS_CODEGEN(BeatLeader, AccuracyGraph, UnityEngine::EventSystems::UIBehaviour,
     DECLARE_INSTANCE_FIELD(AccuracyGraphLine*, graphLine);
     DECLARE_INSTANCE_FIELD(UnityEngine::Material*, backgroundMaterial);
+    DECLARE_INSTANCE_FIELD(HMUI::ModalView*, modal);
 
-    DECLARE_INSTANCE_METHOD(void, Construct, HMUI::ImageView* backgroundImage, BeatLeader::AccuracyGraphLine* graphLineObject);
+    DECLARE_INSTANCE_METHOD(void, 
+        Construct, 
+        HMUI::ImageView* backgroundImage, 
+        BeatLeader::AccuracyGraphLine* graphLineObject,
+        HMUI::ModalView* modal);
     DECLARE_INSTANCE_METHOD(void, Setup, float* points, int length, float songDuration);
     
     DECLARE_INSTANCE_METHOD(float, GetAccuracy, float viewTime);
@@ -63,5 +69,4 @@ DECLARE_CLASS_CODEGEN(BeatLeader, AccuracyGraph, UnityEngine::EventSystems::UIBe
     DECLARE_INSTANCE_FIELD(HMUI::CurvedCanvasSettingsHelper*, curvedCanvasSettingsHelper);
 
     DECLARE_INSTANCE_FIELD(int, pointsLength);
-    DECLARE_INSTANCE_FIELD(float*, points);
 )

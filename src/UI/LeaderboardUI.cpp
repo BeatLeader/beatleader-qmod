@@ -229,7 +229,7 @@ namespace LeaderboardUI {
         string const& nameLabel = score.player.name;
 
         string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
-        return FormatUtils::FormatNameWithClans(score.player) + "<pos=45%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
+        return FormatUtils::FormatNameWithClans(score.player, 30) + "<pos=52%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
     }
 
     void updatePlayerInfoLabel() {
@@ -240,7 +240,7 @@ namespace LeaderboardUI {
                 globalRank->SetText(il2cpp_utils::createcsstr("#" + to_string(player->rank)));
                 countryRankAndPp->SetText(il2cpp_utils::createcsstr("#" + to_string(player->countryRank) + "        <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp"));
                 playerName->set_alignment(TMPro::TextAlignmentOptions::Center);
-                playerName->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value())));
+                playerName->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value(), 25)));
                 playerAvatar->SetPlayer(il2cpp_utils::createcsstr(player->avatar), il2cpp_utils::createcsstr(player->role));
                 
                 if (plvc != NULL) {

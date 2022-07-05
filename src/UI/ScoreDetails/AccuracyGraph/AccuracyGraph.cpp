@@ -23,6 +23,8 @@
 
 #include "main.hpp"
 
+#include<algorithm>
+
 DEFINE_TYPE(BeatLeader, AccuracyGraph);
 
 using namespace BeatLeader;
@@ -35,13 +37,18 @@ UnityEngine::Rect viewRect;
 
 ::ArrayW<UnityEngine::Vector3> corners = ::ArrayW<UnityEngine::Vector3>(new UnityEngine::Vector3(4));
 UnityEngine::Vector3 lastPosition3D;
+float* points;
 
-void BeatLeader::AccuracyGraph::Construct(HMUI::ImageView* backgroundImage, BeatLeader::AccuracyGraphLine* graphLineObject) {
+void BeatLeader::AccuracyGraph::Construct(
+        HMUI::ImageView* backgroundImage, 
+        BeatLeader::AccuracyGraphLine* graphLineObject,
+        HMUI::ModalView* modalObject) {
     ViewRectPropertyId = UnityEngine::Shader::PropertyToID("_ViewRect");
     SongDurationPropertyId = UnityEngine::Shader::PropertyToID("_SongDuration");
     CursorPositionPropertyId = UnityEngine::Shader::PropertyToID("_CursorPosition");
 
     graphLine = graphLineObject;
+    modal = modalObject;
 
     backgroundMaterial = UnityEngine::Object::Instantiate(BundleLoader::accuracyGraphMaterial);
     backgroundImage->set_material(backgroundMaterial);
@@ -50,8 +57,10 @@ void BeatLeader::AccuracyGraph::Construct(HMUI::ImageView* backgroundImage, Beat
     
     underlineText = QuestUI::BeatSaberUI::CreateText(backgroundImage->get_transform(), "", UnityEngine::Vector2(2, -18));
 
-    vrPointer = UnityEngine::Resources::FindObjectsOfTypeAll<VRUIControls::VRPointer *>()[0];
-    cursorInitialized = vrPointer != NULL;
+    auto vrpointers = UnityEngine::Resources::FindObjectsOfTypeAll<VRUIControls::VRPointer *>();
+    if (vrpointers.size() != 0) {
+        vrPointer = vrpointers[0];
+    }
 }
 
 float BeatLeader::AccuracyGraph::GetCanvasRadius() {
@@ -64,17 +73,18 @@ float BeatLeader::AccuracyGraph::GetCanvasRadius() {
 }
 
 void BeatLeader::AccuracyGraph::Setup(
-    float* points, 
+    float* pointsArray, 
     int length,
     float songDuration) {
+
+    points = new float[length];
+    std::copy(pointsArray, pointsArray + length, points);
+    this->pointsLength = length;
 
     vector<UnityEngine::Vector2> positions;
     AccuracyGraphUtils::PostProcessPoints(points, length, &positions, &viewRect);
     
     this->graphLine->Setup(&positions[0], positions.size(), viewRect, GetCanvasRadius());
-
-    this->points = points;
-    this->pointsLength = length;
     this->songDuration = songDuration;
 
     auto viewRectVector = UnityEngine::Vector4(viewRect.get_xMin(), viewRect.get_yMin(), viewRect.get_xMax(), viewRect.get_yMax());
@@ -89,7 +99,7 @@ static string FormatCursorText(float songTime, float accuracy) {
 }
 
 void BeatLeader::AccuracyGraph::Update() {
-    if (!graphLine->get_gameObject()->get_activeInHierarchy() || targetViewTime == nanf("")) return;
+    if (!modal->isShown || isnan(abs(targetViewTime)) || targetViewTime < 0 || targetViewTime > 1) return;
 
     currentViewTime = AccuracyGraphUtils::Lerp(currentViewTime, targetViewTime, UnityEngine::Time::get_deltaTime() * 10.0);
     auto songTime = currentViewTime * songDuration;
@@ -118,7 +128,7 @@ float UpdateCursor(Vector2 normalized) {
 }
 
 void BeatLeader::AccuracyGraph::LateUpdate() {
-    if (!graphLine->get_gameObject()->get_activeInHierarchy() || !cursorInitialized) return;
+    if (!modal->isShown || vrPointer == NULL) return;
 
     auto cursorPosition3D = vrPointer->get_cursorPosition();
     if (cursorPosition3D.Equals(lastPosition3D)) return;
