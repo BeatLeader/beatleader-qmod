@@ -11,5 +11,5 @@ namespace LeaderboardUI {
     void setup();
     void reset();
 
-    void updateStatus(ReplayUploadStatus status, string description, float progress);
+    void updateStatus(ReplayUploadStatus status, string description, float progress, bool showRestart);
 }

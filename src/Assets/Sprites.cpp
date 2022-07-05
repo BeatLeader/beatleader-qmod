@@ -14,7 +14,7 @@ using UnityEngine::Sprite;
 
 map<string, std::vector<uint8_t>> Sprites::iconCache;
 
-void Sprites::get_Icon(string url, const std::function<void(UnityEngine::Sprite*)>& completion) {
+void Sprites::get_Icon(string url, const std::function<void(UnityEngine::Sprite*)>& completion, bool nullable) {
     if (iconCache.contains(url)) {
         std::vector<uint8_t> bytes = iconCache[url];
         Array<uint8_t>* spriteArray = il2cpp_utils::vectorToArray(bytes);
@@ -35,16 +35,18 @@ void Sprites::get_Icon(string url, const std::function<void(UnityEngine::Sprite*
             sprite = QuestUI::BeatSaberUI::ArrayToSprite(spriteArray);
         }
 
-        if (sprite != NULL) {
+        if (sprite != NULL || nullable) {
             completion(sprite);
         }
     } else {
-        WebUtils::GetAsync(url, [completion, url](long code, string data) {
+        WebUtils::GetAsync(url, [completion, url, nullable](long code, string data) {
             if (code == 200) {
                 iconCache[url] = {data.begin(), data.end()};
-                QuestUI::MainThreadScheduler::Schedule([completion, url] {
-                    get_Icon(url, completion);
+                QuestUI::MainThreadScheduler::Schedule([completion, url, nullable] {
+                    get_Icon(url, completion, nullable);
                 });
+            } else if (nullable) {
+                completion(NULL);
             }
         });
     }

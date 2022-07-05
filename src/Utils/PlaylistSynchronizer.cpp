@@ -26,6 +26,10 @@
 static bool mapsSynchronized = false;
 static int songsToDownload = 0;
 
+void done() {
+    WebUtils::GetAsync(WebUtils::API_URL + "user/oneclickdone", [](long httpCode, std::string data) {});
+}
+
 void DownloadBeatmap(string path, string hash) {
     WebUtils::GetAsync(path, 64,
         [hash](long httpCode, std::string data) {
@@ -38,7 +42,7 @@ void DownloadBeatmap(string path, string hash) {
         if (songsToDownload == 0) {
             mapsSynchronized = true;
 
-            WebUtils::GetAsync(WebUtils::API_URL + "user/oneclickdone", [](long httpCode, std::string data) {});
+            done();
 
             QuestUI::MainThreadScheduler::Schedule([] {
                 getLogger().info("%s", "Refreshing songs");
@@ -72,6 +76,11 @@ void ActuallySyncPlaylist() {
         outfile.open("sdcard/ModData/com.beatgames.beatsaber/Mods/PlaylistManager/Playlists/BLSynced.json");
         outfile << result << endl;
         outfile.close();
+
+        ofstream outfile2;
+        outfile2.open("sdcard/ModData/com.beatgames.beatsaber/Mods/PlaylistManager/PlaylistBackups/BLSynced.json");
+        outfile2 << result << endl;
+        outfile2.close();
         
         for (int index = 0; index < (int)songs.Size(); ++index)
         {
@@ -81,6 +90,10 @@ void ActuallySyncPlaylist() {
                 getLogger().info("%s", ("Will download " + hash).c_str());
                 GetBeatmap(hash);
             }
+        }
+
+        if (songsToDownload == 0) {
+            done();
         }
     });
 }

@@ -797,10 +797,13 @@ namespace LeaderboardUI {
                 result->playerNameText->set_enableAutoSizing(false);
                 result->playerNameText->set_richText(true);
                 
-                resize(result->playerNameText, 13, 0);
-                move(result->playerNameText, -2, 0);
+                resize(result->playerNameText, 24, 0);
+                move(result->rankText, -6.2, -0.1);
+                result->rankText->set_alignment(TMPro::TextAlignmentOptions::Right);
+                move(result->playerNameText, -0.5, 0);
                 move(result->fullComboText, 0.2, 0);
                 move(result->scoreText, 4, 0);
+
                 result->playerNameText->set_fontSize(3);
                 result->fullComboText->set_fontSize(3);
                 result->scoreText->set_fontSize(2);
@@ -809,7 +812,7 @@ namespace LeaderboardUI {
             if (!isLocal && !cellBackgrounds.count(result)) {
                 EmojiSupport::AddSupport(result->playerNameText);
 
-                avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-32, 0), UnityEngine::Vector2(4, 4));
+                avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
 
                 auto scoreSelector = CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
                     scoreDetailsUI->modal->Show(true, true, nullptr);
@@ -892,9 +895,10 @@ namespace LeaderboardUI {
         return (TableCell *)result;
     }
 
-    void updateStatus(ReplayUploadStatus status, string description, float progress) {
+    void updateStatus(ReplayUploadStatus status, string description, float progress, bool showRestart) {
         if (uploadStatus != NULL && showBeatLeader) {
             uploadStatus->SetText(il2cpp_utils::createcsstr(description));
+
             switch (status)
             {
                 case ReplayUploadStatus::finished:
@@ -904,8 +908,11 @@ namespace LeaderboardUI {
                     break;
                 case ReplayUploadStatus::error:
                     logoAnimation->SetAnimating(false);
-                    retryButton->get_gameObject()->SetActive(true);
-                    showRetryButton = true;
+
+                    if (showRestart) {
+                        retryButton->get_gameObject()->SetActive(true);
+                        showRetryButton = true;
+                    }
                     break;
                 case ReplayUploadStatus::inProgress:
                     logoAnimation->SetAnimating(true);
