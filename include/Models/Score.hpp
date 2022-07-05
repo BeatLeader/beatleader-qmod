@@ -6,6 +6,20 @@
 #include <string>
 using namespace std;
 
+struct ScoreImprovement
+{
+    int score = 0;
+    float accuracy;
+    int rank;
+    float pp;
+
+    int totalRank;
+    float totalPp;
+
+    ScoreImprovement();
+    ScoreImprovement(rapidjson::Value const& document);
+};
+
 struct Score
 {
     int id;
@@ -29,6 +43,7 @@ struct Score
     string timeset;
 
     Player player;
+    ScoreImprovement scoreImprovement;
     Score();
     Score(rapidjson::Value const& document);
 };

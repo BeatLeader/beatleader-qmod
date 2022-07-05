@@ -229,7 +229,7 @@ namespace LeaderboardUI {
         string const& nameLabel = score.player.name;
 
         string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
-        return FormatUtils::FormatNameWithClans(score.player, 30) + "<pos=52%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
+        return FormatUtils::FormatNameWithClans(score.player, 30) + "<pos=50%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
     }
 
     void updatePlayerInfoLabel() {
