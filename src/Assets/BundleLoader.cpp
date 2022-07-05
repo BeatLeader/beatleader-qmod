@@ -10,6 +10,10 @@ Material* BundleLoader::scoreUnderlineMaterial;
 Material* BundleLoader::VotingButtonMaterial;
 Material* BundleLoader::handAccIndicatorMaterial;
 Material* BundleLoader::accGridBackgroundMaterial;
+Material* BundleLoader::accuracyGraphMaterial;
+Material* BundleLoader::accuracyGraphLine;
+Material* BundleLoader::accDetailsRowMaterial;
+
 Sprite* BundleLoader::locationIcon;
 Sprite* BundleLoader::rowSeparatorIcon;
 Sprite* BundleLoader::beatLeaderLogoGradient;
@@ -54,6 +58,9 @@ void BundleLoader::LoadAssets(AssetBundle* assetBundle) {
     VotingButtonMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("VotingButtonMaterial"));
     handAccIndicatorMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("HandAccIndicatorMaterial"));
     accGridBackgroundMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("AccGridBackgroundMaterial"));
+    accuracyGraphMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("AccuracyGraphBackground"));
+    accuracyGraphLine = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("AccuracyGraphLine"));
+    accDetailsRowMaterial = assetBundle->LoadAsset<Material*>(il2cpp_utils::createcsstr("AccDetailsRowMaterial"));
 
     locationIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("LocationIcon"));
     rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>(il2cpp_utils::createcsstr("RowSeparatorIcon"));

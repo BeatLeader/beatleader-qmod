@@ -34,7 +34,7 @@ BeatLeader::ScoreStatsGridCell::ScoreStatsGridCell(HMUI::ModalView *modal, int i
     imageView->set_color(EmptyColor);
     imageView->set_material(UnityEngine::Object::Instantiate(BundleLoader::accGridBackgroundMaterial));
 
-    scoreText = CreateText(modal->get_transform(), "", UnityEngine::Vector2((column - 2.0f) * 10.0 + 30, (row - 1.0f) * 10.0 - 3));
+    scoreText = CreateText(modal->get_transform(), "", UnityEngine::Vector2((column - 2.0f) * 11.0 + 32, (row - 1.0f) * 11.0 - 3));
     scoreText->set_fontSize(3);
 }
 
