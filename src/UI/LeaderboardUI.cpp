@@ -527,6 +527,7 @@ namespace LeaderboardUI {
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
         if (!levelData->get_levelID().starts_with("custom_level")) {
+            bundleLoaded = false;
             self->loadingControl->Hide();
             self->hasScoresData = false;
             self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
@@ -544,6 +545,7 @@ namespace LeaderboardUI {
             result->playerNameText->set_richText(true);
             EmojiSupport::AddSupport(result->playerNameText);
             resize(result->playerNameText, 24, 0);
+            move(result->rankText, -0.6, 0);
             move(result->playerNameText, -2, 0);
             move(result->fullComboText, 0.2, 0);
             move(result->scoreText, 4, 0);
@@ -621,7 +623,7 @@ namespace LeaderboardUI {
         return (TableCell *)result;
     }
 
-    void updateStatus(ReplayUploadStatus status, string description, float progress) {
+    void updateStatus(ReplayUploadStatus status, string description, float progress, bool showRestart) {
         if (visible) {
             uploadStatus->SetText(description);
             switch (status)
@@ -633,7 +635,9 @@ namespace LeaderboardUI {
                     break;
                 case ReplayUploadStatus::error:
                     logoAnimation->SetAnimating(false);
-                    retryButton->get_gameObject()->SetActive(true);
+                    if (showRestart) {
+                        retryButton->get_gameObject()->SetActive(true);
+                    }
                     break;
                 case ReplayUploadStatus::inProgress:
                     logoAnimation->SetAnimating(true);

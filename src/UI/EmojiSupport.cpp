@@ -35,6 +35,7 @@ static bool hooksInstalled = false;
 
 static int currentEmojiIndex;
 static bool textureNeedsApply;
+static ArrayW<UnityEngine::Color> clearPixels;
 static TMPro::TMP_SpriteAsset* rootEmojiAsset;
 static TMPro::TMP_SpriteAsset* currentEmojiAsset;
 
@@ -56,6 +57,7 @@ std::string utf8ToHex(int unicode) {
 
 TMPro::TMP_SpriteAsset* CreateTMP_SpriteAsset() {
     auto texture = UnityEngine::Texture2D::New_ctor(SHEET_SIZE, SHEET_SIZE, UnityEngine::TextureFormat::RGBA32, false);
+    texture->SetPixels(clearPixels);
     texture->Apply(false, true);
 
     TMPro::TMP_SpriteAsset* spriteAsset = TMPro::TMP_SpriteAsset::New_ctor();
@@ -139,10 +141,13 @@ MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpri
         auto assetToUse = currentEmojiAsset;
         loadingCount++;
 
-        getLogger().info("%s", ("https://cdn.beatleader.xyz/unicode/" + utf8ToHex(unicode) + ".png").c_str());
-        
-        Sprites::get_Icon("https://cdn.beatleader.xyz/unicode/" + utf8ToHex(unicode) + ".png", [indexToUse, assetToUse, glyph](UnityEngine::Sprite* sprite) {
-            DrawSprite((UnityEngine::Texture*)sprite->get_texture(), indexToUse, glyph, assetToUse);
+        Sprites::get_Icon("https://cdn.beatleader.xyz/unicode/" + utf8ToHex(unicode) + ".png", [indexToUse, assetToUse, glyph, unicode](UnityEngine::Sprite* sprite) {
+            if (sprite != NULL) {
+                DrawSprite((UnityEngine::Texture*)sprite->get_texture(), indexToUse, glyph, assetToUse);
+            } else {
+                getLogger().info("%s", ("https://cdn.beatleader.xyz/unicode/" + utf8ToHex(unicode) + ".png").c_str());
+            }
+            
             loadingCount--;
             if (loadingCount == 0) {
                 for (size_t i = 0; i < textToUpdate.size(); i++) {
@@ -151,7 +156,7 @@ MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpri
                 textToUpdate = {};
             }
             
-        });
+        }, true);
 
         currentEmojiIndex++;
     }
@@ -171,6 +176,11 @@ MAKE_HOOK_MATCH(SetArraySizes, &TMPro::TextMeshProUGUI::SetArraySizes, int, TMPr
 
 void EmojiSupport::AddSupport(TMPro::TextMeshProUGUI* text) {
     if (rootEmojiAsset == NULL) {
+        clearPixels = ArrayW<UnityEngine::Color>(SHEET_SIZE * SHEET_SIZE);
+        for (size_t i = 0; i < SHEET_SIZE * SHEET_SIZE; i++) {
+            clearPixels[i] = UnityEngine::Color(0, 0, 0, 0);
+        }
+        
         rootEmojiAsset = CreateTMP_SpriteAsset();
         currentEmojiAsset = rootEmojiAsset;
         currentEmojiIndex = 0;
