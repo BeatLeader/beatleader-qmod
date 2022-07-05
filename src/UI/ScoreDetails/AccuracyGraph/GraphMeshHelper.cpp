@@ -14,15 +14,12 @@ BeatLeader::GraphMeshHelper::GraphMeshHelper(int horizontalResolution, int verti
     pointsArray = vector<BeatLeader::GraphPoint>(columnsCount);
 
     int quadCount = horizontalResolution * verticalResolution;
-    triangles = new int[quadCount * 6];
-    trianglesLength = quadCount * 6;
+    triangles = vector<int>(quadCount * 6);
     PopulateTrianglesArray(verticalResolution, horizontalResolution);
 }
 
-void BeatLeader::GraphMeshHelper::SetPoints(UnityEngine::Vector2* points, int length) {
-    int size = length;
-
-    getLogger().info("%s", ("Size" + to_string(size)).c_str());
+void BeatLeader::GraphMeshHelper::SetPoints(ArrayW<UnityEngine::Vector2> points) {
+    int size = points.Length();
 
     if (size <= 1) {
         spline = nullopt;
@@ -44,8 +41,6 @@ void BeatLeader::GraphMeshHelper::PopulateMesh(UnityEngine::UI::VertexHelper* vh
     if (spline == nullopt) return;
     spline->FillArray(pointsArray);
 
-    getLogger().info("%s", ("canvasr " + to_string(canvasRadius)).c_str());
-
     for (int columnIndex = 0; columnIndex < columnsCount; columnIndex++) {
         auto node = pointsArray[columnIndex];
 
@@ -61,10 +56,6 @@ void BeatLeader::GraphMeshHelper::PopulateMesh(UnityEngine::UI::VertexHelper* vh
             auto screenVertexPosition = screenNodePosition + widthOffset;
             auto screenNormalizedPosition = svt.NormalizeScreenPosition(screenVertexPosition);
 
-            getLogger().info("%s", ("pp " + to_string(screenNormalizedPosition.x) + "   " + to_string(screenNormalizedPosition.y)).c_str());
-
-            getLogger().info("%s", ("pp " + to_string(screenVertexPosition.x) + "   " + to_string(screenVertexPosition.y)).c_str());
-
             vh->AddVert(
                 UnityEngine::Vector3(screenVertexPosition.x, screenVertexPosition.y, 0),
                 UnityEngine::Color32(1, 1, 1, 1),
@@ -78,9 +69,7 @@ void BeatLeader::GraphMeshHelper::PopulateMesh(UnityEngine::UI::VertexHelper* vh
         }
     }
 
-    getLogger().info("%s", ("Size" + to_string(trianglesLength)).c_str());
-
-    for (int i = 0; i < trianglesLength; i += 3) vh->AddTriangle(triangles[i], triangles[i + 1], triangles[i + 2]);
+    for (int i = 0; i < triangles.size(); i += 3) vh->AddTriangle(triangles[i], triangles[i + 1], triangles[i + 2]);
 }
 
 int BeatLeader::GraphMeshHelper::GetVertexIndex(int columnIndex, int rowIndex) {

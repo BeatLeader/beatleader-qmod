@@ -9,14 +9,11 @@ DEFINE_TYPE(BeatLeader, AccuracyGraphLine);
 
 static BeatLeader::GraphMeshHelper graphMeshHelper = BeatLeader::GraphMeshHelper(500, 1, 0.2);
 
-void BeatLeader::AccuracyGraphLine::Setup(UnityEngine::Vector2* points, int length, UnityEngine::Rect viewRect, float canvasRadius) {
-    getLogger().info("%s", ("3 " + to_string(length)).c_str());
-
-    this->points = points;
+void BeatLeader::AccuracyGraphLine::Setup(ArrayW<UnityEngine::Vector2> points, UnityEngine::Rect viewRect, float canvasRadius) {
     this->viewRect = viewRect;
     this->canvasRadius = canvasRadius;
 
-    graphMeshHelper.SetPoints(points, length);
+    graphMeshHelper.SetPoints(points);
 
     this->SetVerticesDirty();
 }
@@ -25,6 +22,5 @@ void BeatLeader::AccuracyGraphLine::OnPopulateMesh(UnityEngine::UI::VertexHelper
     auto screenRect = UnityEngine::RectTransformUtility::PixelAdjustRect(this->get_rectTransform(), this->get_canvas());
     auto screenViewTransform = ScreenViewTransform(screenRect, this->viewRect);
 
-    // graphMeshHelper.SetPoints(this->points);
     graphMeshHelper.PopulateMesh(vh, screenViewTransform, this->canvasRadius);
 }
