@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "main.hpp"
+
 using namespace std;
 
 template <typename T>
@@ -56,3 +58,54 @@ inline string truncate(string str, size_t width, bool show_ellipsis=true)
             
     return str;
 }
+
+/// @brief Create a new csstr from a UTF16 string view.
+    /// @tparam creationType The creation type for the string.
+    /// @param inp The input string to create.
+    /// @return The returned string.
+    template<il2cpp_utils::CreationType creationType = il2cpp_utils::CreationType::Temporary>
+    Il2CppString* newcsstr2(std::u16string_view inp) {
+        il2cpp_functions::Init();
+        if constexpr (creationType == il2cpp_utils::CreationType::Manual) {
+            auto len = inp.length();
+            auto mallocSize = sizeof(Il2CppString) + sizeof(Il2CppChar) * (len + 1);
+            // String never has any references anyways, malloc is safe here because the string gets copied over anyways.
+            auto* str = reinterpret_cast<il2cpp_utils::__InternalCSStr*>(malloc(mallocSize));
+            str->object.klass = il2cpp_functions::defaults->string_class;
+            str->object.monitor = nullptr;
+            str->length = len;
+            for (size_t i = 0; i < len; i++) {
+                str->chars[i] = inp[i];
+            }
+            str->chars[len] = '\0';
+            return reinterpret_cast<Il2CppString*>(str);
+        } else {
+            return il2cpp_functions::string_new_utf16(reinterpret_cast<const Il2CppChar*>(inp.data()), inp.length());
+        }
+    }
+
+    /// @brief Create a new csstr from a UTF8 string view.
+    /// @tparam creationType The creation type for the string.
+    /// @param inp The input string to create.
+    /// @return The returned string.
+    template<il2cpp_utils::CreationType creationType = il2cpp_utils::CreationType::Temporary>
+    Il2CppString* newcsstr2(std::string_view inp) {
+        il2cpp_functions::Init();
+        if constexpr (creationType == il2cpp_utils::CreationType::Manual) {
+            // TODO: Perhaps manually call createManual instead
+            auto len = inp.length();
+            auto mallocSize = sizeof(Il2CppString) + sizeof(Il2CppChar) * (len + 1);
+            // String never has any references anyways, malloc is safe here because the string gets copied over anyways.
+            auto* str = reinterpret_cast<il2cpp_utils::__InternalCSStr*>(malloc(mallocSize));
+            str->object.klass = il2cpp_functions::defaults->string_class;
+            str->object.monitor = nullptr;
+            str->length = len;
+            for (size_t i = 0; i < len; i++) {
+                str->chars[i] = inp[i];
+            }
+            str->chars[len] = '\0';
+            return reinterpret_cast<Il2CppString*>(str);
+        } else {
+            return il2cpp_functions::string_new_len(inp.data(), inp.size());
+        }
+    }

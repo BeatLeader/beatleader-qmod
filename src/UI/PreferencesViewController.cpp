@@ -10,6 +10,7 @@
 
 #include "Utils/ModConfig.hpp"
 #include "Utils/WebUtils.hpp"
+#include "include/Utils/StringUtils.hpp"
 #include "API/PlayerController.hpp"
 
 #include "include/UI/PreferencesViewController.hpp"
@@ -44,7 +45,7 @@ string errorDescription = "";
 
 void UpdateUI(string userID) {
     if (!userID.empty()) {
-        label2->SetText(il2cpp_utils::createcsstr(userID));
+        label2->SetText(newcsstr2(userID));
         label2->get_gameObject()->SetActive(true);
         label1->get_gameObject()->SetActive(true);
         label3->get_gameObject()->SetActive(false);
@@ -66,7 +67,7 @@ void UpdateUI(string userID) {
         signupButton->get_gameObject()->SetActive(true);
     }
 
-    errorDescriptionLabel->SetText(il2cpp_utils::createcsstr(errorDescription));
+    errorDescriptionLabel->SetText(newcsstr2(errorDescription));
     if (errorDescription.length() > 0) {
         errorDescriptionLabel->get_gameObject()->SetActive(true);
     } else {
@@ -100,7 +101,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
             login = value;
         });
         login = "";
-        loginField->SetText(il2cpp_utils::createcsstr(login));
+        loginField->SetText(newcsstr2(login));
         
         passwordField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), (std::string_view)"Password", (std::string_view)"", [](std::string_view value) {
             password = value;
@@ -118,9 +119,9 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                 } else {
                     errorDescription = "";
                     login = "";
-                    loginField->SetText(il2cpp_utils::createcsstr(""));
+                    loginField->SetText(newcsstr2(""));
                     password = "";
-                    passwordField->SetText(il2cpp_utils::createcsstr(""));
+                    passwordField->SetText(newcsstr2(""));
                 }
                 UpdateUI(userID);      
             });});
@@ -137,9 +138,9 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                 } else {
                     errorDescription = "";
                     login = "";
-                    loginField->SetText(il2cpp_utils::createcsstr(""));
+                    loginField->SetText(newcsstr2(""));
                     password = "";
-                    passwordField->SetText(il2cpp_utils::createcsstr(""));
+                    passwordField->SetText(newcsstr2(""));
                 }
                 UpdateUI(userID);
             });});

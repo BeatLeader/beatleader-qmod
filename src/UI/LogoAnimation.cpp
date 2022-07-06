@@ -11,6 +11,7 @@
 
 #include "Utils/ModConfig.hpp"
 #include "Utils/WebUtils.hpp"
+#include "include/Utils/StringUtils.hpp"
 #include "API/PlayerController.hpp"
 #include "Assets/BundleLoader.hpp"
 
@@ -67,13 +68,13 @@ void BeatLeader::LogoAnimation::Init(HMUI::ImageView* imageView) {
     this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::logoMaterial);
     imageView->set_material(this->materialInstance);
 
-    GlowPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_Glow"));
-    DotScalePropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_DotScale"));
-    BlockScalePropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_BlockScale"));
-    CornerRadiusPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_CornerRadius"));
-    ThicknessPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_Thickness"));
-    SpinnerRotationPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_SpinnerRotation"));
-    SpinnerAmplitudePropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_SpinnerAmplitude"));
+    GlowPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_Glow"));
+    DotScalePropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_DotScale"));
+    BlockScalePropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_BlockScale"));
+    CornerRadiusPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_CornerRadius"));
+    ThicknessPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_Thickness"));
+    SpinnerRotationPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_SpinnerRotation"));
+    SpinnerAmplitudePropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_SpinnerAmplitude"));
 }
 
 void BeatLeader::LogoAnimation::SetAnimating(bool animating) {

@@ -4,6 +4,7 @@
 #include "include/Assets/BundleLoader.hpp"
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsOverview.hpp"
+#include "include/Utils/StringUtils.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
@@ -44,7 +45,7 @@ BeatLeader::ScoreStatsOverview::ScoreStatsOverview(HMUI::ModalView *modal) noexc
     rightAccScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-3.0, 5.0));
     rightPostScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-3.0, 1.0));
 
-    FillPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_FillValue"));
+    FillPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_FillValue"));
 
     tdTitle = CreateText(modal->get_transform(), "TD", UnityEngine::Vector2(0.0, -5.0));
     tdTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
@@ -75,34 +76,34 @@ static float CalculateFillValue(float score) {
 }
 
 void BeatLeader::ScoreStatsOverview::setScore(optional<ScoreStats> score) {
-    leftPreScore->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.leftAverageCut[0], 2)));
-    leftAccScore->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.leftAverageCut[1], 2)));
-    leftPostScore->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.leftAverageCut[2], 2)));
+    leftPreScore->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.leftAverageCut[0], 2)));
+    leftAccScore->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.leftAverageCut[1], 2)));
+    leftPostScore->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.leftAverageCut[2], 2)));
 
-    leftScore->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.accLeft, 2)));
+    leftScore->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.accLeft, 2)));
     leftScore->set_alignment(TMPro::TextAlignmentOptions::Center);
     leftPieImage->get_material()->SetFloat(FillPropertyId, CalculateFillValue(score->accuracyTracker.accLeft));
     
-    rightScore->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.accRight, 2)));
+    rightScore->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.accRight, 2)));
     rightScore->set_alignment(TMPro::TextAlignmentOptions::Center);
     rightPieImage->get_material()->SetFloat(FillPropertyId, CalculateFillValue(score->accuracyTracker.accRight));
 
-    rightPreScore->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.rightAverageCut[0], 2)));
+    rightPreScore->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.rightAverageCut[0], 2)));
     rightPreScore->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightAccScore->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.rightAverageCut[1], 2)));
+    rightAccScore->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.rightAverageCut[1], 2)));
     rightAccScore->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightPostScore->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.rightAverageCut[2], 2)));
+    rightPostScore->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.rightAverageCut[2], 2)));
     rightPostScore->set_alignment(TMPro::TextAlignmentOptions::Right);
 
-    leftTd->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.leftTimeDependence, 3)));
-    leftPre->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.leftPreswing * 100.0, 2) + "%"));
-    leftPost->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.leftPostswing * 100.0, 2) + "%"));
+    leftTd->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.leftTimeDependence, 3)));
+    leftPre->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.leftPreswing * 100.0, 2) + "%"));
+    leftPost->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.leftPostswing * 100.0, 2) + "%"));
 
-    rightTd->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.rightTimeDependence, 3)));
+    rightTd->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.rightTimeDependence, 3)));
     rightTd->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightPre->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.rightPreswing * 100.0, 2) + "%"));
+    rightPre->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.rightPreswing * 100.0, 2) + "%"));
     rightPre->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightPost->SetText(il2cpp_utils::createcsstr(to_string_wprecision(score->accuracyTracker.rightPostswing * 100.0, 2) + "%"));
+    rightPost->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.rightPostswing * 100.0, 2) + "%"));
     rightPost->set_alignment(TMPro::TextAlignmentOptions::Right);
 }
 

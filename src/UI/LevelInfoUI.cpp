@@ -87,8 +87,8 @@ namespace LevelInfoUI {
         selectedMap = key;
 
         if (_mapInfos.contains(key)) {
-            starsLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(_mapInfos[key], 2)));
-            ppLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(_mapInfos[key] * 44.0f, 2)));
+            starsLabel->SetText(newcsstr2(to_string_wprecision(_mapInfos[key], 2)));
+            ppLabel->SetText(newcsstr2(to_string_wprecision(_mapInfos[key] * 44.0f, 2)));
         } else {
             string url = WebUtils::API_URL + "map/hash/" + hash;
 
@@ -105,8 +105,8 @@ namespace LevelInfoUI {
                 QuestUI::MainThreadScheduler::Schedule([key] () {
                     if (_mapInfos.count(key) && starsLabel != NULL && ppLabel != NULL) {
                         float stars = _mapInfos[key];
-                        starsLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(stars, 2)));
-                        ppLabel->SetText(il2cpp_utils::createcsstr(to_string_wprecision(stars * 44.0f, 2)));
+                        starsLabel->SetText(newcsstr2(to_string_wprecision(stars, 2)));
+                        ppLabel->SetText(newcsstr2(to_string_wprecision(stars * 44.0f, 2)));
                     }
                 });
             });

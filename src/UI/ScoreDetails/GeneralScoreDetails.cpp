@@ -3,6 +3,7 @@
 #include "include/Assets/Sprites.hpp"
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ScoreDetails/GeneralScoreDetails.hpp"
+#include "include/Utils/StringUtils.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
@@ -49,8 +50,6 @@ string FormatInt(int score) {
     std::stringstream strm;
     strm.imbue( std::locale( std::locale::classic(), new MyNumPunct ) );
     strm << score;
-
-    strm << std::endl;
     return strm.str();
 }
 
@@ -58,7 +57,7 @@ string FormatScore(Score const& score) {
     string result = FormatInt(score.modifiedScore);
 
     if (score.scoreImprovement.score > 0) {
-        result += " <color=#008800><size=55%>" + FormatInt(score.scoreImprovement.score) + "</size></color>";
+        result += " <color=#008800><size=62%>\n+" + FormatInt(score.scoreImprovement.score) + "</size></color>";
     }
     return result;
 }
@@ -96,7 +95,7 @@ inline string FormatAcc(const Score& score) {
     string result = FormatUtils::formatAcc(score.accuracy);
 
     if (score.scoreImprovement.score > 0) {
-       result += "<color=#008800><size=55%>\n+" + to_string_wprecision(score.scoreImprovement.accuracy * 100, 2) + "</size></color>";
+       result += "<color=#008800><size=62%>\n+" + to_string_wprecision(score.scoreImprovement.accuracy * 100, 2) + "</size></color>";
     }
 
     return result;
@@ -105,22 +104,22 @@ inline string FormatAcc(const Score& score) {
 inline string FormatPP(const Score& score) {
     string result = FormatUtils::FormatPP(score.pp);
     if (score.scoreImprovement.score > 0) {
-       result += "<color=#008800><size=55%>\n+" + to_string_wprecision(score.scoreImprovement.pp, 2) + "</size></color>";
+       result += "<color=#008800><size=62%>\n+" + to_string_wprecision(score.scoreImprovement.pp, 2) + "</size></color>";
     }
     return result;
 }
 
 void BeatLeader::GeneralScoreDetails::setScore(const Score& score) {
-    datePlayed->SetText(il2cpp_utils::createcsstr(GetTimeSetString(score)));
+    datePlayed->SetText(newcsstr2(GetTimeSetString(score)));
     datePlayed->set_alignment(TMPro::TextAlignmentOptions::Center);
-    
-    modifiedScore->SetText(il2cpp_utils::createcsstr(GetStringWithLabel(FormatScore(score), "score")));
-    accuracy->SetText(il2cpp_utils::createcsstr(GetStringWithLabel(FormatAcc(score), "accuracy")));
-    scorePp->SetText(il2cpp_utils::createcsstr(GetStringWithLabel(FormatPP(score), "pp")));
 
-    scoreDetails->SetText(il2cpp_utils::createcsstr(GetDetailsString(score)));
+    modifiedScore->SetText(newcsstr2(GetStringWithLabel(FormatScore(score), "score")));
+    accuracy->SetText(newcsstr2(GetStringWithLabel(FormatAcc(score), "accuracy")));
+    scorePp->SetText(newcsstr2(GetStringWithLabel(FormatPP(score), "pp")));
 
-    sponsorMessage->SetText(il2cpp_utils::createcsstr(score.player.sponsorMessage));
+    scoreDetails->SetText(newcsstr2(GetDetailsString(score)));
+
+    sponsorMessage->SetText(newcsstr2(score.player.sponsorMessage));
     sponsorMessage->set_alignment(TMPro::TextAlignmentOptions::Center);
 }
 

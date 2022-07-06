@@ -90,10 +90,10 @@ namespace ModifiersUI {
 
         if (totalMultiplier < 0) totalMultiplier = 0;  // thanks Beat Games for Zen mode -1000%
 
-        self->totalMultiplierValueText->SetText(il2cpp_utils::createcsstr((totalMultiplier > 1 ? "+" : "") + to_string_wprecision(totalMultiplier * 100.0f, 1) + "%"));
+        self->totalMultiplierValueText->SetText(newcsstr2((totalMultiplier > 1 ? "+" : "") + to_string_wprecision(totalMultiplier * 100.0f, 1) + "%"));
         //self->totalMultiplierValueText->set_color(totalMultiplier > 1 ? positiveColor : negativeColor);
         
-        self->maxRankValueText->SetText(il2cpp_utils::createcsstr(getRankForMultiplier(totalMultiplier)));
+        self->maxRankValueText->SetText(newcsstr2(getRankForMultiplier(totalMultiplier)));
         //self->maxRankValueText->set_color(totalMultiplier > 1 ? positiveColor : negativeColor);
     }
 
@@ -103,7 +103,7 @@ namespace ModifiersUI {
         getLogger().info("%s", key.c_str());
         if (ModifiersManager::modifiers.count(key)) {
             float value = ModifiersManager::modifiers[key];
-            self->multiplierText->SetText(il2cpp_utils::createcsstr((value > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(value * 100.0f, 1) + "%"));
+            self->multiplierText->SetText(newcsstr2((value > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(value * 100.0f, 1) + "%"));
         }
     }
 
@@ -126,7 +126,7 @@ namespace ModifiersUI {
         string key = modifierKeyFromName(to_utf8(csstrtostr(self->get_gameplayModifier()->get_modifierNameLocalizationKey())));
         if (ModifiersManager::modifiers.count(key)) {
             float value = self->gameplayModifier->multiplier;
-            self->multiplierText->SetText(il2cpp_utils::createcsstr((value > 0 ? "+" : "") + to_string_wprecision(value * 100.0f, 1) + "%"));
+            self->multiplierText->SetText(newcsstr2((value > 0 ? "+" : "") + to_string_wprecision(value * 100.0f, 1) + "%"));
         }
     }
 

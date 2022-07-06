@@ -1,4 +1,6 @@
 #include "UI/ClickableImage.hpp"
+#include "include/Utils/StringUtils.hpp"
+
 #include "VRUIControls/VRPointer.hpp"
 
 #include "GlobalNamespace/MenuShockwave.hpp"
@@ -126,7 +128,7 @@ namespace QuestUI::BeatSaberUI {
 
     QuestUI::ClickableImage* CreateClickableImage(UnityEngine::Transform* parent, UnityEngine::Sprite* sprite, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta, std::function<void()> onClick)
     {
-        auto go = UnityEngine::GameObject::New_ctor(il2cpp_utils::createcsstr("QuestUIClickableImage"));
+        auto go = UnityEngine::GameObject::New_ctor(newcsstr2("QuestUIClickableImage"));
 
         auto image = go->AddComponent<QuestUI::ClickableImage*>();
         auto mat_UINoGlows = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Material*>();

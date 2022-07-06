@@ -11,5 +11,6 @@ class EmojiSupport
 {
 public:
    static void AddSupport(TMPro::TextMeshProUGUI* text);
+   static void RemoveSupport(TMPro::TextMeshProUGUI* text);
    static void Reset();
 };

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "include/Utils/StringUtils.hpp"
+
 #include "UnityEngine/Material.hpp"
 #include "UnityEngine/Color.hpp"
 #include "UnityEngine/Shader.hpp"
@@ -23,10 +25,10 @@ struct RoleColorScheme {
         UnityEngine::Color rimColor, 
         UnityEngine::Color haloColor, 
         float wavesAmplitude) {
-        BackgroundColorPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_BackgroundColor"));
-        RimColorPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_RimColor"));
-        HaloColorPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_HaloColor"));
-        WavesAmplitudePropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_WavesAmplitude"));
+        BackgroundColorPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_BackgroundColor"));
+        RimColorPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_RimColor"));
+        HaloColorPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_HaloColor"));
+        WavesAmplitudePropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_WavesAmplitude"));
         _backgroundColor = backgroundColor;
         _rimColor = rimColor;
         _haloColor = haloColor;

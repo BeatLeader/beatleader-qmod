@@ -3,6 +3,7 @@
 #include "include/Utils/WebUtils.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
+#include "include/Utils/StringUtils.hpp"
 
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ClickableImage.hpp"
@@ -38,7 +39,7 @@ void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPo
     auto roundRects = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Sprite*>();
     for (int i = 0; i < roundRects->Length(); i++)
     {
-        if (roundRects->get(i)->get_name() == il2cpp_utils::createcsstr("RoundRect10")) {
+        if (roundRects->get(i)->get_name() == newcsstr2("RoundRect10")) {
             roundRect = roundRects->get(i);
             break;
         }
@@ -81,23 +82,21 @@ void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPo
     modalUI->loadingText->set_alignment(TMPro::TextAlignmentOptions::Center);
     modalUI->loadingText->get_gameObject()->SetActive(false);
 
-    modalUI->modal->set_name(il2cpp_utils::createcsstr("BLScoreDetailsModal"));
+    modalUI->modal->set_name(newcsstr2("BLScoreDetailsModal"));
     *modalUIPointer = modalUI;
 }
 
 void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
     scoreId = score.id;
 
-    playerAvatar->SetPlayer(il2cpp_utils::createcsstr(score.player.avatar), il2cpp_utils::createcsstr(score.player.role));
-
-    name->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatNameWithClans(score.player, 20)));
+    playerAvatar->SetPlayer(newcsstr2(score.player.avatar), newcsstr2(score.player.role));
+    name->SetText(newcsstr2(FormatUtils::FormatNameWithClans(score.player, 20)));
     name->set_alignment(TMPro::TextAlignmentOptions::Center);
-    rank->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatRank(score.player.rank, true)));
-    pp->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatPP(score.player.pp)));
+    rank->SetText(newcsstr2(FormatUtils::FormatRank(score.player.rank, true)));
+    pp->SetText(newcsstr2(FormatUtils::FormatPP(score.player.pp)));
 
     general.setScore(score);
-
-    scoreStats = nullopt;
+    scoreStatsFetched = false;
 
     selectTab(0);
 }
@@ -127,37 +126,43 @@ void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
         break;
     case 1:
         selectButton(overviewButton, true);
-        if (scoreStats != nullopt) {
+        if (scoreStatsFetched) {
             overview.setScore(scoreStats);
             overview.setSelected(true);
         }
         break;
     case 2:
         selectButton(gridButton, true);
-        if (scoreStats != nullopt) {
+        if (scoreStatsFetched) {
             grid.setScore(scoreStats);
             grid.setSelected(true);
         }
         break;
     case 3:
         selectButton(graphButton, true);
-        if (scoreStats != nullopt) {
+        if (scoreStatsFetched) {
             graph.setScore(scoreStats);
             graph.setSelected(true);
         }
         break;
     }
 
-    if (index > 0 && scoreStats == nullopt) {
+    if (index > 0 && !scoreStatsFetched) {
         auto self = this;
+        self->loadingText->SetText(newcsstr2("Loading..."));
         loadingText->get_gameObject()->SetActive(true);
         string url = WebUtils::API_URL + "score/statistic/" + to_string(scoreId);
         WebUtils::GetJSONAsync(url, [self, index](long status, bool error, rapidjson::Document const& result) {
             if (status == 200) {
-                self->scoreStats.emplace(ScoreStats(result));
+                self->scoreStats = ScoreStats(result);
+                self->scoreStatsFetched = true;
                 QuestUI::MainThreadScheduler::Schedule([self, index] {
                     self->loadingText->get_gameObject()->SetActive(false);
                     self->selectTab(index);
+                });
+            } else {
+                QuestUI::MainThreadScheduler::Schedule([self] {
+                    self->loadingText->SetText(newcsstr2("Failed to fetch stats"));
                 });
             }
         });

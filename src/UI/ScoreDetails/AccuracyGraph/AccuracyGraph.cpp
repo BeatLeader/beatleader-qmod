@@ -8,6 +8,7 @@
 
 #include "include/Utils/FormatUtils.hpp"
 #include "include/Utils/Range.hpp"
+#include "include/Utils/StringUtils.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "UnityEngine/Component.hpp"
@@ -42,9 +43,9 @@ void BeatLeader::AccuracyGraph::Construct(
         HMUI::ImageView* backgroundImage, 
         BeatLeader::AccuracyGraphLine* graphLineObject,
         HMUI::ModalView* modalObject) {
-    ViewRectPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_ViewRect"));
-    SongDurationPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_SongDuration"));
-    CursorPositionPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_CursorPosition"));
+    ViewRectPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_ViewRect"));
+    SongDurationPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_SongDuration"));
+    CursorPositionPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_CursorPosition"));
 
     graphLine = graphLineObject;
     modal = modalObject;
@@ -98,7 +99,7 @@ void BeatLeader::AccuracyGraph::Update() {
     auto songTime = currentViewTime * songDuration;
     auto accuracy = GetAccuracy(currentViewTime);
     backgroundMaterial->SetFloat(CursorPositionPropertyId, currentViewTime);
-    underlineText->SetText(il2cpp_utils::createcsstr(FormatCursorText(songTime, accuracy)));
+    underlineText->SetText(newcsstr2(FormatCursorText(songTime, accuracy)));
 }
 
 Vector2 CalculateCursorPosition(Vector3 worldCursor, BeatLeader::AccuracyGraphLine* graphLine, float canvasRadius) {

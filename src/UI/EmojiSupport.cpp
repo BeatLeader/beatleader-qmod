@@ -1,6 +1,7 @@
 #include "include/UI/EmojiSupport.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
+#include "include/Utils/StringUtils.hpp"
 
 #include "UnityEngine/Texture.hpp"
 #include "UnityEngine/Shader.hpp"
@@ -114,7 +115,7 @@ TMPro::TMP_SpriteGlyph* PushSprite(int unicode) {
     currentEmojiAsset->m_SpriteGlyphTable->Add(sprite);
     
     TMPro::TMP_SpriteCharacter* character = TMPro::TMP_SpriteCharacter::New_ctor(unicode, sprite);
-    character->set_name(il2cpp_utils::createcsstr(text));
+    character->set_name(newcsstr2(text));
     character->set_scale(1);
 
     if (currentEmojiAsset->m_SpriteCharacterTable == NULL) {
@@ -194,6 +195,10 @@ void EmojiSupport::AddSupport(TMPro::TextMeshProUGUI* text) {
     }
 
     text->set_spriteAsset(rootEmojiAsset);
+}
+
+void EmojiSupport::RemoveSupport(TMPro::TextMeshProUGUI* text) {
+    text->set_spriteAsset(NULL);
 }
 
 void EmojiSupport::Reset() {

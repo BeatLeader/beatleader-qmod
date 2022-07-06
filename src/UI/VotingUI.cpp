@@ -4,6 +4,7 @@
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
 #include "include/UI/EmojiSupport.hpp"
+#include "include/Utils/StringUtils.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
@@ -26,7 +27,7 @@ using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
 
 void setupButtonTitle(UnityEngine::UI::Button* button, float offset, int fontSize = 0) {
-    UnityEngine::Object::Destroy(button->get_transform()->Find(il2cpp_utils::createcsstr("Content"))->GetComponent<UnityEngine::UI::LayoutElement*>());
+    UnityEngine::Object::Destroy(button->get_transform()->Find(newcsstr2("Content"))->GetComponent<UnityEngine::UI::LayoutElement*>());
 
     auto title = button->get_transform()->GetComponentsInChildren<TMPro::TextMeshProUGUI*>()->get(0);
     if (fontSize > 0) {
@@ -54,7 +55,7 @@ void BeatLeader::initVotingPopup(
     auto roundRects = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Sprite*>();
     for (int i = 0; i < roundRects->Length(); i++)
     {
-        if (roundRects->get(i)->get_name() == il2cpp_utils::createcsstr("RoundRect10")) {
+        if (roundRects->get(i)->get_name() == newcsstr2("RoundRect10")) {
             roundRect = roundRects->get(i);
             break;
         }
@@ -138,7 +139,7 @@ void BeatLeader::initVotingPopup(
     });
     setupButtonTitle(modalUI->rightButton, -1.5, 3);
 
-    modalUI->modal->set_name(il2cpp_utils::createcsstr("BLVotingModal"));
+    modalUI->modal->set_name(newcsstr2("BLVotingModal"));
     *modalUIPointer = modalUI;
 }
 
