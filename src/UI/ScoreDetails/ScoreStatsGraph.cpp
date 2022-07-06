@@ -30,7 +30,7 @@ using namespace GlobalNamespace;
 
 BeatLeader::ScoreStatsGraph::ScoreStatsGraph(HMUI::ModalView *modal) noexcept {
     graphBackground = CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(60, 30));
-    GameObject* gameObj = GameObject::New_ctor("AccuracyGraph");
+    GameObject* gameObj = GameObject::New_ctor(il2cpp_utils::createcsstr("AccuracyGraph"));
     
     this->accuracyGraph = gameObj->AddComponent<BeatLeader::AccuracyGraph*>();
     auto graphLine = gameObj->AddComponent<BeatLeader::AccuracyGraphLine*>();

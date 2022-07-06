@@ -13,6 +13,7 @@
 #include "include/UI/ScoreDetails/ScoreStatsOverview.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsGrid.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsGraph.hpp"
+#include "UI/ClickableImage.hpp"
 
 namespace BeatLeader {
     class ScoreDetailsPopup {

@@ -58,3 +58,8 @@ ___DECLARE_TYPE_WRAPPER_INHERITANCE(QuestUI, ClickableImage, Il2CppTypeEnum::IL2
                                     void UpdateHighlight();
                                     bool get_isHighlighted();
                                     void set_isHighlighted(bool value);)
+
+namespace QuestUI::BeatSaberUI {
+    QuestUI::ClickableImage* CreateClickableImage(UnityEngine::Transform* parent, UnityEngine::Sprite* sprite, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta, std::function<void()> onClick);
+    QuestUI::ClickableImage* CreateClickableImage(UnityEngine::Transform* parent, UnityEngine::Sprite* sprite, std::function<void()> onClick);
+}

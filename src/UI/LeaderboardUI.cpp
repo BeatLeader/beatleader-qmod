@@ -81,7 +81,6 @@
 #include "GlobalNamespace/LeaderboardTableCell.hpp"
 #include "GlobalNamespace/SinglePlayerLevelSelectionFlowCoordinator.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
-#include "GlobalNamespace/MenuShockwave.hpp"
 
 #include "TMPro/TMP_Sprite.hpp"
 #include "TMPro/TMP_SpriteGlyph.hpp"
@@ -100,66 +99,6 @@ using namespace HMUI;
 using namespace QuestUI;
 using namespace BeatLeader;
 using UnityEngine::Resources;
-
-using HapticPresetSO = Libraries::HM::HMLib::VR::HapticPresetSO;
-static SafePtr<HapticPresetSO> hapticFeedbackPresetSO;
-
-QuestUI::ClickableImage* CreateClickableImage(UnityEngine::Transform* parent, UnityEngine::Sprite* sprite, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta, std::function<void()> onClick)
-    {
-        auto go = UnityEngine::GameObject::New_ctor(il2cpp_utils::createcsstr("QuestUIClickableImage"));
-
-        auto image = go->AddComponent<QuestUI::ClickableImage*>();
-        auto mat_UINoGlows = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Material*>();
-        UnityEngine::Material* mat_UINoGlow = NULL;
-        for (int i = 0; i < mat_UINoGlows->Length(); i++) {
-            if (to_utf8(csstrtostr(mat_UINoGlows->get(i)->get_name())) == "UINoGlow") {
-                mat_UINoGlow = mat_UINoGlows->get(i);
-                break;
-            }
-        }
-
-        image->set_material(mat_UINoGlow);
-
-        go->get_transform()->SetParent(parent, false);
-        image->get_rectTransform()->set_sizeDelta(sizeDelta);
-        image->get_rectTransform()->set_anchoredPosition(anchoredPosition);
-        image->set_sprite(sprite);
-
-        go->AddComponent<UnityEngine::UI::LayoutElement*>();
-
-        if (onClick)
-            image->get_onPointerClickEvent() += [onClick](auto _){ onClick(); };
-        
-        try
-        {
-            auto menuShockWave = UnityEngine::Resources::FindObjectsOfTypeAll<GlobalNamespace::MenuShockwave*>()->get(0);
-            auto buttonClickedSignal = menuShockWave->dyn__buttonClickEvents()->get(menuShockWave->dyn__buttonClickEvents()->Length() - 1);
-            image->buttonClickedSignal = buttonClickedSignal;
-        }
-        catch(const std::exception& e)
-        {
-            getLogger().error("%s", e.what());
-        }
-
-        if (!hapticFeedbackPresetSO)
-        {
-            hapticFeedbackPresetSO.emplace(UnityEngine::ScriptableObject::CreateInstance<HapticPresetSO*>());
-            hapticFeedbackPresetSO->duration = 0.01f;
-            hapticFeedbackPresetSO->strength = 0.75f;
-            hapticFeedbackPresetSO->frequency = 0.5f;
-        }
-
-        auto hapticFeedbackController = UnityEngine::Object::FindObjectOfType<GlobalNamespace::HapticFeedbackController*>();
-        image->hapticFeedbackController = hapticFeedbackController;
-        image->hapticFeedbackPresetSO = (HapticPresetSO*)hapticFeedbackPresetSO;
-
-        return image;
-    }
-
-    QuestUI::ClickableImage* CreateClickableImage(UnityEngine::Transform* parent, UnityEngine::Sprite* sprite, std::function<void()> onClick)
-    {
-        return CreateClickableImage(parent, sprite, {0, 0}, {0, 0}, onClick);
-    }
 
 namespace LeaderboardUI {
     function<void()> retryCallback;
@@ -415,7 +354,7 @@ namespace LeaderboardUI {
 
                 LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
                         currentScore.modifiedScore, 
-                        generateLabel(currentScore), 
+                        il2cpp_utils::createcsstr(generateLabel(currentScore)), 
                         currentScore.rank, 
                         false);
                 
@@ -575,7 +514,7 @@ namespace LeaderboardUI {
             globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(153, 42.5));
             countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(168, 42.5));
 
-            auto websiteLink = CreateClickableImage(parentScreen->get_transform(), BundleLoader::beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
+            auto websiteLink = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
                 string url = WebUtils::WEB_URL;
                 if (PlayerController::currentPlayer != std::nullopt) {
                     url += "u/" + PlayerController::currentPlayer->id;
@@ -602,19 +541,19 @@ namespace LeaderboardUI {
             uploadStatus->set_richText(true);
 
             if (!ssInstalled) {
-                upPageButton = CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
+                upPageButton = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
                     page--;
                     clearTable();
                     refreshFromTheServer();
                 });
-                downPageButton = CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -17), UnityEngine::Vector2(8, 5.12), [](){
+                downPageButton = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -17), UnityEngine::Vector2(8, 5.12), [](){
                     page++;
                     clearTable();
                     refreshFromTheServer();
                 });
             }
 
-            modifiersButton = CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
+            modifiersButton = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
                 modifiers = !modifiers;
                 getModConfig().Modifiers.SetValue(modifiers);
                 clearTable();
@@ -625,7 +564,7 @@ namespace LeaderboardUI {
             modifiersButtonHover = ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton->get_gameObject(), "Show leaderboard without positive modifiers");
             updateModifiersButton();
 
-            auto votingButtonImage = CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 22), UnityEngine::Vector2(4, 4), []() {
+            auto votingButtonImage = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 22), UnityEngine::Vector2(4, 4), []() {
                 if (votingButton->state != 2) return;
                 
                 votingUI->reset();
@@ -814,7 +753,7 @@ namespace LeaderboardUI {
 
                 avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
 
-                auto scoreSelector = CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
+                auto scoreSelector = QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
                     scoreDetailsUI->modal->Show(true, true, nullptr);
 
                     scoreDetailsUI->setScore(cellScores[result]);

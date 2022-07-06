@@ -9,7 +9,7 @@ DEFINE_TYPE(BeatLeader, AccuracyGraphLine);
 
 static BeatLeader::GraphMeshHelper graphMeshHelper = BeatLeader::GraphMeshHelper(500, 1, 0.2);
 
-void BeatLeader::AccuracyGraphLine::Setup(ArrayW<UnityEngine::Vector2> points, UnityEngine::Rect viewRect, float canvasRadius) {
+void BeatLeader::AccuracyGraphLine::Setup(ArrayWrapper<UnityEngine::Vector2> points, UnityEngine::Rect viewRect, float canvasRadius) {
     this->viewRect = viewRect;
     this->canvasRadius = canvasRadius;
 

@@ -3,7 +3,9 @@
 #include "include/Utils/WebUtils.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
+
 #include "include/UI/EmojiSupport.hpp"
+#include "include/UI/ClickableImage.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
@@ -51,7 +53,6 @@ void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPo
     modalUI->rank = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(6.0, 16.0));
     
     modalUI->name = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(0.0, 18.0));
-    modalUI->name->get_gameObject()->AddComponent<::QuestUI::Backgroundable*>()->ApplyBackground("round-rect-panel");
 
     EmojiSupport::AddSupport(modalUI->name);
 
@@ -80,19 +81,19 @@ void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPo
     modalUI->loadingText->set_alignment(TMPro::TextAlignmentOptions::Center);
     modalUI->loadingText->get_gameObject()->SetActive(false);
 
-    modalUI->modal->set_name("BLScoreDetailsModal");
+    modalUI->modal->set_name(il2cpp_utils::createcsstr("BLScoreDetailsModal"));
     *modalUIPointer = modalUI;
 }
 
 void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
     scoreId = score.id;
 
-    playerAvatar->SetPlayer(score.player.avatar, score.player.role);
+    playerAvatar->SetPlayer(il2cpp_utils::createcsstr(score.player.avatar), il2cpp_utils::createcsstr(score.player.role));
 
-    name->SetText(FormatUtils::FormatNameWithClans(score.player, 20));
+    name->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatNameWithClans(score.player, 20)));
     name->set_alignment(TMPro::TextAlignmentOptions::Center);
-    rank->SetText(FormatUtils::FormatRank(score.player.rank, true));
-    pp->SetText(FormatUtils::FormatPP(score.player.pp));
+    rank->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatRank(score.player.rank, true)));
+    pp->SetText(il2cpp_utils::createcsstr(FormatUtils::FormatPP(score.player.pp)));
 
     general.setScore(score);
 

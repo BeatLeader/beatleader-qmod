@@ -35,7 +35,7 @@ static bool hooksInstalled = false;
 
 static int currentEmojiIndex;
 static bool textureNeedsApply;
-static ArrayW<UnityEngine::Color> clearPixels;
+static Array<UnityEngine::Color>* clearPixels;
 static TMPro::TMP_SpriteAsset* rootEmojiAsset;
 static TMPro::TMP_SpriteAsset* currentEmojiAsset;
 
@@ -176,9 +176,9 @@ MAKE_HOOK_MATCH(SetArraySizes, &TMPro::TextMeshProUGUI::SetArraySizes, int, TMPr
 
 void EmojiSupport::AddSupport(TMPro::TextMeshProUGUI* text) {
     if (rootEmojiAsset == NULL) {
-        clearPixels = ArrayW<UnityEngine::Color>(SHEET_SIZE * SHEET_SIZE);
+        clearPixels = Array<UnityEngine::Color>::NewLength(SHEET_SIZE * SHEET_SIZE);
         for (size_t i = 0; i < SHEET_SIZE * SHEET_SIZE; i++) {
-            clearPixels[i] = UnityEngine::Color(0, 0, 0, 0);
+            clearPixels->values[i] = UnityEngine::Color(0, 0, 0, 0);
         }
 
         rootEmojiAsset = CreateTMP_SpriteAsset();

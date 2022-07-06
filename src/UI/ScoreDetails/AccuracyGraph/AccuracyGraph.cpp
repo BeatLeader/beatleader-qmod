@@ -42,9 +42,9 @@ void BeatLeader::AccuracyGraph::Construct(
         HMUI::ImageView* backgroundImage, 
         BeatLeader::AccuracyGraphLine* graphLineObject,
         HMUI::ModalView* modalObject) {
-    ViewRectPropertyId = UnityEngine::Shader::PropertyToID("_ViewRect");
-    SongDurationPropertyId = UnityEngine::Shader::PropertyToID("_SongDuration");
-    CursorPositionPropertyId = UnityEngine::Shader::PropertyToID("_CursorPosition");
+    ViewRectPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_ViewRect"));
+    SongDurationPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_SongDuration"));
+    CursorPositionPropertyId = UnityEngine::Shader::PropertyToID(il2cpp_utils::createcsstr("_CursorPosition"));
 
     graphLine = graphLineObject;
     modal = modalObject;
@@ -57,8 +57,8 @@ void BeatLeader::AccuracyGraph::Construct(
     underlineText = QuestUI::BeatSaberUI::CreateText(backgroundImage->get_transform(), "", UnityEngine::Vector2(2, -18));
 
     auto vrpointers = UnityEngine::Resources::FindObjectsOfTypeAll<VRUIControls::VRPointer *>();
-    if (vrpointers.size() != 0) {
-        vrPointer = vrpointers[0];
+    if (vrpointers->Length() != 0) {
+        vrPointer = vrpointers->get(0);
     }
 }
 
@@ -71,13 +71,13 @@ float BeatLeader::AccuracyGraph::GetCanvasRadius() {
     return canvasSettings == NULL ? 100 : canvasSettings->radius;
 }
 
-void BeatLeader::AccuracyGraph::Setup(ArrayW<float> points, float songDuration) {
+void BeatLeader::AccuracyGraph::Setup(ArrayWrapper<float> points, float songDuration) {
     this->points = points;
 
     vector<UnityEngine::Vector2> positions;
     AccuracyGraphUtils::PostProcessPoints(points, &positions, &viewRect);
     
-    this->graphLine->Setup(ArrayW<UnityEngine::Vector2>(il2cpp_utils::vectorToArray(positions)), viewRect, GetCanvasRadius());
+    this->graphLine->Setup(ArrayWrapper<UnityEngine::Vector2>(il2cpp_utils::vectorToArray(positions)), viewRect, GetCanvasRadius());
     this->songDuration = songDuration;
 
     auto viewRectVector = UnityEngine::Vector4(viewRect.get_xMin(), viewRect.get_yMin(), viewRect.get_xMax(), viewRect.get_yMax());
@@ -98,7 +98,7 @@ void BeatLeader::AccuracyGraph::Update() {
     auto songTime = currentViewTime * songDuration;
     auto accuracy = GetAccuracy(currentViewTime);
     backgroundMaterial->SetFloat(CursorPositionPropertyId, currentViewTime);
-    underlineText->SetText(FormatCursorText(songTime, accuracy));
+    underlineText->SetText(il2cpp_utils::createcsstr(FormatCursorText(songTime, accuracy)));
 }
 
 Vector2 CalculateCursorPosition(Vector3 worldCursor, BeatLeader::AccuracyGraphLine* graphLine, float canvasRadius) {
@@ -106,12 +106,12 @@ Vector2 CalculateCursorPosition(Vector3 worldCursor, BeatLeader::AccuracyGraphLi
 
     auto nonCurved = AccuracyGraphUtils::TransformPointFrom3DToCanvas(worldCursor, canvasRadius * graphContainer->get_lossyScale().x);
 
-    auto corners = ::ArrayW<UnityEngine::Vector3>(4);
+    auto corners = ::Array<UnityEngine::Vector3>::NewLength(4);
     graphContainer->GetWorldCorners(corners);
 
     return Vector2(
-        Range(corners[0].x, corners[3].x).GetRatio(nonCurved.x),
-        Range(corners[0].y, corners[1].y).GetRatio(nonCurved.y)
+        Range(corners->get(0).x, corners->get(3).x).GetRatio(nonCurved.x),
+        Range(corners->get(0).y, corners->get(1).y).GetRatio(nonCurved.y)
     );
 }
 

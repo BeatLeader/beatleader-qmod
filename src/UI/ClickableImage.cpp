@@ -1,6 +1,18 @@
 #include "UI/ClickableImage.hpp"
 #include "VRUIControls/VRPointer.hpp"
 
+#include "GlobalNamespace/MenuShockwave.hpp"
+
+#include "UnityEngine/Events/UnityAction_1.hpp"
+#include "UnityEngine/Events/UnityAction.hpp"
+#include "UnityEngine/Resources.hpp"
+#include "UnityEngine/GameObject.hpp"
+#include "UnityEngine/RectTransform.hpp"
+#include "UnityEngine/Transform.hpp"
+#include "UnityEngine/UI/LayoutElement.hpp"
+
+#include "main.hpp"
+
 DEFINE_TYPE(QuestUI, ClickableImage);
 
 using namespace UnityEngine;
@@ -104,5 +116,68 @@ namespace QuestUI
     ClickableImage::OnPointerExitEvent& ClickableImage::get_onPointerExitEvent()
     {
         return pointerExitEvent;
+    }
+}
+
+namespace QuestUI::BeatSaberUI {
+
+    using HapticPresetSO = Libraries::HM::HMLib::VR::HapticPresetSO;
+    static SafePtr<HapticPresetSO> hapticFeedbackPresetSO;
+
+    QuestUI::ClickableImage* CreateClickableImage(UnityEngine::Transform* parent, UnityEngine::Sprite* sprite, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta, std::function<void()> onClick)
+    {
+        auto go = UnityEngine::GameObject::New_ctor(il2cpp_utils::createcsstr("QuestUIClickableImage"));
+
+        auto image = go->AddComponent<QuestUI::ClickableImage*>();
+        auto mat_UINoGlows = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Material*>();
+        UnityEngine::Material* mat_UINoGlow = NULL;
+        for (int i = 0; i < mat_UINoGlows->Length(); i++) {
+            if (to_utf8(csstrtostr(mat_UINoGlows->get(i)->get_name())) == "UINoGlow") {
+                mat_UINoGlow = mat_UINoGlows->get(i);
+                break;
+            }
+        }
+
+        image->set_material(mat_UINoGlow);
+
+        go->get_transform()->SetParent(parent, false);
+        image->get_rectTransform()->set_sizeDelta(sizeDelta);
+        image->get_rectTransform()->set_anchoredPosition(anchoredPosition);
+        image->set_sprite(sprite);
+
+        go->AddComponent<UnityEngine::UI::LayoutElement*>();
+
+        if (onClick)
+            image->get_onPointerClickEvent() += [onClick](auto _){ onClick(); };
+        
+        try
+        {
+            auto menuShockWave = UnityEngine::Resources::FindObjectsOfTypeAll<GlobalNamespace::MenuShockwave*>()->get(0);
+            auto buttonClickedSignal = menuShockWave->dyn__buttonClickEvents()->get(menuShockWave->dyn__buttonClickEvents()->Length() - 1);
+            image->buttonClickedSignal = buttonClickedSignal;
+        }
+        catch(const std::exception& e)
+        {
+            getLogger().error("%s", e.what());
+        }
+
+        if (!hapticFeedbackPresetSO)
+        {
+            hapticFeedbackPresetSO.emplace(UnityEngine::ScriptableObject::CreateInstance<HapticPresetSO*>());
+            hapticFeedbackPresetSO->duration = 0.01f;
+            hapticFeedbackPresetSO->strength = 0.75f;
+            hapticFeedbackPresetSO->frequency = 0.5f;
+        }
+
+        auto hapticFeedbackController = UnityEngine::Object::FindObjectOfType<GlobalNamespace::HapticFeedbackController*>();
+        image->hapticFeedbackController = hapticFeedbackController;
+        image->hapticFeedbackPresetSO = (HapticPresetSO*)hapticFeedbackPresetSO;
+
+        return image;
+    }
+
+    QuestUI::ClickableImage* CreateClickableImage(UnityEngine::Transform* parent, UnityEngine::Sprite* sprite, std::function<void()> onClick)
+    {
+        return CreateClickableImage(parent, sprite, {0, 0}, {0, 0}, onClick);
     }
 }

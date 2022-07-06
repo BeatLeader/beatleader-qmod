@@ -49,14 +49,14 @@ DECLARE_CLASS_CODEGEN(BeatLeader, AccuracyGraph, UnityEngine::EventSystems::UIBe
         HMUI::ImageView* backgroundImage, 
         BeatLeader::AccuracyGraphLine* graphLineObject,
         HMUI::ModalView* modal);
-    DECLARE_INSTANCE_METHOD(void, Setup, ArrayW<float> points, float songDuration);
+    DECLARE_INSTANCE_METHOD(void, Setup, ArrayWrapper<float> points, float songDuration);
     
     DECLARE_INSTANCE_METHOD(float, GetAccuracy, float viewTime);
     DECLARE_INSTANCE_METHOD(float, GetCanvasRadius);
     DECLARE_INSTANCE_METHOD(void, Update);
     DECLARE_INSTANCE_METHOD(void, LateUpdate);
 
-    DECLARE_INSTANCE_FIELD(ArrayW<float>, points);
+    DECLARE_INSTANCE_FIELD(ArrayWrapper<float>, points);
     DECLARE_INSTANCE_FIELD(float, songDuration);
     DECLARE_INSTANCE_FIELD(VRUIControls::VRPointer*, vrPointer);
     DECLARE_INSTANCE_FIELD(bool, cursorInitialized);

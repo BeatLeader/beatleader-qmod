@@ -68,7 +68,7 @@ namespace AccuracyGraphUtils {
 
     const float MinimalXForScaling = 0.05;
 
-    inline void PostProcessPoints(ArrayW<float> points, vector<UnityEngine::Vector2>* positions, UnityEngine::Rect* viewRect) {
+    inline void PostProcessPoints(ArrayWrapper<float> points, vector<UnityEngine::Vector2>* positions, UnityEngine::Rect* viewRect) {
         auto result = vector<UnityEngine::Vector2>();
 
         float yMin = 1000000;
