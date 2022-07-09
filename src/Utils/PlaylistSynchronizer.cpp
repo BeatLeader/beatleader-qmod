@@ -24,24 +24,24 @@
 #include <iostream>
 
 static bool mapsSynchronized = false;
-static int songsToDownload = 0;
+static vector<string> mapsToDownload;
 
 void done() {
+    mapsSynchronized = true;
     WebUtils::GetAsync(WebUtils::API_URL + "user/oneclickdone", [](long httpCode, std::string data) {});
 }
 
-void DownloadBeatmap(string path, string hash) {
+void DownloadBeatmap(string path, string hash, int index) {
     WebUtils::GetAsync(path, 64,
-        [hash](long httpCode, std::string data) {
+        [hash, index](long httpCode, std::string data) {
         auto targetFolder = RuntimeSongLoader::API::GetCustomLevelsPath() + hash;
         int args = 2;
         int statusCode = zip_stream_extract(data.data(), data.length(), targetFolder.c_str(), +[](const char* name, void* arg) -> int { return 0; }, &args);
 
-        songsToDownload--;
         getLogger().info("%s", "Map downloaded");
-        if (songsToDownload == 0) {
-            mapsSynchronized = true;
-
+        if (index + 1 < mapsToDownload.size()) {
+            PlaylistSynchronizer::GetBeatmap(index + 1);
+        } else {
             done();
 
             QuestUI::MainThreadScheduler::Schedule([] {
@@ -53,11 +53,16 @@ void DownloadBeatmap(string path, string hash) {
     });
 }
 
-void GetBeatmap(std::string hash) {
-    WebUtils::GetJSONAsync("https://api.beatsaver.com/maps/hash/" + hash, [hash] (long status, bool error, rapidjson::Document const& result){
+void PlaylistSynchronizer::GetBeatmap(int index) {
+    string hash = mapsToDownload[index];
+    getLogger().info("%s", ("Will download " + hash).c_str());
+    WebUtils::GetJSONAsync("https://api.beatsaver.com/maps/hash/" + hash, [hash, index] (long status, bool error, rapidjson::Document const& result){
         if (status == 200) {
-            songsToDownload++;
-            DownloadBeatmap(result["versions"].GetArray()[0]["downloadURL"].GetString(), hash);
+            DownloadBeatmap(result["versions"].GetArray()[0]["downloadURL"].GetString(), hash, index);
+        } else if (index + 1 < mapsToDownload.size()) {
+            GetBeatmap(index + 1);
+        } else {
+            done();
         }
     });
 }
@@ -88,13 +93,14 @@ void ActuallySyncPlaylist() {
             auto const& song = songs[index];
             string hash = toLower(song["hash"].GetString());
             if (RuntimeSongLoader::API::GetLevelByHash(hash) == nullopt) {
-                getLogger().info("%s", ("Will download " + hash).c_str());
-                GetBeatmap(hash);
+                mapsToDownload.push_back(hash);
             }
         }
 
-        if (songsToDownload == 0) {
+        if (mapsToDownload.size() == 0) {
             done();
+        } else {
+            PlaylistSynchronizer::GetBeatmap(0);
         }
     });
 }

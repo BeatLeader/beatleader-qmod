@@ -86,7 +86,7 @@ void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
 
     general.setScore(score);
 
-    scoreStats = nullopt;
+    scoreStatsFetched = false;
 
     selectTab(0);
 }
@@ -116,38 +116,45 @@ void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
         break;
     case 1:
         selectButton(overviewButton, true);
-        if (scoreStats != nullopt) {
+        if (scoreStatsFetched) {
             overview.setScore(scoreStats);
             overview.setSelected(true);
         }
         break;
     case 2:
         selectButton(gridButton, true);
-        if (scoreStats != nullopt) {
+        if (scoreStatsFetched) {
             grid.setScore(scoreStats);
             grid.setSelected(true);
         }
         break;
     case 3:
         selectButton(graphButton, true);
-        if (scoreStats != nullopt) {
+        if (scoreStatsFetched) {
             graph.setScore(scoreStats);
             graph.setSelected(true);
         }
         break;
     }
 
-    if (index > 0 && scoreStats == nullopt) {
+    if (index > 0 && !scoreStatsFetched) {
         auto self = this;
+        self->loadingText->SetText("Loading...");
         loadingText->get_gameObject()->SetActive(true);
         string url = WebUtils::API_URL + "score/statistic/" + to_string(scoreId);
         WebUtils::GetJSONAsync(url, [self, index](long status, bool error, rapidjson::Document const& result) {
             if (status == 200) {
-                self->scoreStats.emplace(ScoreStats(result));
+                self->scoreStats = ScoreStats(result);
+                self->scoreStatsFetched = true;
                 QuestUI::MainThreadScheduler::Schedule([self, index] {
                     self->loadingText->get_gameObject()->SetActive(false);
                     self->selectTab(index);
                 });
+            } else {
+                QuestUI::MainThreadScheduler::Schedule([self] {
+                    self->loadingText->SetText("Failed to fetch stats");
+                });
+
             }
         });
     }

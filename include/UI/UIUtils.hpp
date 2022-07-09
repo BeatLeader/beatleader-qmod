@@ -3,6 +3,15 @@
 #include "UnityEngine/RectTransform.hpp"
 #include "UnityEngine/Component.hpp"
 #include "UnityEngine/UI/LayoutElement.hpp"
+#include "UnityEngine/GameObject.hpp"
+
+#include "HMUI/CurvedCanvasSettings.hpp"
+#include "HMUI/Screen.hpp"
+#include "HMUI/ViewController.hpp"
+
+#include "questui/shared/QuestUI.hpp"
+#include "questui/shared/ArrayUtil.hpp"
+#include "questui/shared/BeatSaberUI.hpp"
 
 inline void move(UnityEngine::Component* label, float x, float y) {
     UnityEngine::RectTransform* transform = label->GetComponent<UnityEngine::RectTransform *>();
@@ -18,4 +27,20 @@ inline void resize(UnityEngine::Component* label, float x, float y) {
     sizeDelta.x += x;
     sizeDelta.y += y;
     transform->set_sizeDelta(sizeDelta);
+}
+
+inline UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootView, UnityEngine::Vector2 screenSize, UnityEngine::Vector3 position, float curvatureRadius) {
+    auto gameObject = QuestUI::BeatSaberUI::CreateCanvas();
+    auto screen = gameObject->AddComponent<HMUI::Screen*>();
+    screen->rootViewController = rootView;
+    auto curvedCanvasSettings = gameObject->AddComponent<HMUI::CurvedCanvasSettings*>();
+    curvedCanvasSettings->SetRadius(curvatureRadius);
+
+    auto transform = gameObject->get_transform();
+    UnityEngine::GameObject* screenSystem = UnityEngine::GameObject::Find("ScreenContainer");
+    if(screenSystem) {
+        transform->set_position(screenSystem->get_transform()->get_position());
+        screen->get_gameObject()->GetComponent<UnityEngine::RectTransform*>()->set_sizeDelta(screenSize);
+    }
+    return gameObject;
 }

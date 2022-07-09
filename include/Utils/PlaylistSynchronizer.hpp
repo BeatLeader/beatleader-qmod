@@ -11,4 +11,5 @@ class PlaylistSynchronizer
 {
 public:
    static void SyncPlaylist();
+   static void GetBeatmap(int index);
 };

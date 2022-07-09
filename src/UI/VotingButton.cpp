@@ -34,7 +34,7 @@ void BeatLeader::VotingButton::Init(QuestUI::ClickableImage* imageView) {
     imageView->set_defaultColor(UnityEngine::Color(0.0, 0.0, 0.0, 1.0));
     imageView->set_highlightColor(UnityEngine::Color(1.0, 0.0, 0.0, 1.0));
 
-    this->hoverHint = QuestUI::BeatSaberUI::AddHoverHint(imageView, "Rank voring");
+    this->hoverHint = QuestUI::BeatSaberUI::AddHoverHint(imageView, "Rank voting");
 
     SpinnerValuePropertyId = UnityEngine::Shader::PropertyToID("_SpinnerValue");
     GradientValuePropertyId = UnityEngine::Shader::PropertyToID("_GradientValue");
@@ -53,6 +53,10 @@ void BeatLeader::VotingButton::SetState(int state) {
     this->state = state;
     switch (state)
     {
+    case -1:
+        UpdateMaterial(materialInstance, 0, 0, 0, UnityEngine::Color(0.2f, 0.2f, 0.2f, 0.0f));
+        hoverHint->set_text("Voting for this map is not supported");
+        break;
     case 0:
         UpdateMaterial(materialInstance, 1, 0, 0, UnityEngine::Color(0.2f, 0.2f, 0.2f, 0.0f));
         hoverHint->set_text("Loading vote status");

@@ -38,7 +38,8 @@ namespace BeatLeader {
             TMPro::TextMeshProUGUI* loadingText;
 
             int scoreId;
-            optional<ScoreStats> scoreStats;
+            bool scoreStatsFetched;
+            ScoreStats scoreStats;
             
             void setScore(const Score& score);
             void selectTab(int index);
