@@ -10,6 +10,7 @@ Score::Score(rapidjson::Value const& document) {
     pp = document["pp"].GetFloat();
     rank = document["rank"].GetInt();
     accuracy = document["accuracy"].GetFloat();
+    replay = document["replay"].GetString();
     playerId = document["playerId"].GetString();
     fullCombo = document["fullCombo"].GetBool();
     modifiers = document["modifiers"].GetString();

@@ -69,6 +69,11 @@
       "id": "playlistmanager",
       "versionRange": "^0.2.8",
       "additionalData": {}
+    },
+    {
+      "id": "conditional-dependencies",
+      "versionRange": "*",
+      "additionalData": {}
     }
     
   ],

@@ -35,14 +35,19 @@ namespace BeatLeader {
             QuestUI::ClickableImage* gridButton;
             QuestUI::ClickableImage* graphButton;
 
+            QuestUI::ClickableImage* replayButton;
+
             TMPro::TextMeshProUGUI* loadingText;
 
             int scoreId;
+            string replayLink;
             bool scoreStatsFetched;
             ScoreStats scoreStats;
             
             void setScore(const Score& score);
             void selectTab(int index);
+
+            void playReplay();
 
             void setButtonsMaterial();
     };

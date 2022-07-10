@@ -24,7 +24,7 @@ namespace WebUtils {
             float)> const &progressUpdate = nullptr);
 
     std::thread GetAsync(string url, long timeout, function<void(long, string)> const& finished, function<void(float)> const& progressUpdate = nullptr);
-
+    std::thread GetAsyncFile(string url, string path, long timeout, const function<void(long)>& finished, const function<void(float)>& progressUpdate = nullptr);
     std::thread GetJSONAsync(string url, function<void(long, bool, rapidjson::Document const&)> const& finished);
 
     std::thread PostJSONAsync(string url, string data, function<void(long, string)> const& finished);

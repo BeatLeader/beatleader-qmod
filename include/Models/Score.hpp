@@ -31,7 +31,7 @@ struct Score
     // float Weight;
     int rank;
     int countryRank;
-    // string Replay;
+    string replay;
     string modifiers;
     int badCuts;
     int missedNotes;

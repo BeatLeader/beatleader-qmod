@@ -5,6 +5,8 @@
 #include "include/Assets/BundleLoader.hpp"
 #include "include/UI/EmojiSupport.hpp"
 
+#include "include/Core/ReplayPlayer.hpp"
+
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
 #include "UnityEngine/Component.hpp"
@@ -15,6 +17,7 @@
 #include "main.hpp"
 
 #include <sstream>
+#include <filesystem>
 
 using namespace QuestUI::BeatSaberUI;
 using namespace UnityEngine;
@@ -64,6 +67,12 @@ void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPo
     modalUI->graphButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalUI->modal->get_transform(), BundleLoader::graphIcon, UnityEngine::Vector2(10.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(3);
     });
+    if (ReplayInstalled()) {
+        modalUI->replayButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalUI->modal->get_transform(), Sprites::get_ReplayIcon(), UnityEngine::Vector2(-24.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
+            modalUI->playReplay();
+        });
+    }
+
     modalUI->setButtonsMaterial();
 
     modalUI->loadingText = CreateText(modalUI->modal->get_transform(), "Loading...", UnityEngine::Vector2(0.0, 0.0));
@@ -76,6 +85,7 @@ void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPo
 
 void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
     scoreId = score.id;
+    replayLink = score.replay;
 
     playerAvatar->SetPlayer(score.player.avatar, score.player.role);
 
@@ -165,4 +175,40 @@ void BeatLeader::ScoreDetailsPopup::setButtonsMaterial() {
     overviewButton->set_material(BundleLoader::UIAdditiveGlowMaterial);
     gridButton->set_material(BundleLoader::UIAdditiveGlowMaterial);
     graphButton->set_material(BundleLoader::UIAdditiveGlowMaterial);
+}
+
+void BeatLeader::ScoreDetailsPopup::playReplay() {
+    string directory = getDataDir(modInfo) + "replays/temp/";
+    filesystem::create_directories(directory);
+    string file = directory + "replay.bsor";
+
+    selectButton(generalButton, false);
+    selectButton(overviewButton, false);
+    selectButton(gridButton, false);
+    selectButton(graphButton, false);
+
+    loadingText->get_gameObject()->SetActive(true);
+    general.setSelected(false);
+
+    auto self = this;
+    WebUtils::GetAsyncFile(replayLink, file, 64,
+        [file, self](long httpCode) {
+            if (httpCode == 200) {
+                QuestUI::MainThreadScheduler::Schedule([file, self] {
+                    if (PlayReplayFromFile(file)) {
+                        self->modal->Hide(true, nullptr);
+                    } else {
+                        self->loadingText->SetText("Failed to parse the replay");
+                    }
+                });
+            } else {
+                QuestUI::MainThreadScheduler::Schedule([file, self] {
+                    self->loadingText->SetText("Failed to download the replay");
+                });
+            }
+    }, [self](float progress) {
+        QuestUI::MainThreadScheduler::Schedule([progress, self] {
+            self->loadingText->SetText("Downloading: " + to_string_wprecision(progress, 2) + "%");
+        });
+    });
 }
