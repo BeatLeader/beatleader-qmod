@@ -46,6 +46,8 @@ void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPo
     modalUI->name = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(0.0, 18.0));
     modalUI->name->get_gameObject()->AddComponent<::QuestUI::Backgroundable*>()->ApplyBackground("round-rect-panel");
 
+    modalUI->sponsorMessage = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(0, -28));
+
     EmojiSupport::AddSupport(modalUI->name);
 
     modalUI->pp = CreateText(modalUI->modal->get_transform(), "", UnityEngine::Vector2(45.0, 16.0));
@@ -55,16 +57,16 @@ void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPo
     modalUI->grid = ScoreStatsGrid(modalUI->modal);
     modalUI->graph = ScoreStatsGraph(modalUI->modal);
 
-    modalUI->generalButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalUI->modal->get_transform(), BundleLoader::overviewIcon, UnityEngine::Vector2(-10.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->generalButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalUI->modal->get_transform(), BundleLoader::bundle->overviewIcon, UnityEngine::Vector2(-10.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(0);
     });
-    modalUI->overviewButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalUI->modal->get_transform(), BundleLoader::detailsIcon, UnityEngine::Vector2(-3.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->overviewButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalUI->modal->get_transform(), BundleLoader::bundle->detailsIcon, UnityEngine::Vector2(-3.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(1);
     });
-    modalUI->gridButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalUI->modal->get_transform(), BundleLoader::gridIcon, UnityEngine::Vector2(3.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->gridButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalUI->modal->get_transform(), BundleLoader::bundle->gridIcon, UnityEngine::Vector2(3.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(2);
     });
-    modalUI->graphButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalUI->modal->get_transform(), BundleLoader::graphIcon, UnityEngine::Vector2(10.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->graphButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalUI->modal->get_transform(), BundleLoader::bundle->graphIcon, UnityEngine::Vector2(10.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(3);
     });
     if (ReplayInstalled()) {
@@ -93,6 +95,9 @@ void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
     name->set_alignment(TMPro::TextAlignmentOptions::Center);
     rank->SetText(FormatUtils::FormatRank(score.player.rank, true));
     pp->SetText(FormatUtils::FormatPP(score.player.pp));
+
+    sponsorMessage->SetText(score.player.sponsorMessage);
+    sponsorMessage->set_alignment(TMPro::TextAlignmentOptions::Center);
 
     general.setScore(score);
 
@@ -171,10 +176,10 @@ void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
 }
 
 void BeatLeader::ScoreDetailsPopup::setButtonsMaterial() {
-    generalButton->set_material(BundleLoader::UIAdditiveGlowMaterial);
-    overviewButton->set_material(BundleLoader::UIAdditiveGlowMaterial);
-    gridButton->set_material(BundleLoader::UIAdditiveGlowMaterial);
-    graphButton->set_material(BundleLoader::UIAdditiveGlowMaterial);
+    generalButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
+    overviewButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
+    gridButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
+    graphButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
 }
 
 void BeatLeader::ScoreDetailsPopup::playReplay() {

@@ -1,0 +1,39 @@
+{
+  "_QPVersion": "0.1.1",
+  "name": "BeatLeader",
+  "id": "BeatLeader",
+  "author": "NSGolova",
+  "version": "0.3.1",
+  "packageId": "com.beatgames.beatsaber",
+  "packageVersion": "1.23.0",
+  "coverImage": "cover.png",
+  "dependencies": [
+    {
+      "version": "^0.10.0",
+      "id": "songloader",
+      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.0/SongLoader.qmod"
+    },
+    {
+      "version": "^0.15.13",
+      "id": "custom-types",
+      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.13/CustomTypes.qmod"
+    },
+    {
+      "version": "^0.24.1",
+      "id": "codegen",
+      "downloadIfMissing": "https://github.com/sc2ad/BeatSaber-Quest-Codegen/releases/download/v0.24.1/Codegen.qmod"
+    },
+    {
+      "version": "^0.16.1",
+      "id": "questui",
+      "downloadIfMissing": "https://github.com/darknight1050/QuestUI/releases/download/v0.16.1/QuestUI.qmod"
+    }
+  ],
+  "modFiles": [
+    "libbl.so"
+  ],
+  "libraryFiles": [
+  ],
+  "fileCopies": [],
+  "copyExtensions": []
+}

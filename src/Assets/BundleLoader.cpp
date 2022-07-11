@@ -1,39 +1,13 @@
 #include "Assets/BundleLoader.hpp"
 
+DEFINE_TYPE(BeatLeader, Bundle);
 
-AssetBundle* BundleLoader::bundle;
-Material* BundleLoader::logoMaterial;
-Material* BundleLoader::playerAvatarMaterial;
-Material* BundleLoader::UIAdditiveGlowMaterial;
-Material* BundleLoader::scoreBackgroundMaterial;
-Material* BundleLoader::scoreUnderlineMaterial;
-Material* BundleLoader::VotingButtonMaterial;
-Material* BundleLoader::handAccIndicatorMaterial;
-Material* BundleLoader::accGridBackgroundMaterial;
-Material* BundleLoader::accuracyGraphMaterial;
-Material* BundleLoader::accuracyGraphLine;
-Material* BundleLoader::accDetailsRowMaterial;
+AssetBundle* BundleLoader::assetBundle;
+BeatLeader::Bundle* BundleLoader::bundle;
 
-Sprite* BundleLoader::locationIcon;
-Sprite* BundleLoader::rowSeparatorIcon;
-Sprite* BundleLoader::beatLeaderLogoGradient;
-Sprite* BundleLoader::transparentPixel;
-Sprite* BundleLoader::fileError;
-Sprite* BundleLoader::modifiersIcon;
-
-Sprite* BundleLoader::overviewIcon;
-Sprite* BundleLoader::detailsIcon;
-Sprite* BundleLoader::gridIcon;
-Sprite* BundleLoader::graphIcon;
-Sprite* BundleLoader::websiteLinkIcon;
-Sprite* BundleLoader::discordLinkIcon;
-Sprite* BundleLoader::patreonLinkIcon;
-
-Shader* BundleLoader::TMP_SpriteCurved;
-
-custom_types::Helpers::Coroutine BundleLoader::LoadBundle()
+custom_types::Helpers::Coroutine BundleLoader::LoadBundle(UnityEngine::GameObject* container)
 {
-    if (bundle == NULL) {
+    if (assetBundle == NULL) {
         ArrayW<uint8_t> bytes(bl_bundle::getLength());
         std::copy(bl_bundle::getData(), bl_bundle::getData() + bl_bundle::getLength(), bytes.begin());
 
@@ -44,27 +18,29 @@ custom_types::Helpers::Coroutine BundleLoader::LoadBundle()
         req->set_allowSceneActivation(true);
         co_yield reinterpret_cast<System::Collections::IEnumerator*>(req);
 
-        bundle = req->get_assetBundle();
+        assetBundle = req->get_assetBundle();
     }
-    LoadAssets(bundle);
+
+    bundle = container->AddComponent<BeatLeader::Bundle*>();
+    bundle->Init(assetBundle);
 }
 
-Material* instantiadedMaterial(std::string name, AssetBundle* assetBundle) {
-    return Object::Instantiate(assetBundle->LoadAsset<Material*>(name));
+Material* getMaterial(std::string name, AssetBundle* assetBundle) {
+    return assetBundle->LoadAsset<Material*>(name);
 }
 
-void BundleLoader::LoadAssets(AssetBundle* assetBundle) {
-    logoMaterial = instantiadedMaterial("LogoMaterial", assetBundle);
-    playerAvatarMaterial = instantiadedMaterial("PlayerAvatarMaterial", assetBundle);
-    UIAdditiveGlowMaterial = instantiadedMaterial("UIAdditiveGlow", assetBundle);
-    scoreBackgroundMaterial = instantiadedMaterial("ScoreBackgroundMaterial", assetBundle);
-    scoreUnderlineMaterial = instantiadedMaterial("ScoreUnderlineMaterial", assetBundle);
-    VotingButtonMaterial = instantiadedMaterial("VotingButtonMaterial", assetBundle);
-    handAccIndicatorMaterial = instantiadedMaterial("HandAccIndicatorMaterial", assetBundle);
-    accGridBackgroundMaterial = instantiadedMaterial("AccGridBackgroundMaterial", assetBundle);
-    accuracyGraphMaterial = instantiadedMaterial("AccuracyGraphBackground", assetBundle);
-    accuracyGraphLine = instantiadedMaterial("AccuracyGraphLine", assetBundle);
-    accDetailsRowMaterial = instantiadedMaterial("AccDetailsRowMaterial", assetBundle);
+void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
+    logoMaterial = getMaterial("LogoMaterial", assetBundle);
+    playerAvatarMaterial = getMaterial("PlayerAvatarMaterial", assetBundle);
+    UIAdditiveGlowMaterial = getMaterial("UIAdditiveGlow", assetBundle);
+    scoreBackgroundMaterial = getMaterial("ScoreBackgroundMaterial", assetBundle);
+    scoreUnderlineMaterial = getMaterial("ScoreUnderlineMaterial", assetBundle);
+    VotingButtonMaterial = getMaterial("VotingButtonMaterial", assetBundle);
+    handAccIndicatorMaterial = getMaterial("HandAccIndicatorMaterial", assetBundle);
+    accGridBackgroundMaterial = getMaterial("AccGridBackgroundMaterial", assetBundle);
+    accuracyGraphMaterial = getMaterial("AccuracyGraphBackground", assetBundle);
+    accuracyGraphLine = getMaterial("AccuracyGraphLine", assetBundle);
+    accDetailsRowMaterial = getMaterial("AccDetailsRowMaterial", assetBundle);
 
     locationIcon = assetBundle->LoadAsset<Sprite*>("LocationIcon");
     rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>("RowSeparatorIcon");

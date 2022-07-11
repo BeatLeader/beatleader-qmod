@@ -20,7 +20,6 @@ namespace BeatLeader {
             TMPro::TextMeshProUGUI* scorePp;
 
             TMPro::TextMeshProUGUI* scoreDetails;
-            TMPro::TextMeshProUGUI* sponsorMessage;
             
             void setScore(const Score& score);
             void setSelected(bool selected);

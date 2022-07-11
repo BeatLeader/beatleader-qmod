@@ -435,7 +435,7 @@ namespace LeaderboardUI {
                 updatePlayerInfoLabel();
             }
 
-            auto websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
+            auto websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
                 string url = WebUtils::WEB_URL;
                 if (PlayerController::currentPlayer != std::nullopt) {
                     url += "u/" + PlayerController::currentPlayer->id;
@@ -471,7 +471,7 @@ namespace LeaderboardUI {
                 refreshFromTheServer();
             });
 
-            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
+            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
                 modifiers = !modifiers;
                 getModConfig().Modifiers.SetValue(modifiers);
                 clearTable();
@@ -482,7 +482,7 @@ namespace LeaderboardUI {
             ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard without positive modifiers");
             updateModifiersButton();
 
-            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 22), UnityEngine::Vector2(4, 4), []() {
+            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 22), UnityEngine::Vector2(4, 4), []() {
                 if (votingButton->state != 2) return;
                 
                 votingUI->reset();
@@ -543,12 +543,12 @@ namespace LeaderboardUI {
                 scoreDetailsUI->setScore(cellScores[result]);
                 
             });
-            scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::scoreUnderlineMaterial));
+            scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->scoreUnderlineMaterial));
             
             cellHighlights[result] = scoreSelector;
 
             auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
-            backgroundImage->set_material(BundleLoader::scoreBackgroundMaterial);
+            backgroundImage->set_material(BundleLoader::bundle->scoreBackgroundMaterial);
             backgroundImage->get_transform()->SetAsFirstSibling();
             cellBackgrounds[result] = backgroundImage;  
 
@@ -614,7 +614,7 @@ namespace LeaderboardUI {
                 case ReplayUploadStatus::finished:
                     logoAnimation->SetAnimating(false);
                     updateVotingButton(lastVotingStatusUrl);
-                    plvc->Refresh(true, true);
+                    plvc->HandleDidPressRefreshButton();
                     break;
                 case ReplayUploadStatus::error:
                     logoAnimation->SetAnimating(false);

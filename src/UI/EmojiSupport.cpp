@@ -64,7 +64,7 @@ TMPro::TMP_SpriteAsset* CreateTMP_SpriteAsset() {
     spriteAsset->fallbackSpriteAssets = System::Collections::Generic::List_1<TMPro::TMP_SpriteAsset*>::New_ctor();
     spriteAsset->spriteInfoList = System::Collections::Generic::List_1<TMPro::TMP_Sprite*>::New_ctor();
     spriteAsset->spriteSheet = texture;
-    spriteAsset->material =  UnityEngine::Material::New_ctor(BundleLoader::TMP_SpriteCurved);
+    spriteAsset->material =  UnityEngine::Material::New_ctor(BundleLoader::bundle->TMP_SpriteCurved);
     spriteAsset->material->set_mainTexture(spriteAsset->spriteSheet);
 
     return spriteAsset;

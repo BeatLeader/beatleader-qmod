@@ -28,7 +28,7 @@ DEFINE_TYPE(BeatLeader, PlayerAvatar);
 void BeatLeader::PlayerAvatar::Init(HMUI::ImageView* imageView) {
     this->imageView = imageView;
 
-    this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::playerAvatarMaterial);
+    this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::bundle->playerAvatarMaterial);
     this->AvatarTexturePropertyId = UnityEngine::Shader::PropertyToID("_AvatarTexture");
     this->FadeValuePropertyId = UnityEngine::Shader::PropertyToID("_FadeValue");
     imageView->set_material(this->materialInstance);
