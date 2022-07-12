@@ -4,6 +4,11 @@ DEFINE_TYPE(BeatLeader, Bundle);
 
 AssetBundle* BundleLoader::assetBundle;
 BeatLeader::Bundle* BundleLoader::bundle;
+Material* BundleLoader::scoreUnderlineMaterial;
+
+Material* getMaterial(std::string name, AssetBundle* assetBundle) {
+    return assetBundle->LoadAsset<Material*>(name);
+}
 
 custom_types::Helpers::Coroutine BundleLoader::LoadBundle(UnityEngine::GameObject* container)
 {
@@ -21,12 +26,9 @@ custom_types::Helpers::Coroutine BundleLoader::LoadBundle(UnityEngine::GameObjec
         assetBundle = req->get_assetBundle();
     }
 
+    scoreUnderlineMaterial = getMaterial("ScoreUnderlineMaterial", assetBundle);
     bundle = container->AddComponent<BeatLeader::Bundle*>();
     bundle->Init(assetBundle);
-}
-
-Material* getMaterial(std::string name, AssetBundle* assetBundle) {
-    return assetBundle->LoadAsset<Material*>(name);
 }
 
 void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
@@ -34,7 +36,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     playerAvatarMaterial = getMaterial("PlayerAvatarMaterial", assetBundle);
     UIAdditiveGlowMaterial = getMaterial("UIAdditiveGlow", assetBundle);
     scoreBackgroundMaterial = getMaterial("ScoreBackgroundMaterial", assetBundle);
-    scoreUnderlineMaterial = getMaterial("ScoreUnderlineMaterial", assetBundle);
+    // scoreUnderlineMaterial = getMaterial("ScoreUnderlineMaterial", assetBundle);
     VotingButtonMaterial = getMaterial("VotingButtonMaterial", assetBundle);
     handAccIndicatorMaterial = getMaterial("HandAccIndicatorMaterial", assetBundle);
     accGridBackgroundMaterial = getMaterial("AccGridBackgroundMaterial", assetBundle);

@@ -543,7 +543,7 @@ namespace LeaderboardUI {
                 scoreDetailsUI->setScore(cellScores[result]);
                 
             });
-            scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->scoreUnderlineMaterial));
+            scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::scoreUnderlineMaterial));
             
             cellHighlights[result] = scoreSelector;
 

@@ -58,6 +58,7 @@ class BundleLoader {
 public:
     static AssetBundle* assetBundle;
     static BeatLeader::Bundle* bundle;
+    static Material* scoreUnderlineMaterial;
 
     static custom_types::Helpers::Coroutine LoadBundle(UnityEngine::GameObject* container);
 };
