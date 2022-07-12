@@ -17,7 +17,7 @@ namespace BeatLeader {
             TMPro::TextMeshProUGUI* scoreText;
             HMUI::ImageView* imageView;
             
-            void setScore(float score, float ratio);
-            void setSelected(bool selected);
+            void setScore(float score, float ratio) const;
+            void setSelected(bool selected) const;
     };
 }

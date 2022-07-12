@@ -45,7 +45,7 @@ namespace ModifiersUI {
         return "UD";
     }
 
-    string getRankForMultiplier(float modifier) {
+    string_view getRankForMultiplier(float modifier) {
         if (modifier > 0.9) {
             return "SS";
         }

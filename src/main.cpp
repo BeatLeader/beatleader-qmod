@@ -61,7 +61,7 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
     Sprites::ResetCache();
 }
 
-void replayPostCallback(ReplayUploadStatus status, string description, float progress, int code) {
+void replayPostCallback(ReplayUploadStatus status, const string& description, float progress, int code) {
     if (synchronizer != std::nullopt) {
         if (code == 200) {
             synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::uptodate);

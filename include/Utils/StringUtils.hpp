@@ -6,7 +6,7 @@
 using namespace std;
 
 template <typename T>
-inline string to_string_wprecision(const T a_value, const int n = 6) 
+inline string to_string_wprecision(const T& a_value, const int n = 6)
 {
     std::ostringstream out;
     out.precision(n);
@@ -20,15 +20,15 @@ inline char asciitolower(char in) {
     return in;
 }
 
-inline string toLower(string value) {
-    string result = "";
+inline string toLower(string_view const value) {
+    string result;
     result.resize(value.size());
     transform(value.begin(), value.end(), result.begin(), asciitolower);
 
     return result;
 }
 
-inline size_t findCutPosition(string str, size_t max_size) {
+inline size_t findCutPosition(string_view const str, size_t max_size) {
   max_size -= 3;
   for (size_t pos = max_size; pos > 0; --pos)
   {
@@ -44,15 +44,15 @@ inline size_t findCutPosition(string str, size_t max_size) {
   return max_size;
 }
 
-inline string truncate(string str, size_t width, bool show_ellipsis=true)
+inline string truncate(string_view const str, size_t width, bool show_ellipsis=true)
 {
     if (str.size() > width) {
         if (show_ellipsis) {
-            return str.substr(0, findCutPosition(str, width)) + "...";
+            return std::string(str.substr(0, findCutPosition(str, width))) + "...";
         } else {
-            return str.substr(0, findCutPosition(str, width));
+            return std::string(str.substr(0, findCutPosition(str, width)));
         }
     }
             
-    return str;
+    return std::string(str);
 }

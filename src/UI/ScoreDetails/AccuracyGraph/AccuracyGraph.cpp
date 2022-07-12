@@ -74,13 +74,13 @@ float BeatLeader::AccuracyGraph::GetCanvasRadius() {
 void BeatLeader::AccuracyGraph::Setup(ArrayW<float> points, float songDuration) {
     this->points = points;
 
-    vector<UnityEngine::Vector2> positions;
+    vector<Sombrero::FastVector2> positions;
     AccuracyGraphUtils::PostProcessPoints(points, &positions, &viewRect);
     
     this->graphLine->Setup(ArrayW<UnityEngine::Vector2>(il2cpp_utils::vectorToArray(positions)), viewRect, GetCanvasRadius());
     this->songDuration = songDuration;
 
-    auto viewRectVector = UnityEngine::Vector4(viewRect.get_xMin(), viewRect.get_yMin(), viewRect.get_xMax(), viewRect.get_yMax());
+    auto viewRectVector = UnityEngine::Vector4(viewRect.m_XMin, viewRect.m_YMin, viewRect.m_Width + viewRect.m_XMin, viewRect.m_YMin + viewRect.m_Height);
     backgroundMaterial->SetVector(ViewRectPropertyId, viewRectVector);
     backgroundMaterial->SetFloat(SongDurationPropertyId, songDuration);
 }

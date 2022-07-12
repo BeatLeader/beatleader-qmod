@@ -50,7 +50,7 @@ namespace BeatLeader {
 
             void playReplay();
 
-            void setButtonsMaterial();
+            void setButtonsMaterial() const;
     };
     void initScoreDetailsPopup(ScoreDetailsPopup** modalUI, UnityEngine::Transform* parent);
 }
