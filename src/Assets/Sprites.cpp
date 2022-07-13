@@ -19,31 +19,25 @@ using UnityEngine::Sprite;
 
 unordered_map<string_view, std::vector<uint8_t>> iconCache;
 unordered_map<string_view, Sprite*> iconSpriteCache;
-unordered_map<string_view, Gif> iconGifCache;
 
 
 void Sprites::get_Icon(const string& url, const std::function<void(UnityEngine::Sprite*)>& completion, bool nullable) {
     if (iconCache.contains(url)) {
         std::span<uint8_t> bytes = iconCache.at(url);
         UnityEngine::Sprite* sprite;
-        Gif* gif;
 
         if (iconSpriteCache.contains(url)) {
-            sprite = iconSpriteCache[url];
-        } else if (iconGifCache.contains(url)) {
-            gif = &iconGifCache.at(url);
+            sprite = iconSpriteCache.at(url);
         } else {
             // TODO: Figure out a way to not double allocate
             // problem being Gif's destructor would likely not make copy constructors nice
-            Gif tempGif(bytes);
+            Gif gif(bytes);
 
-            if (tempGif.Parse() == 0 && tempGif.Slurp() == 1) {
-                gif = &iconGifCache.emplace(url, bytes).first->second;
-
-                auto tex = gif->get_frame(0);
+            if (gif.Parse() == 0 && gif.Slurp() == 1) {
+                auto tex = gif.get_frame(0);
                 sprite = UnityEngine::Sprite::Create(
                         tex,
-                        UnityEngine::Rect(0.0, 0.0, gif->get_width(), gif->get_height()),
+                        UnityEngine::Rect(0.0, 0.0, gif.get_width(), gif.get_height()),
                         UnityEngine::Vector2(0.5, 0.5),
                         100.0,
                         0,
@@ -51,13 +45,12 @@ void Sprites::get_Icon(const string& url, const std::function<void(UnityEngine::
                         UnityEngine::Vector4(0.0, 0.0, 0.0, 0.0),
                         false);
             } else {
-
-                if (!sprite) {
-                    // TODO: Bug dark to use a span instead of copied vector
-                    sprite = iconSpriteCache[url] = QuestUI::BeatSaberUI::ArrayToSprite(BeatLeader::toArray(bytes));
-                    Object::DontDestroyOnLoad(sprite);
-                }
+                // TODO: Bug dark to use a span instead of copied vector
+                sprite = QuestUI::BeatSaberUI::ArrayToSprite(BeatLeader::toArray(bytes));
             }
+
+            iconSpriteCache[url] = sprite;
+            Object::DontDestroyOnLoad(sprite);
         }
 
         if (sprite != NULL || nullable) {
