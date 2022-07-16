@@ -32,7 +32,7 @@ namespace BeatLeader {
         optional<GraphSpline> spline;
         vector<UnityEngine::Vector2> CreateUvArray();
         void PopulateTrianglesArray(int horizontalResolution, int verticalResolution);
-        int GetVertexIndex(int columnIndex, int rowIndex);
+        int GetVertexIndex(int columnIndex, int rowIndex) const;
 
         vector<int> triangles;
     };

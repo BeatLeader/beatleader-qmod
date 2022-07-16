@@ -8,23 +8,23 @@ Range::Range(float start, float end) {
     this->amplitude = end - start;
 }
 
-float Range::GetRatioClamped(float value) {
+float Range::GetRatioClamped(float value) const {
     float ratio = GetRatio(value);
     if (ratio <= 0) return 0;
     if (ratio >= 1) return 1;
     return ratio;
 }
 
-float Range::GetValueClamped(float ratio) {
+float Range::GetValueClamped(float ratio) const {
     if (ratio <= 0) return start;
     if (ratio >= 1) return end;
     return SlideBy(ratio);
 }
 
-float Range::GetRatio(float value) {
+float Range::GetRatio(float value) const {
     return (value - start) / amplitude;
 }
 
-float Range::SlideBy(float ratio) {
+float Range::SlideBy(float ratio) const {
     return start + amplitude * ratio;
 }

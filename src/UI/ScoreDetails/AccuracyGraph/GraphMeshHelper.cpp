@@ -63,8 +63,8 @@ void BeatLeader::GraphMeshHelper::PopulateMesh(UnityEngine::UI::VertexHelper* vh
                 screenNormalizedPosition,
                 UnityEngine::Vector2(canvasRadius, 0),
                 node.position,
-                UnityEngine::Vector3::get_one(),
-                UnityEngine::Vector4::get_one()
+                UnityEngine::Vector3{1,1,1},
+                UnityEngine::Vector4{1,1,1,1}
             );
         }
     }
@@ -72,7 +72,7 @@ void BeatLeader::GraphMeshHelper::PopulateMesh(UnityEngine::UI::VertexHelper* vh
     for (int i = 0; i < triangles.size(); i += 3) vh->AddTriangle(triangles[i], triangles[i + 1], triangles[i + 2]);
 }
 
-int BeatLeader::GraphMeshHelper::GetVertexIndex(int columnIndex, int rowIndex) {
+int BeatLeader::GraphMeshHelper::GetVertexIndex(int columnIndex, int rowIndex) const {
     return rowIndex * rowsCount + columnIndex;
 }
 

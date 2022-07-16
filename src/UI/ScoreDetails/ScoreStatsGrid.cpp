@@ -48,8 +48,8 @@ void BeatLeader::ScoreStatsGrid::setScore(optional<ScoreStats> scoreStats) {
 
         
 void BeatLeader::ScoreStatsGrid::setSelected(bool selected) {
-    for (int i = 0; i < 12; i++)
+    for (auto const& accuracyGridCell : accuracyGridCells)
     {
-        accuracyGridCells[i].setSelected(selected);
+        accuracyGridCell.setSelected(selected);
     }
 }

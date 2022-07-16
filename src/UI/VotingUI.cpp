@@ -28,7 +28,7 @@ using namespace GlobalNamespace;
 void setupButtonTitle(UnityEngine::UI::Button* button, float offset, int fontSize = 0) {
     UnityEngine::Object::Destroy(button->get_transform()->Find("Content")->GetComponent<UnityEngine::UI::LayoutElement*>());
 
-    auto title = button->get_transform()->GetComponentsInChildren<TMPro::TextMeshProUGUI*>()->get(0);
+    auto title = button->GetComponentsInChildren<TMPro::TextMeshProUGUI*>()->get(0);
     if (fontSize > 0) {
         title->set_fontSize(fontSize);
     }
@@ -36,8 +36,8 @@ void setupButtonTitle(UnityEngine::UI::Button* button, float offset, int fontSiz
     title->set_margin(offset);
 }
 
-void setButtonTitleColor(UnityEngine::UI::Button* button, UnityEngine::Color32 color) {
-    auto title = button->get_transform()->GetComponentsInChildren<TMPro::TextMeshProUGUI*>()->get(0);
+void setButtonTitleColor(UnityEngine::UI::Button* button, UnityEngine::Color32 const& color) {
+    auto title = button->GetComponentsInChildren<TMPro::TextMeshProUGUI*>()->get(0);
     title->SetFaceColor(color);
 }
 
@@ -50,14 +50,15 @@ void BeatLeader::initVotingPopup(
         UnityEngine::GameObject::Destroy(modalUI->modal->get_gameObject());
     }
     if (modalUI == nullptr) modalUI = (BeatLeader::RankVotingPopup*) malloc(sizeof(BeatLeader::RankVotingPopup));
-    UnityEngine::Sprite* roundRect = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Sprite*>().FirstOrDefault([](UnityEngine::Sprite* x) { return x->get_name() == "RoundRect10"; });
 
     auto container = CreateModal(parent, UnityEngine::Vector2(60, 30), [](HMUI::ModalView *modal) {}, true);
     modalUI->modal = container;
 
+    auto containerTransform = container->get_transform();
+
     // Page 1
-    modalUI->header1 = CreateText(container->get_transform(), "Is this map suitable for rank?", UnityEngine::Vector2(4.0, 8.0));
-    modalUI->yesButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "YES", UnityEngine::Vector2(-12.0, 3.0), [modalUI]() {
+    modalUI->header1 = CreateText(containerTransform, "Is this map suitable for rank?", UnityEngine::Vector2(4.0, 8.0));
+    modalUI->yesButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "YES", UnityEngine::Vector2(-12.0, 3.0), [modalUI]() {
         modalUI->rankable = true;
         modalUI->rightButton->get_gameObject()->SetActive(true);
         modalUI->voteButton->set_interactable(true);
@@ -66,7 +67,7 @@ void BeatLeader::initVotingPopup(
         setButtonTitleColor(modalUI->yesButton, UnityEngine::Color32(102, 255, 102, 255));
     });
 
-    modalUI->noButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "NO", UnityEngine::Vector2(14.0, 3.0), [modalUI]() {
+    modalUI->noButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "NO", UnityEngine::Vector2(14.0, 3.0), [modalUI]() {
         modalUI->rankable = false;
         modalUI->rightButton->get_gameObject()->SetActive(false);
         modalUI->voteButton->set_interactable(true);
@@ -76,7 +77,7 @@ void BeatLeader::initVotingPopup(
     });
 
     // Page 2
-    modalUI->header2 = CreateText(container->get_transform(), "Difficulty and category (optional)", UnityEngine::Vector2(4.0, 8.0));
+    modalUI->header2 = CreateText(containerTransform, "Difficulty and category (optional)", UnityEngine::Vector2(4.0, 8.0));
     modalUI->starSlider = CreateSliderSetting(
         modalUI->modal->get_transform(),
         "Stars",
@@ -90,42 +91,42 @@ void BeatLeader::initVotingPopup(
     });
     move(modalUI->starSlider->slider, -7, 0);
 
-    modalUI->accButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "acc", UnityEngine::Vector2(-20, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
+    modalUI->accButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "acc", UnityEngine::Vector2(-20, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::acc, modalUI->accButton);
     });
     setupButtonTitle(modalUI->accButton, -0.5, 3);
 
-    modalUI->techButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "tech", UnityEngine::Vector2(-6, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
+    modalUI->techButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "tech", UnityEngine::Vector2(-6, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::tech, modalUI->techButton);
     });
     setupButtonTitle(modalUI->techButton, -0.5, 3);
 
-    modalUI->midspeedButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "midspeed", UnityEngine::Vector2(8, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
+    modalUI->midspeedButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "midspeed", UnityEngine::Vector2(8, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::midspeed, modalUI->midspeedButton);
     });
     setupButtonTitle(modalUI->midspeedButton, -0.5, 3);
 
-    modalUI->speedButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "speed", UnityEngine::Vector2(22, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
+    modalUI->speedButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "speed", UnityEngine::Vector2(22, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::speed, modalUI->speedButton);
     });
     setupButtonTitle(modalUI->speedButton, -0.5, 3);
 
-    modalUI->voteButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Vote", UnityEngine::Vector2(-12.0, -10.0), UnityEngine::Vector2(15.0, 8.0), [callback, modalUI]() {
+    modalUI->voteButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "Vote", UnityEngine::Vector2(-12.0, -10.0), UnityEngine::Vector2(15.0, 8.0), [callback, modalUI]() {
         callback(true, modalUI->rankable, modalUI->stars, modalUI->type);
     });
     setupButtonTitle(modalUI->voteButton, -0.5);
 
-    modalUI->cancelButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Cancel", UnityEngine::Vector2(12.0, -10.0), UnityEngine::Vector2(15.0, 8.0), [callback]() {
+    modalUI->cancelButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "Cancel", UnityEngine::Vector2(12.0, -10.0), UnityEngine::Vector2(15.0, 8.0), [callback]() {
         callback(false, false, 0, 0);
     });
     setupButtonTitle(modalUI->cancelButton, -0.5);
 
-    modalUI->leftButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "<", UnityEngine::Vector2(-27.0, -10.0), UnityEngine::Vector2(5.0, 6.0), [modalUI]() {
+    modalUI->leftButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "<", UnityEngine::Vector2(-27.0, -10.0), UnityEngine::Vector2(5.0, 6.0), [modalUI]() {
         modalUI->left();
     });
     setupButtonTitle(modalUI->leftButton, -1.5, 3);
 
-    modalUI->rightButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), ">", UnityEngine::Vector2(26.0, -10.0), UnityEngine::Vector2(5.0, 6.0), [modalUI]() {
+    modalUI->rightButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, ">", UnityEngine::Vector2(26.0, -10.0), UnityEngine::Vector2(5.0, 6.0), [modalUI]() {
         modalUI->right();
     });
     setupButtonTitle(modalUI->rightButton, -1.5, 3);
@@ -166,7 +167,7 @@ void BeatLeader::RankVotingPopup::reset() {
     stars = 0;
 }
 
-void BeatLeader::RankVotingPopup::left() {
+void BeatLeader::RankVotingPopup::left() const {
     rightButton->get_gameObject()->SetActive(true);
     leftButton->get_gameObject()->SetActive(false);
 
@@ -184,7 +185,7 @@ void BeatLeader::RankVotingPopup::left() {
     header2->get_gameObject()->SetActive(false);
 }
 
-void BeatLeader::RankVotingPopup::right() {
+void BeatLeader::RankVotingPopup::right() const {
     leftButton->get_gameObject()->SetActive(true);
     rightButton->get_gameObject()->SetActive(false);
 
