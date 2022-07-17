@@ -689,6 +689,7 @@ namespace LeaderboardUI {
         plvc = NULL;
         scoreDetailsUI = NULL;
         votingUI = NULL;
+        linkContainer = NULL;
         cellScores.clear();
         avatars = {};
         cellHighlights = {};
