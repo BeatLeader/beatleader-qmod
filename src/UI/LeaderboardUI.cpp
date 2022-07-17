@@ -322,7 +322,7 @@ namespace LeaderboardUI {
             }
             plvc->leaderboardTableView->rowHeight = 6;
 
-            if (selectedScore == 11 && !result["selection"].IsNull()) {
+            if (selectedScore > 9 && !result["selection"].IsNull()) {
                 Score currentScore = Score(result["selection"]);
 
                 LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
