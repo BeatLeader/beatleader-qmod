@@ -41,7 +41,6 @@ namespace BeatLeader {
             TMPro::TextMeshProUGUI* loadingText;
 
             int scoreId;
-            string replayLink;
             bool scoreStatsFetched;
             ScoreStats scoreStats;
             

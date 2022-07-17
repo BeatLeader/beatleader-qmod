@@ -11,6 +11,7 @@
 #include "include/UI/ScoreDetails/ScoreDetailsUI.hpp"
 #include "include/UI/VotingButton.hpp"
 #include "include/UI/VotingUI.hpp"
+#include "include/UI/LinksContainer.hpp"
 #include "include/UI/LogoAnimation.hpp"
 #include "include/UI/PlayerAvatar.hpp"
 #include "include/UI/EmojiSupport.hpp"
@@ -38,6 +39,7 @@
 #include "HMUI/Screen.hpp"
 #include "HMUI/ViewController.hpp"
 #include "HMUI/ViewController_AnimationType.hpp"
+#include "HMUI/ViewController_AnimationDirection.hpp"
 #include "HMUI/CurvedTextMeshPro.hpp"
 
 #include "System/Action.hpp"
@@ -116,8 +118,12 @@ namespace LeaderboardUI {
     BeatLeader::VotingButton* votingButton = NULL;
     UnityEngine::GameObject* parentScreen = NULL;
 
+    TMPro::TextMeshProUGUI* loginPrompt = NULL;
+    UnityEngine::UI::Button* preferencesButton = NULL;
+
     BeatLeader::ScoreDetailsPopup* scoreDetailsUI = NULL;
     BeatLeader::RankVotingPopup* votingUI = NULL;
+    BeatLeader::LinksContainerPopup* linkContainer = NULL;
     bool visible = false;
 
     int page = 1;
@@ -209,6 +215,28 @@ namespace LeaderboardUI {
                 votingButton->SetState(stoi(response));
             }
         }, [](float progress){});
+    }
+
+    void openSettings() {
+        auto currentFlowCoordinator = BeatSaberUI::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
+        
+        auto modSettingsFlowCoordinator = GetModSettingsFlowCoordinator();
+        if (modSettingsFlowCoordinator == NULL) {
+            modSettingsFlowCoordinator = BeatSaberUI::CreateFlowCoordinator(reinterpret_cast<System::Type*>(il2cpp_utils::GetSystemType(il2cpp_utils::GetClassFromName("QuestUI", "ModSettingsFlowCoordinator"))));
+        }
+        
+        currentFlowCoordinator->PresentFlowCoordinator(modSettingsFlowCoordinator, nullptr, ViewController::AnimationDirection::Horizontal, true, false);
+
+        QuestUI::MainThreadScheduler::Schedule([modSettingsFlowCoordinator] {
+            auto buttons = modSettingsFlowCoordinator->get_topViewController()->GetComponentsInChildren<UnityEngine::UI::Button*>();
+            for (size_t i = 0; i < buttons.size(); i++)
+            {
+                auto textMesh = buttons[i]->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
+                if (textMesh->get_text() == "bl" || textMesh->get_text() == "BeatLeader") {
+                    buttons[i]->get_onClick()->Invoke();
+                }
+            }
+        });
     }
 
     void refreshFromTheServer() {
@@ -393,8 +421,23 @@ namespace LeaderboardUI {
         isLocal = false;
 
         if (PlayerController::currentPlayer == std::nullopt) {
-            self->loadingControl->ShowText("Please sign up or log in mod settings!", true);
+            self->loadingControl->Hide();
+            
+            if (preferencesButton == NULL) {
+                loginPrompt = ::QuestUI::BeatSaberUI::CreateText(plvc->get_transform(), "Please sign up or log in to post scores!", false, UnityEngine::Vector2(4, 10));
+                preferencesButton = ::QuestUI::BeatSaberUI::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
+                    openSettings();
+                });
+            }
+            loginPrompt->get_gameObject()->SetActive(true);
+            preferencesButton->get_gameObject()->SetActive(true);
+
             return;
+        }
+
+        if (preferencesButton != NULL) {
+            loginPrompt->get_gameObject()->SetActive(false);
+            preferencesButton->get_gameObject()->SetActive(false);
         }
 
         if (uploadStatus == NULL) {
@@ -415,6 +458,7 @@ namespace LeaderboardUI {
             visible = true;
 
             BeatLeader::initScoreDetailsPopup(&scoreDetailsUI, self->get_transform());
+            BeatLeader::initLinksContainerPopup(&linkContainer, self->get_transform());
             BeatLeader::initVotingPopup(&votingUI, self->get_transform(), voteCallback);
 
             auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(20, 20));
@@ -436,11 +480,7 @@ namespace LeaderboardUI {
             }
 
             auto websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
-                string url = WebUtils::WEB_URL;
-                if (PlayerController::currentPlayer != std::nullopt) {
-                    url += "u/" + PlayerController::currentPlayer->id;
-                }
-                UnityEngine::Application::OpenURL(url);
+                linkContainer->modal->Show(true, true, nullptr);
             });
             logoAnimation = websiteLink->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
             logoAnimation->Init(websiteLink);
