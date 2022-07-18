@@ -52,10 +52,15 @@ namespace LevelInfoUI {
 
     static map<string, float> _mapInfos;
     static string selectedMap;
+    static string lastKey;
 
     MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
         LevelRefreshContent(self);
 
+        if (self->level == NULL || 
+            self->level->get_beatmapLevelData() == NULL || 
+            self->beatmapCharacteristicSegmentedControlController == NULL ||
+            self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic == NULL) return;
         if (starsLabel == NULL) {
             starsLabel = CreateText(self->levelParamsPanel->get_transform(), "0.00", true, UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
             starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
@@ -75,6 +80,7 @@ namespace LevelInfoUI {
             noSubmissionLabel->set_color(UnityEngine::Color(1.0, 0.0, 0.0, 1));
         }
 
+        noSubmissionLabel->get_gameObject()->SetActive(!UploadEnabled());
         // TODO: Why not just substr str.substr("custom_level_".size())
         // essentially, remove prefix
         IPreviewBeatmapLevel* level = reinterpret_cast<IPreviewBeatmapLevel*>(self->level);
@@ -86,15 +92,19 @@ namespace LevelInfoUI {
         string key = hash + difficulty + mode;
         selectedMap = key;
 
+        if (lastKey == key) return;
+        lastKey = key;
         if (_mapInfos.contains(key)) {
             starsLabel->SetText(newcsstr2(to_string_wprecision(_mapInfos[key], 2)));
             ppLabel->SetText(newcsstr2(to_string_wprecision(_mapInfos[key] * 44.0f, 2)));
         } else {
             string url = WebUtils::API_URL + "map/hash/" + hash;
 
-            WebUtils::GetJSONAsync(url, [key, hash](long status, bool error, rapidjson::Document const& result){
+            WebUtils::GetJSONAsync(url, [difficulty, mode, key, hash](long status, bool error, rapidjson::Document const& result){
+                if (status != 200) return;
+                
                 if (key != selectedMap || !result.HasMember("difficulties")) return;
-                auto difficulties = result["difficulties"].GetArray();
+                auto const& difficulties = result["difficulties"].GetArray();
                 for (int index = 0; index < (int)difficulties.Size(); ++index)
                 {
                     auto const& value = difficulties[index].GetObject();
@@ -111,8 +121,6 @@ namespace LevelInfoUI {
                 });
             });
         }
-
-        noSubmissionLabel->get_gameObject()->SetActive(!UploadEnabled());
     }
 
     void setup() {

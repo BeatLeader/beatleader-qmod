@@ -28,13 +28,13 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     }
     if (modalUI == nullptr) modalUI = (BeatLeader::LinksContainerPopup*) malloc(sizeof(BeatLeader::LinksContainerPopup));
 
-    auto container = CreateModal(parent, UnityEngine::Vector2(70, 30), [](HMUI::ModalView *modal) {}, true);
+    auto container = CreateModal(parent, UnityEngine::Vector2(75, 30), [](HMUI::ModalView *modal) {}, true);
     modalUI->modal = container;
 
     auto modalTransform = container->get_transform();
 
-    modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(2.0, 5.0));
-    CreateText(modalTransform, "<u>This buttons will open browser!", UnityEngine::Vector2(2.0, -4.0));
+    modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(1.0, 6.0));
+    CreateText(modalTransform, "<u>These buttons will open the browser!", UnityEngine::Vector2(1.0, -3.0));
 
     modalUI->profile = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->websiteLinkIcon, UnityEngine::Vector2(-24, -9), UnityEngine::Vector2(22, 6), [](){
         string url = WebUtils::WEB_URL;

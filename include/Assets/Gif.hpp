@@ -22,8 +22,8 @@ struct Gif
     Gif(std::string& text) : datastream(&this->data), data(text){};
     Gif(std::span<uint8_t> const vec) : datastream(&this->data), data(reinterpret_cast<std::span<char> const &>(vec)){};
     Gif(std::span<char> const vec) : datastream(&this->data), data(vec){};
-    Gif(ArrayW<char> array) : datastream(&this->data), data(array.ref_to()){};
-    Gif(ArrayW<uint8_t> array) : Gif(ArrayW<char>(array.convert())){};
+    Gif(Array<char>* array) : datastream(&this->data), data(array){};
+    Gif(Array<uint8_t>* array) : Gif(reinterpret_cast<Array<char>*>(array)){};
 
     /// @brief on destruction we need to actually close the gif file otherwise we are leaking memory
     ~Gif()
@@ -46,7 +46,7 @@ struct Gif
 
     /// @brief "slurp" decompress all the data
     /// @return slurp error 1 for GIF_OK 0 for GIF_ERROR
-    int Slurp() const
+    int Slurp()
     {
         return DGifSlurp(gif);
     }
@@ -64,7 +64,7 @@ struct Gif
     
     /// @brief gets the frame @ idx
     /// @return texture2d or nullptr on fail
-    Texture2D* get_frame(int idx) const
+    Texture2D* get_frame(int idx)
     {
         if (!gif || idx > get_length()) return nullptr;
 
@@ -135,7 +135,7 @@ struct Gif
     // Stolen from Nya: https://github.com/FrozenAlex/Nya-utils :lovege:
     /// @brief gets the frame @ idx
     /// @return texture2d or nullptr on fail
-    AllFramesResult get_all_frames() const {
+    AllFramesResult get_all_frames() {
         // Not sure if it helps but everything works
         const char * GifVersion = DGifGetGifVersion(gif);
         int length = get_length();
@@ -237,9 +237,9 @@ struct Gif
     }
     
 
-    int get_width() const { return gif ? gif->SWidth : 0; };
-    int get_height() const { return gif ? gif->SHeight : 0; };
-    int get_length() const { return gif ? gif->ImageCount : 0; };
+    int get_width() { return gif ? gif->SWidth : 0; };
+    int get_height() { return gif ? gif->SHeight : 0; };
+    int get_length() { return gif ? gif->ImageCount : 0; };
 
 public:
     GifFileType* gif = nullptr;
