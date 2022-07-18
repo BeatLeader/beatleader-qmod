@@ -13,7 +13,7 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include "songloader/shared/API.hpp"
-// #include "playlistmanager/shared/PlaylistManager.hpp"
+#include "playlistmanager/shared/PlaylistManager.hpp"
 
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
@@ -114,7 +114,7 @@ void PlaylistSynchronizer::SyncPlaylist() {
     );
     RuntimeSongLoader::API::AddRefreshLevelPacksEvent(
         [] (RuntimeSongLoader::SongLoaderBeatmapLevelPackCollectionSO* customBeatmapLevelPackCollectionSO) {
-            // PlaylistManager::LoadPlaylists(customBeatmapLevelPackCollectionSO, true);
+            PlaylistManager::LoadPlaylists(customBeatmapLevelPackCollectionSO, true);
         }
     );
 }

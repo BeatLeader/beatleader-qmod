@@ -169,7 +169,6 @@ void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
                 QuestUI::MainThreadScheduler::Schedule([self] {
                     self->loadingText->SetText("Failed to fetch stats");
                 });
-
             }
         });
     }

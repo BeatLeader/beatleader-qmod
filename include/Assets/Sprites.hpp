@@ -19,7 +19,6 @@ class Sprites {
     static const string CellBGB64;
     static const string ModifiersIconB64;
     static const string PixelB64;
-    static const string ReplayB64;
 
     static map<string, std::vector<uint8_t>> iconCache;
 public:

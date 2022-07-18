@@ -44,6 +44,8 @@ namespace BeatLeader {
             
             void setScore(const Score& score);
             void selectTab(int index);
+
+            void setButtonsMaterial() const;
             
             void playReplay();
     };
