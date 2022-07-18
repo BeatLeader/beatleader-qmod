@@ -26,77 +26,57 @@ void callbackWrapper(optional<Player> const& player) {
         fn(player);
 }
 
-string PlayerController::RefreshOnline() {
-    string result = "";
-    WebUtils::Get(WebUtils::API_URL + "user/id", result);
-    if (result.length() > 0) {
-        currentPlayer = Player();
-        currentPlayer->id = result;
-
-        WebUtils::GetJSONAsync(WebUtils::API_URL + "player/" + result, [](long status, bool error, rapidjson::Document const& result){
-            if (status == 200) {
-                currentPlayer = Player(result);
-                callbackWrapper(currentPlayer);
-            }
-        });
-    } else {
-        currentPlayer = nullopt;
-    }
-    return result;
-}  
-
-string PlayerController::Refresh() {
-    return RefreshOnline();
+void PlayerController::Refresh(const function<void(optional<Player> const&, string)>& finished) {
+    WebUtils::GetJSONAsync(WebUtils::API_URL + "user", [finished](long status, bool error, rapidjson::Document const& result){
+        if (status == 200) {
+            currentPlayer = Player(result["player"]);
+            if (finished) finished(currentPlayer, "");
+            callbackWrapper(currentPlayer);
+        } else {
+            currentPlayer = nullopt;
+            if (finished) finished(nullopt, "Failed to retrieve player");
+        }
+    });
 }
 
-void PlayerController::SignUp(string login, string password, const function<void(string)>& finished) {
+void PlayerController::SignUp(string login, string password, const function<void(optional<Player> const&, string)>& finished) {
     lastErrorDescription = "";
     remove(WebUtils::getCookieFile().data());
 
     WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", password, login, "signup",
                             [finished](long statusCode, string error) {
-                                string result = "";
-                                if (statusCode == 200) {
-                                    result = Refresh();
-                                } else {
-                                    lastErrorDescription = error;
-                                    getLogger().error("BeatLeader %s",
-                                                      ("signup error" + to_string(statusCode)).c_str());
-                                }
-                                finished(result);
-                            });
+        if (statusCode == 200) {
+            Refresh(finished);
+        } else {
+            lastErrorDescription = error;
+            getLogger().error("BeatLeader %s",
+                                ("signup error" + to_string(statusCode)).c_str());
+            finished(nullopt, error);
+        }
+    });
 }
 
-void PlayerController::LogIn(string login, string password, const function<void(string)>& finished) {
+void PlayerController::LogIn(string login, string password, const function<void(optional<Player> const&, string)>& finished) {
     lastErrorDescription = "";
     remove(WebUtils::getCookieFile().data());
 
     WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", password, login, "login",
                             [finished](long statusCode, string error) {
-                                string result = "";
-                                if (statusCode == 200) {
-                                    result = Refresh();
-                                } else {
-                                    lastErrorDescription = error;
-                                    getLogger().error("BeatLeader %s",
-                                                      ("signup error" + to_string(statusCode)).c_str());
-                                }
-
-                                finished(result);
-                            });
+        if (statusCode == 200) {
+            Refresh(finished);
+        } else {
+            lastErrorDescription = error;
+            getLogger().error("BeatLeader %s",
+                                ("signup error" + to_string(statusCode)).c_str());
+            finished(nullopt, error);
+        }
+    });
 }
 
-bool PlayerController::LogOut() {
-    string result = "";
-    WebUtils::Get(WebUtils::API_URL + "signout", result);
+void PlayerController::LogOut() {
+    WebUtils::GetAsync(WebUtils::API_URL + "signout", [](long statusCode, string error) {});
     remove(WebUtils::getCookieFile().data());
-    lastErrorDescription = result;
-    WebUtils::Get(WebUtils::API_URL + "user/id", result);
-    if (result.length() == 0) {
-        currentPlayer = nullopt;
-        callbackWrapper(currentPlayer);
-        return true;
-    } else {
-        return false;
-    }
+
+    currentPlayer = nullopt;
+    callbackWrapper(currentPlayer);
 }
