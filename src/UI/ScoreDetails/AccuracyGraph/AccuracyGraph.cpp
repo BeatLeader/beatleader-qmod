@@ -88,7 +88,7 @@ void BeatLeader::AccuracyGraph::Setup(ArrayW<float> points, float songDuration) 
 static string FormatCursorText(float songTime, float accuracy) {
     int fullMinutes = (int)(songTime / 60.0);
     int remainingSeconds = abs((int)songTime % 60);
-    return "<color=#B856FF>time: </color>" + to_string(fullMinutes) + ":" + to_string(remainingSeconds) + "<color=#B856FF>accuracy: </color>" + to_string_wprecision(accuracy * 100.0, 2) + "<size=70%>%";
+    return "<color=#B856FF>time: </color>" + to_string(fullMinutes) + ":" + (remainingSeconds < 10 ? "0" : "") + to_string(remainingSeconds) + "<color=#B856FF> accuracy: </color>" + to_string_wprecision(accuracy * 100.0, 2) + "<size=70%>%";
 }
 
 void BeatLeader::AccuracyGraph::Update() {
