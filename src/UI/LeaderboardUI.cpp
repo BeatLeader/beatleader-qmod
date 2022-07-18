@@ -135,18 +135,9 @@ namespace LeaderboardUI {
     static UnityEngine::Color ownScoreColor = UnityEngine::Color(0.7, 0.0, 0.7, 0.3);
     static UnityEngine::Color someoneElseScoreColor = UnityEngine::Color(0.07, 0.0, 0.14, 0.05);
 
-    static bool bundleLoaded = false;
     static string lastUrl = "";
     static string lastVotingStatusUrl = "";
     static string votingUrl = "";
-
-    string generateLabel(Score const& score) {
-        // TODO: Use fmt
-        string const& nameLabel = score.player.name;
-
-        string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
-        return FormatUtils::FormatNameWithClans(score.player, 30) + "<pos=50%>" + FormatUtils::FormatPP(score.pp) + "   " + FormatUtils::formatAcc(score.accuracy) + " " + fcLabel; 
-    }
 
     void updatePlayerInfoLabel() {
         auto const& player = PlayerController::currentPlayer;
@@ -201,7 +192,6 @@ namespace LeaderboardUI {
     MAKE_HOOK_MATCH(LeaderboardDeactivate, &PlatformLeaderboardViewController::DidDeactivate, void, PlatformLeaderboardViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
         LeaderboardDeactivate(self, removedFromHierarchy, screenSystemDisabling);
 
-        bundleLoaded = false;
         if (parentScreen != NULL) {
             visible = false;
             parentScreen->SetActive(false);
@@ -218,22 +208,6 @@ namespace LeaderboardUI {
                 votingButton->SetState(stoi(response));
             }
         }, [](float progress){});
-    }
-
-    UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootView, UnityEngine::Vector2 screenSize, UnityEngine::Vector3 position, float curvatureRadius) {
-        auto gameObject = QuestUI::BeatSaberUI::CreateCanvas();
-        auto screen = gameObject->AddComponent<HMUI::Screen*>();
-        screen->rootViewController = rootView;
-        auto curvedCanvasSettings = gameObject->AddComponent<HMUI::CurvedCanvasSettings*>();
-        curvedCanvasSettings->SetRadius(curvatureRadius);
-
-        auto transform = gameObject->get_transform();
-        UnityEngine::GameObject* screenSystem = UnityEngine::GameObject::Find("ScreenContainer");
-        if(screenSystem) {
-            transform->set_position(screenSystem->get_transform()->get_position());
-            screen->get_gameObject()->GetComponent<UnityEngine::RectTransform*>()->set_sizeDelta(screenSize);
-        }
-        return gameObject;
     }
 
     void refreshFromTheServer() {
@@ -311,7 +285,7 @@ namespace LeaderboardUI {
 
                     LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
                         currentScore.modifiedScore, 
-                        generateLabel(currentScore), 
+                        FormatUtils::FormatPlayerScore(currentScore), 
                         currentScore.rank, 
                         false);
                     plvc->scores->Add(scoreData);
@@ -324,7 +298,7 @@ namespace LeaderboardUI {
 
                 LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
                         currentScore.modifiedScore, 
-                        generateLabel(currentScore), 
+                        FormatUtils::FormatPlayerScore(currentScore), 
                         currentScore.rank, 
                         false);
                 
@@ -420,11 +394,6 @@ namespace LeaderboardUI {
         if (PlayerController::currentPlayer == std::nullopt) {
             self->loadingControl->ShowText("Please sign up or log in mod settings!", true);
             return;
-        }
-
-        if (!bundleLoaded) {
-            self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle()));
-            bundleLoaded = true;
         }
 
         if (uploadStatus == NULL) {
@@ -527,7 +496,7 @@ namespace LeaderboardUI {
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
         if (!levelData->get_levelID().starts_with("custom_level")) {
-            bundleLoaded = false;
+            votingButton->SetState(-1);
             self->loadingControl->Hide();
             self->hasScoresData = false;
             self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
@@ -684,6 +653,5 @@ namespace LeaderboardUI {
         avatars = {};
         cellHighlights = {};
         cellBackgrounds = {};
-        bundleLoaded = false;
     }    
 }

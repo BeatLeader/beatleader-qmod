@@ -49,8 +49,6 @@ string FormatInt(int score) {
     std::stringstream strm;
     strm.imbue( std::locale( std::locale::classic(), new MyNumPunct ) );
     strm << score;
-
-    strm << std::endl;
     return strm.str();
 }
 
@@ -58,7 +56,7 @@ string FormatScore(Score const& score) {
     string result = FormatInt(score.modifiedScore);
 
     if (score.scoreImprovement.score > 0) {
-        result += " <color=#008800><size=55%>" + FormatInt(score.scoreImprovement.score) + "</size></color>";
+        result += "\n<color=#008800><size=55%>+" + FormatInt(score.scoreImprovement.score) + "</size></color>";
     }
     return result;
 }
@@ -96,7 +94,7 @@ inline string FormatAcc(const Score& score) {
     string result = FormatUtils::formatAcc(score.accuracy);
 
     if (score.scoreImprovement.score > 0) {
-       result += "<color=#008800><size=55%>\n+" + to_string_wprecision(score.scoreImprovement.accuracy * 100, 2) + "</size></color>";
+       result += "\n<color=#008800><size=55%>+" + to_string_wprecision(score.scoreImprovement.accuracy * 100, 2) + "</size></color>";
     }
 
     return result;
@@ -105,7 +103,7 @@ inline string FormatAcc(const Score& score) {
 inline string FormatPP(const Score& score) {
     string result = FormatUtils::FormatPP(score.pp);
     if (score.scoreImprovement.score > 0) {
-       result += "<color=#008800><size=55%>\n+" + to_string_wprecision(score.scoreImprovement.pp, 2) + "</size></color>";
+       result += "\n<color=#008800><size=55%>+" + to_string_wprecision(score.scoreImprovement.pp, 2) + "</size></color>";
     }
     return result;
 }

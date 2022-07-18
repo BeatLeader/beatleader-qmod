@@ -49,18 +49,22 @@ custom_types::Helpers::Coroutine BundleLoader::LoadBundle()
     LoadAssets(bundle);
 }
 
+Material* instantiadedMaterial(std::string name, AssetBundle* assetBundle) {
+    return Object::Instantiate(assetBundle->LoadAsset<Material*>(name));
+}
+
 void BundleLoader::LoadAssets(AssetBundle* assetBundle) {
-    logoMaterial = assetBundle->LoadAsset<Material*>("LogoMaterial");
-    playerAvatarMaterial = assetBundle->LoadAsset<Material*>("PlayerAvatarMaterial");
-    UIAdditiveGlowMaterial = assetBundle->LoadAsset<Material*>("UIAdditiveGlow");
-    scoreBackgroundMaterial = assetBundle->LoadAsset<Material*>("ScoreBackgroundMaterial");
-    scoreUnderlineMaterial = assetBundle->LoadAsset<Material*>("ScoreUnderlineMaterial");
-    VotingButtonMaterial = assetBundle->LoadAsset<Material*>("VotingButtonMaterial");
-    handAccIndicatorMaterial = assetBundle->LoadAsset<Material*>("HandAccIndicatorMaterial");
-    accGridBackgroundMaterial = assetBundle->LoadAsset<Material*>("AccGridBackgroundMaterial");
-    accuracyGraphMaterial = assetBundle->LoadAsset<Material*>("AccuracyGraphBackground");
-    accuracyGraphLine = assetBundle->LoadAsset<Material*>("AccuracyGraphLine");
-    accDetailsRowMaterial = assetBundle->LoadAsset<Material*>("AccDetailsRowMaterial");
+    logoMaterial = instantiadedMaterial("LogoMaterial", assetBundle);
+    playerAvatarMaterial = instantiadedMaterial("PlayerAvatarMaterial", assetBundle);
+    UIAdditiveGlowMaterial = instantiadedMaterial("UIAdditiveGlow", assetBundle);
+    scoreBackgroundMaterial = instantiadedMaterial("ScoreBackgroundMaterial", assetBundle);
+    scoreUnderlineMaterial = instantiadedMaterial("ScoreUnderlineMaterial", assetBundle);
+    VotingButtonMaterial = instantiadedMaterial("VotingButtonMaterial", assetBundle);
+    handAccIndicatorMaterial = instantiadedMaterial("HandAccIndicatorMaterial", assetBundle);
+    accGridBackgroundMaterial = instantiadedMaterial("AccGridBackgroundMaterial", assetBundle);
+    accuracyGraphMaterial = instantiadedMaterial("AccuracyGraphBackground", assetBundle);
+    accuracyGraphLine = instantiadedMaterial("AccuracyGraphLine", assetBundle);
+    accDetailsRowMaterial = instantiadedMaterial("AccDetailsRowMaterial", assetBundle);
 
     locationIcon = assetBundle->LoadAsset<Sprite*>("LocationIcon");
     rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>("RowSeparatorIcon");

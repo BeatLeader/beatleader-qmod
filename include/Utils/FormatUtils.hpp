@@ -11,6 +11,7 @@
 #include "include/Utils/StringUtils.hpp"
 #include "include/Models/Player.hpp"
 #include "include/Models/Clan.hpp"
+#include "include/Models/Score.hpp"
 
 using namespace std;
 using namespace UnityEngine;
@@ -100,7 +101,7 @@ namespace FormatUtils {
             return "<alpha=#00>.<alpha=#FF><b><noparse>" + tag + "</noparse></b><alpha=#00>.<alpha=#FF>";
         }
 
-        inline string FormatNameWithClans(Player player, int limit) {
+        inline string FormatNameWithClans(Player const& player, int limit) {
             string clansLabel = "<size=90%>";
             int clanCount = player.clans.size();
             if (clanCount == 2) {
@@ -115,5 +116,13 @@ namespace FormatUtils {
             clansLabel += "</size>";
 
             return truncate(player.name, limit - clanCount * 3) + clansLabel;
+        }
+
+        inline string FormatPlayerScore(Score const& score) {
+            // TODO: Use fmt
+            string const& nameLabel = score.player.name;
+
+            string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
+            return FormatNameWithClans(score.player, 30) + "<pos=50%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel; 
         }
     }
