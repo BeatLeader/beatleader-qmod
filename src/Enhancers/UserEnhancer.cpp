@@ -11,8 +11,6 @@ void UserEnhancer::Enhance(Replay& replay)
     Player* player;
     if (PlayerController::currentPlayer && !PlayerController::currentPlayer->name.empty()) {
         player = &PlayerController::currentPlayer.value();
-    } else {
-        player = &PlayerController::platformPlayer.value();
     }
 
     if (player != NULL) {
