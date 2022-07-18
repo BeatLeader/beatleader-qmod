@@ -42,7 +42,6 @@ jobs:
       run: |
         chmod +x ./qpm-rust
         ./qpm-rust restore
-        ./qpm-rust qmod build
     - uses: seanmiddleditch/gha-setup-ninja@master
     - name: Build
       run: pwsh -Command ./buildQMOD.ps1

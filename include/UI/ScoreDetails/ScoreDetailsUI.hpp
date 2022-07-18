@@ -24,6 +24,7 @@ namespace BeatLeader {
             TMPro::TextMeshProUGUI* rank;
             TMPro::TextMeshProUGUI* name;
             TMPro::TextMeshProUGUI* pp;
+            TMPro::TextMeshProUGUI* sponsorMessage;
 
             GeneralScoreDetails general;
             ScoreStatsOverview overview;

@@ -27,9 +27,7 @@ BeatLeader::GeneralScoreDetails::GeneralScoreDetails(HMUI::ModalView *modal) noe
     accuracy = CreateText(modal->get_transform(), "", UnityEngine::Vector2(26.0, 2.0));
     scorePp = CreateText(modal->get_transform(), "", UnityEngine::Vector2(46.0, 2.0));
 
-    scoreDetails = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5, -12));
-
-    sponsorMessage = CreateText(modal->get_transform(), "", UnityEngine::Vector2(0, 30));
+    scoreDetails = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5, -12));   
 }
 
 string GetStringWithLabel(string value, string label) {
@@ -117,9 +115,6 @@ void BeatLeader::GeneralScoreDetails::setScore(const Score& score) {
     scorePp->SetText(GetStringWithLabel(FormatPP(score), "pp"));
 
     scoreDetails->SetText(GetDetailsString(score));
-
-    sponsorMessage->SetText(score.player.sponsorMessage);
-    sponsorMessage->set_alignment(TMPro::TextAlignmentOptions::Center);
 }
 
 void BeatLeader::GeneralScoreDetails::setSelected(bool selected) {
@@ -128,5 +123,4 @@ void BeatLeader::GeneralScoreDetails::setSelected(bool selected) {
     accuracy->get_gameObject()->SetActive(selected);
     scorePp->get_gameObject()->SetActive(selected);
     scoreDetails->get_gameObject()->SetActive(selected);
-    sponsorMessage->get_gameObject()->SetActive(selected);
 }
