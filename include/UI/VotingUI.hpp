@@ -51,8 +51,8 @@ namespace BeatLeader {
             float stars;
             int type;
 
-            void left();
-            void right();
+            void left() const;
+            void right() const;
             void reset();
 
             void updateType(MapType mapType, UnityEngine::UI::Button* button);

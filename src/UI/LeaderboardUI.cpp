@@ -153,7 +153,7 @@ namespace LeaderboardUI {
                 if (plvc != NULL) {
                     auto countryControl = plvc->scopeSegmentedControl->dataItems.get(3);
                     countryControl->set_hintText("Country");
-                    Sprites::GetCountryIcon(player->country, [countryControl](UnityEngine::Sprite* sprite) {
+                    Sprites::GetCountryIcon(player->country, [](UnityEngine::Sprite* sprite) {
                         plvc->scopeSegmentedControl->dataItems.get(3)->set_icon(sprite);
                         plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
 
@@ -177,7 +177,7 @@ namespace LeaderboardUI {
     MAKE_HOOK_MATCH(LeaderboardActivate, &PlatformLeaderboardViewController::DidActivate, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHeirarchy, bool screenSystemEnabling) {
         LeaderboardActivate(self, firstActivation, addedToHeirarchy, screenSystemEnabling);
         if (firstActivation) {
-            HMUI::ImageView* imageView = self->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
+            HMUI::ImageView* imageView = self->get_transform()->Find("HeaderPanel")->GetComponentInChildren<HMUI::ImageView*>();
             imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
             imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
             imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));

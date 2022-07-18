@@ -42,7 +42,7 @@ void BeatLeader::VotingButton::Init(QuestUI::ClickableImage* imageView) {
     TintPropertyId = UnityEngine::Shader::PropertyToID("_Tint");
 }
 
-void UpdateMaterial(UnityEngine::Material* materialInstance, float spinnerValue, float gradientValue, float state, UnityEngine::Color color) {
+void UpdateMaterial(UnityEngine::Material* materialInstance, float spinnerValue, float gradientValue, float state, UnityEngine::Color const& color) {
     materialInstance->SetFloat(SpinnerValuePropertyId, spinnerValue);
     materialInstance->SetFloat(GradientValuePropertyId, gradientValue);
     materialInstance->SetFloat(StatePropertyId, state);

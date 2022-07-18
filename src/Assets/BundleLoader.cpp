@@ -1,5 +1,7 @@
 #include "Assets/BundleLoader.hpp"
 
+#include <utility>
+
 DEFINE_TYPE(BeatLeader, Bundle);
 
 AssetBundle* BundleLoader::assetBundle;
@@ -26,7 +28,7 @@ custom_types::Helpers::Coroutine BundleLoader::LoadBundle(UnityEngine::GameObjec
 }
 
 Material* getMaterial(std::string name, AssetBundle* assetBundle) {
-    return assetBundle->LoadAsset<Material*>(name);
+    return assetBundle->LoadAsset<Material*>(std::move(name));
 }
 
 void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {

@@ -41,8 +41,8 @@ UnityEngine::UI::Toggle* saveToggle;
 
 BeatLeader::LogoAnimation* spinner = NULL;
 
-StringW login;
-StringW password;
+string login;
+string password;
 
 string errorDescription = "";
 
@@ -103,34 +103,36 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         this->get_gameObject()->AddComponent<HMUI::Touchable*>();
         UnityEngine::GameObject* container = BeatSaberUI::CreateScrollableSettingsContainer(this->get_transform());
 
+        auto containerTransform = container->get_transform();
+
         auto spinnerImage = ::QuestUI::BeatSaberUI::CreateImage(this->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 20}, {20, 20});
         spinner = this->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
         spinner->Init(spinnerImage);
         spinnerImage->get_gameObject()->SetActive(false);
 
-        name = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "", false);
+        name = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "", false);
         EmojiSupport::AddSupport(name);
 
-        logoutButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Logout", [](){
+        logoutButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "Logout", [](){
             PlayerController::LogOut();
         });
 
-        loginField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), "Login", "", [](StringW value) {
-            login = value;
+        loginField = ::QuestUI::BeatSaberUI::CreateStringSetting(containerTransform, "Login", "", [](StringW value) {
+            login = (string) value;
         });
         
-        passwordField = ::QuestUI::BeatSaberUI::CreateStringSetting(container->get_transform(), "Password", "", [](StringW value) {
-            password = value;
+        passwordField = ::QuestUI::BeatSaberUI::CreateStringSetting(containerTransform, "Password", "", [](StringW value) {
+            password = (string) value;
         });
 
-        loginButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Log in", [spinnerImage]() {
-            if (!login || !password) {
+        loginButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "Log in", [spinnerImage]() {
+            if (login.empty() || password.empty()) {
                 errorDescription = "Enter a username and/or password!";
                 UpdateUI(nullopt);
                 return;
             }
             showLoading();
-            PlayerController::LogIn((string)login, (string)password, [](std::optional<Player> const& player, string error) { 
+            PlayerController::LogIn(login, password, [](std::optional<Player> const& player, string error) {
                 QuestUI::MainThreadScheduler::Schedule([player, error] {
                 if (player == nullopt) {
                     errorDescription = error;
@@ -141,18 +143,18 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                     password = "";
                     passwordField->SetText("");
                 }
-                UpdateUI(player);      
+                UpdateUI(player);
                 });
             });
         });
-        signupButton = ::QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), "Sign up", [spinnerImage]() {
-            if (!login || !password) {
+        signupButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "Sign up", []() {
+            if (login.empty() || password.empty()) {
                 errorDescription = "Enter a username and/or password!";
                 UpdateUI(nullopt);
                 return;
             }
             showLoading();
-            PlayerController::SignUp((string)login, (string)password, [](std::optional<Player> const& player, string error) { 
+            PlayerController::SignUp((string)login, (string)password, [](std::optional<Player> const& player, string error) {
                 QuestUI::MainThreadScheduler::Schedule([player, error] {
                 if (player == nullopt) {
                     errorDescription = error;
@@ -173,9 +175,9 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
             });
         });
 
-        saveToggle = AddConfigValueToggle(container->get_transform(), getModConfig().Save);
-        errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "", false);
-        label3 = ::QuestUI::BeatSaberUI::CreateText(container->get_transform(), "To sign up, enter your login information.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile picture on the website.", false);
+        saveToggle = AddConfigValueToggle(containerTransform, getModConfig().Save);
+        errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "", false);
+        label3 = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "To sign up, enter your login information.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile picture on the website.", false);
     }
 
     UpdateUI(PlayerController::currentPlayer);

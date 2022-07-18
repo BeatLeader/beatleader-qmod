@@ -18,7 +18,7 @@ using namespace UnityEngine;
 
 namespace FormatUtils {
 
-        inline string GetHeadsetNameById(int id) {
+        inline string_view GetHeadsetNameById(int id) {
             switch (id) {
                 case 1: return "Rift";
                 case 2: return "Vive";
@@ -41,7 +41,7 @@ namespace FormatUtils {
         const int Month = 30 * Day;
         const int Year = 365 * Day;
 
-        inline string GetRelativeTimeString(string timeSet) {
+        inline string GetRelativeTimeString(string_view timeSet) {
             int timeSetSeconds = std::stoi(timeSet.data());
             int nowSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             int delta = nowSeconds - timeSetSeconds;
@@ -64,13 +64,13 @@ namespace FormatUtils {
             return (withPrefix ? "<size=70%>#</size>" : "") + to_string(rank);
         }
 
-        inline string FormatUserName(string userName) {
+        inline string FormatUserName(string_view userName) {
             return "<noparse>" + userName + "</noparse>";
         }
 
         const string ModifiersColor = "";
 
-        inline string FormatModifiers(string modifiers) {
+        inline string FormatModifiers(string_view modifiers) {
             return modifiers.length() == 0 ? "" : "<color=#999999>" + modifiers;
         }
 
@@ -97,7 +97,7 @@ namespace FormatUtils {
             return "<color=#B856FF>" + to_string_wprecision(value, 2) + "<size=70%>pp</size></color>";
         }
 
-        inline string FormatClanTag(string tag) {
+        inline string FormatClanTag(string_view tag) {
             return "<alpha=#00>.<alpha=#FF><b><noparse>" + tag + "</noparse></b><alpha=#00>.<alpha=#FF>";
         }
 

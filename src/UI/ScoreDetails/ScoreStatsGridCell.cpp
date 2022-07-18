@@ -38,13 +38,13 @@ BeatLeader::ScoreStatsGridCell::ScoreStatsGridCell(HMUI::ModalView *modal, int i
     scoreText->set_fontSize(3);
 }
 
-void BeatLeader::ScoreStatsGridCell::setScore(float score, float ratio) {
+void BeatLeader::ScoreStatsGridCell::setScore(float score, float ratio) const {
     scoreText->SetText(to_string_wprecision(score, 2));
     imageView->set_color(UnityEngine::Color::Lerp(BadColor, GoodColor, ratio * ratio));
 }
 
         
-void BeatLeader::ScoreStatsGridCell::setSelected(bool selected) {
+void BeatLeader::ScoreStatsGridCell::setSelected(bool selected) const {
     scoreText->get_gameObject()->SetActive(selected);
     imageView->get_gameObject()->SetActive(selected);
 }

@@ -21,7 +21,7 @@ namespace BeatLeader {
 
             TMPro::TextMeshProUGUI* scoreDetails;
             
-            void setScore(const Score& score);
-            void setSelected(bool selected);
+            void setScore(const Score& score) const;
+            void setSelected(bool selected) const;
     };
 }
