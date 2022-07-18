@@ -185,7 +185,7 @@ namespace LeaderboardUI {
                 if (plvc != NULL) {
                     auto countryControl = plvc->scopeSegmentedControl->dataItems->get(3);
                     countryControl->set_hintText(newcsstr2("Country"));
-                    Sprites::GetCountryIcon(player->country, [countryControl](UnityEngine::Sprite* sprite) {
+                    Sprites::GetCountryIcon(player->country, [](UnityEngine::Sprite* sprite) {
                         plvc->scopeSegmentedControl->dataItems->get(3)->set_icon(sprite);
                         plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
 

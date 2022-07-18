@@ -27,46 +27,48 @@ static int FillPropertyId = 0;
 
 BeatLeader::ScoreStatsOverview::ScoreStatsOverview(HMUI::ModalView *modal) noexcept {
 
-    leftPreScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(3.0, 7.0));
-    leftAccScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(3.0, 3.0));
-    leftPostScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(3.0, -1.0));
+    auto modalTransform = modal->get_transform();
 
-    leftScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-9.0, 5.8));
-    leftPieImage = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(-9, 6), UnityEngine::Vector2(14, 14));
+    leftPreScore = CreateText(modalTransform, "", UnityEngine::Vector2(3.0, 7.0));
+    leftAccScore = CreateText(modalTransform, "", UnityEngine::Vector2(3.0, 3.0));
+    leftPostScore = CreateText(modalTransform, "", UnityEngine::Vector2(3.0, -1.0));
+
+    leftScore = CreateText(modalTransform, "", UnityEngine::Vector2(-9.0, 5.8));
+    leftPieImage = ::QuestUI::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(-9, 6), UnityEngine::Vector2(14, 14));
     leftPieImage->set_color(UnityEngine::Color(0.8f, 0.2f, 0.2f, 0.1f));
     leftPieImage->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->handAccIndicatorMaterial));
 
-    rightScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(9.0, 5.8));
-    rightPieImage = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(9, 6), UnityEngine::Vector2(14, 14));
+    rightScore = CreateText(modalTransform, "", UnityEngine::Vector2(9.0, 5.8));
+    rightPieImage = ::QuestUI::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(9, 6), UnityEngine::Vector2(14, 14));
     rightPieImage->set_color(UnityEngine::Color(0.2f, 0.2f, 0.8f, 0.1f));
     rightPieImage->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->handAccIndicatorMaterial));
 
-    rightPreScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-3.0, 9.0));
-    rightAccScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-3.0, 5.0));
-    rightPostScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-3.0, 1.0));
+    rightPreScore = CreateText(modalTransform, "", UnityEngine::Vector2(-3.0, 9.0));
+    rightAccScore = CreateText(modalTransform, "", UnityEngine::Vector2(-3.0, 5.0));
+    rightPostScore = CreateText(modalTransform, "", UnityEngine::Vector2(-3.0, 1.0));
 
     FillPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_FillValue"));
 
-    tdTitle = CreateText(modal->get_transform(), "TD", UnityEngine::Vector2(0.0, -5.0));
+    tdTitle = CreateText(modalTransform, "TD", UnityEngine::Vector2(0.0, -5.0));
     tdTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
-    tdBackground = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -9), UnityEngine::Vector2(50, 5));
+    tdBackground = ::QuestUI::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -9), UnityEngine::Vector2(50, 5));
     tdBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
-    preTitle = CreateText(modal->get_transform(), "Pre", UnityEngine::Vector2(0.0, -10.0));
+    preTitle = CreateText(modalTransform, "Pre", UnityEngine::Vector2(0.0, -10.0));
     preTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
-    preBackground = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -14), UnityEngine::Vector2(50, 5));
+    preBackground = ::QuestUI::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -14), UnityEngine::Vector2(50, 5));
     preBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
-    postTitle = CreateText(modal->get_transform(), "Post", UnityEngine::Vector2(0.0, -15.0));
+    postTitle = CreateText(modalTransform, "Post", UnityEngine::Vector2(0.0, -15.0));
     postTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
-    postBackground = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -19), UnityEngine::Vector2(50, 5));
+    postBackground = ::QuestUI::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -19), UnityEngine::Vector2(50, 5));
     postBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
 
-    leftTd = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5.0, -7.0));
-    leftPre = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5.0, -12.0));
-    leftPost = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5.0, -17.0));
+    leftTd = CreateText(modalTransform, "", UnityEngine::Vector2(5.0, -7.0));
+    leftPre = CreateText(modalTransform, "", UnityEngine::Vector2(5.0, -12.0));
+    leftPost = CreateText(modalTransform, "", UnityEngine::Vector2(5.0, -17.0));
 
-    rightTd = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-5.0, -5.0));
-    rightPre = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-5.0, -10.0));
-    rightPost = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-5.0, -15.0));
+    rightTd = CreateText(modalTransform, "", UnityEngine::Vector2(-5.0, -5.0));
+    rightPre = CreateText(modalTransform, "", UnityEngine::Vector2(-5.0, -10.0));
+    rightPost = CreateText(modalTransform, "", UnityEngine::Vector2(-5.0, -15.0));
 }
 
 static float CalculateFillValue(float score) {
@@ -75,7 +77,7 @@ static float CalculateFillValue(float score) {
     return pow(ratio, 0.6f);
 }
 
-void BeatLeader::ScoreStatsOverview::setScore(optional<ScoreStats> score) {
+void BeatLeader::ScoreStatsOverview::setScore(optional<ScoreStats> score) const {
     leftPreScore->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.leftAverageCut[0], 2)));
     leftAccScore->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.leftAverageCut[1], 2)));
     leftPostScore->SetText(newcsstr2(to_string_wprecision(score->accuracyTracker.leftAverageCut[2], 2)));
@@ -107,7 +109,7 @@ void BeatLeader::ScoreStatsOverview::setScore(optional<ScoreStats> score) {
     rightPost->set_alignment(TMPro::TextAlignmentOptions::Right);
 }
 
-void BeatLeader::ScoreStatsOverview::setSelected(bool selected) {
+void BeatLeader::ScoreStatsOverview::setSelected(bool selected) const {
     leftPreScore->get_gameObject()->SetActive(selected);
     leftAccScore->get_gameObject()->SetActive(selected);
     leftPostScore->get_gameObject()->SetActive(selected);

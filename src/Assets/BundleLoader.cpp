@@ -1,6 +1,8 @@
 #include "Assets/BundleLoader.hpp"
 #include "include/Utils/StringUtils.hpp"
 
+#include <utility>
+
 DEFINE_TYPE(BeatLeader, Bundle);
 
 AssetBundle* BundleLoader::assetBundle;

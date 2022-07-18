@@ -47,12 +47,12 @@ BeatLeader::ScoreStatsGraph::ScoreStatsGraph(HMUI::ModalView *modal) noexcept {
     this->accuracyGraph->Construct(graphBackground, graphLine, modal);
 }
 
-void BeatLeader::ScoreStatsGraph::setScore(optional<ScoreStats> score) {
+void BeatLeader::ScoreStatsGraph::setScore(optional<ScoreStats> score) const {
     auto points = score->scoreGraphTracker.graph;
     
     accuracyGraph->Setup(il2cpp_utils::vectorToArray(points), score->winTracker.endTime);
 }
 
-void BeatLeader::ScoreStatsGraph::setSelected(bool selected) {
+void BeatLeader::ScoreStatsGraph::setSelected(bool selected) const {
     graphBackground->get_gameObject()->SetActive(selected);
 }

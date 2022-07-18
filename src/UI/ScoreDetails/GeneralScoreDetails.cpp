@@ -31,17 +31,16 @@ BeatLeader::GeneralScoreDetails::GeneralScoreDetails(HMUI::ModalView *modal) noe
     scoreDetails = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5, -12));   
 }
 
-string GetStringWithLabel(string value, string label) {
-    string result = "";
-    result += "<color=#888888><size=70%>" + label + "\n</size></color>" + value;
+string GetStringWithLabel(const string& value, const string& label) {
+    string result = "<color=#888888><size=70%>" + label + "\n</size></color>" + value;
     return result;
 }
 
 class MyNumPunct : public std::numpunct<char>
 {
 protected:
-    virtual char do_thousands_sep() const { return ' '; }
-    virtual std::string do_grouping() const { return "\03"; }
+    [[nodiscard]] virtual char do_thousands_sep() const { return ' '; }
+    [[nodiscard]] virtual std::string do_grouping() const { return "\03"; }
 };
 
 string FormatInt(int score) {
@@ -68,7 +67,7 @@ string GetTimeSetString(Score const& score) {
     return result.str();
 }
 
-string GetDetailsString(Score score) {
+string GetDetailsString(const Score& score) {
     stringstream result;
 
     result << "<color=#888888>Pauses: <color=#FFFFFF>" << to_string(score.pauses) << "    ";
@@ -107,7 +106,7 @@ inline string FormatPP(const Score& score) {
     return result;
 }
 
-void BeatLeader::GeneralScoreDetails::setScore(const Score& score) {
+void BeatLeader::GeneralScoreDetails::setScore(const Score& score) const {
     datePlayed->SetText(newcsstr2(GetTimeSetString(score)));
     datePlayed->set_alignment(TMPro::TextAlignmentOptions::Center);
 
@@ -118,7 +117,7 @@ void BeatLeader::GeneralScoreDetails::setScore(const Score& score) {
     scoreDetails->SetText(newcsstr2(GetDetailsString(score)));
 }
 
-void BeatLeader::GeneralScoreDetails::setSelected(bool selected) {
+void BeatLeader::GeneralScoreDetails::setSelected(bool selected) const {
     datePlayed->get_gameObject()->SetActive(selected);
     modifiedScore->get_gameObject()->SetActive(selected);
     accuracy->get_gameObject()->SetActive(selected);

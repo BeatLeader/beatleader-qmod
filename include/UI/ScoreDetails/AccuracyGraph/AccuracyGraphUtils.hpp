@@ -5,10 +5,12 @@
 #include "UnityEngine/Rect.hpp"
 #include <vector>
 
+#include "sombrero/shared/FastVector2.hpp"
+
 using namespace std;
 
 namespace AccuracyGraphUtils {
-    inline float Clamp01(float value) {
+    constexpr float Clamp01(float value) {
         if (value < 0)
             return 0;
         else if (value > 1)
@@ -17,35 +19,35 @@ namespace AccuracyGraphUtils {
             return value;
     }
 
-    inline float InverseLerp(float a, float b, float value) {
+    constexpr float InverseLerp(float a, float b, float value) {
         if (a != b)
             return Clamp01((value - a) / (b - a));
         else
             return 0.0;
     }
 
-    inline float Lerp(float a, float b, float t) {
+    constexpr float Lerp(float a, float b, float t) {
         return a + (b - a) * Clamp01(t);
     }
 
-    inline UnityEngine::Vector2 PointToNormalized(UnityEngine::Rect rectangle, UnityEngine::Vector2 point) {
-        return UnityEngine::Vector2(
-            InverseLerp(rectangle.get_x(), rectangle.get_xMax(), point.x),
-            InverseLerp(rectangle.get_y(), rectangle.get_yMax(), point.y)
+    inline Sombrero::FastVector2 PointToNormalized(UnityEngine::Rect const& rectangle, Sombrero::FastVector2 const& point) {
+        return Sombrero::FastVector2(
+            InverseLerp(rectangle.m_XMin, rectangle.m_Width + rectangle.m_XMin, point.x),
+            InverseLerp(rectangle.m_YMin, rectangle.m_Height + rectangle.m_YMin, point.y)
         );
     }
 
-    inline UnityEngine::Vector2 NormalizedToPoint(UnityEngine::Rect rectangle, UnityEngine::Vector2 normalizedRectCoordinates) {
-        return UnityEngine::Vector2(
-            Lerp(rectangle.get_x(), rectangle.get_xMax(), normalizedRectCoordinates.x),
-            Lerp(rectangle.get_y(), rectangle.get_yMax(), normalizedRectCoordinates.y)
+    inline Sombrero::FastVector2 NormalizedToPoint(UnityEngine::Rect rectangle, Sombrero::FastVector2 normalizedRectCoordinates) {
+        return Sombrero::FastVector2(
+            Lerp(rectangle.m_XMin, rectangle.m_Width + rectangle.m_XMin, normalizedRectCoordinates.x),
+            Lerp(rectangle.m_YMin, rectangle.m_Height + rectangle.m_YMin, normalizedRectCoordinates.y)
         );
     }
 
     const float ReduceAngleMargin = 10;
     const float ReduceProximityMargin = 0.1;
 
-    inline void ReducePositionsList(vector<UnityEngine::Vector2> positions, UnityEngine::Rect viewRect) {
+    inline void ReducePositionsList(vector<Sombrero::FastVector2>& positions, UnityEngine::Rect const& viewRect) {
         auto startIndex = 1;
         while (startIndex < positions.size() - 1) {
             auto i = startIndex;
@@ -56,8 +58,8 @@ namespace AccuracyGraphUtils {
 
                 auto a = next - curr;
                 auto b = curr - prev;
-                if (a.get_magnitude() > ReduceProximityMargin || b.get_magnitude() > ReduceProximityMargin) continue;
-                if (UnityEngine::Vector2::Angle(a, b) > ReduceAngleMargin) continue;
+                if (a.Magnitude() > ReduceProximityMargin || b.Magnitude() > ReduceProximityMargin) continue;
+                if (Sombrero::FastVector2::Angle(a, b) > ReduceAngleMargin) continue;
                 positions.erase(positions.begin() + i);
                 break;
             }
@@ -68,18 +70,19 @@ namespace AccuracyGraphUtils {
 
     const float MinimalXForScaling = 0.05;
 
-    inline void PostProcessPoints(ArrayWrapper<float> points, vector<UnityEngine::Vector2>* positions, UnityEngine::Rect* viewRect) {
-        auto result = vector<UnityEngine::Vector2>();
+    inline void PostProcessPoints(ArrayWrapper<float> points, vector<Sombrero::FastVector2>* positions, UnityEngine::Rect* viewRect) {
+        auto result = vector<Sombrero::FastVector2>();
 
         float yMin = 1000000;
         float yMax = -1000000;
 
         int length = points.Length();
+        result.reserve(length);
 
         for (auto i = 0; i < length; i++) {
             auto x = (float) i / (length - 1);
             auto y = points[i];
-            result.push_back(UnityEngine::Vector2(x, y));
+            result.emplace_back(x, y);
             if (x < MinimalXForScaling) continue;
             if (y > yMax) yMax = y;
             if (y < yMin) yMin = y;
@@ -94,9 +97,9 @@ namespace AccuracyGraphUtils {
         *viewRect = resultViewRect;
     }
 
-    inline UnityEngine::Vector2 TransformPointFrom3DToCanvas(UnityEngine::Vector3 point, float canvasRadius) {
-        if (canvasRadius < 1e-10) return UnityEngine::Vector2(point.x, point.y);
+    inline Sombrero::FastVector2 TransformPointFrom3DToCanvas(UnityEngine::Vector3 point, float canvasRadius) {
+        if (canvasRadius < 1e-10) return Sombrero::FastVector2(point.x, point.y);
         float x = (float)asin(point.x / canvasRadius) * canvasRadius;
-        return UnityEngine::Vector2(x, point.y);
+        return Sombrero::FastVector2(x, point.y);
     }
 }
