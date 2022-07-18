@@ -65,7 +65,7 @@ const float HalfPI = 1.570796f;
 void BeatLeader::LogoAnimation::Init(HMUI::ImageView* imageView) {
     this->imageView = imageView;
 
-    this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::logoMaterial);
+    this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::bundle->logoMaterial);
     imageView->set_material(this->materialInstance);
 
     GlowPropertyId = UnityEngine::Shader::PropertyToID(newcsstr2("_Glow"));

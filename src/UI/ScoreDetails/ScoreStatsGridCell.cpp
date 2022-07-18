@@ -33,7 +33,7 @@ BeatLeader::ScoreStatsGridCell::ScoreStatsGridCell(HMUI::ModalView *modal, int i
 
     imageView = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2((column - 2.0f) * 11.0 + 5, (row - 1.0f) * 11.0), UnityEngine::Vector2(10, 10));
     imageView->set_color(EmptyColor);
-    imageView->set_material(UnityEngine::Object::Instantiate(BundleLoader::accGridBackgroundMaterial));
+    imageView->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->accGridBackgroundMaterial));
 
     scoreText = CreateText(modal->get_transform(), "", UnityEngine::Vector2((column - 2.0f) * 11.0 + 32, (row - 1.0f) * 11.0 - 3));
     scoreText->set_fontSize(3);

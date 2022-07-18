@@ -50,10 +50,10 @@ void BeatLeader::AccuracyGraph::Construct(
     graphLine = graphLineObject;
     modal = modalObject;
 
-    backgroundMaterial = UnityEngine::Object::Instantiate(BundleLoader::accuracyGraphMaterial);
+    backgroundMaterial = UnityEngine::Object::Instantiate(BundleLoader::bundle->accuracyGraphMaterial);
     backgroundImage->set_material(backgroundMaterial);
 
-    graphLineObject->set_material(BundleLoader::accuracyGraphLine);
+    graphLineObject->set_material(BundleLoader::bundle->accuracyGraphLine);
     
     underlineText = QuestUI::BeatSaberUI::CreateText(backgroundImage->get_transform(), "", UnityEngine::Vector2(2, -18));
 

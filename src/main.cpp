@@ -87,7 +87,7 @@ MAKE_HOOK_MATCH(MainMenuViewControllerDidActivate, &MainMenuViewController::DidA
      MainMenuViewControllerDidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
      if (firstActivation) {
-        self->StartCoroutine(reinterpret_cast<System::Collections::IEnumerator*>(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle())));
+        self->StartCoroutine(reinterpret_cast<System::Collections::IEnumerator*>(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle(self->get_gameObject()))));
      }
 }
 

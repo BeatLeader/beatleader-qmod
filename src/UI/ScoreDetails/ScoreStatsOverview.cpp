@@ -34,12 +34,12 @@ BeatLeader::ScoreStatsOverview::ScoreStatsOverview(HMUI::ModalView *modal) noexc
     leftScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-9.0, 5.8));
     leftPieImage = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(-9, 6), UnityEngine::Vector2(14, 14));
     leftPieImage->set_color(UnityEngine::Color(0.8f, 0.2f, 0.2f, 0.1f));
-    leftPieImage->set_material(UnityEngine::Object::Instantiate(BundleLoader::handAccIndicatorMaterial));
+    leftPieImage->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->handAccIndicatorMaterial));
 
     rightScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(9.0, 5.8));
     rightPieImage = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(9, 6), UnityEngine::Vector2(14, 14));
     rightPieImage->set_color(UnityEngine::Color(0.2f, 0.2f, 0.8f, 0.1f));
-    rightPieImage->set_material(UnityEngine::Object::Instantiate(BundleLoader::handAccIndicatorMaterial));
+    rightPieImage->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->handAccIndicatorMaterial));
 
     rightPreScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-3.0, 9.0));
     rightAccScore = CreateText(modal->get_transform(), "", UnityEngine::Vector2(-3.0, 5.0));
@@ -50,15 +50,15 @@ BeatLeader::ScoreStatsOverview::ScoreStatsOverview(HMUI::ModalView *modal) noexc
     tdTitle = CreateText(modal->get_transform(), "TD", UnityEngine::Vector2(0.0, -5.0));
     tdTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
     tdBackground = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -9), UnityEngine::Vector2(50, 5));
-    tdBackground->set_material(BundleLoader::accDetailsRowMaterial);
+    tdBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
     preTitle = CreateText(modal->get_transform(), "Pre", UnityEngine::Vector2(0.0, -10.0));
     preTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
     preBackground = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -14), UnityEngine::Vector2(50, 5));
-    preBackground->set_material(BundleLoader::accDetailsRowMaterial);
+    preBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
     postTitle = CreateText(modal->get_transform(), "Post", UnityEngine::Vector2(0.0, -15.0));
     postTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
     postBackground = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -19), UnityEngine::Vector2(50, 5));
-    postBackground->set_material(BundleLoader::accDetailsRowMaterial);
+    postBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
 
     leftTd = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5.0, -7.0));
     leftPre = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5.0, -12.0));

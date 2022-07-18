@@ -514,7 +514,11 @@ namespace LeaderboardUI {
             globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(153, 42.5));
             countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(168, 42.5));
 
-            auto websiteLink = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
+            if (PlayerController::currentPlayer != std::nullopt) {
+                updatePlayerInfoLabel();
+            }
+
+            auto websiteLink = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
                 string url = WebUtils::WEB_URL;
                 if (PlayerController::currentPlayer != std::nullopt) {
                     url += "u/" + PlayerController::currentPlayer->id;
@@ -553,7 +557,7 @@ namespace LeaderboardUI {
                 });
             }
 
-            modifiersButton = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
+            modifiersButton = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
                 modifiers = !modifiers;
                 getModConfig().Modifiers.SetValue(modifiers);
                 clearTable();
@@ -564,7 +568,7 @@ namespace LeaderboardUI {
             modifiersButtonHover = ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton->get_gameObject(), "Show leaderboard without positive modifiers");
             updateModifiersButton();
 
-            auto votingButtonImage = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::modifiersIcon, UnityEngine::Vector2(100, -28), UnityEngine::Vector2(4, 4), []() {
+            auto votingButtonImage = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, -28), UnityEngine::Vector2(4, 4), []() {
                 if (votingButton->state != 2) return;
                 
                 votingUI->reset();
@@ -853,7 +857,7 @@ namespace LeaderboardUI {
                 case ReplayUploadStatus::finished:
                     logoAnimation->SetAnimating(false);
                     updateVotingButton(lastVotingStatusUrl);
-                    plvc->Refresh(true, true);
+                    plvc->HandleDidPressRefreshButton();
                     break;
                 case ReplayUploadStatus::error:
                     logoAnimation->SetAnimating(false);

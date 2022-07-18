@@ -29,7 +29,7 @@ static int TintPropertyId;
 void BeatLeader::VotingButton::Init(QuestUI::ClickableImage* imageView) {
     this->imageView = imageView;
 
-    this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::VotingButtonMaterial);
+    this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::bundle->VotingButtonMaterial);
     imageView->set_material(this->materialInstance);
 
     imageView->set_defaultColor(UnityEngine::Color(0.0, 0.0, 0.0, 1.0));
