@@ -45,6 +45,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, UnityEngine::MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Sprite*, detailsIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, gridIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, graphIcon);
+    
     DECLARE_INSTANCE_FIELD(Sprite*, websiteLinkIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, discordLinkIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, patreonLinkIcon);
