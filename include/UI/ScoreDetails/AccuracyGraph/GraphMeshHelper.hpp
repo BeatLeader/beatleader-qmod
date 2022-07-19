@@ -16,7 +16,7 @@ namespace BeatLeader {
         public:
         GraphMeshHelper(int horizontalResolution, int verticalResolution, float lineThickness) noexcept;
 
-        void SetPoints(ArrayWrapper<UnityEngine::Vector2> points);
+        void SetPoints(ArrayWrapper<Sombrero::FastVector2> points);
         void PopulateMesh(UnityEngine::UI::VertexHelper* vh, ScreenViewTransform svt, float canvasRadius);
 
         private:

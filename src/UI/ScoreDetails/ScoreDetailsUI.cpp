@@ -62,22 +62,22 @@ void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPo
     modalUI->generalButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->overviewIcon, UnityEngine::Vector2(-10.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(0);
     });
-    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->generalButton, "General score info");
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->generalButton->get_gameObject(), "General score info");
 
     modalUI->overviewButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->detailsIcon, UnityEngine::Vector2(-3.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(1);
     });
-    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->overviewButton, "Detailed score info");
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->overviewButton->get_gameObject(), "Detailed score info");
 
     modalUI->gridButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->gridIcon, UnityEngine::Vector2(3.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(2);
     });
-    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->gridButton, "Note accuracy distribution");
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->gridButton->get_gameObject(), "Note accuracy distribution");
 
     modalUI->graphButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->graphIcon, UnityEngine::Vector2(10.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(3);
     });
-    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->graphButton, "Accuracy timeline graph");
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->graphButton->get_gameObject(), "Accuracy timeline graph");
 
     modalUI->setButtonsMaterial();
 

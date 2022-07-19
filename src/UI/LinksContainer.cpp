@@ -1,8 +1,10 @@
 #include "include/UI/LinksContainer.hpp"
+#include "include/UI/ClickableImage.hpp"
 
 #include "include/Assets/BundleLoader.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/API/PlayerController.hpp"
+#include "include/Utils/StringUtils.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "UnityEngine/Application.hpp"
@@ -36,38 +38,38 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(1.0, 6.0));
     CreateText(modalTransform, "<u>These buttons will open the browser!", UnityEngine::Vector2(1.0, -3.0));
 
-    modalUI->profile = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->websiteLinkIcon, UnityEngine::Vector2(-24, -9), UnityEngine::Vector2(22, 6), [](){
+    modalUI->profile = QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->websiteLinkIcon, UnityEngine::Vector2(-24, -9), UnityEngine::Vector2(22, 6), [](){
         string url = WebUtils::WEB_URL;
         if (PlayerController::currentPlayer != std::nullopt) {
             url += "u/" + PlayerController::currentPlayer->id;
         }
-        UnityEngine::Application::OpenURL(url);
+        UnityEngine::Application::OpenURL(newcsstr2(url));
     });
-    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->profile, "Your web profile");
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->profile->get_gameObject(), "Your web profile");
 
-    modalUI->discord = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->discordLinkIcon, UnityEngine::Vector2(0, -9), UnityEngine::Vector2(22, 6), [](){
-        UnityEngine::Application::OpenURL("https://discord.gg/2RG5YVqtG6");
+    modalUI->discord = QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->discordLinkIcon, UnityEngine::Vector2(0, -9), UnityEngine::Vector2(22, 6), [](){
+        UnityEngine::Application::OpenURL(newcsstr2("https://discord.gg/2RG5YVqtG6"));
     });
-    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->discord, "Our discord server");
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->discord->get_gameObject(), "Our discord server");
 
-    modalUI->patreon = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->patreonLinkIcon, UnityEngine::Vector2(24, -9), UnityEngine::Vector2(22, 6), [](){
-        UnityEngine::Application::OpenURL("https://patreon.com/BeatLeader");
+    modalUI->patreon = QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->patreonLinkIcon, UnityEngine::Vector2(24, -9), UnityEngine::Vector2(22, 6), [](){
+        UnityEngine::Application::OpenURL(newcsstr2("https://patreon.com/BeatLeader"));
     });
-    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->patreon, "Patreon page");
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->patreon->get_gameObject(), "Patreon page");
 
     WebUtils::GetJSONAsync(WebUtils::API_URL + "mod/lastVersions", [modalUI](long status, bool error, rapidjson::Document const& result){ 
         if (status == 200) {
             string version = result["quest"].GetObject()["version"].GetString();
             QuestUI::MainThreadScheduler::Schedule([modalUI, version] {
                 if (modInfo.version == version) {
-                    modalUI->versionText->SetText("<color=#88FF88>Mod is up to date!");
+                    modalUI->versionText->SetText(newcsstr2("<color=#88FF88>Mod is up to date!"));
                 } else  {
-                    modalUI->versionText->SetText("<color=#FF8888>Mod is outdated!");
+                    modalUI->versionText->SetText(newcsstr2("<color=#FF8888>Mod is outdated!"));
                 }
             });
         }
     });
 
-    modalUI->modal->set_name("BLLinksModal");
+    modalUI->modal->set_name(newcsstr2("BLLinksModal"));
     *modalUIPointer = modalUI;
 }

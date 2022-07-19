@@ -22,7 +22,7 @@ inline char asciitolower(char in) {
     return in;
 }
 
-inline string toLower(string_view const value) {
+inline string toLower(string const value) {
     string result;
     result.resize(value.size());
     transform(value.begin(), value.end(), result.begin(), asciitolower);
@@ -89,7 +89,7 @@ Il2CppString* newcsstr2(std::u16string_view inp) {
 /// @param inp The input string to create.
 /// @return The returned string.
 template<il2cpp_utils::CreationType creationType = il2cpp_utils::CreationType::Temporary>
-Il2CppString* newcsstr2(std::string_view inp) {
+Il2CppString* newcsstr2(std::string inp) {
     il2cpp_functions::Init();
     if constexpr (creationType == il2cpp_utils::CreationType::Manual) {
         // TODO: Perhaps manually call createManual instead

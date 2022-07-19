@@ -13,7 +13,8 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include "songloader/shared/API.hpp"
-// #include "playlistmanager/shared/PlaylistManager.hpp"
+#include "playlistmanager/shared/PlaylistManager.hpp"
+#include "include/Utils/SongLoader.hpp"
 
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
@@ -47,6 +48,7 @@ void DownloadBeatmap(string path, string hash) {
             QuestUI::MainThreadScheduler::Schedule([] {
                 getLogger().info("%s", "Refreshing songs");
                 RuntimeSongLoader::API::RefreshSongs(false);
+                RuntimeSongLoader::SongLoader::GetInstance()->RefreshLevelPacks();
             });
         }
     });
@@ -107,7 +109,7 @@ void PlaylistSynchronizer::SyncPlaylist() {
     );
     RuntimeSongLoader::API::AddRefreshLevelPacksEvent(
         [] (RuntimeSongLoader::SongLoaderBeatmapLevelPackCollectionSO* customBeatmapLevelPackCollectionSO) {
-            // PlaylistManager::LoadPlaylists(customBeatmapLevelPackCollectionSO, true);
+            PlaylistManager::LoadPlaylists(customBeatmapLevelPackCollectionSO, true);
         }
     );
 }

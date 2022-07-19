@@ -1,5 +1,7 @@
 #pragma once
 
+#include "UI/ClickableImage.hpp"
+
 #include "HMUI/ModalView.hpp"
 
 #include "questui/shared/BeatSaberUI.hpp"

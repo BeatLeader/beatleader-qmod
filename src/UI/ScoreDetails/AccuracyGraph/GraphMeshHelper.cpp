@@ -18,7 +18,7 @@ BeatLeader::GraphMeshHelper::GraphMeshHelper(int horizontalResolution, int verti
     PopulateTrianglesArray(verticalResolution, horizontalResolution);
 }
 
-void BeatLeader::GraphMeshHelper::SetPoints(ArrayWrapper<UnityEngine::Vector2> points) {
+void BeatLeader::GraphMeshHelper::SetPoints(ArrayWrapper<Sombrero::FastVector2> points) {
     int size = points.Length();
 
     if (size <= 1) {

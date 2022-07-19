@@ -131,20 +131,25 @@ namespace QuestUI::BeatSaberUI {
         auto go = UnityEngine::GameObject::New_ctor(newcsstr2("QuestUIClickableImage"));
 
         auto image = go->AddComponent<QuestUI::ClickableImage*>();
-        auto mat_UINoGlows = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Material*>();
-        UnityEngine::Material* mat_UINoGlow = NULL;
-        for (int i = 0; i < mat_UINoGlows->Length(); i++) {
-            if (to_utf8(csstrtostr(mat_UINoGlows->get(i)->get_name())) == "UINoGlow") {
-                mat_UINoGlow = mat_UINoGlows->get(i);
-                break;
+        
+        static UnityEngine::Material* mat_UINoGlow;
+
+        if (!mat_UINoGlow) {
+            auto mat_UINoGlows = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Material*>();
+            for (int i = 0; i < mat_UINoGlows->Length(); i++) {
+                if (to_utf8(csstrtostr(mat_UINoGlows->get(i)->get_name())) == "UINoGlow") {
+                    mat_UINoGlow = mat_UINoGlows->get(i);
+                    break;
+                }
             }
         }
 
         image->set_material(mat_UINoGlow);
 
         go->get_transform()->SetParent(parent, false);
-        image->get_rectTransform()->set_sizeDelta(sizeDelta);
-        image->get_rectTransform()->set_anchoredPosition(anchoredPosition);
+        auto rectTransform = image->get_rectTransform();
+        rectTransform->set_sizeDelta(sizeDelta);
+        rectTransform->set_anchoredPosition(anchoredPosition);
         image->set_sprite(sprite);
 
         go->AddComponent<UnityEngine::UI::LayoutElement*>();
@@ -154,8 +159,12 @@ namespace QuestUI::BeatSaberUI {
         
         try
         {
-            auto menuShockWave = UnityEngine::Resources::FindObjectsOfTypeAll<GlobalNamespace::MenuShockwave*>()->get(0);
-            auto buttonClickedSignal = menuShockWave->dyn__buttonClickEvents()->get(menuShockWave->dyn__buttonClickEvents()->Length() - 1);
+            static GlobalNamespace::Signal* buttonClickedSignal;
+            if (!buttonClickedSignal) {
+                auto menuShockWave = UnityEngine::Resources::FindObjectsOfTypeAll<GlobalNamespace::MenuShockwave*>()->get(0);
+                buttonClickedSignal = menuShockWave->dyn__buttonClickEvents()->get(menuShockWave->dyn__buttonClickEvents()->Length() - 1);
+            }
+            
             image->buttonClickedSignal = buttonClickedSignal;
         }
         catch(const std::exception& e)
@@ -171,7 +180,10 @@ namespace QuestUI::BeatSaberUI {
             hapticFeedbackPresetSO->frequency = 0.5f;
         }
 
-        auto hapticFeedbackController = UnityEngine::Object::FindObjectOfType<GlobalNamespace::HapticFeedbackController*>();
+        static GlobalNamespace::HapticFeedbackController* hapticFeedbackController; 
+        if (!hapticFeedbackController) {
+            hapticFeedbackController = UnityEngine::Object::FindObjectOfType<GlobalNamespace::HapticFeedbackController*>();
+        }
         image->hapticFeedbackController = hapticFeedbackController;
         image->hapticFeedbackPresetSO = (HapticPresetSO*)hapticFeedbackPresetSO;
 

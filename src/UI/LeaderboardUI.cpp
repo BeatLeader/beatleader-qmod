@@ -278,11 +278,11 @@ namespace LeaderboardUI {
 
         QuestUI::MainThreadScheduler::Schedule([modSettingsFlowCoordinator] {
             auto buttons = modSettingsFlowCoordinator->get_topViewController()->GetComponentsInChildren<UnityEngine::UI::Button*>();
-            for (size_t i = 0; i < buttons.size(); i++)
+            for (size_t i = 0; i < buttons->Length(); i++)
             {
-                auto textMesh = buttons[i]->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
-                if (textMesh->get_text() == "bl" || textMesh->get_text() == "BeatLeader") {
-                    buttons[i]->get_onClick()->Invoke();
+                auto textMesh = buttons->get(i)->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
+                if (to_utf8(csstrtostr(textMesh->get_text())) == "bl" || to_utf8(csstrtostr(textMesh->get_text())) == "BeatLeader") {
+                    buttons->get(i)->get_onClick()->Invoke();
                 }
             }
         });
@@ -553,10 +553,6 @@ namespace LeaderboardUI {
             globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(153, 42.5));
             countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(168, 42.5));
 
-            if (PlayerController::currentPlayer != std::nullopt) {
-                updatePlayerInfoLabel();
-            }
-
             auto websiteLink = QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
                 linkContainer->modal->Show(true, true, nullptr);
             });
@@ -804,12 +800,12 @@ namespace LeaderboardUI {
 
                     scoreDetailsUI->setScore(cellScores[result]);
                 });
-                scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::scoreUnderlineMaterial));
+                scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->scoreUnderlineMaterial));
                 
                 cellHighlights[result] = scoreSelector;
 
                 auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
-                backgroundImage->set_material(BundleLoader::scoreBackgroundMaterial);
+                backgroundImage->set_material(BundleLoader::bundle->scoreBackgroundMaterial);
                 backgroundImage->get_transform()->SetAsFirstSibling();
                 cellBackgrounds[result] = backgroundImage;  
 

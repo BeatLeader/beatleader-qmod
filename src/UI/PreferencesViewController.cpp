@@ -53,7 +53,7 @@ void UpdateUI(optional<Player> player) {
     spinner->SetAnimating(false);
 
     if (player != nullopt) {
-        name->SetText(player->name + ", hi!");
+        name->SetText(newcsstr2(player->name + ", hi!"));
         name->get_gameObject()->SetActive(true);
         label3->get_gameObject()->SetActive(false);
         logoutButton->get_gameObject()->SetActive(true);
