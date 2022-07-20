@@ -4,6 +4,7 @@
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
 #include "include/Utils/StringUtils.hpp"
+#include "include/Models/ScoreStats.hpp"
 
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ClickableImage.hpp"
@@ -29,6 +30,7 @@ static UnityEngine::Color FadedColor = UnityEngine::Color(0.8f, 0.8f, 0.8f, 0.2f
 static UnityEngine::Color FadedHoverColor = UnityEngine::Color(0.5f, 0.5f, 0.5f, 0.2f);
 
 static string replayLink;
+static ScoreStats scoreStats;
 
 void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPointer, Transform* parent){
     auto modalUI = *modalUIPointer;
@@ -159,10 +161,10 @@ void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
         loadingText->get_gameObject()->SetActive(true);
         string url = WebUtils::API_URL + "score/statistic/" + to_string(scoreId);
         WebUtils::GetJSONAsync(url, [self, index](long status, bool error, rapidjson::Document const& result) {
-            if (status == 200) {
-                self->scoreStats = ScoreStats(result);
-                self->scoreStatsFetched = true;
+            if (status == 200 && !result.HasParseError() && result.IsObject() && result.HasMember("scoreGraphTracker")) {
+                scoreStats = ScoreStats(result);
                 QuestUI::MainThreadScheduler::Schedule([self, index] {
+                    self->scoreStatsFetched = true;
                     self->loadingText->get_gameObject()->SetActive(false);
                     self->selectTab(index);
                 });

@@ -5,7 +5,7 @@
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/QuestUI.hpp"
 
-#include "include/Models/Score.hpp"
+#include "include/Models/ScoreStats.hpp"
 #include "include/UI/PlayerAvatar.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsGridCell.hpp"
 
@@ -16,7 +16,7 @@ namespace BeatLeader {
 
             ScoreStatsGridCell accuracyGridCells[12];
             
-            void setScore(optional<ScoreStats> score);
+            void setScore(ScoreStats score);
             void setSelected(bool selected);
     };
 }
