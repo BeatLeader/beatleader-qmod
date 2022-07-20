@@ -6,7 +6,6 @@
 #include "questui/shared/QuestUI.hpp"
 
 #include "include/Models/Score.hpp"
-#include "include/Models/ScoreStats.hpp"
 #include "include/UI/PlayerAvatar.hpp"
 
 #include "include/UI/ScoreDetails/GeneralScoreDetails.hpp"
@@ -42,7 +41,6 @@ namespace BeatLeader {
 
             int scoreId;
             bool scoreStatsFetched;
-            ScoreStats scoreStats;
             
             void setScore(const Score& score);
             void selectTab(int index);

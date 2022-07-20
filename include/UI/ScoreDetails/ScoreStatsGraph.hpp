@@ -18,7 +18,7 @@ namespace BeatLeader {
             
             AccuracyGraph* accuracyGraph;
             
-            void setScore(optional<ScoreStats> score) const;
+            void setScore(ScoreStats score) const;
             void setSelected(bool selected) const;
     };
 }

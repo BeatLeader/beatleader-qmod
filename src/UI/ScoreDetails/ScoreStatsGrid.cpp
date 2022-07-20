@@ -26,10 +26,10 @@ BeatLeader::ScoreStatsGrid::ScoreStatsGrid(HMUI::ModalView *modal) noexcept {
     }
 }
 
-void BeatLeader::ScoreStatsGrid::setScore(optional<ScoreStats> scoreStats) {
+void BeatLeader::ScoreStatsGrid::setScore(ScoreStats scoreStats) {
     float max = 10000;
     float min = -10000;
-    auto scores = scoreStats->accuracyTracker.gridAcc;
+    auto scores = scoreStats.accuracyTracker.gridAcc;
 
     for (int i = 0; i < 12; i++)
     {

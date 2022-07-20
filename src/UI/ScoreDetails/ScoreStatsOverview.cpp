@@ -76,35 +76,35 @@ static float CalculateFillValue(float score) {
     return pow(ratio, 0.6f);
 }
 
-void BeatLeader::ScoreStatsOverview::setScore(optional<ScoreStats> score) const {
-    leftPreScore->SetText(to_string_wprecision(score->accuracyTracker.leftAverageCut[0], 2));
-    leftAccScore->SetText(to_string_wprecision(score->accuracyTracker.leftAverageCut[1], 2));
-    leftPostScore->SetText(to_string_wprecision(score->accuracyTracker.leftAverageCut[2], 2));
+void BeatLeader::ScoreStatsOverview::setScore(ScoreStats score) const {
+    leftPreScore->SetText(to_string_wprecision(score.accuracyTracker.leftAverageCut[0], 2));
+    leftAccScore->SetText(to_string_wprecision(score.accuracyTracker.leftAverageCut[1], 2));
+    leftPostScore->SetText(to_string_wprecision(score.accuracyTracker.leftAverageCut[2], 2));
 
-    leftScore->SetText(to_string_wprecision(score->accuracyTracker.accLeft, 2));
+    leftScore->SetText(to_string_wprecision(score.accuracyTracker.accLeft, 2));
     leftScore->set_alignment(TMPro::TextAlignmentOptions::Center);
-    leftPieImage->get_material()->SetFloat(FillPropertyId, CalculateFillValue(score->accuracyTracker.accLeft));
+    leftPieImage->get_material()->SetFloat(FillPropertyId, CalculateFillValue(score.accuracyTracker.accLeft));
     
-    rightScore->SetText(to_string_wprecision(score->accuracyTracker.accRight, 2));
+    rightScore->SetText(to_string_wprecision(score.accuracyTracker.accRight, 2));
     rightScore->set_alignment(TMPro::TextAlignmentOptions::Center);
-    rightPieImage->get_material()->SetFloat(FillPropertyId, CalculateFillValue(score->accuracyTracker.accRight));
+    rightPieImage->get_material()->SetFloat(FillPropertyId, CalculateFillValue(score.accuracyTracker.accRight));
 
-    rightPreScore->SetText(to_string_wprecision(score->accuracyTracker.rightAverageCut[0], 2));
+    rightPreScore->SetText(to_string_wprecision(score.accuracyTracker.rightAverageCut[0], 2));
     rightPreScore->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightAccScore->SetText(to_string_wprecision(score->accuracyTracker.rightAverageCut[1], 2));
+    rightAccScore->SetText(to_string_wprecision(score.accuracyTracker.rightAverageCut[1], 2));
     rightAccScore->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightPostScore->SetText(to_string_wprecision(score->accuracyTracker.rightAverageCut[2], 2));
+    rightPostScore->SetText(to_string_wprecision(score.accuracyTracker.rightAverageCut[2], 2));
     rightPostScore->set_alignment(TMPro::TextAlignmentOptions::Right);
 
-    leftTd->SetText(to_string_wprecision(score->accuracyTracker.leftTimeDependence, 3));
-    leftPre->SetText(to_string_wprecision(score->accuracyTracker.leftPreswing * 100.0, 2) + "%");
-    leftPost->SetText(to_string_wprecision(score->accuracyTracker.leftPostswing * 100.0, 2) + "%");
+    leftTd->SetText(to_string_wprecision(score.accuracyTracker.leftTimeDependence, 3));
+    leftPre->SetText(to_string_wprecision(score.accuracyTracker.leftPreswing * 100.0, 2) + "%");
+    leftPost->SetText(to_string_wprecision(score.accuracyTracker.leftPostswing * 100.0, 2) + "%");
 
-    rightTd->SetText(to_string_wprecision(score->accuracyTracker.rightTimeDependence, 3));
+    rightTd->SetText(to_string_wprecision(score.accuracyTracker.rightTimeDependence, 3));
     rightTd->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightPre->SetText(to_string_wprecision(score->accuracyTracker.rightPreswing * 100.0, 2) + "%");
+    rightPre->SetText(to_string_wprecision(score.accuracyTracker.rightPreswing * 100.0, 2) + "%");
     rightPre->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightPost->SetText(to_string_wprecision(score->accuracyTracker.rightPostswing * 100.0, 2) + "%");
+    rightPost->SetText(to_string_wprecision(score.accuracyTracker.rightPostswing * 100.0, 2) + "%");
     rightPost->set_alignment(TMPro::TextAlignmentOptions::Right);
 }
 

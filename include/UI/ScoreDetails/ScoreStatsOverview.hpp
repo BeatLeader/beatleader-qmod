@@ -5,7 +5,7 @@
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/QuestUI.hpp"
 
-#include "include/Models/Score.hpp"
+#include "include/Models/ScoreStats.hpp"
 #include "include/UI/PlayerAvatar.hpp"
 
 namespace BeatLeader {
@@ -42,7 +42,7 @@ namespace BeatLeader {
             TMPro::TextMeshProUGUI* rightPre;
             TMPro::TextMeshProUGUI* rightPost;
             
-            void setScore(optional<ScoreStats> score) const;
+            void setScore(ScoreStats score) const;
             void setSelected(bool selected) const;
     };
 }
