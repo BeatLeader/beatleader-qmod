@@ -619,7 +619,7 @@ namespace LeaderboardUI {
                     auto button = buttons->get(i);
 
                     TMPro::TextMeshProUGUI* textMesh = button->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
-                    if (textMesh && to_utf8(csstrtostr(textMesh->get_text())) == "") {
+                    if (textMesh && textMesh->get_text() && to_utf8(csstrtostr(textMesh->get_text())) == "") {
                         auto position = button->GetComponent<UnityEngine::RectTransform *>()->get_anchoredPosition();
                         if (position.x == -40 && position.y == 20) {
                             ssDownAction = button->get_onClick();
@@ -761,7 +761,7 @@ namespace LeaderboardUI {
             ssWasOpened = true;
         }
 
-        if (ssInstalled && sspageUpButton == NULL) {
+        if (ssInstalled && showBeatLeader && sspageUpButton == NULL) {
             QuestUI::MainThreadScheduler::Schedule([self] {
                 refreshLeaderboardCall(self);
             });

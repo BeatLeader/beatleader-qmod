@@ -62,7 +62,7 @@ ScoreGraphTracker::ScoreGraphTracker(rapidjson::Value const& document) {
     auto graphArray  = document["graph"].GetArray();
     graph = vector<float>(graphArray.Size());
     for (int index = 0; index < (int)graphArray.Size(); ++index) {
-        graph.emplace_back(graphArray[index].GetFloat());
+        graph[index] = graphArray[index].GetFloat();
     }
 }
 
