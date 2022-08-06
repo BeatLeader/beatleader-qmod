@@ -13,7 +13,7 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include "songloader/shared/API.hpp"
-// #include "playlistmanager/shared/PlaylistManager.hpp"
+#include "playlistcore/shared/PlaylistCore.hpp"
 
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
@@ -83,10 +83,10 @@ void ActuallySyncPlaylist() {
         outfile << result << endl;
         outfile.close();
 
-        // ofstream outfile2;
-        // outfile2.open("sdcard/ModData/com.beatgames.beatsaber/Mods/PlaylistManager/PlaylistBackups/BLSynced.json");
-        // outfile2 << result << endl;
-        // outfile2.close();
+        ofstream outfile2;
+        outfile2.open("sdcard/ModData/com.beatgames.beatsaber/Mods/PlaylistManager/PlaylistBackups/BLSynced.json");
+        outfile2 << result << endl;
+        outfile2.close();
         
         for (int index = 0; index < (int)songs.Size(); ++index)
         {
@@ -114,7 +114,7 @@ void PlaylistSynchronizer::SyncPlaylist() {
     );
     RuntimeSongLoader::API::AddRefreshLevelPacksEvent(
         [] (RuntimeSongLoader::SongLoaderBeatmapLevelPackCollectionSO* customBeatmapLevelPackCollectionSO) {
-            // PlaylistManager::LoadPlaylists(customBeatmapLevelPackCollectionSO, true);
+            PlaylistCore::LoadPlaylists(customBeatmapLevelPackCollectionSO, true);
         }
     );
 }

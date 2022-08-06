@@ -69,6 +69,11 @@
       "id": "conditional-dependencies",
       "versionRange": "*",
       "additionalData": {}
+    },
+    {
+      "id": "playlistcore",
+      "versionRange": "^1.0.0",
+      "additionalData": {}
     }
   ],
   "additionalData": {}
