@@ -2,6 +2,7 @@
 
 #include "include/Assets/BundleLoader.hpp"
 #include "include/Utils/WebUtils.hpp"
+#include "include/Utils/PlaylistSynchronizer.hpp"
 #include "include/API/PlayerController.hpp"
 
 #include "UnityEngine/Resources.hpp"
@@ -28,15 +29,15 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     }
     if (modalUI == nullptr) modalUI = (BeatLeader::LinksContainerPopup*) malloc(sizeof(BeatLeader::LinksContainerPopup));
 
-    auto container = CreateModal(parent, UnityEngine::Vector2(75, 30), [](HMUI::ModalView *modal) {}, true);
+    auto container = CreateModal(parent, UnityEngine::Vector2(75, 50), [](HMUI::ModalView *modal) {}, true);
     modalUI->modal = container;
 
     auto modalTransform = container->get_transform();
 
-    modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(1.0, 6.0));
-    CreateText(modalTransform, "<u>These buttons will open the browser!", UnityEngine::Vector2(1.0, -3.0));
+    modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(1.0, 14.0));
+    CreateText(modalTransform, "<u>These buttons will open the browser!", UnityEngine::Vector2(1.0, 5.0));
 
-    modalUI->profile = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->websiteLinkIcon, UnityEngine::Vector2(-24, -9), UnityEngine::Vector2(22, 6), [](){
+    modalUI->profile = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->websiteLinkIcon, UnityEngine::Vector2(-24, -1), UnityEngine::Vector2(22, 6), [](){
         string url = WebUtils::WEB_URL;
         if (PlayerController::currentPlayer != std::nullopt) {
             url += "u/" + PlayerController::currentPlayer->id;
@@ -45,18 +46,18 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->profile, "Your web profile");
 
-    modalUI->discord = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->discordLinkIcon, UnityEngine::Vector2(0, -9), UnityEngine::Vector2(22, 6), [](){
+    modalUI->discord = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->discordLinkIcon, UnityEngine::Vector2(0, -1), UnityEngine::Vector2(22, 6), [](){
         UnityEngine::Application::OpenURL("https://discord.gg/2RG5YVqtG6");
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->discord, "Our discord server");
 
-    modalUI->patreon = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->patreonLinkIcon, UnityEngine::Vector2(24, -9), UnityEngine::Vector2(22, 6), [](){
+    modalUI->patreon = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->patreonLinkIcon, UnityEngine::Vector2(24, -1), UnityEngine::Vector2(22, 6), [](){
         UnityEngine::Application::OpenURL("https://patreon.com/BeatLeader");
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->patreon, "Patreon page");
 
     WebUtils::GetJSONAsync(WebUtils::API_URL + "mod/lastVersions", [modalUI](long status, bool error, rapidjson::Document const& result){ 
-        if (status == 200) {
+        if (status == 200 && !result.HasParseError() && result.IsObject() && result.HasMember("quest")) {
             string version = result["quest"].GetObject()["version"].GetString();
             QuestUI::MainThreadScheduler::Schedule([modalUI, version] {
                 if (modInfo.version == version) {
@@ -67,6 +68,22 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
             });
         }
     });
+
+    CreateText(modalTransform, "<u>Various playlists. You need to sync them yourself!", UnityEngine::Vector2(1.0, -13.0));
+    modalUI->nominated = ::QuestUI::BeatSaberUI::CreateUIButton(modalTransform, "Nominated", UnityEngine::Vector2(-24.0, -19.0), [modalUI]() {
+       PlaylistSynchronizer::InstallPlaylist(WebUtils::API_URL + "playlist/nominated", "BL Nominated");
+    });
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->nominated, "Playlist of nominated maps");
+
+    modalUI->qualified = ::QuestUI::BeatSaberUI::CreateUIButton(modalTransform, "Qualified", UnityEngine::Vector2(0, -19.0), [modalUI]() {
+        PlaylistSynchronizer::InstallPlaylist(WebUtils::API_URL + "playlist/qualified", "BL Qualified");
+    });
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->nominated, "Playlist of nominated maps");
+
+    modalUI->ranked = ::QuestUI::BeatSaberUI::CreateUIButton(modalTransform, "Ranked", UnityEngine::Vector2(24.0, -19.0), [modalUI]() {
+        PlaylistSynchronizer::InstallPlaylist(WebUtils::API_URL + "playlist/ranked", "BL Ranked");
+    });
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->nominated, "Playlist of nominated maps");
 
     modalUI->modal->set_name("BLLinksModal");
     *modalUIPointer = modalUI;

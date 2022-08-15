@@ -47,7 +47,7 @@ void DownloadBeatmap(string path, string hash, int index) {
             QuestUI::MainThreadScheduler::Schedule([] {
                 getLogger().info("%s", "Refreshing songs");
                 RuntimeSongLoader::API::RefreshSongs(false);
-                RuntimeSongLoader::API::RefreshPacks(false);
+                RuntimeSongLoader::API::RefreshPacks(true);
             });
         }
     });
@@ -57,7 +57,7 @@ void PlaylistSynchronizer::GetBeatmap(int index) {
     string hash = mapsToDownload[index];
     getLogger().info("%s", ("Will download " + hash).c_str());
     WebUtils::GetJSONAsync("https://api.beatsaver.com/maps/hash/" + hash, [hash, index] (long status, bool error, rapidjson::Document const& result){
-        if (status == 200) {
+        if (status == 200 && !result.HasParseError() && result.IsObject() && result.HasMember("versions")) {
             DownloadBeatmap(result["versions"].GetArray()[0]["downloadURL"].GetString(), hash, index);
         } else if (index + 1 < mapsToDownload.size()) {
             GetBeatmap(index + 1);
@@ -67,27 +67,38 @@ void PlaylistSynchronizer::GetBeatmap(int index) {
     });
 }
 
-void ActuallySyncPlaylist() {
-    if (PlayerController::currentPlayer == std::nullopt) return;
+void DownloadPlaylist(
+    string url, 
+    string name,
+    bool checkSize,
+    function<void(rapidjson::GenericArray<false, rapidjson::Value>)> const &completion) {
 
-    WebUtils::GetAsync(WebUtils::API_URL + "user/oneclickplaylist", 64, [](long status, string result) {
+    WebUtils::GetAsync(url, 64, [completion, checkSize, name](long status, string result) {
         rapidjson::Document playlist;
         playlist.Parse(result.data());
-        if (playlist.HasParseError() || !playlist.IsObject()) return;
+        if (playlist.HasParseError() || !playlist.IsObject() || !playlist.HasMember("songs")) return;
 
         auto songs = playlist["songs"].GetArray();
-        if ((int)songs.Size() == 0) return;
+        if (checkSize && (int)songs.Size() == 0) return;
 
         ofstream outfile;
-        outfile.open("sdcard/ModData/com.beatgames.beatsaber/Mods/PlaylistManager/Playlists/BLSynced.json");
+        outfile.open("sdcard/ModData/com.beatgames.beatsaber/Mods/PlaylistManager/Playlists/" + name + ".bplist_BMBF.json");
         outfile << result << endl;
         outfile.close();
 
         ofstream outfile2;
-        outfile2.open("sdcard/ModData/com.beatgames.beatsaber/Mods/PlaylistManager/PlaylistBackups/BLSynced.json");
+        outfile2.open("sdcard/ModData/com.beatgames.beatsaber/Mods/PlaylistManager/PlaylistBackups/" + name + ".bplist_BMBF.json");
         outfile2 << result << endl;
         outfile2.close();
-        
+
+        completion(songs);
+    });
+}
+
+void ActuallySyncPlaylist() {
+    if (PlayerController::currentPlayer == std::nullopt) return;
+
+    DownloadPlaylist(WebUtils::API_URL + "user/oneclickplaylist", "BLSynced", true, [](auto songs) {
         for (int index = 0; index < (int)songs.Size(); ++index)
         {
             auto const& song = songs[index];
@@ -112,9 +123,13 @@ void PlaylistSynchronizer::SyncPlaylist() {
             ActuallySyncPlaylist();
         }
     );
-    RuntimeSongLoader::API::AddRefreshLevelPacksEvent(
-        [] (RuntimeSongLoader::SongLoaderBeatmapLevelPackCollectionSO* customBeatmapLevelPackCollectionSO) {
-            PlaylistCore::LoadPlaylists(customBeatmapLevelPackCollectionSO, true);
-        }
-    );
+}
+
+void PlaylistSynchronizer::InstallPlaylist(string url, string filename) {
+    DownloadPlaylist(url, filename, true, [](auto songs) {
+        QuestUI::MainThreadScheduler::Schedule([] {
+            RuntimeSongLoader::API::RefreshSongs(false);
+            RuntimeSongLoader::API::RefreshPacks(true);
+        });
+    });
 }

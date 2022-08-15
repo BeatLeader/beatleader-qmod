@@ -9,8 +9,10 @@ void ModifiersManager::Sync() {
     string url = WebUtils::API_URL + "modifiers";
 
     WebUtils::GetJSONAsync(url, [] (long status, bool error, rapidjson::Document const& result){
-        for (auto i = result.MemberBegin(); i != result.MemberEnd(); ++i) {
-            modifiers[i->name.GetString()] = i->value.GetFloat();
+        if (status == 200 && !result.HasParseError() && result.IsObject()) {
+            for (auto i = result.MemberBegin(); i != result.MemberEnd(); ++i) {
+                modifiers[i->name.GetString()] = i->value.GetFloat();
+            }
         }
     });
 }

@@ -274,7 +274,11 @@ namespace LeaderboardUI {
         lastUrl = url;
 
         WebUtils::GetJSONAsync(url, [url](long status, bool error, rapidjson::Document const& result){
-            if (url != lastUrl) return; 
+            if (url != lastUrl) return;
+
+            if (status != 200 || result.HasParseError() || !result.IsObject() || !result.HasMember("data")) {
+                return;
+            } 
 
             auto scores = result["data"].GetArray();
             plvc->scores->Clear();
@@ -647,6 +651,7 @@ namespace LeaderboardUI {
     }
 
     void updateStatus(ReplayUploadStatus status, string description, float progress, bool showRestart) {
+        lastVotingStatusUrl = "";
         if (visible) {
             uploadStatus->SetText(description);
             switch (status)

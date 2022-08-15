@@ -9,30 +9,36 @@
   "coverImage": "cover.png",
   "dependencies": [
     {
+      "version": "^0.16.2",
+      "id": "questui",
+      "downloadIfMissing": "https://github.com/darknight1050/QuestUI/releases/download/v0.16.4/QuestUI.qmod"
+    },
+    {
+      "version": "^1.0.0",
+      "id": "playlistcore",
+      "downloadIfMissing": "https://github.com/Metalit/PlaylistCore/releases/download/v1.0.1/PlaylistCore.qmod"
+    },
+    {
       "version": "^0.10.1",
       "id": "songloader",
-      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.0/SongLoader.qmod"
+      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.3/SongLoader.qmod"
     },
     {
       "version": "^0.15.13",
       "id": "custom-types",
-      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.13/CustomTypes.qmod"
+      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.18/CustomTypes.qmod"
     },
     {
       "version": "^0.25.0",
       "id": "codegen",
       "downloadIfMissing": "https://github.com/sc2ad/BeatSaber-Quest-Codegen/releases/download/v0.25.0/Codegen.qmod"
-    },
-    {
-      "version": "^0.16.2",
-      "id": "questui",
-      "downloadIfMissing": "https://github.com/darknight1050/QuestUI/releases/download/v0.16.2/QuestUI.qmod"
     }
   ],
   "modFiles": [
     "libbl.so"
   ],
   "libraryFiles": [
+    "libbeatsaber-hook_3_10_0.so"
   ],
   "fileCopies": [],
   "copyExtensions": []

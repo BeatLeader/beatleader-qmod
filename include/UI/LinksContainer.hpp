@@ -15,6 +15,10 @@ namespace BeatLeader {
             QuestUI::ClickableImage* profile;
             QuestUI::ClickableImage* discord;
             QuestUI::ClickableImage* patreon;
+
+            UnityEngine::UI::Button* nominated;
+            UnityEngine::UI::Button* qualified;
+            UnityEngine::UI::Button* ranked;
     };
     void initLinksContainerPopup(LinksContainerPopup** modalUI, UnityEngine::Transform* parent);
 }

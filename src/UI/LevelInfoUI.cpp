@@ -98,7 +98,7 @@ namespace LevelInfoUI {
             string url = WebUtils::API_URL + "map/hash/" + hash;
 
             WebUtils::GetJSONAsync(url, [difficulty, mode, key, hash](long status, bool error, rapidjson::Document const& result){
-                if (status != 200) return;
+                if (status != 200 || result.HasParseError() || !result.IsObject() || !result.HasMember("difficulties")) return;
                 auto const& difficulties = result["difficulties"].GetArray();
 
                 for (int index = 0; index < (int)difficulties.Size(); ++index)
