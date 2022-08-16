@@ -34,8 +34,8 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
 
     auto modalTransform = container->get_transform();
 
-    modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(1.0, 14.0));
-    CreateText(modalTransform, "<u>These buttons will open the browser!", UnityEngine::Vector2(1.0, 5.0));
+    modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(-4.0, 14.0));
+    CreateText(modalTransform, "<u>These buttons will open the browser!", UnityEngine::Vector2(-4.0, 4.0));
 
     modalUI->profile = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->websiteLinkIcon, UnityEngine::Vector2(-24, -1), UnityEngine::Vector2(22, 6), [](){
         string url = WebUtils::WEB_URL;
@@ -57,7 +57,7 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->patreon, "Patreon page");
 
     WebUtils::GetJSONAsync(WebUtils::API_URL + "mod/lastVersions", [modalUI](long status, bool error, rapidjson::Document const& result){ 
-        if (status == 200 && !result.HasParseError() && result.IsObject() && result.HasMember("quest")) {
+        if (status == 200 && !error && result.HasMember("quest")) {
             string version = result["quest"].GetObject()["version"].GetString();
             QuestUI::MainThreadScheduler::Schedule([modalUI, version] {
                 if (modInfo.version == version) {
@@ -69,7 +69,7 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
         }
     });
 
-    CreateText(modalTransform, "<u>Various playlists. You need to sync them yourself!", UnityEngine::Vector2(1.0, -13.0));
+    CreateText(modalTransform, "<u>Install playlists. You need to sync them yourself!", UnityEngine::Vector2(-4.0, -11.0));
     modalUI->nominated = ::QuestUI::BeatSaberUI::CreateUIButton(modalTransform, "Nominated", UnityEngine::Vector2(-24.0, -19.0), [modalUI]() {
        PlaylistSynchronizer::InstallPlaylist(WebUtils::API_URL + "playlist/nominated", "BL Nominated");
     });
@@ -78,12 +78,12 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     modalUI->qualified = ::QuestUI::BeatSaberUI::CreateUIButton(modalTransform, "Qualified", UnityEngine::Vector2(0, -19.0), [modalUI]() {
         PlaylistSynchronizer::InstallPlaylist(WebUtils::API_URL + "playlist/qualified", "BL Qualified");
     });
-    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->nominated, "Playlist of nominated maps");
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->nominated, "Playlist of qualified maps");
 
     modalUI->ranked = ::QuestUI::BeatSaberUI::CreateUIButton(modalTransform, "Ranked", UnityEngine::Vector2(24.0, -19.0), [modalUI]() {
         PlaylistSynchronizer::InstallPlaylist(WebUtils::API_URL + "playlist/ranked", "BL Ranked");
     });
-    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->nominated, "Playlist of nominated maps");
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->nominated, "Playlist of ranked maps");
 
     modalUI->modal->set_name("BLLinksModal");
     *modalUIPointer = modalUI;

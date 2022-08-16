@@ -276,7 +276,7 @@ namespace LeaderboardUI {
         WebUtils::GetJSONAsync(url, [url](long status, bool error, rapidjson::Document const& result){
             if (url != lastUrl) return;
 
-            if (status != 200 || result.HasParseError() || !result.IsObject() || !result.HasMember("data")) {
+            if (status != 200 || error || !result.HasMember("data")) {
                 return;
             } 
 
@@ -486,8 +486,16 @@ namespace LeaderboardUI {
             auto websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(12, 12), []() {
                 linkContainer->modal->Show(true, true, nullptr);
             });
+            
             logoAnimation = websiteLink->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
             logoAnimation->Init(websiteLink);
+            websiteLink->get_onPointerEnterEvent() += [](auto _){ 
+                logoAnimation->SetGlowing(true);
+            };
+
+            websiteLink->get_onPointerExitEvent() += [](auto _){ 
+                logoAnimation->SetGlowing(false);
+            };
 
             if (retryButton) UnityEngine::GameObject::Destroy(retryButton);
             retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){

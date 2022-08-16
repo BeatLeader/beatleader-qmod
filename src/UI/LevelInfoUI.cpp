@@ -72,15 +72,23 @@ namespace LevelInfoUI {
             ppLabel = CreateText(self->levelParamsPanel->get_transform(), "0", true, UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
             ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             ppLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            AddHoverHint(ppLabel, "BeatLeader pp for 100%");
+            AddHoverHint(ppLabel, "BeatLeader approximate pp");
             
             ppImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-15.5, 5.6), UnityEngine::Vector2(3, 3));
 
-            noSubmissionLabel = CreateText(self->levelParamsPanel->get_transform(), "Score submission disabled", true, UnityEngine::Vector2(24, 3));
+            noSubmissionLabel = CreateText(self->levelParamsPanel->get_transform(), "", true, UnityEngine::Vector2(-5, -20));
             noSubmissionLabel->set_color(UnityEngine::Color(1.0, 0.0, 0.0, 1));
+            noSubmissionLabel->set_fontSize(3);
+            AddHoverHint(noSubmissionLabel, "Check their settings for 'force' or 'hitbox'");
         }
 
-        noSubmissionLabel->get_gameObject()->SetActive(!UploadEnabled());
+        bool uploadEnabled = UploadEnabled();
+        noSubmissionLabel->get_gameObject()->SetActive(!uploadEnabled);
+        if (!uploadEnabled) {
+            noSubmissionLabel->set_text(UploadDisablers());
+            noSubmissionLabel->set_alignment(TMPro::TextAlignmentOptions::Center);
+        }
+
         // TODO: Why not just substr str.substr("custom_level_".size())
         // essentially, remove prefix
         string hash = regex_replace((string)reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID(), basic_regex("custom_level_"), "");
@@ -93,12 +101,12 @@ namespace LevelInfoUI {
         lastKey = key;
         if (_mapInfos.contains(key)) {
             starsLabel->SetText(to_string_wprecision(_mapInfos[key], 2));
-            ppLabel->SetText(to_string_wprecision(_mapInfos[key] * 44.0f, 2));
+            ppLabel->SetText(to_string_wprecision(_mapInfos[key] * 51.0f, 2));
         } else {
             string url = WebUtils::API_URL + "map/hash/" + hash;
 
             WebUtils::GetJSONAsync(url, [difficulty, mode, key, hash](long status, bool error, rapidjson::Document const& result){
-                if (status != 200 || result.HasParseError() || !result.IsObject() || !result.HasMember("difficulties")) return;
+                if (lastKey == key && status != 200 || error || !result.HasMember("difficulties")) return;
                 auto const& difficulties = result["difficulties"].GetArray();
 
                 for (int index = 0; index < (int)difficulties.Size(); ++index)
@@ -111,11 +119,10 @@ namespace LevelInfoUI {
 
                 QuestUI::MainThreadScheduler::Schedule([stars] () {
                     starsLabel->SetText(to_string_wprecision(stars, 2));
-                    ppLabel->SetText(to_string_wprecision(stars * 44.0f, 2));
+                    ppLabel->SetText(to_string_wprecision(stars * 51.0f, 2));
                 });
             });
         }
-
     }
 
     void setup() {

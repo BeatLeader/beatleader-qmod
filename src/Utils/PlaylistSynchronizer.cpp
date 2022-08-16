@@ -13,7 +13,6 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include "songloader/shared/API.hpp"
-#include "playlistcore/shared/PlaylistCore.hpp"
 
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
@@ -57,7 +56,7 @@ void PlaylistSynchronizer::GetBeatmap(int index) {
     string hash = mapsToDownload[index];
     getLogger().info("%s", ("Will download " + hash).c_str());
     WebUtils::GetJSONAsync("https://api.beatsaver.com/maps/hash/" + hash, [hash, index] (long status, bool error, rapidjson::Document const& result){
-        if (status == 200 && !result.HasParseError() && result.IsObject() && result.HasMember("versions")) {
+        if (status == 200 && !error && result.HasMember("versions")) {
             DownloadBeatmap(result["versions"].GetArray()[0]["downloadURL"].GetString(), hash, index);
         } else if (index + 1 < mapsToDownload.size()) {
             GetBeatmap(index + 1);

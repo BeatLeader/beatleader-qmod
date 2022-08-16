@@ -32,7 +32,7 @@
     },
     {
       "id": "questui",
-      "versionRange": "^0.16.2",
+      "versionRange": "^0.16.4",
       "additionalData": {}
     },
     {
@@ -71,8 +71,8 @@
       "additionalData": {}
     },
     {
-      "id": "playlistcore",
-      "versionRange": "^1.0.0",
+      "id": "bs-utils",
+      "versionRange": "^0.7.0",
       "additionalData": {}
     }
   ],

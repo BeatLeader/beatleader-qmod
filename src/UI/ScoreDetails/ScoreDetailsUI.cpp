@@ -172,7 +172,7 @@ void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
         loadingText->get_gameObject()->SetActive(true);
         string url = WebUtils::API_URL + "score/statistic/" + to_string(scoreId);
         WebUtils::GetJSONAsync(url, [self, index](long status, bool error, rapidjson::Document const& result) {
-            if (status == 200 && !result.HasParseError() && result.IsObject() && result.HasMember("scoreGraphTracker")) {
+            if (status == 200 && !error && result.HasMember("scoreGraphTracker")) {
                 scoreStats = ScoreStats(result);
                 QuestUI::MainThreadScheduler::Schedule([self, index] {
                     self->scoreStatsFetched = true;

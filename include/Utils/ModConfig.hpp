@@ -1,5 +1,6 @@
 #pragma once
 #include "config-utils/shared/config-utils.hpp"
+#include "bs-utils/shared/utils.hpp"
 
 DECLARE_CONFIG(ModConfig,
 
@@ -15,7 +16,18 @@ DECLARE_CONFIG(ModConfig,
 )
 
 inline bool UploadEnabled() {
-    char* value = getenv("disable_ss_upload");
+    return bs_utils::Submission::getEnabled();
+}
 
-    return value == NULL || strcmp(value, "0") == 0;
+inline std::string UploadDisablers() {
+    auto map = bs_utils::Submission::getDisablingMods();
+    std::string result = "Score submission disabled by ";
+    int counter = 0;
+    int size = map.size();
+
+    for (auto kv : map) {
+        counter++;
+        result += kv.id + (counter != size ? ", " : "");
+    } 
+    return result;
 }

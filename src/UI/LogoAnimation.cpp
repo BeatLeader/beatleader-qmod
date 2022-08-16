@@ -106,6 +106,10 @@ void BeatLeader::LogoAnimation::Update() {
         _fill = lerp(_fill, IdleFill, fastT);
         _spinnerRotation = lerp(_spinnerRotation, _targetSpinnerRotation, fastT);
     }
+
+    if (glowing) {
+        _blockScale = 1.0f;
+    }
     
     materialInstance->SetFloat(GlowPropertyId, _glow);
     materialInstance->SetFloat(DotScalePropertyId, _dotScale);
@@ -114,4 +118,8 @@ void BeatLeader::LogoAnimation::Update() {
     materialInstance->SetFloat(ThicknessPropertyId, _thickness);
     materialInstance->SetFloat(SpinnerAmplitudePropertyId, _fill);
     materialInstance->SetFloat(SpinnerRotationPropertyId, _spinnerRotation);
+}
+
+void BeatLeader::LogoAnimation::SetGlowing(bool glowing) {
+    this->glowing = glowing;
 }
