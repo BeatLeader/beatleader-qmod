@@ -17,6 +17,8 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include "include/Assets/Sprites.hpp"
+#include "include/Models/Song.hpp"
+#include "include/Models/Difficulty.hpp"
 #include "include/UI/LevelInfoUI.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
@@ -44,15 +46,26 @@ using namespace BeatSaberUI;
 namespace LevelInfoUI {
     TMPro::TextMeshProUGUI* starsLabel = NULL;
     TMPro::TextMeshProUGUI* ppLabel = NULL;
+    TMPro::TextMeshProUGUI* typeLabel = NULL;
+    TMPro::TextMeshProUGUI* statusLabel = NULL;
+
 
     HMUI::ImageView* starsImage = NULL;
     HMUI::ImageView* ppImage = NULL;
+    HMUI::ImageView* typeImage = NULL;
+    HMUI::ImageView* statusImage = NULL;
 
     TMPro::TextMeshProUGUI* noSubmissionLabel = NULL;
 
-    static map<string, float> _mapInfos;
+    static map<string, Song> _mapInfos;
+    static map<int, string> mapTypes ={
+        {1, "acc"},
+        {2, "tech"},
+        {4, "midspeed"},
+        {8, "speed"}
+    };
     static string selectedMap;
-    static string lastKey;
+    static pair<string, string> lastKey;
 
     MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
         LevelRefreshContent(self);
@@ -76,6 +89,20 @@ namespace LevelInfoUI {
             
             ppImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-15.5, 5.6), UnityEngine::Vector2(3, 3));
 
+            typeLabel = CreateText(self->levelParamsPanel->get_transform(), "-", {9, 6}, {8,4});
+            typeLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
+            typeLabel->set_fontStyle(TMPro::FontStyles::Italic);
+            AddHoverHint(typeLabel, "Map type\n\nunknown");
+
+            typeImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_ArrowIcon(), {2.5, 5.6}, {3,3});
+
+            statusLabel = CreateText(self->levelParamsPanel->get_transform(), "unr.", {27, 6}, {8,4});
+            statusLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
+            statusLabel->set_fontStyle(TMPro::FontStyles::Italic);
+            AddHoverHint(statusLabel, "Ranking status - unranked");
+
+            statusImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_ClipboardIcon(), {20.5, 5.6}, {3,3});
+
             noSubmissionLabel = CreateText(self->levelParamsPanel->get_transform(), "", true, UnityEngine::Vector2(-5, -20));
             noSubmissionLabel->set_color(UnityEngine::Color(1.0, 0.0, 0.0, 1));
             noSubmissionLabel->set_fontSize(3);
@@ -95,31 +122,23 @@ namespace LevelInfoUI {
         string difficulty = MapEnhancer::DiffName(self->selectedDifficultyBeatmap->get_difficulty().value);
         string mode = (string)self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName;
 
-        string key = hash + difficulty + mode;
-
+        pair<string, string> key = {hash, difficulty + mode};
+        
         if (lastKey == key) return;
         lastKey = key;
-        if (_mapInfos.contains(key)) {
-            starsLabel->SetText(to_string_wprecision(_mapInfos[key], 2));
-            ppLabel->SetText(to_string_wprecision(_mapInfos[key] * 51.0f, 2));
+        if (_mapInfos.contains(key.first)) {
+            setLabels(_mapInfos[key.first].difficulties[key.second]);
         } else {
             string url = WebUtils::API_URL + "map/hash/" + hash;
 
-            WebUtils::GetJSONAsync(url, [difficulty, mode, key, hash](long status, bool error, rapidjson::Document const& result){
+            WebUtils::GetJSONAsync(url, [key](long status, bool error, rapidjson::Document const& result){
                 if (lastKey == key && status != 200 || error || !result.HasMember("difficulties")) return;
-                auto const& difficulties = result["difficulties"].GetArray();
+                _mapInfos.insert({key.first, Song(result.GetObject())});
 
-                for (int index = 0; index < (int)difficulties.Size(); ++index)
-                {
-                    auto const& value = difficulties[index].GetObject();
-                    _mapInfos[hash + value["difficultyName"].GetString() + value["modeName"].GetString()] = value["stars"].GetFloat();
-                }
+                Difficulty selectedDifficulty = _mapInfos[key.first].difficulties[key.second];
 
-                float stars = _mapInfos[key];
-
-                QuestUI::MainThreadScheduler::Schedule([stars] () {
-                    starsLabel->SetText(to_string_wprecision(stars, 2));
-                    ppLabel->SetText(to_string_wprecision(stars * 51.0f, 2));
+                QuestUI::MainThreadScheduler::Schedule([selectedDifficulty] () {
+                    setLabels(selectedDifficulty);
                 });
             });
         }
@@ -137,5 +156,72 @@ namespace LevelInfoUI {
 
     void reset() {
         starsLabel = NULL;
+    }
+
+    void setLabels(Difficulty selectedDifficulty)
+    {
+        float stars = selectedDifficulty.stars;
+        starsLabel->SetText(to_string_wprecision(stars, 2));
+        ppLabel->SetText(to_string_wprecision(stars * 51.0f, 2));
+
+        vector<string> typeStrings;
+        int type = selectedDifficulty.type;
+        for (const auto &possibleType : mapTypes)
+        {
+            if ((possibleType.first & type) == possibleType.first)
+            {
+                typeStrings.push_back(possibleType.second);
+            }
+        }
+
+        string typeToSet;
+        string typeHoverHint = "Map types\n\n";
+        if (typeStrings.size() == 0)
+        {
+            typeToSet = "-";
+            typeHoverHint += "unknown";
+        }
+        else if (typeStrings.size() == 1)
+        {
+            typeToSet = typeStrings[0];
+            // Shorten just midspeed cause of limited space
+            if (typeToSet == "midspeed")
+            {
+                typeToSet = "m.speed";
+            }
+            typeHoverHint += typeStrings[0];
+        }
+        else
+        {
+            typeToSet = "mul.";
+            for (const string &partMapType : typeStrings)
+            {
+                typeHoverHint += partMapType + "\n";
+            }
+            // Remove last newline
+            typeHoverHint.pop_back();
+        }
+        typeLabel->SetText(typeToSet);
+        AddHoverHint(typeLabel, typeHoverHint);
+
+        string rankingStatus = "unranked";
+        int shortWritingChars = 3;
+        if (selectedDifficulty.nominated)
+        {
+            rankingStatus = "nominated";
+        }
+        if (selectedDifficulty.qualified)
+        {
+            rankingStatus = "qualified";
+            shortWritingChars = 4;
+        }
+        if (selectedDifficulty.ranked)
+        {
+            rankingStatus = "ranked";
+            shortWritingChars = 4;
+        }
+
+        statusLabel->SetText(rankingStatus.substr(0, shortWritingChars) + ".");
+        AddHoverHint(statusLabel, "Ranking status - " + rankingStatus);
     }
 }
