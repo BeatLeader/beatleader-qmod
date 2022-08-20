@@ -129,11 +129,11 @@ namespace LevelInfoUI {
         if (_mapInfos.contains(key.first)) {
             setLabels(_mapInfos[key.first].difficulties[key.second]);
         } else {
-            string url = WebUtils::API_URL + "map/hash/" + hash;
+            string url = WebUtils::API_URL + "map/modinterface/" + hash;
 
             WebUtils::GetJSONAsync(url, [key](long status, bool error, rapidjson::Document const& result){
-                if (lastKey == key && status != 200 || error || !result.HasMember("difficulties")) return;
-                _mapInfos.insert({key.first, Song(result.GetObject())});
+                if (lastKey == key && status != 200 || error) return;
+                _mapInfos.insert({key.first, Song(result)});
 
                 Difficulty selectedDifficulty = _mapInfos[key.first].difficulties[key.second];
 

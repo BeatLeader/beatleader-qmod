@@ -244,7 +244,7 @@ namespace LeaderboardUI {
         string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(plvc->difficultyBeatmap->get_difficulty().value);
         string mode = (string)plvc->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
-        string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode;
+        string url = WebUtils::API_URL + "scores/modinterface/" + hash + "/" + difficulty + "/" + mode;
 
         if (modifiers) {
             url += "/modifiers";

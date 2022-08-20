@@ -27,9 +27,9 @@ void callbackWrapper(optional<Player> const& player) {
 }
 
 void PlayerController::Refresh(const function<void(optional<Player> const&, string)>& finished) {
-    WebUtils::GetJSONAsync(WebUtils::API_URL + "user", [finished](long status, bool error, rapidjson::Document const& result){
-        if (status == 200 && !error && result.HasMember("player")) {
-            currentPlayer = Player(result["player"]);
+    WebUtils::GetJSONAsync(WebUtils::API_URL + "user/modinterface", [finished](long status, bool error, rapidjson::Document const& result){
+        if (status == 200 && !error) {
+            currentPlayer = Player(result.GetObject());
             if (finished) finished(currentPlayer, "");
             callbackWrapper(currentPlayer);
         } else {
