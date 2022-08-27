@@ -248,7 +248,7 @@ namespace LevelInfoUI {
         float voteRatio = 0;
         if (!selectedDifficulty.votes.empty())
         {
-            auto const count = static_cast<float>(selectedDifficulty.votes.size());
+            float const count = static_cast<float>(selectedDifficulty.votes.size());
             voteRatio = reduce(selectedDifficulty.votes.begin(), selectedDifficulty.votes.end()) / count;
         }
 
