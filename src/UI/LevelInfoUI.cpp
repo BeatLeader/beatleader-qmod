@@ -259,7 +259,7 @@ namespace LevelInfoUI {
         // Set Hovertext with percentage value
         voteRatio *= 100;
         AddHoverHint(statusLabel, "Ranking status - " + rankingStatus 
-                                + "\n Vote ratio - " + to_string(static_cast<int>(voteRatio)) 
+                                + "\nVote ratio - " + to_string(static_cast<int>(voteRatio)) 
                                 + "%\nVotes - " + to_string(selectedDifficulty.votes.size())
                                 + "\nTo vote for a song to be ranked, click the message box on the leaderboard");
     }
