@@ -7,5 +7,7 @@ namespace LevelInfoUI {
     void reset();
 
     void resetStars();
+    void addVoteToCurrentLevel(bool rankable, int type);
+
     void setLabels(Difficulty selectedDifficulty);
 }

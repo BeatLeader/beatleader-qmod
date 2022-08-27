@@ -244,7 +244,7 @@ namespace LeaderboardUI {
         string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(plvc->difficultyBeatmap->get_difficulty().value);
         string mode = (string)plvc->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
-        string url = WebUtils::API_URL + "scores/modinterface/" + hash + "/" + difficulty + "/" + mode;
+        string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode;
 
         if (modifiers) {
             url += "/modifiers";
@@ -396,11 +396,12 @@ namespace LeaderboardUI {
             string starsString = stars > 0 ? "&stars=" + to_string_wprecision(stars, 2) : "";
             string typeString = type > 0 ? "&type=" + to_string(type) : "";
             string currentVotingUrl = votingUrl;
-            WebUtils::PostJSONAsync(votingUrl + rankableString + starsString + typeString, "", [currentVotingUrl](long status, string response) {
+            WebUtils::PostJSONAsync(votingUrl + rankableString + starsString + typeString, "", [currentVotingUrl, rankable, type](long status, string response) {
                 if (votingUrl != currentVotingUrl) return;
 
                 if (status == 200) {
                     votingButton->SetState(stoi(response));
+                    LevelInfoUI::addVoteToCurrentLevel(rankable, type);
                 } else {
                     votingButton->SetState(1);
                 }

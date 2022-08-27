@@ -2,8 +2,12 @@
 
 Difficulty::Difficulty(rapidjson::Value const& document) {
     stars = document["stars"].GetFloat();
-    nominated = document["nominated"].GetBool();
-    qualified = document["qualified"].GetBool();
-    ranked = document["ranked"].GetBool();
+    status = document["status"].GetInt();
     type = document["type"].GetInt();
+
+    auto receivedVotes = document["votes"].GetArray();
+
+    for(const auto& vote : receivedVotes) {
+        votes.push_back(vote.GetFloat());
+    }
 }

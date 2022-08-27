@@ -2,6 +2,7 @@
 
 #include <string>
 #include "include/Utils/ReplayManager.hpp"
+#include "include/UI/LevelInfoUI.hpp"
 
 using namespace std;
 

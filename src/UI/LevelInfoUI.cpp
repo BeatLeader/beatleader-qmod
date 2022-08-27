@@ -34,6 +34,7 @@
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
+#include <numeric>
 #include <map>
 #include <string>
 #include <regex>
@@ -58,11 +59,19 @@ namespace LevelInfoUI {
     TMPro::TextMeshProUGUI* noSubmissionLabel = NULL;
 
     static map<string, Song> _mapInfos;
-    static map<int, string> mapTypes ={
+    static map<int, string> mapTypes = {
         {1, "acc"},
         {2, "tech"},
         {4, "midspeed"},
         {8, "speed"}
+    };
+    static map<int, string> mapStatuses = {
+        {0, "unranked"},
+        {1, "nominated"},
+        {2, "qualified"},
+        {3, "ranked"},
+        {4, "unrankable"},
+        {5, "outdated"}
     };
     static string selectedMap;
     static pair<string, string> lastKey;
@@ -123,18 +132,27 @@ namespace LevelInfoUI {
         string mode = (string)self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName;
 
         pair<string, string> key = {hash, difficulty + mode};
-        
+
+        // If we didnt change the level, we can just stay where we already are
         if (lastKey == key) return;
+
         lastKey = key;
         if (_mapInfos.contains(key.first)) {
             setLabels(_mapInfos[key.first].difficulties[key.second]);
         } else {
-            string url = WebUtils::API_URL + "map/modinterface/" + hash;
+            string url = WebUtils::API_URL + "map/modinterface/" + key.first;
 
             WebUtils::GetJSONAsync(url, [key](long status, bool error, rapidjson::Document const& result){
+                // if our request was not successfull, we cant do anything
                 if (lastKey == key && status != 200 || error) return;
-                _mapInfos.insert({key.first, Song(result)});
 
+                auto song = Song(result);
+
+                // We can only add it, if the song is actually valid
+                if(song.difficulties.empty()) return;
+
+                // Cache the song and get the selected difficulty
+                _mapInfos.insert({key.first, song});
                 Difficulty selectedDifficulty = _mapInfos[key.first].difficulties[key.second];
 
                 QuestUI::MainThreadScheduler::Schedule([selectedDifficulty] () {
@@ -154,19 +172,32 @@ namespace LevelInfoUI {
         _mapInfos = {};
     }
 
+    void addVoteToCurrentLevel(bool rankable, int type) {
+        // Edit Value in Cache and set labels to the new values
+        if(_mapInfos.contains(lastKey.first)){
+            auto diff = &_mapInfos[lastKey.first].difficulties[lastKey.second];
+            
+            diff->type += type;
+            diff->votes.push_back(rankable ? 1 : 0);
+            setLabels(*diff);
+        }
+    }
+
     void reset() {
         starsLabel = NULL;
     }
 
     void setLabels(Difficulty selectedDifficulty)
     {
+        // Set the Stars & PP Label
         float stars = selectedDifficulty.stars;
         starsLabel->SetText(to_string_wprecision(stars, 2));
         ppLabel->SetText(to_string_wprecision(stars * 51.0f, 2));
 
+        // Create a list of all song types, that are definied for this sond
         vector<string> typeStrings;
         int type = selectedDifficulty.type;
-        for (const auto &possibleType : mapTypes)
+        for (const auto& possibleType : mapTypes)
         {
             if ((possibleType.first & type) == possibleType.first)
             {
@@ -174,15 +205,18 @@ namespace LevelInfoUI {
             }
         }
 
+        // Then we create content for the type label
         string typeToSet;
         string typeHoverHint = "Map types\n\n";
         if (typeStrings.size() == 0)
         {
+            // No type has been votes at this time -> unknown
             typeToSet = "-";
             typeHoverHint += "unknown";
         }
         else if (typeStrings.size() == 1)
         {
+            // If just one type has been voted, then we just set this type in the label & Hovertext
             typeToSet = typeStrings[0];
             // Shorten just midspeed cause of limited space
             if (typeToSet == "midspeed")
@@ -193,6 +227,7 @@ namespace LevelInfoUI {
         }
         else
         {
+            // If a song has multiple types set, then we just show the user, that there are more than one and add them all to the hover text
             typeToSet = "mul.";
             for (const string &partMapType : typeStrings)
             {
@@ -201,27 +236,28 @@ namespace LevelInfoUI {
             // Remove last newline
             typeHoverHint.pop_back();
         }
+        // Actually set the labels with the prepared strings
         typeLabel->SetText(typeToSet);
         AddHoverHint(typeLabel, typeHoverHint);
 
-        string rankingStatus = "unranked";
-        int shortWritingChars = 3;
-        if (selectedDifficulty.nominated)
+        string rankingStatus = mapStatuses[selectedDifficulty.status];
+        // For better readability show 4 characters for ranked(rank.) and unrankable(unra.)
+        int shortWritingChars = (selectedDifficulty.status == 3 || selectedDifficulty.status == 4) ? 4 : 3;
+
+        // Calculate voteRatio from votes
+        float voteRatio = 0;
+        if (!selectedDifficulty.votes.empty())
         {
-            rankingStatus = "nominated";
-        }
-        if (selectedDifficulty.qualified)
-        {
-            rankingStatus = "qualified";
-            shortWritingChars = 4;
-        }
-        if (selectedDifficulty.ranked)
-        {
-            rankingStatus = "ranked";
-            shortWritingChars = 4;
+            auto const count = static_cast<float>(selectedDifficulty.votes.size());
+            voteRatio = reduce(selectedDifficulty.votes.begin(), selectedDifficulty.votes.end()) / count;
         }
 
+        // Set Color according to calculated VoteRatio (0% = red, 100% = green)
         statusLabel->SetText(rankingStatus.substr(0, shortWritingChars) + ".");
-        AddHoverHint(statusLabel, "Ranking status - " + rankingStatus);
+        statusLabel->set_color(UnityEngine::Color(1-voteRatio,voteRatio,0,1));
+
+        // Set Hovertext with percentage value
+        voteRatio *= 100;
+        AddHoverHint(statusLabel, "Ranking status - " + rankingStatus + "\n Vote ratio - " + to_string(static_cast<int>(voteRatio)) + "%\nVotes - " + to_string(selectedDifficulty.votes.size()));
     }
 }

@@ -13,7 +13,7 @@
 #define X_BSSB "X-BSSB: ✔"
 
 namespace WebUtils {
-    string GameVersion = "1.21.1";
+    string GameVersion = "1.24.0";
 
     string API_URL = "";
     string WEB_URL = "";
@@ -120,7 +120,7 @@ namespace WebUtils {
         Get(url, data);
         rapidjson::Document document;
         document.Parse(data);
-        if(document.HasParseError() || !document.IsObject())
+        if(document.HasParseError())
             return std::nullopt;
         return document;
     }
@@ -167,7 +167,7 @@ namespace WebUtils {
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
         curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-    
+
         auto res = curl_easy_perform(curl);
         /* Check for errors */ 
         if (res != CURLE_OK) {
@@ -329,7 +329,7 @@ namespace WebUtils {
             [finished] (long httpCode, string data) {
                 rapidjson::Document document;
                 document.Parse(data.data());
-                finished(httpCode, document.HasParseError() || !document.IsObject(), document);
+                finished(httpCode, document.HasParseError(), document);
             }
         );
     }
