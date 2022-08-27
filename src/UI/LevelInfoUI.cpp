@@ -108,7 +108,7 @@ namespace LevelInfoUI {
             statusLabel = CreateText(self->levelParamsPanel->get_transform(), "unr.", {27, 6}, {8,4});
             statusLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             statusLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            AddHoverHint(statusLabel, "Ranking status - unranked");
+            AddHoverHint(statusLabel, "Ranking status - unranked \nTo vote for a song to be ranked, click the message box on the leaderboard");
 
             statusImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_ClipboardIcon(), {20.5, 5.6}, {3,3});
 
@@ -258,6 +258,9 @@ namespace LevelInfoUI {
 
         // Set Hovertext with percentage value
         voteRatio *= 100;
-        AddHoverHint(statusLabel, "Ranking status - " + rankingStatus + "\n Vote ratio - " + to_string(static_cast<int>(voteRatio)) + "%\nVotes - " + to_string(selectedDifficulty.votes.size()));
+        AddHoverHint(statusLabel, "Ranking status - " + rankingStatus 
+                                + "\n Vote ratio - " + to_string(static_cast<int>(voteRatio)) 
+                                + "%\nVotes - " + to_string(selectedDifficulty.votes.size())
+                                + "\nTo vote for a song to be ranked, click the message box on the leaderboard");
     }
 }
