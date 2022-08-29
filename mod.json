@@ -38,7 +38,7 @@
     "libbl.so"
   ],
   "libraryFiles": [
-    "libbeatsaber-hook_3_10_0.so"
+    "libbeatsaber-hook_3_12_0.so"
   ],
   "fileCopies": [],
   "copyExtensions": []

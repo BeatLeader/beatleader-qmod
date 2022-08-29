@@ -396,11 +396,12 @@ namespace LeaderboardUI {
             string starsString = stars > 0 ? "&stars=" + to_string_wprecision(stars, 2) : "";
             string typeString = type > 0 ? "&type=" + to_string(type) : "";
             string currentVotingUrl = votingUrl;
-            WebUtils::PostJSONAsync(votingUrl + rankableString + starsString + typeString, "", [currentVotingUrl](long status, string response) {
+            WebUtils::PostJSONAsync(votingUrl + rankableString + starsString + typeString, "", [currentVotingUrl, rankable, type](long status, string response) {
                 if (votingUrl != currentVotingUrl) return;
 
                 if (status == 200) {
                     votingButton->SetState(stoi(response));
+                    LevelInfoUI::addVoteToCurrentLevel(rankable, type);
                 } else {
                     votingButton->SetState(1);
                 }
