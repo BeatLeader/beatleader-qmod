@@ -71,7 +71,8 @@ namespace LevelInfoUI {
         {2, "qualified"},
         {3, "ranked"},
         {4, "unrankable"},
-        {5, "outdated"}
+        {5, "outdated"},
+        {6, "inevent"}
     };
     static string selectedMap;
     static pair<string, string> lastKey;
@@ -243,6 +244,11 @@ namespace LevelInfoUI {
         string rankingStatus = mapStatuses[selectedDifficulty.status];
         // For better readability show 4 characters for ranked(rank.) and unrankable(unra.)
         int shortWritingChars = (selectedDifficulty.status == 3 || selectedDifficulty.status == 4) ? 4 : 3;
+
+        // If the given rankingStatus is unknown, we default to unranked
+        if(rankingStatus.empty()){
+            rankingStatus = mapStatuses[0];
+        }
 
         // Calculate voteRatio from votes
         float voteRatio = 0;
