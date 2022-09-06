@@ -14,5 +14,6 @@ struct Difficulty
     vector<float> votes;
 
     Difficulty(rapidjson::Value const& document);
+    Difficulty(float starsGiven, int statusGiven, int typeGiven, vector<float> votesGiven);
     Difficulty() = default;
 };
