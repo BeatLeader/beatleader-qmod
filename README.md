@@ -16,10 +16,8 @@ Go to the https://beatleader.xyz/ to see your scores on the web.
 ## Roadmap
 
 - Profile viewer (WIP)
-- Score statistic viewer (WIP)
 - In-game replay player
 - Friends management
-- Playlist management and synchronization
 
 ## Credits
 
