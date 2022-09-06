@@ -11,3 +11,10 @@ Difficulty::Difficulty(rapidjson::Value const& document) {
         votes.push_back(vote.GetFloat());
     }
 }
+
+Difficulty::Difficulty(float starsGiven, int statusGiven, int typeGiven, vector<float> votesGiven) {
+    stars = starsGiven;
+    status = statusGiven;
+    type = typeGiven;
+    votes = votesGiven;
+}

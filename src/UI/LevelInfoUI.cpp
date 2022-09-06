@@ -77,6 +77,8 @@ namespace LevelInfoUI {
     static string selectedMap;
     static pair<string, string> lastKey;
 
+    const Difficulty defaultDiff = Difficulty(0, 0, 0, {});
+
     MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
         LevelRefreshContent(self);
 
@@ -144,17 +146,22 @@ namespace LevelInfoUI {
             string url = WebUtils::API_URL + "map/modinterface/" + key.first;
 
             WebUtils::GetJSONAsync(url, [key](long status, bool error, rapidjson::Document const& result){
-                // if our request was not successfull, we cant do anything
-                if (lastKey == key && status != 200 || error) return;
+                // If the map was already switched again, the response is irrelevant
+                if(lastKey != key) return;
 
-                auto song = Song(result);
-
-                // We can only add it, if the song is actually valid
-                if(song.difficulties.empty()) return;
-
-                // Cache the song and get the selected difficulty
-                _mapInfos.insert({key.first, song});
-                Difficulty selectedDifficulty = _mapInfos[key.first].difficulties[key.second];
+                Difficulty selectedDifficulty;
+                Song song;
+                if (status == 200 && !error && !(song = Song(result)).difficulties.empty())
+                {
+                    // If the request was successful, we cache the value and display it
+                    _mapInfos.insert({ key.first, song});
+                    selectedDifficulty = _mapInfos[key.first].difficulties[key.second];
+                }
+                else
+                {
+                    // If it wasnt we just display our default values
+                    selectedDifficulty = defaultDiff;
+                }
 
                 QuestUI::MainThreadScheduler::Schedule([selectedDifficulty] () {
                     setLabels(selectedDifficulty);
