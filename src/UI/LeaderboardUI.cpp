@@ -212,7 +212,9 @@ namespace LeaderboardUI {
         lastVotingStatusUrl = votingStatusUrl;
         WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
             if (votingStatusUrl == lastVotingStatusUrl && status == 200) {
-                votingButton->SetState(stoi(response));
+                QuestUI::MainThreadScheduler::Schedule([response] {
+                    votingButton->SetState(stoi(response));
+                });
             }
         }, [](float progress){});
     }
@@ -399,12 +401,14 @@ namespace LeaderboardUI {
             WebUtils::PostJSONAsync(votingUrl + rankableString + starsString + typeString, "", [currentVotingUrl, rankable, type](long status, string response) {
                 if (votingUrl != currentVotingUrl) return;
 
-                if (status == 200) {
-                    votingButton->SetState(stoi(response));
-                    LevelInfoUI::addVoteToCurrentLevel(rankable, type);
-                } else {
-                    votingButton->SetState(1);
-                }
+                QuestUI::MainThreadScheduler::Schedule([status, response, rankable, type] {
+                    if (status == 200) {
+                        votingButton->SetState(stoi(response));
+                            LevelInfoUI::addVoteToCurrentLevel(rankable, type);
+                    } else {
+                        votingButton->SetState(1);
+                    } 
+                });
             });
         }
 
