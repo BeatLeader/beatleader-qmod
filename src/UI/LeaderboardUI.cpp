@@ -20,7 +20,6 @@
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
 #include "include/Utils/FormatUtils.hpp"
-#include "include/Utils/ModifiersManager.hpp"
 #include "include/Utils/ModConfig.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"

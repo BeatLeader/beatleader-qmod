@@ -4,6 +4,8 @@
 
 #include <vector>
 #include <string>
+#include <unordered_map>
+#include <algorithm>
 using namespace std;
 
 struct Difficulty 
@@ -12,8 +14,9 @@ struct Difficulty
     int status;
     int type;
     vector<float> votes;
+    unordered_map<string, float> modifierValues;
 
     Difficulty(rapidjson::Value const& document);
-    Difficulty(float starsGiven, int statusGiven, int typeGiven, vector<float> votesGiven);
+    Difficulty(float starsGiven, int statusGiven, int typeGiven, vector<float> votesGive, unordered_map<string, float> modifierValuesGiven);
     Difficulty() = default;
 };
