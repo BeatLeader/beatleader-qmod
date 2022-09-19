@@ -276,6 +276,8 @@ namespace LevelInfoUI {
                                 + "\nVote ratio - " + to_string(static_cast<int>(voteRatio)) 
                                 + "%\nVotes - " + to_string(selectedDifficulty.votes.size())
                                 + "\nTo vote for a song to be ranked, click the message box on the leaderboard");
+
+        // Set the modifier values of this song on the gameplaymodifiers panel
         ModifiersUI::songModifiers = selectedDifficulty.modifierValues;
         ModifiersUI::refreshAllModifiers();
     }

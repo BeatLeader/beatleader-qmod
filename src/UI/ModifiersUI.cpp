@@ -85,6 +85,7 @@ namespace ModifiersUI {
     }
 
     void refreshAllModifiers(){
+        // Set the map dependant modifier values on the toggles (with colors)
         for(auto& [key, value] : allModifierToggles){
             if(songModifiers.contains(key)){
                 float modifierValue = songModifiers[key];
@@ -96,7 +97,10 @@ namespace ModifiersUI {
 
     void refreshMultiplierAndMaxRank()
     {
+        // If we dont have a panel reference we cant do anything
         if (modifiersPanel) {
+
+            // Now we iterate all modifiers to set the totalMultiplier (% value on top) and the max achievable rank
             auto modifierParams = modifiersPanel->gameplayModifiersModel->CreateModifierParamsList(modifiersPanel->gameplayModifiers);
 
             float totalMultiplier = 1;
