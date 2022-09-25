@@ -1,6 +1,6 @@
 #include "include/Utils/FileManager.hpp"
 #include "include/Utils/ReplayManager.hpp"
-#include "include/Utils/ModifiersManager.hpp"
+#include "include/UI/ModifiersUI.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
@@ -95,10 +95,13 @@ int ReplayManager::GetLocalScore(string filename) {
 float ReplayManager::GetTotalMultiplier(string modifiers) {
     float multiplier = 1;
 
-    auto modifierValues = ModifiersManager::modifiers;
-    for (auto iter = modifierValues.begin(); iter != modifierValues.end(); ++iter)
-    {   
-        if (modifiers.find(iter->first) != string::npos) { multiplier += modifierValues[iter->first]; }
+    auto modifierValues = ModifiersUI::songModifiers;
+    if(!modifierValues.empty()) {
+        for (auto& [key, value] : modifierValues){
+            if (modifiers.find(key) != string::npos) {
+                multiplier += value;
+            }
+        }
     }
 
     return multiplier;

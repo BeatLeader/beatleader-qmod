@@ -20,6 +20,7 @@
 #include "include/Models/Song.hpp"
 #include "include/Models/Difficulty.hpp"
 #include "include/UI/LevelInfoUI.hpp"
+#include "include/UI/ModifiersUI.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -77,7 +78,7 @@ namespace LevelInfoUI {
     static string selectedMap;
     static pair<string, string> lastKey;
 
-    const Difficulty defaultDiff = Difficulty(0, 0, 0, {});
+    const Difficulty defaultDiff = Difficulty(0, 0, 0, {}, {});
 
     MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
         LevelRefreshContent(self);
@@ -275,5 +276,9 @@ namespace LevelInfoUI {
                                 + "\nVote ratio - " + to_string(static_cast<int>(voteRatio)) 
                                 + "%\nVotes - " + to_string(selectedDifficulty.votes.size())
                                 + "\nTo vote for a song to be ranked, click the message box on the leaderboard");
+
+        // Set the modifier values of this song on the gameplaymodifiers panel
+        ModifiersUI::songModifiers = selectedDifficulty.modifierValues;
+        ModifiersUI::refreshAllModifiers();
     }
 }

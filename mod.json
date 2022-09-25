@@ -3,7 +3,7 @@
   "name": "BeatLeader",
   "id": "BeatLeader",
   "author": "NSGolova",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.24.0",
   "coverImage": "cover.png",
@@ -21,7 +21,7 @@
     {
       "version": "^0.15.13",
       "id": "custom-types",
-      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.18/CustomTypes.qmod"
+      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.19/CustomTypes.qmod"
     },
     {
       "version": "^0.25.0",
@@ -38,7 +38,7 @@
     "libbl.so"
   ],
   "libraryFiles": [
-    "libbeatsaber-hook_3_12_0.so"
+    "libbeatsaber-hook_3_13_0.so"
   ],
   "fileCopies": [],
   "copyExtensions": []

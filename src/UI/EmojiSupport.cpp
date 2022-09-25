@@ -60,7 +60,7 @@ TMPro::TMP_SpriteAsset* CreateTMP_SpriteAsset() {
     texture->SetPixels(clearPixels);
     texture->Apply(false, true);
 
-    TMPro::TMP_SpriteAsset* spriteAsset = TMPro::TMP_SpriteAsset::New_ctor();
+    TMPro::TMP_SpriteAsset* spriteAsset = ScriptableObject::CreateInstance<TMPro::TMP_SpriteAsset*>();
     spriteAsset->fallbackSpriteAssets = System::Collections::Generic::List_1<TMPro::TMP_SpriteAsset*>::New_ctor();
     spriteAsset->spriteInfoList = System::Collections::Generic::List_1<TMPro::TMP_Sprite*>::New_ctor();
     spriteAsset->spriteSheet = texture;
