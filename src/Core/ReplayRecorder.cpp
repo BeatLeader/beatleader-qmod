@@ -13,6 +13,7 @@
 
 #include "include/Utils/ReplayManager.hpp"
 #include "include/Utils/RecorderUtils.hpp"
+#include "include/Utils/ModConfig.hpp"
 #include "include/API/PlayerController.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
@@ -169,7 +170,7 @@ namespace ReplayRecorder {
     MAKE_HOOK_MATCH(MultiplayerLevelPlay, &MultiplayerController::StartGameplay, void, MultiplayerController* self, float syncTime) {
         MultiplayerLevelPlay(self, syncTime);
 
-        if (PlayerController::currentPlayer == std::nullopt) return;
+        if (PlayerController::currentPlayer == std::nullopt || !UploadEnabled()) return;
 
         startReplay();
         
@@ -179,7 +180,7 @@ namespace ReplayRecorder {
     MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLevel, void, SinglePlayerLevelSelectionFlowCoordinator* self, System::Action* beforeSceneSwitchCallback, bool practice) {
         LevelPlay(self, beforeSceneSwitchCallback, practice);
 
-        if (PlayerController::currentPlayer == std::nullopt) return;
+        if (PlayerController::currentPlayer == std::nullopt || !UploadEnabled()) return;
 
         startReplay();
         automaticPlayerHeight = self->get_playerSettings()->automaticPlayerHeight;
@@ -187,6 +188,7 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(PlayerHeightDetectorStart, &PlayerHeightDetector::Start, void, PlayerHeightDetector* self) {
         PlayerHeightDetectorStart(self);
+        if (replay == nullopt) return;
 
         _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float> *>(
                         classof(System::Action_1<float>*),
@@ -253,6 +255,7 @@ namespace ReplayRecorder {
     }
 
     void NoteSpawned(NoteController* noteController, NoteData* noteData) {
+        if (replay == nullopt) return;
         _noteId++;
         _noteIdCache[noteData] = _noteId;
 
@@ -341,7 +344,8 @@ namespace ReplayRecorder {
         auto sortedScoringElementsWithoutMultiplier = self->sortedScoringElementsWithoutMultiplier;
         auto sortedNoteTimesWithoutScoringElements = self->sortedNoteTimesWithoutScoringElements;
 
-        if (sortedScoringElementsWithoutMultiplier != NULL 
+        if (replay != nullopt
+            && sortedScoringElementsWithoutMultiplier != NULL 
             && sortedNoteTimesWithoutScoringElements != NULL
             && self->audioTimeSyncController != NULL) {
             auto songTime = self->audioTimeSyncController->songTime;
@@ -372,6 +376,7 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(ScoreControllerStart, &ScoreController::Start, void, ScoreController* self) {
         ScoreControllerStart(self);
+        if (replay == nullopt) return;
 
         _scoreEvent = il2cpp_utils::MakeDelegate<System::Action_1<ScoringElement*> *>(
                         classof(System::Action_1<ScoringElement*>*),
@@ -383,6 +388,7 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(ComputeSwingRating, static_cast<float (SaberMovementData::*)(bool, float)>(&SaberMovementData::ComputeSwingRating), float, SaberMovementData* self, bool overrideSegmenAngle, float overrideValue) {
         float result = ComputeSwingRating(self, overrideSegmenAngle, overrideValue);
+        if (replay == nullopt) return result;
         auto _data = self->data;
         int _nextAddIndex = self->nextAddIndex;
         int _validCount = self->validCount;
@@ -424,6 +430,7 @@ namespace ReplayRecorder {
     MAKE_HOOK_MATCH(ProcessNewSwingData, &SaberSwingRatingCounter::ProcessNewData, void, SaberSwingRatingCounter* self, BladeMovementDataElement newData, BladeMovementDataElement prevData, bool prevDataAreValid) {
         bool alreadyCut = self->notePlaneWasCut;
         ProcessNewSwingData(self, newData, prevData, prevDataAreValid);
+        if (replay == nullopt) return;
 
         float postSwing = _postSwingContainer[self];
         if (!alreadyCut && !self->notePlane.SameSide(newData.topPos, prevData.topPos))
@@ -473,6 +480,7 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(LevelPause, &PauseMenuManager::ShowMenu, void, PauseMenuManager* self) {
         LevelPause(self);
+        if (replay == nullopt) return;
 
         _currentPause = Pause();
         _currentPause->time = audioTimeSyncController->songTime;
@@ -492,7 +500,9 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
         Tick(trans);
-        if (audioTimeSyncController != nullptr && _currentPause == nullopt && replay != nullopt) {
+        if (replay == nullopt) return;
+
+        if (audioTimeSyncController != nullptr && _currentPause == nullopt) {
             
             auto time = audioTimeSyncController->songTime;
             auto fps = 1.0f / UnityEngine::Time::get_deltaTime();
