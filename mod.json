@@ -21,7 +21,7 @@
     {
       "version": "^0.15.13",
       "id": "custom-types",
-      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.19/CustomTypes.qmod"
+      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.21/CustomTypes.qmod"
     },
     {
       "version": "^0.25.0",
@@ -38,7 +38,7 @@
     "libbl.so"
   ],
   "libraryFiles": [
-    "libbeatsaber-hook_3_13_0.so"
+    "libbeatsaber-hook_3_14_0.so"
   ],
   "fileCopies": [],
   "copyExtensions": []

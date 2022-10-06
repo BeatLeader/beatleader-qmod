@@ -169,7 +169,10 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                 });
             });
         });
-        PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
+
+        auto captureSelf = this;
+        PlayerController::playerChanged.emplace_back([captureSelf](std::optional<Player> const& updated) {
+            if (!captureSelf->isActivated) return;
             QuestUI::MainThreadScheduler::Schedule([updated] {
                 UpdateUI(updated);
             });
