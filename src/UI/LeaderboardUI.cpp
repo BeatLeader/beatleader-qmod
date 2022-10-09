@@ -29,6 +29,7 @@
 #include "questui/shared/ArrayUtil.hpp"
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "questui/shared/CustomTypes/Components/WeakPtrGO.hpp"
 
 #include "HMUI/TableView.hpp"
 #include "HMUI/TableCell.hpp"
@@ -56,6 +57,8 @@
 #include "UnityEngine/TextCore/GlyphRect.hpp"
 #include "UnityEngine/HideFlags.hpp"
 #include "UnityEngine/Texture.hpp"
+#include "UnityEngine/UI/Toggle.hpp"
+#include "UnityEngine/Events/UnityAction_1.hpp"
 
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
@@ -82,6 +85,8 @@
 #include "TMPro/TMP_SpriteAsset.hpp"
 #include "TMPro/TMP_FontAssetUtilities.hpp"
 #include "TMPro/ShaderUtilities.hpp"
+
+#include "custom-types/shared/delegate.hpp"
 
 #include "main.hpp"
 
@@ -123,6 +128,7 @@ namespace LeaderboardUI {
     BeatLeader::ScoreDetailsPopup* scoreDetailsUI = NULL;
     BeatLeader::RankVotingPopup* votingUI = NULL;
     BeatLeader::LinksContainerPopup* linkContainer = NULL;
+    HMUI::ModalView* settingsContainer = NULL;
     bool visible = false;
 
     int page = 1;
@@ -469,7 +475,10 @@ namespace LeaderboardUI {
             BeatLeader::initLinksContainerPopup(&linkContainer, self->get_transform());
             BeatLeader::initVotingPopup(&votingUI, self->get_transform(), voteCallback);
 
-            auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(20, 20));
+            initSettingsModal(self->get_transform());
+            auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(20, 20), []() {
+                settingsContainer->Show(true, true, nullptr);
+            });
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
@@ -588,6 +597,7 @@ namespace LeaderboardUI {
             result->scoreText->set_fontSize(2);
 
             avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
+            avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
 
             auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
                 auto openEvent = il2cpp_utils::MakeDelegate<System::Action *>(
@@ -615,7 +625,12 @@ namespace LeaderboardUI {
         if (!isLocal) {
             auto player = scoreVector[row].player;
             cellBackgrounds[result]->get_gameObject()->set_active(true);
-            avatars[result]->get_gameObject()->set_active(true);
+            result->playerNameText->GetComponent<UnityEngine::RectTransform*>()->set_anchoredPosition({
+                getModConfig().AvatarsActive.GetValue() ? 10.5f : 6.5f,
+                result->playerNameText->GetComponent<UnityEngine::RectTransform*>()->get_anchoredPosition().y
+            });
+            avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
+            result->scoreText->get_gameObject()->set_active(getModConfig().ScoresActive.GetValue());
             
             if (row == selectedScore) {
                 cellBackgrounds[result]->set_color(ownScoreColor);
@@ -623,13 +638,16 @@ namespace LeaderboardUI {
                 cellBackgrounds[result]->set_color(someoneElseScoreColor);
             }
             cellScores[result] = scoreVector[row];
-            avatars[result]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
-            
-            Sprites::get_Icon(player.avatar, [result](UnityEngine::Sprite* sprite) {
-                if (sprite != NULL && avatars[result] != NULL && sprite->get_texture() != NULL) {
-                    avatars[result]->set_sprite(sprite);
-                }
-            });
+
+            if(getModConfig().AvatarsActive.GetValue()){
+                avatars[result]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
+                
+                Sprites::get_Icon(player.avatar, [result](UnityEngine::Sprite* sprite) {
+                    if (sprite != NULL && avatars[result] != NULL && sprite->get_texture() != NULL) {
+                        avatars[result]->set_sprite(sprite);
+                    }
+                });
+            }
 
             // TODO
             // auto tagList = clanGroups[result];
@@ -687,6 +705,62 @@ namespace LeaderboardUI {
             }
         }
        
+    }
+
+    void initSettingsModal(UnityEngine::Transform* parent){
+        auto container = QuestUI::BeatSaberUI::CreateModal(parent, {40,50}, nullptr, true);
+        
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Leaderboard Settings", {16, 19});
+
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Avatar", {12, 9});
+
+        CreateToggle(container->get_transform(), getModConfig().AvatarsActive.GetValue(), {-3, 11}, [](bool value){
+            getModConfig().AvatarsActive.SetValue(value);
+            plvc->Refresh(true, true);
+        });
+
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Clans", {12, -1});
+
+        CreateToggle(container->get_transform(), getModConfig().ClansActive.GetValue(), {-3, 1}, [](bool value){
+            getModConfig().ClansActive.SetValue(value);
+            plvc->Refresh(true, true);
+        });
+
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Score", {12, -11});
+
+        CreateToggle(container->get_transform(), getModConfig().ScoresActive.GetValue(), {-3, -9}, [](bool value){
+            getModConfig().ScoresActive.SetValue(value);
+            plvc->Refresh(true, true);
+        });
+
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Time", {12, -21});
+
+        CreateToggle(container->get_transform(), getModConfig().TimesetActive.GetValue(), {-3, -19}, [](bool value){
+            getModConfig().TimesetActive.SetValue(value);
+            plvc->Refresh(true, true);
+        });
+
+        settingsContainer = container;
+    }
+
+    UnityEngine::UI::Toggle* CreateToggle(UnityEngine::Transform* parent, bool currentValue, UnityEngine::Vector2 anchoredPosition, std::function<void(bool)> onValueChange)
+    {
+        // Code adapted from: https://github.com/darknight1050/QuestUI/blob/master/src/BeatSaberUI.cpp#L826
+        static WeakPtrGO<UnityEngine::UI::Toggle> toggleCopy;
+        if(!toggleCopy){
+            toggleCopy = Resources::FindObjectsOfTypeAll<UnityEngine::UI::Toggle*>().FirstOrDefault([](auto x) {return x->get_transform()->get_parent()->get_gameObject()->get_name() == "Fullscreen"; });
+        }
+
+        UnityEngine::UI::Toggle* newToggle = Object::Instantiate(toggleCopy.getInner(), parent, false);
+        newToggle->set_interactable(true);
+        newToggle->set_isOn(currentValue);
+        newToggle->onValueChanged = UnityEngine::UI::Toggle::ToggleEvent::New_ctor();
+        if(onValueChange)
+            newToggle->onValueChanged->AddListener(custom_types::MakeDelegate<UnityEngine::Events::UnityAction_1<bool>*>(onValueChange));
+        RectTransform* rectTransform = newToggle->GetComponent<RectTransform*>();
+        rectTransform->set_anchoredPosition(anchoredPosition);
+        newToggle->get_gameObject()->set_active(true);
+        return newToggle;
     }
 
     MAKE_HOOK_MATCH(LocalLeaderboardDidActivate, &LocalLeaderboardViewController::DidActivate, void, LocalLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
