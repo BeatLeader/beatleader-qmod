@@ -9,6 +9,7 @@
 #include "UnityEngine/Color.hpp"
 
 #include "include/Utils/StringUtils.hpp"
+#include "include/Utils/ModConfig.hpp"
 #include "include/Models/Player.hpp"
 #include "include/Models/Clan.hpp"
 #include "include/Models/Score.hpp"
@@ -119,10 +120,9 @@ namespace FormatUtils {
         }
 
         inline string FormatPlayerScore(Score const& score) {
-            // TODO: Use fmt
-            string const& nameLabel = score.player.name;
-
             string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
-            return FormatNameWithClans(score.player, 30) + "<pos=50%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel; 
+            string name = getModConfig().ClansActive.GetValue() ? FormatNameWithClans(score.player, 24) : truncate(score.player.name, 24);
+            string time = getModConfig().TimesetActive.GetValue() ? " <size=60%>" + GetRelativeTimeString(score.timeset) + "</size>" : "";
+            return name + "<pos=40%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel + time; 
         }
     }

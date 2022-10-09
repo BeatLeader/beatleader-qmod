@@ -7,11 +7,19 @@ DECLARE_CONFIG(ModConfig,
     CONFIG_VALUE(ServerType, std::string, "ServerType", "Main", "");
     CONFIG_VALUE(Save, bool, "Keep local replays", true, "Save replays on this device");
     CONFIG_VALUE(Modifiers, bool, "Positive modifiers", true, "Show leaderboards with positive modifiers");
+    CONFIG_VALUE(AvatarsActive, bool, "Show Avatars", false);
+    CONFIG_VALUE(ClansActive, bool, "Show Clans", false);
+    CONFIG_VALUE(ScoresActive, bool, "Show Scores", false);
+    CONFIG_VALUE(TimesetActive, bool, "Show Timeset", false);
 
     CONFIG_INIT_FUNCTION(
         CONFIG_INIT_VALUE(ServerType);
         CONFIG_INIT_VALUE(Save);
         CONFIG_INIT_VALUE(Modifiers);
+        CONFIG_INIT_VALUE(AvatarsActive);
+        CONFIG_INIT_VALUE(ClansActive);
+        CONFIG_INIT_VALUE(ScoresActive);
+        CONFIG_INIT_VALUE(TimesetActive);
     )
 )
 
