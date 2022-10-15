@@ -170,7 +170,10 @@ namespace ReplayRecorder {
     MAKE_HOOK_MATCH(MultiplayerLevelPlay, &MultiplayerController::StartGameplay, void, MultiplayerController* self, float syncTime) {
         MultiplayerLevelPlay(self, syncTime);
 
-        if (PlayerController::currentPlayer == std::nullopt || !UploadEnabled()) return;
+        if (PlayerController::currentPlayer == std::nullopt || !UploadEnabled()) {
+            replay = nullopt;
+            return;
+        }
 
         startReplay();
         
@@ -180,7 +183,10 @@ namespace ReplayRecorder {
     MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLevel, void, SinglePlayerLevelSelectionFlowCoordinator* self, System::Action* beforeSceneSwitchCallback, bool practice) {
         LevelPlay(self, beforeSceneSwitchCallback, practice);
 
-        if (PlayerController::currentPlayer == std::nullopt || !UploadEnabled()) return;
+        if (PlayerController::currentPlayer == std::nullopt || !UploadEnabled()) {
+            replay = nullopt;
+            return;
+        }
 
         startReplay();
         automaticPlayerHeight = self->get_playerSettings()->automaticPlayerHeight;
