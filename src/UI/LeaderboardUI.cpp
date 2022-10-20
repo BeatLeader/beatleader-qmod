@@ -98,6 +98,26 @@ using namespace QuestUI;
 using namespace BeatLeader;
 using UnityEngine::Resources;
 
+// Access into internal QuestUI structures
+namespace QuestUI::ModSettingsInfos {
+    struct ModSettingsInfo {
+        ModInfo modInfo;
+        bool showModInfo;
+        std::string title;
+        Register::Type type;
+        System::Type* il2cpp_type;
+        union {
+            HMUI::ViewController* viewController;
+            HMUI::FlowCoordinator* flowCoordinator;
+        };
+        Register::DidActivateEvent didActivateEvent;
+        Register::MenuLocation location;
+        void Present();
+    };
+
+    std::vector<ModSettingsInfo>& get();
+}
+
 namespace LeaderboardUI {
     function<void()> retryCallback;
     PlatformLeaderboardViewController* plvc = NULL;
@@ -223,27 +243,14 @@ namespace LeaderboardUI {
         }, [](float progress){});
     }
 
-    // void openSettings() {
-    //     auto currentFlowCoordinator = BeatSaberUI::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
-        
-    //     auto modSettingsFlowCoordinator = GetModSettingsFlowCoordinator();
-    //     if (modSettingsFlowCoordinator == NULL) {
-    //         modSettingsFlowCoordinator = BeatSaberUI::CreateFlowCoordinator(reinterpret_cast<System::Type*>(il2cpp_utils::GetSystemType(il2cpp_utils::GetClassFromName("QuestUI", "ModSettingsFlowCoordinator"))));
-    //     }
-        
-    //     currentFlowCoordinator->PresentFlowCoordinator(modSettingsFlowCoordinator, nullptr, ViewController::AnimationDirection::Horizontal, true, false);
-
-    //     QuestUI::MainThreadScheduler::Schedule([modSettingsFlowCoordinator] {
-    //         auto buttons = modSettingsFlowCoordinator->get_topViewController()->GetComponentsInChildren<UnityEngine::UI::Button*>();
-    //         for (size_t i = 0; i < buttons.size(); i++)
-    //         {
-    //             auto textMesh = buttons[i]->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
-    //             if (textMesh->get_text() == "bl" || textMesh->get_text() == "BeatLeader") {
-    //                 buttons[i]->get_onClick()->Invoke();
-    //             }
-    //         }
-    //     });
-    // }
+    void openSettings() {
+        // Get all of the mod settings infos, and get the one that is for beatleader
+        for (auto& s : QuestUI::ModSettingsInfos::get()) {
+            if (s.modInfo.id == MOD_ID) {
+                s.Present();
+            }
+        }
+    }
 
     void refreshFromTheServer() {
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level());
