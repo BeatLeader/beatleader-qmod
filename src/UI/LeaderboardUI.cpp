@@ -29,7 +29,6 @@
 #include "questui/shared/ArrayUtil.hpp"
 #include "questui/shared/BeatSaberUI.hpp"
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
-#include "questui/shared/CustomTypes/Components/WeakPtrGO.hpp"
 
 #include "HMUI/TableView.hpp"
 #include "HMUI/TableCell.hpp"
@@ -224,27 +223,27 @@ namespace LeaderboardUI {
         }, [](float progress){});
     }
 
-    void openSettings() {
-        auto currentFlowCoordinator = BeatSaberUI::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
+    // void openSettings() {
+    //     auto currentFlowCoordinator = BeatSaberUI::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
         
-        auto modSettingsFlowCoordinator = GetModSettingsFlowCoordinator();
-        if (modSettingsFlowCoordinator == NULL) {
-            modSettingsFlowCoordinator = BeatSaberUI::CreateFlowCoordinator(reinterpret_cast<System::Type*>(il2cpp_utils::GetSystemType(il2cpp_utils::GetClassFromName("QuestUI", "ModSettingsFlowCoordinator"))));
-        }
+    //     auto modSettingsFlowCoordinator = GetModSettingsFlowCoordinator();
+    //     if (modSettingsFlowCoordinator == NULL) {
+    //         modSettingsFlowCoordinator = BeatSaberUI::CreateFlowCoordinator(reinterpret_cast<System::Type*>(il2cpp_utils::GetSystemType(il2cpp_utils::GetClassFromName("QuestUI", "ModSettingsFlowCoordinator"))));
+    //     }
         
-        currentFlowCoordinator->PresentFlowCoordinator(modSettingsFlowCoordinator, nullptr, ViewController::AnimationDirection::Horizontal, true, false);
+    //     currentFlowCoordinator->PresentFlowCoordinator(modSettingsFlowCoordinator, nullptr, ViewController::AnimationDirection::Horizontal, true, false);
 
-        QuestUI::MainThreadScheduler::Schedule([modSettingsFlowCoordinator] {
-            auto buttons = modSettingsFlowCoordinator->get_topViewController()->GetComponentsInChildren<UnityEngine::UI::Button*>();
-            for (size_t i = 0; i < buttons.size(); i++)
-            {
-                auto textMesh = buttons[i]->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
-                if (textMesh->get_text() == "bl" || textMesh->get_text() == "BeatLeader") {
-                    buttons[i]->get_onClick()->Invoke();
-                }
-            }
-        });
-    }
+    //     QuestUI::MainThreadScheduler::Schedule([modSettingsFlowCoordinator] {
+    //         auto buttons = modSettingsFlowCoordinator->get_topViewController()->GetComponentsInChildren<UnityEngine::UI::Button*>();
+    //         for (size_t i = 0; i < buttons.size(); i++)
+    //         {
+    //             auto textMesh = buttons[i]->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
+    //             if (textMesh->get_text() == "bl" || textMesh->get_text() == "BeatLeader") {
+    //                 buttons[i]->get_onClick()->Invoke();
+    //             }
+    //         }
+    //     });
+    // }
 
     void refreshFromTheServer() {
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level());
@@ -440,7 +439,7 @@ namespace LeaderboardUI {
             if (preferencesButton == NULL) {
                 loginPrompt = ::QuestUI::BeatSaberUI::CreateText(plvc->get_transform(), "Please sign up or log in to post scores!", false, UnityEngine::Vector2(4, 10));
                 preferencesButton = ::QuestUI::BeatSaberUI::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
-                    openSettings();
+                    // openSettings();
                 });
             }
             loginPrompt->get_gameObject()->SetActive(true);
@@ -746,12 +745,12 @@ namespace LeaderboardUI {
     UnityEngine::UI::Toggle* CreateToggle(UnityEngine::Transform* parent, bool currentValue, UnityEngine::Vector2 anchoredPosition, std::function<void(bool)> onValueChange)
     {
         // Code adapted from: https://github.com/darknight1050/QuestUI/blob/master/src/BeatSaberUI.cpp#L826
-        static WeakPtrGO<UnityEngine::UI::Toggle> toggleCopy;
+        static SafePtrUnity<UnityEngine::UI::Toggle> toggleCopy;
         if(!toggleCopy){
             toggleCopy = Resources::FindObjectsOfTypeAll<UnityEngine::UI::Toggle*>().FirstOrDefault([](auto x) {return x->get_transform()->get_parent()->get_gameObject()->get_name() == "Fullscreen"; });
         }
 
-        UnityEngine::UI::Toggle* newToggle = Object::Instantiate(toggleCopy.getInner(), parent, false);
+        UnityEngine::UI::Toggle* newToggle = Object::Instantiate(toggleCopy.ptr(), parent, false);
         newToggle->set_interactable(true);
         newToggle->set_isOn(currentValue);
         newToggle->onValueChanged = UnityEngine::UI::Toggle::ToggleEvent::New_ctor();
