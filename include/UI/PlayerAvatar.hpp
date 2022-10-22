@@ -16,8 +16,7 @@ using namespace std;
 DECLARE_CLASS_CODEGEN(BeatLeader, PlayerAvatar, UnityEngine::MonoBehaviour,
     DECLARE_INSTANCE_FIELD(HMUI::ImageView*, imageView);
     DECLARE_INSTANCE_FIELD(UnityEngine::Material*, materialInstance);
-    DECLARE_INSTANCE_FIELD(int, AvatarTexturePropertyId);
-    DECLARE_INSTANCE_FIELD(int, FadeValuePropertyId);
+    DECLARE_INSTANCE_FIELD(StringW, materialName);
 
     DECLARE_INSTANCE_FIELD(int, currentFrame);
     DECLARE_INSTANCE_FIELD(float, frameTime);
@@ -27,6 +26,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, PlayerAvatar, UnityEngine::MonoBehaviour,
     DECLARE_INSTANCE_FIELD(ArrayW<float>, animationTimings);
      
     DECLARE_INSTANCE_METHOD(void, Init, HMUI::ImageView* imageView);
-    DECLARE_INSTANCE_METHOD(void, SetPlayer, StringW url, StringW roles);
+    DECLARE_INSTANCE_METHOD(void, SetPlayer, StringW url, UnityEngine::Material* roleMaterial, float hueShift, float saturation);
+    DECLARE_INSTANCE_METHOD(void, SetHiddenPlayer);
     DECLARE_INSTANCE_METHOD(void, Update);
 )

@@ -190,8 +190,12 @@ namespace WebUtils {
     }
 
     std::thread GetAsync(string url, long timeout, const function<void(long, string)>& finished, const function<void(float)>& progressUpdate) {
+        return RequestAsync(url, "GET", timeout, finished, progressUpdate);
+    }
+
+    std::thread RequestAsync(string url, string method, long timeout, const function<void(long, string)>& finished, const function<void(float)>& progressUpdate) {
         std::thread t (
-            [url = string(url), timeout, progressUpdate, finished] {
+            [url = string(url), timeout, progressUpdate, finished, method] {
                 string cookieFile = getCookieFile();
                 string val;
                 // Init curl
@@ -213,7 +217,7 @@ namespace WebUtils {
                 // Follow HTTP redirects if necessary.
                 curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
-                curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
+                curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
                 curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWrite_CallbackFunc_StdString);
 
                 ProgressUpdateWrapper wrapper = ProgressUpdateWrapper { progressUpdate };

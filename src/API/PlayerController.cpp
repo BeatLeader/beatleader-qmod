@@ -1,5 +1,6 @@
 #include "include/API/PlayerController.hpp"
 #include "include/Utils/WebUtils.hpp"
+#include "include/Utils/ModConfig.hpp"
 #include "include/main.hpp"
 
 #include "GlobalNamespace/IPlatformUserModel.hpp"
@@ -13,9 +14,11 @@
 #include "UnityEngine/Resources.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
+#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 using UnityEngine::Resources;
 using namespace GlobalNamespace;
+using namespace rapidjson;
 
 optional<Player> PlayerController::currentPlayer = nullopt;
 string PlayerController::lastErrorDescription = "";
@@ -77,4 +80,69 @@ void PlayerController::LogOut() {
 
     currentPlayer = nullopt;
     callbackWrapper(currentPlayer);
+}
+
+bool PlayerController::IsFriend(Player anotherPlayer) {
+    if (currentPlayer == nullopt) return false;
+
+    return std::find(currentPlayer->friends.begin(), currentPlayer->friends.end(), anotherPlayer.id) != currentPlayer->friends.end();
+}
+
+bool PlayerController::IsIncognito(Player anotherPlayer) {
+    Document incognitoList;
+    incognitoList.Parse(getModConfig().IncognitoList.GetValue().c_str());
+
+    if (incognitoList.HasParseError() || !incognitoList.IsObject()) {
+        getModConfig().IncognitoList.SetValue("[]");
+        return false;
+    }
+
+    auto incognitoArray = incognitoList.GetArray();
+
+    for (int index = 0; index < (int)incognitoArray.Size(); ++index) {
+        auto const& id = incognitoArray[index].GetString();
+        if (strcmp(id, anotherPlayer.id.c_str()) == 0) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+void PlayerController::SetIsIncognito(Player anotherPlayer, bool value) {
+    Document incognitoList;
+    incognitoList.Parse(getModConfig().IncognitoList.GetValue().c_str());
+
+    if (incognitoList.HasParseError() || !incognitoList.IsObject()) {
+        getModConfig().IncognitoList.SetValue("[]");
+        return;
+    }
+
+    auto incognitoArray = incognitoList.GetArray();
+    StringBuffer buffer;
+    Writer<StringBuffer> writer(buffer);
+    rapidjson::Document::AllocatorType& allocator = incognitoList.GetAllocator();
+    if (value) {
+        Value rj_key;
+        rj_key.SetString(anotherPlayer.id.c_str(), anotherPlayer.id.length(), allocator);
+        incognitoList.PushBack(rj_key, allocator);
+    } else {
+        for (int idx = 0 ; idx < (int) incognitoList.Size() ; idx++) {
+            if (strcmp(incognitoList[idx].GetString(), anotherPlayer.id.c_str()) == 0) {
+                incognitoList.Erase(incognitoList.Begin() + idx--);
+                break;
+            }
+        }
+    }
+
+    incognitoList.Accept(writer);
+
+    getModConfig().IncognitoList.SetValue(buffer.GetString());
+}
+
+bool PlayerController::IsPatron(Player anotherPlayer) {
+    return 
+        anotherPlayer.role.find("tipper") != string::npos ||
+        anotherPlayer.role.find("supporter") != string::npos ||
+        anotherPlayer.role.find("sponsor") != string::npos;
 }

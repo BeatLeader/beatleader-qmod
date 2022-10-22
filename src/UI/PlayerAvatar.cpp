@@ -23,25 +23,50 @@
 
 using namespace QuestUI;
 
+static int AvatarTexturePropertyId;
+static int FadeValuePropertyId;
+static int HueShiftPropertyId;
+static int SaturationPropertyId;
+static int ScalePropertyId;
+
 DEFINE_TYPE(BeatLeader, PlayerAvatar);
 
 void BeatLeader::PlayerAvatar::Init(HMUI::ImageView* imageView) {
     this->imageView = imageView;
 
-    this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::bundle->playerAvatarMaterial);
-    this->AvatarTexturePropertyId = UnityEngine::Shader::PropertyToID("_AvatarTexture");
-    this->FadeValuePropertyId = UnityEngine::Shader::PropertyToID("_FadeValue");
-    imageView->set_material(this->materialInstance);
+    AvatarTexturePropertyId = UnityEngine::Shader::PropertyToID("_AvatarTexture");
+    FadeValuePropertyId = UnityEngine::Shader::PropertyToID("_FadeValue");
+    HueShiftPropertyId = UnityEngine::Shader::PropertyToID("_HueShift");
+    SaturationPropertyId = UnityEngine::Shader::PropertyToID("_Saturation");
+    ScalePropertyId = UnityEngine::Shader::PropertyToID("_Scale");
 }
 
-void BeatLeader::PlayerAvatar::SetPlayer(StringW url, StringW roles) {
-    materialInstance->SetTexture(FadeValuePropertyId, 0);
+void BeatLeader::PlayerAvatar::SetPlayer(
+    StringW url, 
+    UnityEngine::Material* roleMaterial, 
+    float hueShift,
+    float saturation) {
+    
+    if (this->materialInstance == NULL || roleMaterial->get_name() != this->materialName) {
+      this->materialInstance = UnityEngine::Object::Instantiate(roleMaterial);
+      this->materialName = roleMaterial->get_name();
+      imageView->set_material(this->materialInstance);
+    }
+    
+    float scale = materialInstance->GetFloat(ScalePropertyId);
+    imageView->get_transform()->set_localScale({scale, scale, scale});
+    materialInstance->SetFloat(HueShiftPropertyId, hueShift);
+    materialInstance->SetFloat(SaturationPropertyId, saturation);
     play = false;
     currentFrame = 0;
     frameTime = 0;
 
+    if (!Sprites::has_Icon(url)) {
+      materialInstance->SetFloat(FadeValuePropertyId, 0);
+    }
+
     auto self = this;
-    Sprites::get_AnimatedIcon(url, [self, roles](AllFramesResult result) {
+    Sprites::get_AnimatedIcon(url, [self](AllFramesResult result) {
         self->imageView->set_sprite(UnityEngine::Sprite::Create(
                 result.frames[0], 
                 UnityEngine::Rect(0.0, 0.0, (float)result.frames[0]->get_width(), (float)result.frames[0]->get_height()), 
@@ -53,11 +78,13 @@ void BeatLeader::PlayerAvatar::SetPlayer(StringW url, StringW roles) {
                 false));
         self->animationFrames = result.frames;
         self->animationTimings = result.timings;
-        self->materialInstance->SetFloat(self->FadeValuePropertyId, 1.0f);
+        self->materialInstance->SetFloat(FadeValuePropertyId, 1.0f);
         self->play = true;
-
-        schemeForRole(roles).Apply(self->materialInstance);
     });
+}
+
+void BeatLeader::PlayerAvatar::SetHiddenPlayer() {
+  SetPlayer("https://cdn.beatleader.xyz/assets/IncognitoAvatar.png", BundleLoader::bundle->defaultAvatarMaterial, 0, 0);
 }
 
 // Stolen from Nya: https://github.com/FrozenAlex/Nya-utils :lovege:

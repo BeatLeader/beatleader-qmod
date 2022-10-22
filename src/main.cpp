@@ -93,6 +93,7 @@ MAKE_HOOK_MATCH(MainMenuViewControllerDidActivate, &MainMenuViewController::DidA
 // Called later on in the game loading - a good time to install function hooks
 extern "C" void load() {
     il2cpp_functions::Init();
+    custom_types::Register::AutoRegister();
     WebUtils::refresh_urls();
 
     LoggerContextObject logger = getLogger().WithContext("load");

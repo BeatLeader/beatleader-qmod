@@ -19,11 +19,9 @@ using namespace std;
 #define DECLARE_FILE(name, prefix) extern "C" uint8_t _binary_##name##_start[]; extern "C" uint8_t _binary_##name##_end[]; struct prefix##name { static size_t getLength() { return _binary_##name##_end - _binary_##name##_start; } static uint8_t* getData() { return _binary_##name##_start; } };
 DECLARE_FILE(bl_bundle,)
 
-#define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::get()
-
-DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, UnityEngine::MonoBehaviour,
+DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Material*, logoMaterial);
-    DECLARE_INSTANCE_FIELD(Material*, playerAvatarMaterial);
+    DECLARE_INSTANCE_FIELD(Material*, defaultAvatarMaterial);
     DECLARE_INSTANCE_FIELD(Material*, UIAdditiveGlowMaterial);
     DECLARE_INSTANCE_FIELD(Material*, scoreBackgroundMaterial);
     DECLARE_INSTANCE_FIELD(Material*, scoreUnderlineMaterial);
@@ -33,6 +31,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, UnityEngine::MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Material*, accuracyGraphMaterial);
     DECLARE_INSTANCE_FIELD(Material*, accuracyGraphLine);
     DECLARE_INSTANCE_FIELD(Material*, accDetailsRowMaterial);
+    DECLARE_INSTANCE_FIELD(Material*, miniProfileBackgroundMaterial);
 
     DECLARE_INSTANCE_FIELD(Sprite*, locationIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, rowSeparatorIcon);
@@ -41,7 +40,8 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, UnityEngine::MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Sprite*, fileError);
     DECLARE_INSTANCE_FIELD(Sprite*, modifiersIcon);
 
-    DECLARE_INSTANCE_FIELD(Sprite*, overviewIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, overview1Icon);
+    DECLARE_INSTANCE_FIELD(Sprite*, overview2Icon);
     DECLARE_INSTANCE_FIELD(Sprite*, detailsIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, gridIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, graphIcon);
@@ -50,9 +50,17 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, UnityEngine::MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Sprite*, discordLinkIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, patreonLinkIcon);
 
+    DECLARE_INSTANCE_FIELD(Sprite*, twitterIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, twitchIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, youtubeIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, profileIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, friendsIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, incognitoIcon);
+
     DECLARE_INSTANCE_FIELD(Shader*, TMP_SpriteCurved);
 
     DECLARE_INSTANCE_METHOD(void, Init, AssetBundle* bundle);
+    DECLARE_INSTANCE_METHOD(Material*, GetAvatarMaterial, StringW effectName);
 )
 
 class BundleLoader {
@@ -60,5 +68,5 @@ public:
     static AssetBundle* assetBundle;
     static BeatLeader::Bundle* bundle;
 
-    static custom_types::Helpers::Coroutine LoadBundle(UnityEngine::GameObject* container);
+    static custom_types::Helpers::Coroutine LoadBundle(GameObject* container);
 };

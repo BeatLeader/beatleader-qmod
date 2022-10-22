@@ -1,6 +1,7 @@
 #include "Assets/BundleLoader.hpp"
 
 #include <utility>
+#include "main.hpp"
 
 DEFINE_TYPE(BeatLeader, Bundle);
 
@@ -33,7 +34,7 @@ Material* getMaterial(std::string name, AssetBundle* assetBundle) {
 
 void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     logoMaterial = getMaterial("LogoMaterial", assetBundle);
-    playerAvatarMaterial = getMaterial("PlayerAvatarMaterial", assetBundle);
+    defaultAvatarMaterial = getMaterial("DefaultAvatar", assetBundle);
     UIAdditiveGlowMaterial = getMaterial("UIAdditiveGlow", assetBundle);
     scoreBackgroundMaterial = getMaterial("ScoreBackgroundMaterial", assetBundle);
     scoreUnderlineMaterial = getMaterial("ScoreUnderlineMaterial", assetBundle);
@@ -43,6 +44,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     accuracyGraphMaterial = getMaterial("AccuracyGraphBackground", assetBundle);
     accuracyGraphLine = getMaterial("AccuracyGraphLine", assetBundle);
     accDetailsRowMaterial = getMaterial("AccDetailsRowMaterial", assetBundle);
+    miniProfileBackgroundMaterial = getMaterial("UIMiniProfileBackgroundMaterial", assetBundle);
 
     locationIcon = assetBundle->LoadAsset<Sprite*>("LocationIcon");
     rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>("RowSeparatorIcon");
@@ -51,7 +53,8 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     fileError = assetBundle->LoadAsset<Sprite*>("FileError");
     modifiersIcon = assetBundle->LoadAsset<Sprite*>("ModifiersIcon");
 
-    overviewIcon = assetBundle->LoadAsset<Sprite*>("BL_OverviewIcon");
+    overview1Icon = assetBundle->LoadAsset<Sprite*>("BL_Overview1Icon");
+    overview2Icon = assetBundle->LoadAsset<Sprite*>("BL_Overview2Icon");
     detailsIcon = assetBundle->LoadAsset<Sprite*>("BL_DetailsIcon");
     gridIcon = assetBundle->LoadAsset<Sprite*>("BL_GridIcon");
     graphIcon = assetBundle->LoadAsset<Sprite*>("BL_GraphIcon");
@@ -59,5 +62,20 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     discordLinkIcon = assetBundle->LoadAsset<Sprite*>("BL_Discord");
     patreonLinkIcon = assetBundle->LoadAsset<Sprite*>("BL_Patreon");
 
+    twitterIcon = assetBundle->LoadAsset<Sprite*>("BL_TwitterIcon");
+    twitchIcon = assetBundle->LoadAsset<Sprite*>("BL_TwitchIcon");
+    youtubeIcon = assetBundle->LoadAsset<Sprite*>("BL_YoutubeIcon");
+    profileIcon = assetBundle->LoadAsset<Sprite*>("BL_ProfileIcon");
+    friendsIcon = assetBundle->LoadAsset<Sprite*>("BL_FriendsIcon");
+    incognitoIcon = assetBundle->LoadAsset<Sprite*>("BL_IncognitoIcon");
+
     TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
+}
+
+Material* BeatLeader::Bundle::GetAvatarMaterial(StringW effectName) {
+    Material* result;
+    if (((string)effectName).find("_") != string::npos) {
+        result = getMaterial(effectName, BundleLoader::assetBundle);
+    }
+    return result != NULL ? result : defaultAvatarMaterial;
 }

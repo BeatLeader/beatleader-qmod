@@ -14,6 +14,10 @@ using UnityEngine::Sprite;
 
 map<string, std::vector<uint8_t>> Sprites::iconCache;
 
+bool Sprites::has_Icon(string url) {
+    return iconCache.contains(url);
+}
+
 void Sprites::get_Icon(string url, const std::function<void(UnityEngine::Sprite*)>& completion, bool nullable) {
     if (iconCache.contains(url)) {
         std::vector<uint8_t> bytes = iconCache[url];
