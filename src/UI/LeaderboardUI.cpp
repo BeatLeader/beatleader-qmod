@@ -99,26 +99,6 @@ using namespace QuestUI;
 using namespace BeatLeader;
 using UnityEngine::Resources;
 
-// Access into internal QuestUI structures
-namespace QuestUI::ModSettingsInfos {
-    struct ModSettingsInfo {
-        ModInfo modInfo;
-        bool showModInfo;
-        std::string title;
-        Register::Type type;
-        System::Type* il2cpp_type;
-        union {
-            HMUI::ViewController* viewController;
-            HMUI::FlowCoordinator* flowCoordinator;
-        };
-        Register::DidActivateEvent didActivateEvent;
-        Register::MenuLocation location;
-        void Present();
-    };
-
-    std::vector<ModSettingsInfo>& get();
-}
-
 namespace LeaderboardUI {
     function<void()> retryCallback;
     PlatformLeaderboardViewController* plvc = NULL;
@@ -244,15 +224,6 @@ namespace LeaderboardUI {
                 });
             }
         }, [](float progress){});
-    }
-
-    void openSettings() {
-        // Get all of the mod settings infos, and get the one that is for beatleader
-        for (auto& s : QuestUI::ModSettingsInfos::get()) {
-            if (s.modInfo.id == MOD_ID) {
-                s.Present();
-            }
-        }
     }
 
     void refreshFromTheServer() {
@@ -449,7 +420,7 @@ namespace LeaderboardUI {
             if (preferencesButton == NULL) {
                 loginPrompt = ::QuestUI::BeatSaberUI::CreateText(plvc->get_transform(), "Please sign up or log in to post scores!", false, UnityEngine::Vector2(4, 10));
                 preferencesButton = ::QuestUI::BeatSaberUI::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
-                    // openSettings();
+                    UIUtils::OpenSettings();
                 });
             }
             loginPrompt->get_gameObject()->SetActive(true);

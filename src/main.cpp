@@ -75,7 +75,7 @@ void replayPostCallback(ReplayUploadStatus status, const string& description, fl
         }
         
         QuestUI::MainThreadScheduler::Schedule([status, description, progress, code] {
-            LeaderboardUI::updateStatus(status, description, progress, code > 450);
+            LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
         });
     }
 }
@@ -126,7 +126,7 @@ extern "C" void load() {
         } else {
             ReplayManager::ProcessReplay(replay, isOst, [](ReplayUploadStatus finished, string description, float progress, int code) {
                 QuestUI::MainThreadScheduler::Schedule([description, progress, finished, code] {
-                    LeaderboardUI::updateStatus(finished, description, progress, code > 450);
+                    LeaderboardUI::updateStatus(finished, description, progress, code > 450 || code < 200);
                 });
             });
         }

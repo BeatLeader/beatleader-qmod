@@ -66,7 +66,8 @@ void ReplayManager::TryPostReplay(string name, int tryIndex, function<void(Repla
             }
         } else {
             getLogger().error("Replay was not posted!");
-            if (statusCode == 100) {
+            if (statusCode == 100 || statusCode == 0) {
+                statusCode = 100;
                 result = "Timed out";
             }
             finished(ReplayUploadStatus::error, std::string("<color=#008000ff>Replay was not posted. " + result), 0, statusCode);

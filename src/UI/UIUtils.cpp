@@ -6,7 +6,29 @@
 
 #include "UI/UIUtils.hpp"
 
+#include "main.hpp"
+
 #include "UnityEngine/HideFlags.hpp"
+
+// Access into internal QuestUI structures
+namespace QuestUI::ModSettingsInfos {
+    struct ModSettingsInfo {
+        ModInfo modInfo;
+        bool showModInfo;
+        std::string title;
+        Register::Type type;
+        System::Type* il2cpp_type;
+        union {
+            HMUI::ViewController* viewController;
+            HMUI::FlowCoordinator* flowCoordinator;
+        };
+        Register::DidActivateEvent didActivateEvent;
+        Register::MenuLocation location;
+        void Present();
+    };
+
+    std::vector<ModSettingsInfo>& get();
+}
 
 namespace UIUtils {
 
@@ -62,6 +84,16 @@ namespace UIUtils {
         return comp;
     }
 
+    void OpenSettings() {
+        // Get all of the mod settings infos, and get the one that is for beatleader
+        for (auto& s : QuestUI::ModSettingsInfos::get()) {
+            if (s.modInfo.id == MOD_ID) {
+                s.Present();
+            }
+        }
+    }
+
+    // Copied from BSML
     HMUI::ImageView* CreateRoundRectImage(UnityEngine::Transform* parent, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta) {
         static ConstString name("QuestUIImage");
         UnityEngine::GameObject* gameObj = UnityEngine::GameObject::New_ctor(name);
