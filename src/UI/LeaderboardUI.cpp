@@ -683,13 +683,17 @@ namespace LeaderboardUI {
 
     void updateStatus(ReplayUploadStatus status, string description, float progress, bool showRestart) {
         lastVotingStatusUrl = "";
+
+        if (status == ReplayUploadStatus::finished) {
+            updateVotingButton(lastVotingStatusUrl);
+        }
+        
         if (visible) {
             uploadStatus->SetText(description);
             switch (status)
             {
                 case ReplayUploadStatus::finished:
                     logoAnimation->SetAnimating(false);
-                    updateVotingButton(lastVotingStatusUrl);
                     plvc->HandleDidPressRefreshButton();
                     break;
                 case ReplayUploadStatus::error:
@@ -705,7 +709,6 @@ namespace LeaderboardUI {
                     break;
             }
         }
-       
     }
 
     void initSettingsModal(UnityEngine::Transform* parent){
