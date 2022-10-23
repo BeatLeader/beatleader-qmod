@@ -17,6 +17,7 @@
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/RoleColorScheme.hpp"
 #include "include/UI/Themes/ThemeUtils.hpp"
+#include "include/UI/ResultsViewController.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -213,17 +214,24 @@ namespace LeaderboardUI {
     }
 
     void updateVotingButton(string votingStatusUrl) {
-        votingButton->SetState(0);
-        votingUI->modal->Hide(true, nullptr);
+        setVotingButtonsState(0);
+        hideVotingUIs();
 
         lastVotingStatusUrl = votingStatusUrl;
         WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
             if (votingStatusUrl == lastVotingStatusUrl && status == 200) {
                 QuestUI::MainThreadScheduler::Schedule([response] {
-                    votingButton->SetState(stoi(response));
+                    setVotingButtonsState(stoi(response));
                 });
             }
         }, [](float progress){});
+    }
+
+    void setVotingButtonsState(int state){
+        votingButton->SetState(state);
+        if(ResultsView::resultsVotingButton){
+            ResultsView::resultsVotingButton->SetState(state);
+        }
     }
 
     void refreshFromTheServer() {
@@ -378,7 +386,7 @@ namespace LeaderboardUI {
 
     void voteCallback(bool voted, bool rankable, float stars, int type) {
         if (voted) {
-            votingButton->SetState(0);
+            setVotingButtonsState(0);
             string rankableString = "?rankability=" + (rankable ? (string)"1.0" : (string)"0.0");
             string starsString = stars > 0 ? "&stars=" + to_string_wprecision(stars, 2) : "";
             string typeString = type > 0 ? "&type=" + to_string(type) : "";
@@ -388,16 +396,22 @@ namespace LeaderboardUI {
 
                 QuestUI::MainThreadScheduler::Schedule([status, response, rankable, type] {
                     if (status == 200) {
-                        votingButton->SetState(stoi(response));
-                            LevelInfoUI::addVoteToCurrentLevel(rankable, type);
+                        setVotingButtonsState(stoi(response));
+                        LevelInfoUI::addVoteToCurrentLevel(rankable, type);
                     } else {
-                        votingButton->SetState(1);
+                        setVotingButtonsState(1);
                     } 
                 });
             });
         }
 
+        hideVotingUIs();
+    }
+
+    void hideVotingUIs()
+    {
         votingUI->modal->Hide(true, nullptr);
+        if(ResultsView::votingUI){ ResultsView::votingUI->modal->Hide(true, nullptr); }
     }
 
     static bool isLocal = false;
@@ -547,7 +561,7 @@ namespace LeaderboardUI {
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
         if (!levelData->get_levelID().starts_with("custom_level")) {
-            votingButton->SetState(-1);
+            setVotingButtonsState(-1);
             self->loadingControl->Hide();
             self->hasScoresData = false;
             self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);

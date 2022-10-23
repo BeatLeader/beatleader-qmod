@@ -5,6 +5,7 @@
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/PreferencesViewController.hpp"
 #include "include/UI/EmojiSupport.hpp"
+#include "include/UI/ResultsViewController.hpp"
 
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
@@ -107,6 +108,7 @@ extern "C" void load() {
 
     LevelInfoUI::setup();
     ModifiersUI::setup();
+    ResultsView::setup();
     RecorderUtils::StartRecorderUtils();
 
     PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {
