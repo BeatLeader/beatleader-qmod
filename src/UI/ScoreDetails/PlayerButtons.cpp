@@ -71,7 +71,7 @@ void BeatLeader::PlayerButtons::Setup(HMUI::ModalView *modal, function<void(Play
     }));
     friendsButton.RegisterCallback();
 
-    incognitoButton = MiniProfileButton("Hide player", SelectedColor, true, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    incognitoButton = MiniProfileButton("Hide player info", SelectedColor, true, ::QuestUI::BeatSaberUI::CreateClickableImage(
             leftTransform, 
             BundleLoader::bundle->incognitoIcon, 
             {0, 0}, 
@@ -219,8 +219,10 @@ void BeatLeader::PlayerButtons::updateSocialButtons() const {
 
 void BeatLeader::PlayerButtons::updateIncognitoButton() const {
     if (!PlayerController::IsIncognito(player)) {
+        incognitoButton.setHint("Hide player info");
         incognitoButton.setState(MiniProfileButtonState::InteractableFaded);
     } else {
+        incognitoButton.setHint("Show player info");
         incognitoButton.setState(MiniProfileButtonState::InteractableGlowing);
     }
 }

@@ -29,7 +29,7 @@ using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
 
 BeatLeader::ScoreStatsGraph::ScoreStatsGraph(HMUI::ModalView *modal) noexcept {
-    graphBackground = CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(60, 30));
+    graphBackground = CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -1), UnityEngine::Vector2(60, 28));
     GameObject* gameObj = GameObject::New_ctor("AccuracyGraph");
     
     this->accuracyGraph = gameObj->AddComponent<BeatLeader::AccuracyGraph*>();

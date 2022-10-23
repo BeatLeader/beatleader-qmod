@@ -268,7 +268,12 @@ namespace LevelInfoUI {
 
         // Set Color according to calculated VoteRatio (0% = red, 100% = green)
         statusLabel->SetText(rankingStatus.substr(0, shortWritingChars) + ".");
-        statusLabel->set_color(UnityEngine::Color(1-voteRatio,voteRatio,0,1));
+        if (voteRatio == 0) {
+             statusLabel->set_color(UnityEngine::Color(0.5, 0.5, 0.5, 1));
+        } else {
+            statusLabel->set_color(UnityEngine::Color(1 - voteRatio, voteRatio, 0, 1));
+        }
+        
 
         // Set Hovertext with percentage value
         voteRatio *= 100;

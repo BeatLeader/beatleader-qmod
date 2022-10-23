@@ -11,7 +11,7 @@ DECLARE_CONFIG(ModConfig,
     CONFIG_VALUE(ClansActive, bool, "Show Clans", true);
     CONFIG_VALUE(ScoresActive, bool, "Show Scores", true);
     CONFIG_VALUE(TimesetActive, bool, "Show Timeset", true);
-    CONFIG_VALUE(IncognitoList, std::string, "Hidden players", "[]");
+    CONFIG_VALUE(IncognitoList, std::string, "Hidden players", "{}");
 
     CONFIG_INIT_FUNCTION(
         CONFIG_INIT_VALUE(ServerType);
