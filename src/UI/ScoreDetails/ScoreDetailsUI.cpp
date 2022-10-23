@@ -71,7 +71,7 @@ void BeatLeader::initScoreDetailsPopup(
 
     modalUI->rank = CreateText(modalTransform, "", UnityEngine::Vector2(6.0, 16.0));
     modalUI->name = CreateText(modalTransform, "", UnityEngine::Vector2(0.0, 18.0));
-    modalUI->sponsorMessage = CreateText(modalTransform, "", UnityEngine::Vector2(0, -28));
+    modalUI->sponsorMessage = CreateText(modalTransform, "", UnityEngine::Vector2(0, -32));
 
     EmojiSupport::AddSupport(modalUI->name);
 

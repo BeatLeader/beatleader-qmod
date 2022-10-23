@@ -93,7 +93,7 @@ bool PlayerController::IsIncognito(Player anotherPlayer) {
     incognitoList.Parse(getModConfig().IncognitoList.GetValue().c_str());
 
     if (incognitoList.HasParseError() || !incognitoList.IsObject()) {
-        getModConfig().IncognitoList.SetValue("[]");
+        getModConfig().IncognitoList.SetValue("{}");
         return false;
     }
 
@@ -114,7 +114,7 @@ void PlayerController::SetIsIncognito(Player anotherPlayer, bool value) {
     incognitoList.Parse(getModConfig().IncognitoList.GetValue().c_str());
 
     if (incognitoList.HasParseError() || !incognitoList.IsObject()) {
-        getModConfig().IncognitoList.SetValue("[]");
+        getModConfig().IncognitoList.SetValue("{}");
         return;
     }
 
