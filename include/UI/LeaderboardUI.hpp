@@ -6,11 +6,13 @@
 #include "UnityEngine/Transform.hpp"
 #include "UnityEngine/UI/Toggle.hpp"
 #include "UnityEngine/Vector2.hpp"
+#include "UI/VotingButton.hpp"
 
 using namespace std;
 
 namespace LeaderboardUI {
     extern function<void()> retryCallback; 
+    extern BeatLeader::VotingButton* votingButton;
 
     void setup();
     void reset();
