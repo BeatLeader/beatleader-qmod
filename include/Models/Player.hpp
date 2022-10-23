@@ -6,8 +6,28 @@
 #include <string>
 using namespace std;
 
-struct Player
+struct ProfileSettings {
+    string message;
+    string effectName;
+    int hue;
+    float saturation;
+
+    ProfileSettings(rapidjson::Value const& document);
+    ProfileSettings() = default;
+};
+
+struct Social {
+    string service;
+    string link;
+    string user;
+
+    Social(rapidjson::Value const& document);
+    Social() = default;
+};
+
+class Player
 {
+    public:
     string id;
     string name;
     string country;
@@ -16,8 +36,11 @@ struct Player
     int rank;
     int countryRank;
     float pp;
+    std::optional<ProfileSettings> profileSettings;
+    
+    vector<string> friends;
+    vector<Social> socials;
     vector<Clan> clans;
-    string sponsorMessage;
 
     Player(rapidjson::Value const& document);
     Player() = default;

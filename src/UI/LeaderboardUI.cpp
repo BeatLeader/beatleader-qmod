@@ -16,6 +16,7 @@
 #include "include/UI/PlayerAvatar.hpp"
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/RoleColorScheme.hpp"
+#include "include/UI/Themes/ThemeUtils.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -98,26 +99,6 @@ using namespace QuestUI;
 using namespace BeatLeader;
 using UnityEngine::Resources;
 
-// Access into internal QuestUI structures
-namespace QuestUI::ModSettingsInfos {
-    struct ModSettingsInfo {
-        ModInfo modInfo;
-        bool showModInfo;
-        std::string title;
-        Register::Type type;
-        System::Type* il2cpp_type;
-        union {
-            HMUI::ViewController* viewController;
-            HMUI::FlowCoordinator* flowCoordinator;
-        };
-        Register::DidActivateEvent didActivateEvent;
-        Register::MenuLocation location;
-        void Present();
-    };
-
-    std::vector<ModSettingsInfo>& get();
-}
-
 namespace LeaderboardUI {
     function<void()> retryCallback;
     PlatformLeaderboardViewController* plvc = NULL;
@@ -179,7 +160,9 @@ namespace LeaderboardUI {
                 countryRankAndPp->SetText("#" + to_string(player->countryRank) + "        <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp");
                 playerName->set_alignment(TMPro::TextAlignmentOptions::Center);
                 playerName->SetText(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value(), 25));
-                playerAvatar->SetPlayer(player->avatar, player->role);
+
+                auto params = GetAvatarParams(player.value(), false);
+                playerAvatar->SetPlayer(player->avatar, params.baseMaterial, params.hueShift, params.saturation);
                 
                 if (plvc != NULL) {
                     auto countryControl = plvc->scopeSegmentedControl->dataItems.get(3);
@@ -241,15 +224,6 @@ namespace LeaderboardUI {
                 });
             }
         }, [](float progress){});
-    }
-
-    void openSettings() {
-        // Get all of the mod settings infos, and get the one that is for beatleader
-        for (auto& s : QuestUI::ModSettingsInfos::get()) {
-            if (s.modInfo.id == MOD_ID) {
-                s.Present();
-            }
-        }
     }
 
     void refreshFromTheServer() {
@@ -446,7 +420,7 @@ namespace LeaderboardUI {
             if (preferencesButton == NULL) {
                 loginPrompt = ::QuestUI::BeatSaberUI::CreateText(plvc->get_transform(), "Please sign up or log in to post scores!", false, UnityEngine::Vector2(4, 10));
                 preferencesButton = ::QuestUI::BeatSaberUI::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
-                    // openSettings();
+                    UIUtils::OpenSettings();
                 });
             }
             loginPrompt->get_gameObject()->SetActive(true);
@@ -477,7 +451,12 @@ namespace LeaderboardUI {
             parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(480, 160), self->screen->get_transform()->get_position(), 140);
             visible = true;
 
-            BeatLeader::initScoreDetailsPopup(&scoreDetailsUI, self->get_transform());
+            BeatLeader::initScoreDetailsPopup(
+                &scoreDetailsUI, 
+                self->get_transform(),
+                []() {
+                    plvc->Refresh(true, true);
+                });
             BeatLeader::initLinksContainerPopup(&linkContainer, self->get_transform());
             BeatLeader::initVotingPopup(&votingUI, self->get_transform(), voteCallback);
 
@@ -648,11 +627,13 @@ namespace LeaderboardUI {
             if(getModConfig().AvatarsActive.GetValue()){
                 avatars[result]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
                 
-                Sprites::get_Icon(player.avatar, [result](UnityEngine::Sprite* sprite) {
-                    if (sprite != NULL && avatars[result] != NULL && sprite->get_texture() != NULL) {
-                        avatars[result]->set_sprite(sprite);
-                    }
-                });
+                if (!PlayerController::IsIncognito(player)) {
+                    Sprites::get_Icon(player.avatar, [result](UnityEngine::Sprite* sprite) {
+                        if (sprite != NULL && avatars[result] != NULL && sprite->get_texture() != NULL) {
+                            avatars[result]->set_sprite(sprite);
+                        }
+                    });
+                }
             }
 
             // TODO

@@ -75,7 +75,7 @@ void replayPostCallback(ReplayUploadStatus status, const string& description, fl
         }
         
         QuestUI::MainThreadScheduler::Schedule([status, description, progress, code] {
-            LeaderboardUI::updateStatus(status, description, progress, code > 450);
+            LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
         });
     }
 }
@@ -93,6 +93,7 @@ MAKE_HOOK_MATCH(MainMenuViewControllerDidActivate, &MainMenuViewController::DidA
 // Called later on in the game loading - a good time to install function hooks
 extern "C" void load() {
     il2cpp_functions::Init();
+    custom_types::Register::AutoRegister();
     WebUtils::refresh_urls();
 
     LoggerContextObject logger = getLogger().WithContext("load");
@@ -125,7 +126,7 @@ extern "C" void load() {
         } else {
             ReplayManager::ProcessReplay(replay, isOst, [](ReplayUploadStatus finished, string description, float progress, int code) {
                 QuestUI::MainThreadScheduler::Schedule([description, progress, finished, code] {
-                    LeaderboardUI::updateStatus(finished, description, progress, code > 450);
+                    LeaderboardUI::updateStatus(finished, description, progress, code > 450 || code < 200);
                 });
             });
         }

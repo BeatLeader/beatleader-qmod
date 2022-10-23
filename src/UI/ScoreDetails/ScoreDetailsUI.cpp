@@ -6,6 +6,8 @@
 #include "include/Models/ScoreStats.hpp"
 
 #include "include/UI/EmojiSupport.hpp"
+#include "include/UI/UIUtils.hpp"
+#include "include/UI/Themes/ThemeUtils.hpp"
 
 #include "include/Core/ReplayPlayer.hpp"
 
@@ -33,57 +35,79 @@ static UnityEngine::Color FadedHoverColor = UnityEngine::Color(0.5f, 0.5f, 0.5f,
 static string replayLink;
 static ScoreStats scoreStats;
 
-void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPointer, Transform* parent){
+static void MakeModalTransparent(HMUI::ModalView *modal) {
+    int childCount = modal->get_transform()->get_childCount();
+    for (int i = 0; i < childCount; i++) {
+        auto* child = modal->get_transform()->GetChild(i)->GetComponent<RectTransform*>();
+
+        if (child->get_gameObject()->get_name() == "BG") {
+            child->GetComponent<Image*>()->set_sprite(Sprites::get_TransparentPixel());
+        }
+    }
+}
+
+void BeatLeader::initScoreDetailsPopup(
+        BeatLeader::ScoreDetailsPopup** modalUIPointer, 
+        Transform* parent,
+        function<void()> const &incognitoCallback){
     auto modalUI = *modalUIPointer;
     if (modalUI != nullptr){
         UnityEngine::GameObject::Destroy(modalUI->modal->get_gameObject());
     }
     if (modalUI == nullptr) modalUI = (BeatLeader::ScoreDetailsPopup*) malloc(sizeof(BeatLeader::ScoreDetailsPopup));
-    modalUI->modal = CreateModal(parent, UnityEngine::Vector2(60, 47), [](HMUI::ModalView *modal) {}, true);
+    modalUI->modal = CreateModal(parent, UnityEngine::Vector2(60, 90), [](HMUI::ModalView *modal) {}, true);
+    MakeModalTransparent(modalUI->modal);
 
     auto modalTransform = modalUI->modal->get_transform();
+
     auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(modalTransform, NULL, UnityEngine::Vector2(0, 30), UnityEngine::Vector2(24, 24));
     modalUI->playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
     modalUI->playerAvatar->Init(playerAvatarImage);
 
-    modalUI->rank = CreateText(modalTransform, "", UnityEngine::Vector2(6.0, 16.0));
-    
-    modalUI->name = CreateText(modalTransform, "", UnityEngine::Vector2(0.0, 18.0));
-    modalUI->name->get_gameObject()->AddComponent<::QuestUI::Backgroundable*>()->ApplyBackground("round-rect-panel");
+    UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(0, 18), UnityEngine::Vector2(58, 6));
+    UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(0, -3), UnityEngine::Vector2(60, 34));
+    UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(0, -24), UnityEngine::Vector2(30, 6));
+    UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(-24.5, -24), UnityEngine::Vector2(7, 7));
 
+    modalUI->rank = CreateText(modalTransform, "", UnityEngine::Vector2(6.0, 16.0));
+    modalUI->name = CreateText(modalTransform, "", UnityEngine::Vector2(0.0, 18.0));
     modalUI->sponsorMessage = CreateText(modalTransform, "", UnityEngine::Vector2(0, -28));
 
     EmojiSupport::AddSupport(modalUI->name);
 
     modalUI->pp = CreateText(modalTransform, "", UnityEngine::Vector2(45.0, 16.0));
 
+    modalUI->playerButtons.Setup(modalUI->modal, [modalUI, incognitoCallback](Player player) {
+        modalUI->updatePlayerDetails(player);
+        incognitoCallback();
+    });
     modalUI->general = GeneralScoreDetails(modalUI->modal);
     modalUI->overview = ScoreStatsOverview(modalUI->modal);
     modalUI->grid = ScoreStatsGrid(modalUI->modal);
     modalUI->graph = ScoreStatsGraph(modalUI->modal);
 
-    modalUI->generalButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->overviewIcon, UnityEngine::Vector2(-10.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->generalButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->overview1Icon, UnityEngine::Vector2(-10.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(0);
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->generalButton, "General score info");
 
-    modalUI->overviewButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->detailsIcon, UnityEngine::Vector2(-3.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->overviewButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->detailsIcon, UnityEngine::Vector2(-3.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(1);
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->overviewButton, "Detailed score info");
 
-    modalUI->gridButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->gridIcon, UnityEngine::Vector2(3.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->gridButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->gridIcon, UnityEngine::Vector2(3.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(2);
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->gridButton, "Note accuracy distribution");
 
-    modalUI->graphButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->graphIcon, UnityEngine::Vector2(10.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->graphButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->graphIcon, UnityEngine::Vector2(10.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(3);
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->graphButton, "Accuracy timeline graph");
 
     if (ReplayInstalled()) {
-        modalUI->replayButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, Sprites::get_ReplayIcon(), UnityEngine::Vector2(-24.5, -20), UnityEngine::Vector2(5, 5), [modalUI](){
+        modalUI->replayButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, Sprites::get_ReplayIcon(), UnityEngine::Vector2(-24.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
             modalUI->playReplay();
         });
         ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->replayButton, "Watch the replay");
@@ -99,20 +123,36 @@ void BeatLeader::initScoreDetailsPopup(BeatLeader::ScoreDetailsPopup** modalUIPo
     *modalUIPointer = modalUI;
 }
 
+void BeatLeader::ScoreDetailsPopup::updatePlayerDetails(Player player) {
+    if (!PlayerController::IsIncognito(player)) {
+        name->SetText(FormatUtils::FormatNameWithClans(player, 20));
+        auto params = GetAvatarParams(player, false);
+        playerAvatar->SetPlayer(player.avatar, params.baseMaterial, params.hueShift, params.saturation);
+    } else {
+        name->SetText("[REDACTED]");
+        playerAvatar->SetHiddenPlayer();
+    }
+}
+
 void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
     scoreId = score.id;
     replayLink = score.replay;
 
-    playerAvatar->SetPlayer(score.player.avatar, score.player.role);
-
-    name->SetText(FormatUtils::FormatNameWithClans(score.player, 20));
+    updatePlayerDetails(score.player);
+    
     name->set_alignment(TMPro::TextAlignmentOptions::Center);
     rank->SetText(FormatUtils::FormatRank(score.player.rank, true));
     pp->SetText(FormatUtils::FormatPP(score.player.pp));
 
-    sponsorMessage->SetText(score.player.sponsorMessage);
+    if (score.player.profileSettings != nullopt) {
+        sponsorMessage->SetText(score.player.profileSettings->message);
+    } else {
+        sponsorMessage->SetText("");
+    }
+    
     sponsorMessage->set_alignment(TMPro::TextAlignmentOptions::Center);
 
+    playerButtons.setScore(score);
     general.setScore(score);
 
     scoreStatsFetched = false;

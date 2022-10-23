@@ -20,6 +20,8 @@ namespace WebUtils {
 
     long Get(string url, long timeout, string& val);
 
+    std::thread RequestAsync(string url, string method, long timeout, function<void(long, string)> const &finished, function<void(
+            float)> const &progressUpdate = nullptr);
     std::thread GetAsync(string url, function<void(long, string)> const &finished, function<void(
             float)> const &progressUpdate = nullptr);
 

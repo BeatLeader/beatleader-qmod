@@ -12,6 +12,7 @@
 #include "include/UI/ScoreDetails/ScoreStatsOverview.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsGrid.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsGraph.hpp"
+#include "include/UI/ScoreDetails/PlayerButtons.hpp"
 
 namespace BeatLeader {
     class ScoreDetailsPopup {
@@ -25,6 +26,7 @@ namespace BeatLeader {
             TMPro::TextMeshProUGUI* pp;
             TMPro::TextMeshProUGUI* sponsorMessage;
 
+            PlayerButtons playerButtons;
             GeneralScoreDetails general;
             ScoreStatsOverview overview;
             ScoreStatsGrid grid;
@@ -43,11 +45,12 @@ namespace BeatLeader {
             bool scoreStatsFetched;
             
             void setScore(const Score& score);
+            void updatePlayerDetails(Player player);
             void selectTab(int index);
 
             void playReplay();
 
             void setButtonsMaterial() const;
     };
-    void initScoreDetailsPopup(ScoreDetailsPopup** modalUI, UnityEngine::Transform* parent);
+    void initScoreDetailsPopup(ScoreDetailsPopup** modalUI, UnityEngine::Transform* parent, function<void()> const &incognitoCallback);
 }

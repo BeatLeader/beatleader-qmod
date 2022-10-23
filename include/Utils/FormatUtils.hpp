@@ -13,6 +13,7 @@
 #include "include/Models/Player.hpp"
 #include "include/Models/Clan.hpp"
 #include "include/Models/Score.hpp"
+#include "include/API/PlayerController.hpp"
 
 using namespace std;
 using namespace UnityEngine;
@@ -121,7 +122,14 @@ namespace FormatUtils {
 
         inline string FormatPlayerScore(Score const& score) {
             string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
-            string name = getModConfig().ClansActive.GetValue() ? FormatNameWithClans(score.player, 24) : truncate(score.player.name, 24);
+
+            string name = "";
+            if (!PlayerController::IsIncognito(score.player)) {
+                name = getModConfig().ClansActive.GetValue() ? FormatNameWithClans(score.player, 24) : truncate(score.player.name, 24);
+            } else {
+                name = "[REDACTED]";
+            }
+
             string time = getModConfig().TimesetActive.GetValue() ? " <size=60%>" + GetRelativeTimeString(score.timeset) + "</size>" : "";
             return name + "<pos=40%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel + time; 
         }

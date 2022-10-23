@@ -4,7 +4,6 @@
 #include "UnityEngine/Component.hpp"
 #include "UnityEngine/UI/LayoutElement.hpp"
 #include "UnityEngine/GameObject.hpp"
-
 #include "HMUI/CurvedCanvasSettings.hpp"
 #include "HMUI/Screen.hpp"
 #include "HMUI/ViewController.hpp"
@@ -43,4 +42,13 @@ inline UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootVie
         screen->get_gameObject()->GetComponent<UnityEngine::RectTransform*>()->set_sizeDelta(screenSize);
     }
     return gameObject;
+}
+
+namespace UIUtils {
+    extern SafePtrUnity<HMUI::ImageView> roundRectSprite;
+
+    HMUI::ImageView* getRoundRectSprite();
+    HMUI::ImageView* GetCopyOf(HMUI::ImageView* comp, HMUI::ImageView* other);
+    void OpenSettings();
+    HMUI::ImageView* CreateRoundRectImage(UnityEngine::Transform* parent, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta);
 }

@@ -468,7 +468,7 @@ namespace ReplayRecorder {
                 WallEvent& wallEvent = _wallEventCache.at(_wallCache[reinterpret_cast<ObstacleController*>(obstacleEnumerator.current)]);
                 wallEvent.time = audioTimeSyncController->songTime;
                 replay->walls.emplace_back(wallEvent);
-                _currentWallEvent = wallEvent;
+                _currentWallEvent.emplace(wallEvent);
                 phoi = self->playerHeadAndObstacleInteraction;
             }
         }
@@ -523,7 +523,8 @@ namespace ReplayRecorder {
         if (_currentWallEvent != nullopt) {
             if (phoi->intersectingObstacles->get_Count() == 0)
             {
-                _currentWallEvent->energy = audioTimeSyncController->songTime;
+                WallEvent& wallEvent = replay->walls[replay->walls.size() - 1];
+                wallEvent.energy = audioTimeSyncController->songTime;
                 _currentWallEvent = nullopt;
             }
         }
