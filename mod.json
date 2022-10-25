@@ -31,7 +31,7 @@
     {
       "version": "^0.17.3",
       "id": "questui",
-      "downloadIfMissing": "https://github.com/darknight1050/QuestUI/releases/download/v0.17.4/QuestUI.qmod"
+      "downloadIfMissing": "https://github.com/darknight1050/QuestUI/releases/download/v0.17.5/QuestUI.qmod"
     }
   ],
   "modFiles": [

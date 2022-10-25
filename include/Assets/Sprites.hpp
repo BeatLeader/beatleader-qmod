@@ -19,7 +19,6 @@ class Sprites {
     static const string CellBGB64;
     static const string ModifiersIconB64;
     static const string PixelB64;
-    static const string ReplayB64;
     static const string ClipboardB64;
     static const string ArrowsB64;
 
@@ -32,7 +31,6 @@ public:
     static UnityEngine::Sprite* get_CellBG();
     static UnityEngine::Sprite* get_ModifiersIcon();
     static UnityEngine::Sprite* get_TransparentPixel();
-    static UnityEngine::Sprite* get_ReplayIcon();
     static UnityEngine::Sprite* get_ClipboardIcon();
     static UnityEngine::Sprite* get_ArrowIcon();
 

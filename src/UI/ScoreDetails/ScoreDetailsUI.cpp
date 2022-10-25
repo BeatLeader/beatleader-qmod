@@ -107,7 +107,7 @@ void BeatLeader::initScoreDetailsPopup(
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->graphButton, "Accuracy timeline graph");
 
     if (ReplayInstalled()) {
-        modalUI->replayButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, Sprites::get_ReplayIcon(), UnityEngine::Vector2(-24.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+        modalUI->replayButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->replayIcon, UnityEngine::Vector2(-24.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
             modalUI->playReplay();
         });
         ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->replayButton, "Watch the replay");
@@ -230,6 +230,11 @@ void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
 }
 
 void BeatLeader::ScoreDetailsPopup::setButtonsMaterial() const {
+    if (replayButton) {
+        replayButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
+        replayButton->set_defaultColor(FadedColor);
+        replayButton->set_highlightColor(FadedHoverColor);
+    }
     generalButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
     overviewButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
     gridButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);

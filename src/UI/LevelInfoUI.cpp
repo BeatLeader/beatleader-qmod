@@ -146,25 +146,37 @@ namespace LevelInfoUI {
         } else {
             string url = WebUtils::API_URL + "map/modinterface/" + key.first;
 
-            WebUtils::GetJSONAsync(url, [key](long status, bool error, rapidjson::Document const& result){
+            WebUtils::GetAsync(url, [key](long status, string stringResult){
                 // If the map was already switched again, the response is irrelevant
                 if(lastKey != key) return;
 
-                Difficulty selectedDifficulty;
-                Song song;
-                if (status == 200 && !error && !(song = Song(result)).difficulties.empty())
-                {
-                    // If the request was successful, we cache the value and display it
-                    _mapInfos.insert({ key.first, song});
-                    selectedDifficulty = _mapInfos[key.first].difficulties[key.second];
-                }
-                else
-                {
-                    // If it wasnt we just display our default values
-                    selectedDifficulty = defaultDiff;
-                }
+                QuestUI::MainThreadScheduler::Schedule([status, key, stringResult] () {
+                    if (status != 200) {
+                        setLabels(defaultDiff);
+                        return;
+                    }
 
-                QuestUI::MainThreadScheduler::Schedule([selectedDifficulty] () {
+                    rapidjson::Document result;
+                    result.Parse(stringResult.c_str());
+                    if (result.HasParseError()) {
+                        setLabels(defaultDiff);
+                        return;
+                    }
+                    
+                    Difficulty selectedDifficulty;
+                    Song song = Song(result);
+                    if (!song.difficulties.empty())
+                    {
+                        // If the request was successful, we cache the value and display it
+                        _mapInfos.insert({ key.first, song});
+                        selectedDifficulty = _mapInfos[key.first].difficulties[key.second];
+                    }
+                    else
+                    {
+                        // If it wasnt we just display our default values
+                        selectedDifficulty = defaultDiff;
+                    }
+                
                     setLabels(selectedDifficulty);
                 });
             });

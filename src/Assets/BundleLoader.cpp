@@ -61,6 +61,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     websiteLinkIcon = assetBundle->LoadAsset<Sprite*>("BL_Website");
     discordLinkIcon = assetBundle->LoadAsset<Sprite*>("BL_Discord");
     patreonLinkIcon = assetBundle->LoadAsset<Sprite*>("BL_Patreon");
+    replayIcon = assetBundle->LoadAsset<Sprite*>("BL_QuestReplayIcon");
 
     twitterIcon = assetBundle->LoadAsset<Sprite*>("BL_TwitterIcon");
     twitchIcon = assetBundle->LoadAsset<Sprite*>("BL_TwitchIcon");

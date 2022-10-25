@@ -28,7 +28,7 @@
 #include <sstream>
 
 const int EMOJI_SIZE = 72;
-const int SHEET_TILES = 4;
+const int SHEET_TILES = 10;
 const int SHEET_SIZE = SHEET_TILES * EMOJI_SIZE;
 
 static bool hooksInstalled = false;
