@@ -31,7 +31,6 @@ namespace ResultsView {
     SafePtrUnity<BeatLeader::VotingButton> resultsVotingButton;
     SafePtrUnity<UnityEngine::UI::Button> replayButton;
     BeatLeader::RankVotingPopup* votingUI;
-    bool PlayReplayOnNextFlow = false;
 
     MAKE_HOOK_MATCH(ResultsViewDidActivate, &ResultsViewController::DidActivate, void, ResultsViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
     {
@@ -74,27 +73,15 @@ namespace ResultsView {
 
         if(replayButton) {
             ((RectTransform*)replayButton->get_transform())->set_anchoredPosition(self->levelCompletionResults->levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared ? UnityEngine::Vector2(-46, -30) : UnityEngine::Vector2(-46, -19));
-            replayButton->get_gameObject()->SetActive(!IsInReplay());
+            //replayButton->get_gameObject()->SetActive(!IsInReplay());
         }
 
         // Load initial status
         LeaderboardUI::updateVotingButton();
     }
 
-    MAKE_HOOK_MATCH(DidActivateViewControllerHook, &HMUI::ViewController::__Activate, void, HMUI::ViewController *self, bool addedToHierarchy, bool screenSystemEnabling)
-    {
-        // Base Call
-        DidActivateViewControllerHook(self, addedToHierarchy, screenSystemEnabling);
-
-        // if(PlayReplayOnNextFlow) {
-        //     PlayReplayOnNextFlow = false;
-        //     PlayReplayFromFile(ReplayManager::lastReplayFilename);
-        // }
-    }
-
     void setup() {
         LoggerContextObject logger = getLogger().WithContext("load");
         INSTALL_HOOK(logger, ResultsViewDidActivate);
-        INSTALL_HOOK(logger, DidActivateViewControllerHook);
     }
 }
