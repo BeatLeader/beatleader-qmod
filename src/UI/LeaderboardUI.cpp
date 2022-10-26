@@ -93,11 +93,13 @@
 
 #include <regex>
 #include <map>
+#include <tuple>
 
 using namespace GlobalNamespace;
 using namespace HMUI;
 using namespace QuestUI;
 using namespace BeatLeader;
+using namespace std;
 using UnityEngine::Resources;
 
 namespace LeaderboardUI {
@@ -234,11 +236,16 @@ namespace LeaderboardUI {
         }
     }
 
-    void refreshFromTheServer() {
-        IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level());
+    tuple<string, string, string> getLevelDetails(IPreviewBeatmapLevel* levelData)
+    {
         string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(plvc->difficultyBeatmap->get_difficulty().value);
         string mode = (string)plvc->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
+        return make_tuple(hash, difficulty, mode);
+    }
+
+    void refreshFromTheServer() {
+        auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
         string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode;
 
         if (modifiers) {
@@ -688,7 +695,8 @@ namespace LeaderboardUI {
         lastVotingStatusUrl = "";
 
         if (status == ReplayUploadStatus::finished) {
-            updateVotingButton(lastVotingStatusUrl);
+            auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
+            updateVotingButton(WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode);
         }
         
         if (visible) {
