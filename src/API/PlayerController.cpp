@@ -119,8 +119,7 @@ void PlayerController::SetIsIncognito(Player anotherPlayer, bool value) {
     }
 
     auto incognitoArray = incognitoList.GetArray();
-    StringBuffer buffer;
-    Writer<StringBuffer> writer(buffer);
+    
     rapidjson::Document::AllocatorType& allocator = incognitoList.GetAllocator();
     if (value) {
         Value rj_key;
@@ -135,9 +134,13 @@ void PlayerController::SetIsIncognito(Player anotherPlayer, bool value) {
         }
     }
 
-    incognitoList.Accept(writer);
-
-    getModConfig().IncognitoList.SetValue(buffer.GetString());
+    StringBuffer buffer;
+    buffer.Clear();
+    Writer<StringBuffer> writer(buffer);
+    if (incognitoList.Accept(writer)) {
+        string incognitoListString = string(buffer.GetString());
+        getModConfig().IncognitoList.SetValue(incognitoListString);
+    }
 }
 
 bool PlayerController::IsPatron(Player anotherPlayer) {

@@ -268,89 +268,92 @@ namespace LeaderboardUI {
 
         lastUrl = url;
 
-        WebUtils::GetJSONAsync(url, [url](long status, bool error, rapidjson::Document const& result){
+        WebUtils::GetAsync(url, [url](long status, string stringResult){
             if (url != lastUrl) return;
 
-            if (status != 200 || error || !result.HasMember("data")) {
+            if (status != 200) {
                 return;
-            } 
+            }
 
-            auto scores = result["data"].GetArray();
-            plvc->scores->Clear();
-            if ((int)scores.Size() == 0) {
-                QuestUI::MainThreadScheduler::Schedule([status] {
+            QuestUI::MainThreadScheduler::Schedule([status, stringResult] {
+
+                rapidjson::Document result;
+                result.Parse(stringResult.c_str());
+                if (result.HasParseError() || !result.HasMember("data")) return;
+
+                auto scores = result["data"].GetArray();
+
+                plvc->scores->Clear();
+                if ((int)scores.Size() == 0) {
                     plvc->loadingControl->Hide();
                     plvc->hasScoresData = false;
                     plvc->loadingControl->ShowText("No scores were found!", true);
                     
                     plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
-                });
-                return;
-            }
+                    return;
+                }
 
-            auto const& metadata = result["metadata"].GetObject();
-            int perPage = metadata["itemsPerPage"].GetInt();
-            int pageNum = metadata["page"].GetInt();
-            int total = metadata["total"].GetInt();
-            int topRank = 0;
+                auto metadata = result["metadata"].GetObject();
+                int perPage = metadata["itemsPerPage"].GetInt();
+                int pageNum = metadata["page"].GetInt();
+                int total = metadata["total"].GetInt();
+                int topRank = 0;
 
-            for (int index = 0; index < 10; ++index)
-            {
-                if (index < (int)scores.Size())
+                for (int index = 0; index < 10; ++index)
                 {
-                    auto const& score = scores[index];
-                    
-                    Score currentScore = Score(score);
-                    scoreVector[index] = currentScore;
+                    if (index < (int)scores.Size())
+                    {
+                        auto const& score = scores[index];
+                        
+                        Score currentScore = Score(score);
+                        scoreVector[index] = currentScore;
 
-                    if (index == 0) {
-                        topRank = currentScore.rank;
+                        if (index == 0) {
+                            topRank = currentScore.rank;
+                        }
+                        
+                        if (currentScore.playerId.compare(PlayerController::currentPlayer->id) == 0) {
+                            selectedScore = index;
+                        }
+
+                        LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
+                            currentScore.modifiedScore, 
+                            FormatUtils::FormatPlayerScore(currentScore), 
+                            currentScore.rank, 
+                            false);
+                        plvc->scores->Add(scoreData);
                     }
-                    
-                    if (currentScore.playerId.compare(PlayerController::currentPlayer->id) == 0) {
-                        selectedScore = index;
-                    }
+                }
+                plvc->leaderboardTableView->rowHeight = 6;
+                if (selectedScore > 9 && !result["selection"].IsNull()) {
+                    Score currentScore = Score(result["selection"]);
 
                     LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
-                        currentScore.modifiedScore, 
-                        FormatUtils::FormatPlayerScore(currentScore), 
-                        currentScore.rank, 
-                        false);
-                    plvc->scores->Add(scoreData);
-                }
-            }
-            plvc->leaderboardTableView->rowHeight = 6;
-
-            if (selectedScore > 9 && !result["selection"].IsNull()) {
-                Score currentScore = Score(result["selection"]);
-
-                LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
-                        currentScore.modifiedScore, 
-                        FormatUtils::FormatPlayerScore(currentScore), 
-                        currentScore.rank, 
-                        false);
-                
-                if (currentScore.rank > topRank) {
-                    plvc->scores->Add(scoreData);
-                    scoreVector[10] = currentScore;
-                    selectedScore = 10;
-                } else {
-                    for (size_t i = 10; i > 0; i--)
-                    {
-                        scoreVector[i] = scoreVector[i - 1];
+                            currentScore.modifiedScore, 
+                            FormatUtils::FormatPlayerScore(currentScore), 
+                            currentScore.rank, 
+                            false);
+                    
+                    if (currentScore.rank > topRank) {
+                        plvc->scores->Add(scoreData);
+                        scoreVector[10] = currentScore;
+                        selectedScore = 10;
+                    } else {
+                        for (size_t i = 10; i > 0; i--)
+                        {
+                            scoreVector[i] = scoreVector[i - 1];
+                        }
+                        plvc->scores->Insert(0, scoreData);
+                        scoreVector[0] = currentScore;
+                        selectedScore = 0;
                     }
-                    plvc->scores->Insert(0, scoreData);
-                    scoreVector[0] = currentScore;
-                    selectedScore = 0;
+                    if (plvc->scores->get_Count() > 10) {
+                        plvc->leaderboardTableView->rowHeight = 5.5;
+                    }
                 }
-                if (plvc->scores->get_Count() > 10) {
-                    plvc->leaderboardTableView->rowHeight = 5.5;
-                }
-            }
-                
-            plvc->leaderboardTableView->scores = plvc->scores;
-            plvc->leaderboardTableView->specialScorePos = 12;
-            QuestUI::MainThreadScheduler::Schedule([pageNum, perPage, total] {
+                    
+                plvc->leaderboardTableView->scores = plvc->scores;
+                plvc->leaderboardTableView->specialScorePos = 12;
                 upPageButton->get_gameObject()->SetActive(pageNum != 1);
                 downPageButton->get_gameObject()->SetActive(pageNum * perPage < total);
 

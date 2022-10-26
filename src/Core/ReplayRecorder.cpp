@@ -133,6 +133,8 @@ namespace ReplayRecorder {
         mapEnhancer.practiceSettings = self->practiceSettings;
         mapEnhancer.environmentInfo = self->environmentInfo;
         mapEnhancer.colorScheme = self->colorScheme;
+
+        automaticPlayerHeight = self->gameplayCoreSceneSetupData->playerSpecificSettings->automaticPlayerHeight;
     }
 
     void collectMultiplayerMapData(MultiplayerLevelScenesTransitionSetupDataSO* self) {
@@ -147,6 +149,8 @@ namespace ReplayRecorder {
         mapEnhancer.practiceSettings = NULL;
         mapEnhancer.environmentInfo = self->multiplayerEnvironmentInfo;
         mapEnhancer.colorScheme = self->colorScheme;
+
+        automaticPlayerHeight = gameplayCoreSceneSetupData->playerSpecificSettings->automaticPlayerHeight;
     }
 
     void OnPlayerHeightChange(float height)
@@ -167,8 +171,8 @@ namespace ReplayRecorder {
        
     }
 
-    MAKE_HOOK_MATCH(MultiplayerLevelPlay, &MultiplayerController::StartGameplay, void, MultiplayerController* self, float syncTime) {
-        MultiplayerLevelPlay(self, syncTime);
+    MAKE_HOOK_MATCH(SinglePlayerInstallBindings, &GameplayCoreInstaller::InstallBindings, void, GameplayCoreInstaller* self) {
+        SinglePlayerInstallBindings(self);
 
         if (PlayerController::currentPlayer == std::nullopt || !UploadEnabled()) {
             replay = nullopt;
@@ -176,20 +180,6 @@ namespace ReplayRecorder {
         }
 
         startReplay();
-        
-        automaticPlayerHeight = self->playersSpecificSettingsAtGameStartModel->localPlayerSpecificSettings->automaticPlayerHeight;;
-    }
-
-    MAKE_HOOK_MATCH(LevelPlay, &SinglePlayerLevelSelectionFlowCoordinator::StartLevel, void, SinglePlayerLevelSelectionFlowCoordinator* self, System::Action* beforeSceneSwitchCallback, bool practice) {
-        LevelPlay(self, beforeSceneSwitchCallback, practice);
-
-        if (PlayerController::currentPlayer == std::nullopt || !UploadEnabled()) {
-            replay = nullopt;
-            return;
-        }
-
-        startReplay();
-        automaticPlayerHeight = self->get_playerSettings()->automaticPlayerHeight;
     }
 
     MAKE_HOOK_MATCH(PlayerHeightDetectorStart, &PlayerHeightDetector::Start, void, PlayerHeightDetector* self) {
@@ -536,7 +526,7 @@ namespace ReplayRecorder {
         getLogger().info("Installing ReplayRecorder hooks...");
 
         INSTALL_HOOK(logger, ProcessResultsSolo);
-        INSTALL_HOOK(logger, LevelPlay);
+        INSTALL_HOOK(logger, SinglePlayerInstallBindings);
         INSTALL_HOOK(logger, SpawnNote);
         INSTALL_HOOK(logger, SpawnObstacle);
         INSTALL_HOOK(logger, ComboMultiplierChanged);
@@ -549,7 +539,6 @@ namespace ReplayRecorder {
         INSTALL_HOOK(logger, PlayerHeightDetectorStart);
         INSTALL_HOOK(logger, ScoreControllerStart);
         INSTALL_HOOK(logger, ScoreControllerLateUpdate);
-        INSTALL_HOOK(logger, MultiplayerLevelPlay);
         INSTALL_HOOK(logger, ProcessResultsMultiplayer);
 
         getLogger().info("Installed all ReplayRecorder hooks!");
