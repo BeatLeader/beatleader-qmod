@@ -4,16 +4,23 @@
 
 #include "GlobalNamespace/ResultsViewController.hpp"
 #include "GlobalNamespace/LevelCompletionResults.hpp"
+#include "GlobalNamespace/SinglePlayerLevelSelectionFlowCoordinator.hpp"
+#include "HMUI/ViewController.hpp"
+#include "HMUI/ViewController_AnimationDirection.hpp"
+#include "HMUI/FlowCoordinator.hpp"
 #include "UnityEngine/GameObject.hpp"
 #include "UI/LeaderboardUI.hpp"
 #include "questui/shared/BeatSaberUI.hpp"
 #include "UnityEngine/RectTransform.hpp"
 #include "UnityEngine/UI/Button.hpp"
+#include "System/Action.hpp"
 #include "Assets/BundleLoader.hpp"
 #include "Core/ReplayPlayer.hpp"
 #include "Utils/ReplayManager.hpp"
 #include "UI/LeaderboardUI.hpp"
 #include "beatsaber-hook/shared/utils/il2cpp-functions.hpp"
+#include "custom-types/shared/delegate.hpp"
+#include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
 
 #include <filesystem>
 
@@ -24,6 +31,7 @@ namespace ResultsView {
     SafePtrUnity<BeatLeader::VotingButton> resultsVotingButton;
     SafePtrUnity<UnityEngine::UI::Button> replayButton;
     BeatLeader::RankVotingPopup* votingUI;
+    bool PlayReplayOnNextFlow = false;
 
     MAKE_HOOK_MATCH(ResultsViewDidActivate, &ResultsViewController::DidActivate, void, ResultsViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
     {
@@ -45,10 +53,17 @@ namespace ResultsView {
 
             // If we have replay, also show the replay button
             if(ReplayInstalled()) {
-                replayButton = QuestUI::BeatSaberUI::CreateUIButton(self->get_transform(), "", "PracticeButton", {-46, -19}, {12, 10}, []() {
+                auto continueButton = self->continueButton;
+                replayButton = QuestUI::BeatSaberUI::CreateUIButton(self->get_transform(), "", "PracticeButton", {-46, -19}, {12, 10}, [self]() {
                     // Dont crash if file doesnt exist yet
                     if(std::filesystem::exists(ReplayManager::lastReplayFilename)) {
-                        PlayReplayFromFile(ReplayManager::lastReplayFilename);
+                        QuestUI::BeatSaberUI::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf()->DismissViewController(self, HMUI::ViewController::AnimationDirection::Vertical, custom_types::MakeDelegate<System::Action*>(classof(System::Action*), (std::function<void()>)[]() {
+                            auto currentFlow = QuestUI::BeatSaberUI::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
+                            if(il2cpp_utils::try_cast<GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator>(currentFlow)){
+                                ((GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator*)currentFlow)->SinglePlayerLevelSelectionFlowCoordinatorDidActivate(false, false);
+                            }
+                            PlayReplayFromFile(ReplayManager::lastReplayFilename);
+                        }), true);
                     }
                 });
                 // Set icon of button
@@ -57,14 +72,29 @@ namespace ResultsView {
             }
         }
 
-        ((RectTransform*)replayButton->get_transform())->set_anchoredPosition(self->levelCompletionResults->levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared ? UnityEngine::Vector2(-46, -30) : UnityEngine::Vector2(-46, -19));
+        if(replayButton) {
+            ((RectTransform*)replayButton->get_transform())->set_anchoredPosition(self->levelCompletionResults->levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared ? UnityEngine::Vector2(-46, -30) : UnityEngine::Vector2(-46, -19));
+            replayButton->get_gameObject()->SetActive(!IsInReplay());
+        }
 
         // Load initial status
         LeaderboardUI::updateVotingButton();
     }
 
+    MAKE_HOOK_MATCH(DidActivateViewControllerHook, &HMUI::ViewController::__Activate, void, HMUI::ViewController *self, bool addedToHierarchy, bool screenSystemEnabling)
+    {
+        // Base Call
+        DidActivateViewControllerHook(self, addedToHierarchy, screenSystemEnabling);
+
+        // if(PlayReplayOnNextFlow) {
+        //     PlayReplayOnNextFlow = false;
+        //     PlayReplayFromFile(ReplayManager::lastReplayFilename);
+        // }
+    }
+
     void setup() {
         LoggerContextObject logger = getLogger().WithContext("load");
         INSTALL_HOOK(logger, ResultsViewDidActivate);
+        INSTALL_HOOK(logger, DidActivateViewControllerHook);
     }
 }
