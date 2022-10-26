@@ -215,9 +215,11 @@ namespace LeaderboardUI {
         }
     }
 
-    void updateVotingButton(string votingStatusUrl) {
+    void updateVotingButton() {
         setVotingButtonsState(0);
         hideVotingUIs();
+        auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
+        string votingStatusUrl = WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode;
 
         lastVotingStatusUrl = votingStatusUrl;
         WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
@@ -373,7 +375,7 @@ namespace LeaderboardUI {
         string votingStatusUrl = WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode;
         votingUrl = WebUtils::API_URL + "vote/" + hash + "/" + difficulty + "/" + mode;
         if (lastVotingStatusUrl != votingStatusUrl) {
-            updateVotingButton(votingStatusUrl);
+            updateVotingButton();
         }
 
         plvc->loadingControl->ShowText("Loading", true);
@@ -695,8 +697,7 @@ namespace LeaderboardUI {
         lastVotingStatusUrl = "";
 
         if (status == ReplayUploadStatus::finished) {
-            auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
-            updateVotingButton(WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode);
+            updateVotingButton();
         }
         
         if (visible) {
