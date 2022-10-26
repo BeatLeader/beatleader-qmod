@@ -8,7 +8,11 @@
 #include "questui/shared/BeatSaberUI.hpp"
 #include "UnityEngine/RectTransform.hpp"
 #include "Assets/BundleLoader.hpp"
+#include "Core/ReplayPlayer.hpp"
+#include "Utils/ReplayManager.hpp"
 #include "beatsaber-hook/shared/utils/il2cpp-functions.hpp"
+
+#include <filesystem>
 
 using namespace GlobalNamespace;
 
@@ -22,10 +26,11 @@ namespace ResultsView {
         ResultsViewDidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
         if(firstActivation){
-            getLogger().info("InitedModal Voting Button");
+            // Init voting modal
             BeatLeader::initVotingPopup(&votingUI, self->get_transform(), LeaderboardUI::voteCallback);
-            getLogger().info("Creating Voting Button");
-            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(self->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(-65, -2), UnityEngine::Vector2(8, 8), []() {
+
+            // Create voting button
+            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(self->get_transform(), BundleLoader::bundle->modifiersIcon, {-65, -2}, {8, 8}, []() {
                 if (resultsVotingButton->state != 2) return;
                 
                 votingUI->reset();
@@ -33,6 +38,17 @@ namespace ResultsView {
             });
             resultsVotingButton = self->get_gameObject()->AddComponent<BeatLeader::VotingButton*>();
             resultsVotingButton->Init(votingButtonImage);
+
+            // If we have replay, also show the replay button
+            if(ReplayInstalled()) {
+                auto replayButton = QuestUI::BeatSaberUI::CreateUIButton(self->get_transform(), "", "PracticeButton", {-46, -19}, {12, 10}, []() {
+                    // Dont crash if file doesnt exist yet
+                    if(std::filesystem::exists(ReplayManager::lastReplayFilename)) {
+                        PlayReplayFromFile(ReplayManager::lastReplayFilename);
+                    }
+                });
+                QuestUI::BeatSaberUI::SetButtonIcon(replayButton, BundleLoader::bundle->replayIcon);
+            }
 
             getLogger().info("Created Voting Button");
         }
