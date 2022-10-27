@@ -31,6 +31,7 @@ namespace ResultsView {
     SafePtrUnity<BeatLeader::VotingButton> resultsVotingButton;
     SafePtrUnity<UnityEngine::UI::Button> replayButton;
     BeatLeader::RankVotingPopup* votingUI;
+    bool lastResultsScreenWasReplay = false;
 
     MAKE_HOOK_MATCH(ResultsViewDidActivate, &ResultsViewController::DidActivate, void, ResultsViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
     {
@@ -52,17 +53,19 @@ namespace ResultsView {
 
             // If we have replay, also show the replay button
             if(ReplayInstalled()) {
-                auto continueButton = self->continueButton;
-                replayButton = QuestUI::BeatSaberUI::CreateUIButton(self->get_transform(), "", "PracticeButton", {-46, -19}, {12, 10}, [self]() {
+                replayButton = QuestUI::BeatSaberUI::CreateUIButton(self->get_transform(), "", "PracticeButton", {-46, -19}, {12, 10}, []() {
                     // Dont crash if file doesnt exist yet
                     if(std::filesystem::exists(ReplayManager::lastReplayFilename)) {
-                        QuestUI::BeatSaberUI::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf()->DismissViewController(self, HMUI::ViewController::AnimationDirection::Vertical, custom_types::MakeDelegate<System::Action*>(classof(System::Action*), (std::function<void()>)[]() {
-                            auto currentFlow = QuestUI::BeatSaberUI::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
-                            if(il2cpp_utils::try_cast<GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator>(currentFlow)){
-                                ((GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator*)currentFlow)->SinglePlayerLevelSelectionFlowCoordinatorDidActivate(false, false);
+                        auto flow = QuestUI::BeatSaberUI::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
+                        flow->DismissViewController(flow->get_topViewController(), HMUI::ViewController::AnimationDirection::Vertical, custom_types::MakeDelegate<System::Action *>(classof(System::Action *), (std::function<void()>)[flow]() {
+                            if (il2cpp_utils::try_cast<GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator>(flow)) {
+                                ((GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator *)flow)->SinglePlayerLevelSelectionFlowCoordinatorDidActivate(false, false);
                             }
-                            PlayReplayFromFile(ReplayManager::lastReplayFilename);
-                        }), true);
+                            // TODO Forced?
+                            if(!lastResultsScreenWasReplay){
+                                PlayReplayFromFile(ReplayManager::lastReplayFilename);
+                            }
+                        }),true);
                     }
                 });
                 // Set icon of button
@@ -73,8 +76,8 @@ namespace ResultsView {
 
         if(replayButton) {
             ((RectTransform*)replayButton->get_transform())->set_anchoredPosition(self->levelCompletionResults->levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared ? UnityEngine::Vector2(-46, -30) : UnityEngine::Vector2(-46, -19));
-            //replayButton->get_gameObject()->SetActive(!IsInReplay());
         }
+        lastResultsScreenWasReplay=IsInReplay();
 
         // Load initial status
         LeaderboardUI::updateVotingButton();
