@@ -47,25 +47,22 @@ struct ReplayInfo {
     float speed = 0;
 };
 
-using Vector3 = Sombrero::FastVector3;
-using Quaternion = Sombrero::FastQuaternion;
+struct ReplayTransform {
+    Sombrero::FastVector3 position;
+    Sombrero::FastQuaternion rotation;
 
-struct Transform {
-    Vector3 position;
-    Quaternion rotation;
-
-    constexpr Transform(Sombrero::FastVector3 const &position, Sombrero::FastQuaternion const &rotation) : position(position),
+    constexpr ReplayTransform(Sombrero::FastVector3 const &position, Sombrero::FastQuaternion const &rotation) : position(position),
                                                                                                  rotation(rotation) {}
 };
 
 struct Frame {
     float time;
     int fps;
-    Transform head;
-    Transform leftHand;
-    Transform rightHand;
+    ReplayTransform head;
+    ReplayTransform leftHand;
+    ReplayTransform rightHand;
 
-    constexpr Frame(float time, int fps, Transform const &head, Transform const &leftHand, Transform const &rightHand) : time(
+    constexpr Frame(float time, int fps, ReplayTransform const &head, ReplayTransform const &leftHand, ReplayTransform const &rightHand) : time(
             time), fps(fps), head(head), leftHand(leftHand), rightHand(rightHand) {}
 };
 
@@ -75,12 +72,12 @@ struct ReplayNoteCutInfo {
     bool saberTypeOK;
     bool wasCutTooSoon;
     float saberSpeed;
-    Vector3 saberDir;
+    Sombrero::FastVector3 saberDir;
     int saberType;
     float timeDeviation;
     float cutDirDeviation;
-    Vector3 cutPoint;
-    Vector3 cutNormal;
+    Sombrero::FastVector3 cutPoint;
+    Sombrero::FastVector3 cutNormal;
     float cutDistanceToCenter;
     float cutAngle;
     float beforeCutRating;
@@ -162,8 +159,8 @@ private:
     }
 
     static void Encode(ReplayInfo const &info, ofstream& stream);
-    static void Encode(Vector3 const &vector, ofstream& stream);
-    static void Encode(Quaternion const &quaternion, ofstream& stream);
+    static void Encode(Sombrero::FastVector3 const &vector, ofstream& stream);
+    static void Encode(Sombrero::FastQuaternion const &quaternion, ofstream& stream);
     static void Encode(Frame const &frame, ofstream& stream);
     static void Encode(NoteEvent const &note, ofstream& stream);
     static void Encode(WallEvent const &wall, ofstream& stream);

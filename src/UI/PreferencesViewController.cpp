@@ -38,6 +38,7 @@ TMPro::TextMeshProUGUI* errorDescriptionLabel;
 
 HMUI::SimpleTextDropdown* serverDropdown;
 UnityEngine::UI::Toggle* saveToggle;
+UnityEngine::UI::Toggle* showReplaySettingsToggle;
 
 BeatLeader::LogoAnimation* spinner = NULL;
 
@@ -179,6 +180,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         });
 
         saveToggle = AddConfigValueToggle(containerTransform, getModConfig().Save);
+        showReplaySettingsToggle = AddConfigValueToggle(containerTransform, getModConfig().ShowReplaySettings);
         errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "", false);
         label3 = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "To sign up, enter your login information.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile picture on the website.", false);
     }

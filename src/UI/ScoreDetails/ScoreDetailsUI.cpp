@@ -1,6 +1,7 @@
 #include "include/UI/ScoreDetails/ScoreDetailsUI.hpp"
 #include "include/Utils/FormatUtils.hpp"
 #include "include/Utils/WebUtils.hpp"
+#include "include/Utils/ReplayManager.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
 #include "include/Models/ScoreStats.hpp"
@@ -24,8 +25,6 @@
 #include <filesystem>
 
 using namespace QuestUI::BeatSaberUI;
-using namespace UnityEngine;
-using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
 
 static UnityEngine::Color SelectedColor = UnityEngine::Color(0.0f, 0.4f, 1.0f, 1.0f);
@@ -41,14 +40,14 @@ static void MakeModalTransparent(HMUI::ModalView *modal) {
         auto* child = modal->get_transform()->GetChild(i)->GetComponent<RectTransform*>();
 
         if (child->get_gameObject()->get_name() == "BG") {
-            child->GetComponent<Image*>()->set_sprite(Sprites::get_TransparentPixel());
+            child->GetComponent<UnityEngine::UI::Image*>()->set_sprite(Sprites::get_TransparentPixel());
         }
     }
 }
 
 void BeatLeader::initScoreDetailsPopup(
         BeatLeader::ScoreDetailsPopup** modalUIPointer, 
-        Transform* parent,
+        UnityEngine::Transform* parent,
         function<void()> const &incognitoCallback){
     auto modalUI = *modalUIPointer;
     if (modalUI != nullptr){
@@ -259,8 +258,9 @@ void BeatLeader::ScoreDetailsPopup::playReplay() {
         [file, self](long httpCode) {
             if (httpCode == 200) {
                 QuestUI::MainThreadScheduler::Schedule([file, self] {
-                    if (PlayReplayFromFile(file)) {
+                    if ((getModConfig().ShowReplaySettings.GetValue() && PlayReplayFromFile(file)) ||  (!getModConfig().ShowReplaySettings.GetValue() && PlayReplayFromFileWithoutSettings(file))) {
                         self->modal->Hide(true, nullptr);
+                        ReplayManager::lastReplayFilename = file;
                     } else {
                         self->loadingText->SetText("Failed to parse the replay");
                     }

@@ -1,6 +1,7 @@
 #include "UI/ResultsViewController.hpp"
 
 #include "main.hpp"
+#include "Utils/ModConfig.hpp"
 
 #include "GlobalNamespace/ResultsViewController.hpp"
 #include "GlobalNamespace/LevelCompletionResults.hpp"
@@ -32,11 +33,12 @@ namespace ResultsView {
     SafePtrUnity<BeatLeader::VotingButton> resultsVotingButton;
     SafePtrUnity<UnityEngine::UI::Button> replayButton;
     BeatLeader::RankVotingPopup* votingUI;
-    bool lastResultsScreenWasReplay = false;
+    bool lastGameWasReplay = false;
 
     MAKE_HOOK_MATCH(GetLastReplayStateHook, &MenuTransitionsHelper::HandleMainGameSceneDidFinish, void, MenuTransitionsHelper* self, StandardLevelScenesTransitionSetupDataSO* standardLevelScenesTransitionSetupData, LevelCompletionResults* levelCompletionResults){
+        // Save if the last Game was a Replay
         if(ReplayInstalled()) {
-            lastResultsScreenWasReplay = IsInReplay();
+            lastGameWasReplay = IsInReplay();
         }
         GetLastReplayStateHook(self, standardLevelScenesTransitionSetupData, levelCompletionResults);
     }
@@ -69,11 +71,15 @@ namespace ResultsView {
                             if (il2cpp_utils::try_cast<GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator>(flow)) {
                                 ((GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator *)flow)->SinglePlayerLevelSelectionFlowCoordinatorDidActivate(false, false);
                             }
-                            // TODO Forced?
-                            if(!lastResultsScreenWasReplay){
-                                PlayReplayFromFile(ReplayManager::lastReplayFilename);
+                            if(!lastGameWasReplay || !getModConfig().ShowReplaySettings.GetValue()){
+                                if (getModConfig().ShowReplaySettings.GetValue()) {
+                                    PlayReplayFromFile(ReplayManager::lastReplayFilename);
+                                }
+                                else {
+                                    PlayReplayFromFileWithoutSettings(ReplayManager::lastReplayFilename);
+                                }
                             }
-                        }),false);
+                        }), true);
                     }
                 });
                 // Set icon of button
@@ -82,6 +88,7 @@ namespace ResultsView {
             }
         }
 
+        // Ajust position based on result screen type (position is different between failure and success)
         if(replayButton) {
             ((RectTransform*)replayButton->get_transform())->set_anchoredPosition(self->levelCompletionResults->levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared ? UnityEngine::Vector2(-46, -30) : UnityEngine::Vector2(-46, -19));
         }

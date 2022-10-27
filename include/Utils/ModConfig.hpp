@@ -12,6 +12,7 @@ DECLARE_CONFIG(ModConfig,
     CONFIG_VALUE(ScoresActive, bool, "Show Scores", true);
     CONFIG_VALUE(TimesetActive, bool, "Show Timeset", true);
     CONFIG_VALUE(IncognitoList, std::string, "Hidden players", "{}");
+    CONFIG_VALUE(ShowReplaySettings, bool, "Show replay settings", true);
 
     CONFIG_INIT_FUNCTION(
         CONFIG_INIT_VALUE(ServerType);
@@ -22,6 +23,7 @@ DECLARE_CONFIG(ModConfig,
         CONFIG_INIT_VALUE(ScoresActive);
         CONFIG_INIT_VALUE(TimesetActive);
         CONFIG_INIT_VALUE(IncognitoList);
+        CONFIG_INIT_VALUE(ShowReplaySettings);
     )
 )
 
