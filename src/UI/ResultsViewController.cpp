@@ -5,6 +5,7 @@
 #include "GlobalNamespace/ResultsViewController.hpp"
 #include "GlobalNamespace/LevelCompletionResults.hpp"
 #include "GlobalNamespace/SinglePlayerLevelSelectionFlowCoordinator.hpp"
+#include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "HMUI/ViewController.hpp"
 #include "HMUI/ViewController_AnimationDirection.hpp"
 #include "HMUI/FlowCoordinator.hpp"
@@ -32,6 +33,13 @@ namespace ResultsView {
     SafePtrUnity<UnityEngine::UI::Button> replayButton;
     BeatLeader::RankVotingPopup* votingUI;
     bool lastResultsScreenWasReplay = false;
+
+    MAKE_HOOK_MATCH(GetLastReplayStateHook, &MenuTransitionsHelper::HandleMainGameSceneDidFinish, void, MenuTransitionsHelper* self, StandardLevelScenesTransitionSetupDataSO* standardLevelScenesTransitionSetupData, LevelCompletionResults* levelCompletionResults){
+        if(ReplayInstalled()) {
+            lastResultsScreenWasReplay = IsInReplay();
+        }
+        GetLastReplayStateHook(self, standardLevelScenesTransitionSetupData, levelCompletionResults);
+    }
 
     MAKE_HOOK_MATCH(ResultsViewDidActivate, &ResultsViewController::DidActivate, void, ResultsViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
     {
@@ -65,7 +73,7 @@ namespace ResultsView {
                             if(!lastResultsScreenWasReplay){
                                 PlayReplayFromFile(ReplayManager::lastReplayFilename);
                             }
-                        }),true);
+                        }),false);
                     }
                 });
                 // Set icon of button
@@ -77,7 +85,6 @@ namespace ResultsView {
         if(replayButton) {
             ((RectTransform*)replayButton->get_transform())->set_anchoredPosition(self->levelCompletionResults->levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared ? UnityEngine::Vector2(-46, -30) : UnityEngine::Vector2(-46, -19));
         }
-        lastResultsScreenWasReplay=IsInReplay();
 
         // Load initial status
         LeaderboardUI::updateVotingButton();
@@ -85,6 +92,7 @@ namespace ResultsView {
 
     void setup() {
         LoggerContextObject logger = getLogger().WithContext("load");
+        INSTALL_HOOK(logger, GetLastReplayStateHook);
         INSTALL_HOOK(logger, ResultsViewDidActivate);
     }
 }
