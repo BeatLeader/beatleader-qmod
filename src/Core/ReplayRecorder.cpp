@@ -503,9 +503,9 @@ namespace ReplayRecorder {
             auto time = audioTimeSyncController->songTime;
             auto fps = 1.0f / UnityEngine::Time::get_deltaTime();
             
-            auto head = Transform(trans->get_headPseudoLocalPos(), trans->get_headPseudoLocalRot());
-            auto leftHand = Transform(trans->get_leftHandPseudoLocalPos(), trans->get_leftHandPseudoLocalRot());
-            auto rightHand = Transform(trans->get_rightHandPseudoLocalPos(), trans->get_rightHandPseudoLocalRot());
+            auto head = ReplayTransform(trans->get_headPseudoLocalPos(), trans->get_headPseudoLocalRot());
+            auto leftHand = ReplayTransform(trans->get_leftHandPseudoLocalPos(), trans->get_leftHandPseudoLocalRot());
+            auto rightHand = ReplayTransform(trans->get_rightHandPseudoLocalPos(), trans->get_rightHandPseudoLocalRot());
             
             replay->frames.emplace_back(time, fps, head, leftHand, rightHand);
         }

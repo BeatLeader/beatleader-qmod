@@ -17,6 +17,7 @@
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/RoleColorScheme.hpp"
 #include "include/UI/Themes/ThemeUtils.hpp"
+#include "include/UI/ResultsViewController.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -92,11 +93,13 @@
 
 #include <regex>
 #include <map>
+#include <tuple>
 
 using namespace GlobalNamespace;
 using namespace HMUI;
 using namespace QuestUI;
 using namespace BeatLeader;
+using namespace std;
 using UnityEngine::Resources;
 
 namespace LeaderboardUI {
@@ -212,25 +215,39 @@ namespace LeaderboardUI {
         }
     }
 
-    void updateVotingButton(string votingStatusUrl) {
-        votingButton->SetState(0);
-        votingUI->modal->Hide(true, nullptr);
+    void updateVotingButton() {
+        setVotingButtonsState(0);
+        hideVotingUIs();
+        auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
+        string votingStatusUrl = WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode;
 
         lastVotingStatusUrl = votingStatusUrl;
         WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
             if (votingStatusUrl == lastVotingStatusUrl && status == 200) {
                 QuestUI::MainThreadScheduler::Schedule([response] {
-                    votingButton->SetState(stoi(response));
+                    setVotingButtonsState(stoi(response));
                 });
             }
         }, [](float progress){});
     }
 
-    void refreshFromTheServer() {
-        IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level());
+    void setVotingButtonsState(int state){
+        votingButton->SetState(state);
+        if(ResultsView::resultsVotingButton){
+            ResultsView::resultsVotingButton->SetState(state);
+        }
+    }
+
+    tuple<string, string, string> getLevelDetails(IPreviewBeatmapLevel* levelData)
+    {
         string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(plvc->difficultyBeatmap->get_difficulty().value);
         string mode = (string)plvc->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
+        return make_tuple(hash, difficulty, mode);
+    }
+
+    void refreshFromTheServer() {
+        auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
         string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode;
 
         if (modifiers) {
@@ -358,7 +375,7 @@ namespace LeaderboardUI {
         string votingStatusUrl = WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode;
         votingUrl = WebUtils::API_URL + "vote/" + hash + "/" + difficulty + "/" + mode;
         if (lastVotingStatusUrl != votingStatusUrl) {
-            updateVotingButton(votingStatusUrl);
+            updateVotingButton();
         }
 
         plvc->loadingControl->ShowText("Loading", true);
@@ -381,7 +398,7 @@ namespace LeaderboardUI {
 
     void voteCallback(bool voted, bool rankable, float stars, int type) {
         if (voted) {
-            votingButton->SetState(0);
+            setVotingButtonsState(0);
             string rankableString = "?rankability=" + (rankable ? (string)"1.0" : (string)"0.0");
             string starsString = stars > 0 ? "&stars=" + to_string_wprecision(stars, 2) : "";
             string typeString = type > 0 ? "&type=" + to_string(type) : "";
@@ -391,16 +408,22 @@ namespace LeaderboardUI {
 
                 QuestUI::MainThreadScheduler::Schedule([status, response, rankable, type] {
                     if (status == 200) {
-                        votingButton->SetState(stoi(response));
-                            LevelInfoUI::addVoteToCurrentLevel(rankable, type);
+                        setVotingButtonsState(stoi(response));
+                        LevelInfoUI::addVoteToCurrentLevel(rankable, type);
                     } else {
-                        votingButton->SetState(1);
+                        setVotingButtonsState(1);
                     } 
                 });
             });
         }
 
+        hideVotingUIs();
+    }
+
+    void hideVotingUIs()
+    {
         votingUI->modal->Hide(true, nullptr);
+        if(ResultsView::votingUI){ ResultsView::votingUI->modal->Hide(true, nullptr); }
     }
 
     static bool isLocal = false;
@@ -550,7 +573,7 @@ namespace LeaderboardUI {
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
         if (!levelData->get_levelID().starts_with("custom_level")) {
-            votingButton->SetState(-1);
+            setVotingButtonsState(-1);
             self->loadingControl->Hide();
             self->hasScoresData = false;
             self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
@@ -672,13 +695,17 @@ namespace LeaderboardUI {
 
     void updateStatus(ReplayUploadStatus status, string description, float progress, bool showRestart) {
         lastVotingStatusUrl = "";
+
+        if (status != ReplayUploadStatus::inProgress) {
+            updateVotingButton();
+        }
+        
         if (visible) {
             uploadStatus->SetText(description);
             switch (status)
             {
                 case ReplayUploadStatus::finished:
                     logoAnimation->SetAnimating(false);
-                    updateVotingButton(lastVotingStatusUrl);
                     plvc->HandleDidPressRefreshButton();
                     break;
                 case ReplayUploadStatus::error:
@@ -694,7 +721,6 @@ namespace LeaderboardUI {
                     break;
             }
         }
-       
     }
 
     void initSettingsModal(UnityEngine::Transform* parent){

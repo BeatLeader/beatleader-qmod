@@ -102,12 +102,12 @@ void Replay::Encode(ReplayInfo const &info, ofstream& stream) {
     Encode(info.failTime, stream);
     Encode(info.speed, stream);
 }
-void Replay::Encode(Vector3 const &vector, ofstream& stream) {
+void Replay::Encode(Sombrero::FastVector3 const &vector, ofstream& stream) {
     Encode(vector.x, stream);
     Encode(vector.y, stream);
     Encode(vector.z, stream);
 }
-void Replay::Encode(Quaternion const &quaternion, ofstream& stream) {
+void Replay::Encode(Sombrero::FastQuaternion const &quaternion, ofstream& stream) {
     Encode(quaternion.x, stream);
     Encode(quaternion.y, stream);
     Encode(quaternion.z, stream);
