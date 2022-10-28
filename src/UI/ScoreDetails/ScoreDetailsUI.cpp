@@ -66,7 +66,9 @@ void BeatLeader::initScoreDetailsPopup(
     UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(0, 18), UnityEngine::Vector2(58, 6));
     UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(0, -3), UnityEngine::Vector2(60, 34));
     UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(0, -24), UnityEngine::Vector2(30, 6));
-    UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(-24.5, -24), UnityEngine::Vector2(7, 7));
+    if (ReplayInstalled()) {
+        UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(-24.5, -24), UnityEngine::Vector2(7, 7));
+    }
 
     modalUI->rank = CreateText(modalTransform, "", UnityEngine::Vector2(6.0, 16.0));
     modalUI->name = CreateText(modalTransform, "", UnityEngine::Vector2(0.0, 18.0));
