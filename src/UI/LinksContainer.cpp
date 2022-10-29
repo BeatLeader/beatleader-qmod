@@ -85,6 +85,6 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->nominated, "Playlist of ranked maps");
 
-    modalUI->modal->set_name("BLLinksModal");
+    modalUI->modal->set_name("BeatLeaderLinksModal");
     *modalUIPointer = modalUI;
 }

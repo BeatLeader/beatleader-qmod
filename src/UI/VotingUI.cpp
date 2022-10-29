@@ -131,7 +131,7 @@ void BeatLeader::initVotingPopup(
     });
     setupButtonTitle(modalUI->rightButton, -1.5, 3);
 
-    modalUI->modal->set_name("BLVotingModal");
+    modalUI->modal->set_name("BeatLeaderVotingModal");
     *modalUIPointer = modalUI;
 }
 

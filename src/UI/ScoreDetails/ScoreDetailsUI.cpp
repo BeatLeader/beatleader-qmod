@@ -120,7 +120,7 @@ void BeatLeader::initScoreDetailsPopup(
     modalUI->loadingText->set_alignment(TMPro::TextAlignmentOptions::Center);
     modalUI->loadingText->get_gameObject()->SetActive(false);
 
-    modalUI->modal->set_name("BLScoreDetailsModal");
+    modalUI->modal->set_name("BeatLeaderScoreDetailsModal");
     *modalUIPointer = modalUI;
 }
 
@@ -277,4 +277,5 @@ void BeatLeader::ScoreDetailsPopup::playReplay() {
             self->loadingText->SetText("Downloading: " + to_string_wprecision(progress, 2) + "%");
         });
     });
+    WebUtils::GetAsync(WebUtils::API_URL + "/watched/" + to_string(scoreId), [](long code, string result) {});
 }

@@ -91,6 +91,25 @@ MAKE_HOOK_MATCH(MainMenuViewControllerDidActivate, &MainMenuViewController::DidA
      }
 }
 
+#include "HMUI/ModalView.hpp"
+#include "HMUI/Screen.hpp"
+#include "UnityEngine/Transform.hpp"
+#include "UnityEngine/Canvas.hpp"
+#include "UnityEngine/GameObject.hpp"
+
+MAKE_HOOK_MATCH(ModalView_Show, &HMUI::ModalView::Show, void, HMUI::ModalView* self, bool animated, bool moveToCenter, System::Action* finishedCallback)
+{
+	ModalView_Show(self, animated, moveToCenter, finishedCallback); 
+
+    if (((string)self->get_name()).find("BeatLeader") != string::npos) {
+        auto cb = self->blockerGO->get_gameObject()->GetComponent<UnityEngine::Canvas*>();
+        cb->set_overrideSorting(false);
+
+        auto cm = self->get_gameObject()->GetComponent<UnityEngine::Canvas*>();
+        cm->set_overrideSorting(false); 
+    }
+}
+
 // Called later on in the game loading - a good time to install function hooks
 extern "C" void load() {
     il2cpp_functions::Init();
@@ -118,6 +137,8 @@ extern "C" void load() {
     });
     QuestUI::MainThreadScheduler::Schedule([] {
         PlayerController::Refresh();
+        LoggerContextObject logger = getLogger().WithContext("load");
+        INSTALL_HOOK(logger, ModalView_Show);
     });
 
     PlaylistSynchronizer::SyncPlaylist();
