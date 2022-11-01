@@ -18,6 +18,7 @@
 #include "include/Utils/PlaylistSynchronizer.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/RecorderUtils.hpp"
+#include "include/Utils/FileManager.hpp"
 
 #include "config-utils/shared/config-utils.hpp"
 #include "custom-types/shared/register.hpp"
@@ -115,6 +116,7 @@ extern "C" void load() {
     il2cpp_functions::Init();
     custom_types::Register::AutoRegister();
     WebUtils::refresh_urls();
+    FileManager::EnsureReplaysFolderExists();
 
     LoggerContextObject logger = getLogger().WithContext("load");
 
