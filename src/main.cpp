@@ -145,11 +145,11 @@ extern "C" void load() {
 
     PlaylistSynchronizer::SyncPlaylist();
 
-    ReplayRecorder::StartRecording([](Replay const& replay, MapStatus status, bool isOst) {
+    ReplayRecorder::StartRecording([](Replay const& replay, MapStatus status, bool skipUpload) {
         if (status == MapStatus::cleared) {
-            ReplayManager::ProcessReplay(replay, isOst, replayPostCallback);
+            ReplayManager::ProcessReplay(replay, skipUpload, replayPostCallback);
         } else {
-            ReplayManager::ProcessReplay(replay, isOst, [](ReplayUploadStatus finished, string description, float progress, int code) {
+            ReplayManager::ProcessReplay(replay, skipUpload, [](ReplayUploadStatus finished, string description, float progress, int code) {
                 QuestUI::MainThreadScheduler::Schedule([description, progress, finished, code] {
                     LeaderboardUI::updateStatus(finished, description, progress, code > 450 || code < 200);
                 });

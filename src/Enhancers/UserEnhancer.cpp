@@ -16,8 +16,12 @@ void UserEnhancer::Enhance(Replay& replay)
     if (player != NULL) {
         replay.info.playerName = player->name;
         replay.info.playerID = player->id;
-        replay.info.platform = "oculus";
+    } else {
+        replay.info.playerName = "Anonimus";
+        replay.info.playerID = "-1";
     }
+
+    replay.info.platform = "oculus";
     
     switch (GlobalNamespace::OVRPlugin::GetSystemHeadsetType())
     {

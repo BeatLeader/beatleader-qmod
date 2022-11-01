@@ -174,7 +174,7 @@ namespace ReplayRecorder {
     MAKE_HOOK_MATCH(SinglePlayerInstallBindings, &GameplayCoreInstaller::InstallBindings, void, GameplayCoreInstaller* self) {
         SinglePlayerInstallBindings(self);
 
-        if (PlayerController::currentPlayer == std::nullopt || !UploadEnabled()) {
+        if (!UploadEnabled()) {
             replay = nullopt;
             return;
         }
@@ -192,7 +192,7 @@ namespace ReplayRecorder {
         self->add_playerHeightDidChangeEvent(_heightEvent);
     }
 
-    void processResults(LevelCompletionResults* levelCompletionResults) {
+    void processResults(LevelCompletionResults* levelCompletionResults, bool skipUpload) {
         replay->info.score = levelCompletionResults->multipliedScore;
 
         mapEnhancer.energy = levelCompletionResults->energy;
@@ -201,13 +201,13 @@ namespace ReplayRecorder {
         switch (levelCompletionResults->levelEndStateType)
         {
             case LevelCompletionResults::LevelEndStateType::Cleared:
-                replayCallback(*replay, MapStatus::cleared, isOst);
+                replayCallback(*replay, MapStatus::cleared, isOst || skipUpload);
                 break;
             case LevelCompletionResults::LevelEndStateType::Failed:
                 if (levelCompletionResults->levelEndAction != LevelCompletionResults::LevelEndAction::Restart)
                 {
                     replay->info.failTime = audioTimeSyncController->songTime;
-                    replayCallback(*replay, MapStatus::failed, isOst);
+                    replayCallback(*replay, MapStatus::failed, isOst || skipUpload);
                 }
                 break;
         }
@@ -216,9 +216,9 @@ namespace ReplayRecorder {
     MAKE_HOOK_MATCH(ProcessResultsSolo, &StandardLevelScenesTransitionSetupDataSO::Finish, void, StandardLevelScenesTransitionSetupDataSO* self, LevelCompletionResults* levelCompletionResults) {
         ProcessResultsSolo(self, levelCompletionResults);
         recording = false;
-        if (self->gameMode != "Party" && replay != nullopt) {
+        if (replay != nullopt) {
             collectMapData(self);
-            processResults(levelCompletionResults);
+            processResults(levelCompletionResults, self->gameMode == "Party");
         }
     }
 

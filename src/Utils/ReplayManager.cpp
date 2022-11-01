@@ -12,7 +12,7 @@
 
 string ReplayManager::lastReplayFilename = "";
 
-void ReplayManager::ProcessReplay(Replay const &replay, bool isOst, function<void(ReplayUploadStatus, string, float,
+void ReplayManager::ProcessReplay(Replay const &replay, bool skipUpload, function<void(ReplayUploadStatus, string, float,
                                                                                   int)> const &finished) {
 
     if(!UploadEnabled()) {
@@ -31,7 +31,7 @@ void ReplayManager::ProcessReplay(Replay const &replay, bool isOst, function<voi
         finished(ReplayUploadStatus::finished, "<color=#008000ff>Failed attempt was saved!</color>", 0, -1);
         return; 
     }
-    if(isOst)
+    if(skipUpload)
         return;
     if(PlayerController::currentPlayer != std::nullopt)
         TryPostReplay(filename, 0, finished);

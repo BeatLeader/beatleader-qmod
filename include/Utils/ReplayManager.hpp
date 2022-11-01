@@ -15,7 +15,7 @@ enum struct ReplayUploadStatus {
 class ReplayManager
 {  
 public:
-   static void ProcessReplay(Replay const &replay, bool isOst, function<void(ReplayUploadStatus, string, float,
+   static void ProcessReplay(Replay const &replay, bool skipUpload, function<void(ReplayUploadStatus, string, float,
                                                                              int)> const &finished);
    static void RetryPosting(function<void(ReplayUploadStatus, string, float, int)> const& finished);
 

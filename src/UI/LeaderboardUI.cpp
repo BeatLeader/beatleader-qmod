@@ -218,17 +218,19 @@ namespace LeaderboardUI {
     void updateVotingButton() {
         setVotingButtonsState(0);
         hideVotingUIs();
-        auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
-        string votingStatusUrl = WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode;
+        if (plvc) {
+            auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
+            string votingStatusUrl = WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode;
 
-        lastVotingStatusUrl = votingStatusUrl;
-        WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
-            if (votingStatusUrl == lastVotingStatusUrl && status == 200) {
-                QuestUI::MainThreadScheduler::Schedule([response] {
-                    setVotingButtonsState(stoi(response));
-                });
-            }
-        }, [](float progress){});
+            lastVotingStatusUrl = votingStatusUrl;
+            WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
+                if (votingStatusUrl == lastVotingStatusUrl && status == 200) {
+                    QuestUI::MainThreadScheduler::Schedule([response] {
+                        setVotingButtonsState(stoi(response));
+                    });
+                }
+            }, [](float progress){});
+        }
     }
 
     void setVotingButtonsState(int state){
