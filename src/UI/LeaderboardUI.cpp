@@ -232,7 +232,9 @@ namespace LeaderboardUI {
     }
 
     void setVotingButtonsState(int state){
-        votingButton->SetState(state);
+        if (votingButton) {
+            votingButton->SetState(state);
+        }
         if(ResultsView::resultsVotingButton){
             ResultsView::resultsVotingButton->SetState(state);
         }
@@ -422,7 +424,9 @@ namespace LeaderboardUI {
 
     void hideVotingUIs()
     {
-        votingUI->modal->Hide(true, nullptr);
+        if (votingUI) {
+            votingUI->modal->Hide(true, nullptr);
+        }
         if(ResultsView::votingUI){ ResultsView::votingUI->modal->Hide(true, nullptr); }
     }
 
