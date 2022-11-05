@@ -231,7 +231,7 @@ void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
 }
 
 void BeatLeader::ScoreDetailsPopup::setButtonsMaterial() const {
-    if (replayButton) {
+    if (ReplayInstalled()) {
         replayButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
         replayButton->set_defaultColor(FadedColor);
         replayButton->set_highlightColor(FadedHoverColor);
