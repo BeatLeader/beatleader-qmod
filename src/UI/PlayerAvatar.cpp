@@ -84,7 +84,7 @@ void BeatLeader::PlayerAvatar::SetPlayer(
 }
 
 void BeatLeader::PlayerAvatar::SetHiddenPlayer() {
-  SetPlayer("https://cdn.beatleader.xyz/assets/IncognitoAvatar.png", BundleLoader::bundle->defaultAvatarMaterial, 0, 0);
+  SetPlayer("https://beatleadercdn.blob.core.windows.net/assets/IncognitoAvatar.png", BundleLoader::bundle->defaultAvatarMaterial, 0, 0);
 }
 
 // Stolen from Nya: https://github.com/FrozenAlex/Nya-utils :lovege:

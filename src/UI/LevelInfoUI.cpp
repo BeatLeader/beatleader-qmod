@@ -271,26 +271,30 @@ namespace LevelInfoUI {
         }
 
         // Calculate voteRatio from votes
-        float voteRatio = 0;
+        float rating = 0;
+        float reviewScore = 0;
         if (!selectedDifficulty.votes.empty())
         {
-            float const count = static_cast<float>(selectedDifficulty.votes.size());
-            voteRatio = reduce(selectedDifficulty.votes.begin(), selectedDifficulty.votes.end()) / count;
+            float count = static_cast<float>(selectedDifficulty.votes.size());
+            reviewScore = reduce(selectedDifficulty.votes.begin(), selectedDifficulty.votes.end()) / count;
+            rating = reviewScore - (reviewScore - 0.5f) * pow(2.0f, -log10(count + 1));
         }
 
         // Set Color according to calculated VoteRatio (0% = red, 100% = green)
         statusLabel->SetText(rankingStatus.substr(0, shortWritingChars) + ".");
-        if (voteRatio == 0) {
+        if (rating == 0) {
              statusLabel->set_color(UnityEngine::Color(0.5, 0.5, 0.5, 1));
         } else {
-            statusLabel->set_color(UnityEngine::Color(1 - voteRatio, voteRatio, 0, 1));
+            statusLabel->set_color(UnityEngine::Color(1 - rating, rating, 0, 1));
         }
         
 
         // Set Hovertext with percentage value
-        voteRatio *= 100;
+        rating *= 100;
+        reviewScore *= 100;
         AddHoverHint(statusLabel, "Ranking status - " + rankingStatus 
-                                + "\nVote ratio - " + to_string(static_cast<int>(voteRatio)) 
+                                + "\nRating -" + to_string(static_cast<int>(rating))
+                                + "%\nPositivity ratio - " + to_string(static_cast<int>(reviewScore)) 
                                 + "%\nVotes - " + to_string(selectedDifficulty.votes.size())
                                 + "\nTo vote for a song to be ranked, click the message box on the leaderboard");
 
