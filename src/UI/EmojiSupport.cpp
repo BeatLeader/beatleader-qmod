@@ -141,11 +141,11 @@ MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpri
         auto assetToUse = currentEmojiAsset;
         loadingCount++;
 
-        Sprites::get_Icon("https://cdn.beatleader.xyz/unicode/" + utf8ToHex(unicode) + ".png", [indexToUse, assetToUse, glyph, unicode](UnityEngine::Sprite* sprite) {
+        Sprites::get_Icon("https://beatleadercdn.blob.core.windows.net/unicode/" + utf8ToHex(unicode) + ".png", [indexToUse, assetToUse, glyph, unicode](UnityEngine::Sprite* sprite) {
             if (sprite != NULL) {
                 DrawSprite((UnityEngine::Texture*)sprite->get_texture(), indexToUse, glyph, assetToUse);
             } else {
-                getLogger().info("%s", ("https://cdn.beatleader.xyz/unicode/" + utf8ToHex(unicode) + ".png").c_str());
+                getLogger().info("%s", ("https://beatleadercdn.blob.core.windows.net/unicode/" + utf8ToHex(unicode) + ".png").c_str());
             }
             
             loadingCount--;
