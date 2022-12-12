@@ -103,7 +103,7 @@ void Sprites::get_AnimatedIcon(string url, const std::function<void(AllFramesRes
 }
 
 void Sprites::GetCountryIcon(string country, const std::function<void(UnityEngine::Sprite*)>& completion) {
-    get_Icon("https://cdn.beatleader.xyz/flags/" + toLower(country) + ".png", completion);
+    get_Icon("https://beatleadercdn.blob.core.windows.net/flags/" + toLower(country) + ".png", completion);
 }
 
 void Sprites::ResetCache() {
