@@ -198,6 +198,12 @@ namespace LeaderboardUI {
             imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
             imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
             imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
+
+            initSettingsModal(self->get_transform());
+
+            ::QuestUI::BeatSaberUI::CreateClickableImage(self->get_transform(), BundleLoader::bundle->settingsIcon, {40, 36}, {5, 5}, [](){
+                settingsContainer->Show(true, true, nullptr);
+            });
         }
 
         if (parentScreen != NULL) {
@@ -492,10 +498,7 @@ namespace LeaderboardUI {
             BeatLeader::initLinksContainerPopup(&linkContainer, self->get_transform());
             BeatLeader::initVotingPopup(&votingUI, self->get_transform(), voteCallback);
 
-            initSettingsModal(self->get_transform());
-            auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(20, 20), []() {
-                settingsContainer->Show(true, true, nullptr);
-            });
+            auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(20, 20));
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 

@@ -57,6 +57,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Sprite*, profileIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, friendsIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, incognitoIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, settingsIcon);
 
     DECLARE_INSTANCE_FIELD(Shader*, TMP_SpriteCurved);
 

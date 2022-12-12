@@ -52,6 +52,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     transparentPixel = assetBundle->LoadAsset<Sprite*>("TransparentPixel");
     fileError = assetBundle->LoadAsset<Sprite*>("FileError");
     modifiersIcon = assetBundle->LoadAsset<Sprite*>("ModifiersIcon");
+    settingsIcon = assetBundle->LoadAsset<Sprite*>("SettingsIcon");
 
     overview1Icon = assetBundle->LoadAsset<Sprite*>("BL_Overview1Icon");
     overview2Icon = assetBundle->LoadAsset<Sprite*>("BL_Overview2Icon");
