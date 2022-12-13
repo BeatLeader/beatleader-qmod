@@ -145,7 +145,11 @@ extern "C" void load() {
 
     PlaylistSynchronizer::SyncPlaylist();
 
-    ReplayRecorder::StartRecording([](Replay const& replay, MapStatus status, bool skipUpload) {
+    ReplayRecorder::StartRecording(
+        []() {
+            LeaderboardUI::hidePopups();
+        },
+        [](Replay const& replay, MapStatus status, bool skipUpload) {
         if (status == MapStatus::cleared) {
             ReplayManager::ProcessReplay(replay, skipUpload, replayPostCallback);
         } else {

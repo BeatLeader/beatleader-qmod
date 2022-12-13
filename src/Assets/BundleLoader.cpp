@@ -81,3 +81,7 @@ Material* BeatLeader::Bundle::GetAvatarMaterial(StringW effectName) {
     }
     return result != NULL ? result : defaultAvatarMaterial;
 }
+
+Sprite* BeatLeader::Bundle::GetCountryIcon(StringW country) {
+    return BundleLoader::assetBundle->LoadAsset<Sprite*>(country);
+}

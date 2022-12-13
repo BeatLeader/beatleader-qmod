@@ -26,5 +26,6 @@ namespace LeaderboardUI {
     void initSettingsModal(UnityEngine::Transform* parent);
     void voteCallback(bool voted, bool rankable, float stars, int type);
     void hideVotingUIs();
+    void hidePopups();
     UnityEngine::UI::Toggle* CreateToggle(UnityEngine::Transform* parent, bool currentValue, UnityEngine::Vector2 anchoredPosition, std::function<void(bool)> onValueChange);
 }

@@ -33,6 +33,7 @@ DEFINE_TYPE(BeatLeader, PlayerAvatar);
 
 void BeatLeader::PlayerAvatar::Init(HMUI::ImageView* imageView) {
     this->imageView = imageView;
+    imageView->get_gameObject()->SetActive(false);
 
     AvatarTexturePropertyId = UnityEngine::Shader::PropertyToID("_AvatarTexture");
     FadeValuePropertyId = UnityEngine::Shader::PropertyToID("_FadeValue");
@@ -46,6 +47,8 @@ void BeatLeader::PlayerAvatar::SetPlayer(
     UnityEngine::Material* roleMaterial, 
     float hueShift,
     float saturation) {
+
+    imageView->get_gameObject()->SetActive(true);
     
     if (this->materialInstance == NULL || roleMaterial->get_name() != this->materialName) {
       this->materialInstance = UnityEngine::Object::Instantiate(roleMaterial);
@@ -85,6 +88,10 @@ void BeatLeader::PlayerAvatar::SetPlayer(
 
 void BeatLeader::PlayerAvatar::SetHiddenPlayer() {
   SetPlayer("https://beatleadercdn.blob.core.windows.net/assets/IncognitoAvatar.png", BundleLoader::bundle->defaultAvatarMaterial, 0, 0);
+}
+
+void BeatLeader::PlayerAvatar::HideImage() {
+  imageView->get_gameObject()->SetActive(false);
 }
 
 // Stolen from Nya: https://github.com/FrozenAlex/Nya-utils :lovege:
