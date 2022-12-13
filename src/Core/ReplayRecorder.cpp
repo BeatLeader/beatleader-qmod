@@ -95,6 +95,7 @@ namespace ReplayRecorder {
 
     optional<Replay> replay;
     std::function<void(Replay const&, MapStatus, bool)> replayCallback;
+    std::function<void(void)> startedCallback;
 
     MapEnhancer mapEnhancer;
     UserEnhancer userEnhancer;
@@ -174,7 +175,8 @@ namespace ReplayRecorder {
     MAKE_HOOK_MATCH(SinglePlayerInstallBindings, &GameplayCoreInstaller::InstallBindings, void, GameplayCoreInstaller* self) {
         SinglePlayerInstallBindings(self);
 
-        if (!UploadEnabled()) {
+        startedCallback();
+        if (UploadDisabledByReplay()) {
             replay = nullopt;
             return;
         }
@@ -520,7 +522,9 @@ namespace ReplayRecorder {
         }
     }
 
-    void StartRecording(function<void(Replay const &, MapStatus, bool)> const &callback) {
+    void StartRecording(
+        function<void(void)> const &started,
+        function<void(Replay const &, MapStatus, bool)> const &callback) {
         LoggerContextObject logger = getLogger().WithContext("load");
 
         getLogger().info("Installing ReplayRecorder hooks...");
@@ -543,6 +547,7 @@ namespace ReplayRecorder {
 
         getLogger().info("Installed all ReplayRecorder hooks!");
 
+        startedCallback = started;
         replayCallback = callback;
     }
 }

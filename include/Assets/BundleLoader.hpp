@@ -63,6 +63,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
 
     DECLARE_INSTANCE_METHOD(void, Init, AssetBundle* bundle);
     DECLARE_INSTANCE_METHOD(Material*, GetAvatarMaterial, StringW effectName);
+    DECLARE_INSTANCE_METHOD(Sprite*, GetCountryIcon, StringW country);
 )
 
 class BundleLoader {

@@ -8,6 +8,8 @@ enum MapStatus {
 };
 
 namespace ReplayRecorder {
-    void StartRecording(function<void(Replay const &, MapStatus, bool)> const &callback);
+    void StartRecording(
+        function<void(void)> const &startedCallback, 
+        function<void(Replay const &, MapStatus, bool)> const &callback);
     static bool recording;
 }

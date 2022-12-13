@@ -37,6 +37,5 @@ public:
     static bool has_Icon(string url);
     static void get_Icon(string url, const std::function<void(UnityEngine::Sprite*)>& completion, bool nullable = false);
     static void get_AnimatedIcon(string url, const std::function<void(AllFramesResult)>& completion);
-    static void GetCountryIcon(string country, const std::function<void(UnityEngine::Sprite*)>& completion);
     static void ResetCache();
 };

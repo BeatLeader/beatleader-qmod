@@ -58,6 +58,7 @@
 #include "UnityEngine/TextCore/GlyphRect.hpp"
 #include "UnityEngine/HideFlags.hpp"
 #include "UnityEngine/Texture.hpp"
+#include "UnityEngine/Bounds.hpp"
 #include "UnityEngine/UI/Toggle.hpp"
 #include "UnityEngine/Events/UnityAction_1.hpp"
 
@@ -150,6 +151,9 @@ namespace LeaderboardUI {
     static UnityEngine::Color ownScoreColor = UnityEngine::Color(0.7, 0.0, 0.7, 0.3);
     static UnityEngine::Color someoneElseScoreColor = UnityEngine::Color(0.07, 0.0, 0.14, 0.05);
 
+    static UnityEngine::Color SelectedColor = UnityEngine::Color(0.0, 0.4, 1.0, 1.0);
+    static UnityEngine::Color FadedColor = UnityEngine::Color(0.8, 0.8, 0.8, 0.2);
+
     static string lastUrl = "";
     static string lastVotingStatusUrl = "";
     static string votingUrl = "";
@@ -170,12 +174,10 @@ namespace LeaderboardUI {
                 if (plvc != NULL) {
                     auto countryControl = plvc->scopeSegmentedControl->dataItems.get(3);
                     countryControl->set_hintText("Country");
-                    Sprites::GetCountryIcon(player->country, [](UnityEngine::Sprite* sprite) {
-                        plvc->scopeSegmentedControl->dataItems.get(3)->set_icon(sprite);
-                        plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
+                    auto sprite = BundleLoader::bundle->GetCountryIcon(player->country);
 
-                        countryRankIcon->set_sprite(sprite);
-                    });
+                    plvc->scopeSegmentedControl->dataItems.get(3)->set_icon(sprite);
+                    countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), sprite, {135, 45}, {3.2, sprite->get_bounds().get_size().y * 10});
                     plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
                 }
 
@@ -185,8 +187,10 @@ namespace LeaderboardUI {
         } else {
             globalRank->SetText("#0");
             countryRankAndPp->SetText("#0");
-            // playerAvatar->set_sprite(plvc->aroundPlayerLeaderboardIcon);
-            countryRankIcon->set_sprite(plvc->friendsLeaderboardIcon);
+            playerAvatar->HideImage();
+            if (countryRankIcon) {
+                countryRankIcon->set_sprite(plvc->friendsLeaderboardIcon);
+            }
             playerName->SetText("");
         }
     }
@@ -198,12 +202,6 @@ namespace LeaderboardUI {
             imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
             imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
             imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
-
-            initSettingsModal(self->get_transform());
-
-            ::QuestUI::BeatSaberUI::CreateClickableImage(self->get_transform(), BundleLoader::bundle->settingsIcon, {40, 36}, {5, 5}, [](){
-                settingsContainer->Show(true, true, nullptr);
-            });
         }
 
         if (parentScreen != NULL) {
@@ -442,8 +440,12 @@ namespace LeaderboardUI {
 
     void clearTable() {
         selectedScore = 11;
-        plvc->scores->Clear();
-        plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
+        if (plvc->scores) {
+            plvc->scores->Clear();
+        }
+        if (plvc->leaderboardTableView && plvc->leaderboardTableView->tableView) {
+            plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
+        }
     }
 
     MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
@@ -503,7 +505,6 @@ namespace LeaderboardUI {
             playerAvatar->Init(playerAvatarImage);
 
             globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->globalLeaderboardIcon, UnityEngine::Vector2(120, 45), UnityEngine::Vector2(4, 4));
-            countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->friendsLeaderboardIcon, UnityEngine::Vector2(135, 45), UnityEngine::Vector2(4, 4));
             playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
 
@@ -575,6 +576,16 @@ namespace LeaderboardUI {
             });
             votingButton = websiteLink->get_gameObject()->AddComponent<BeatLeader::VotingButton*>();
             votingButton->Init(votingButtonImage);
+
+            initSettingsModal(self->get_transform());
+
+            auto settingsButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->settingsIcon, {180, 36}, {4.5, 4.5}, [](){
+                settingsContainer->Show(true, true, nullptr);
+            });
+
+            settingsButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
+            settingsButton->set_defaultColor(FadedColor);
+            settingsButton->set_highlightColor(SelectedColor);
         }
 
         upPageButton->get_gameObject()->SetActive(false);
@@ -818,9 +829,26 @@ namespace LeaderboardUI {
         scoreDetailsUI = NULL;
         votingUI = NULL;
         linkContainer = NULL;
+        settingsContainer = NULL;
+        preferencesButton = NULL;
         cellScores.clear();
         avatars = {};
         cellHighlights = {};
         cellBackgrounds = {};
     }    
+
+    void hidePopups() {
+        if (scoreDetailsUI) {
+            scoreDetailsUI->modal->Hide(false, nullptr);
+        }
+        if (votingUI) {
+            votingUI->modal->Hide(false, nullptr);
+        }
+        if (linkContainer) {
+            linkContainer->modal->Hide(false, nullptr);
+        }
+        if (settingsContainer) {
+            settingsContainer->Hide(false, nullptr);
+        }
+    }
 }

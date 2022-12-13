@@ -28,5 +28,6 @@ DECLARE_CLASS_CODEGEN(BeatLeader, PlayerAvatar, UnityEngine::MonoBehaviour,
     DECLARE_INSTANCE_METHOD(void, Init, HMUI::ImageView* imageView);
     DECLARE_INSTANCE_METHOD(void, SetPlayer, StringW url, UnityEngine::Material* roleMaterial, float hueShift, float saturation);
     DECLARE_INSTANCE_METHOD(void, SetHiddenPlayer);
+    DECLARE_INSTANCE_METHOD(void, HideImage);
     DECLARE_INSTANCE_METHOD(void, Update);
 )
