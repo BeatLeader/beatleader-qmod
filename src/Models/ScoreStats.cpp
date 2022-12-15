@@ -50,10 +50,23 @@ WinTracker::WinTracker() {}
 WinTracker::WinTracker(rapidjson::Value const& document) {
 
     jumpDistance = document["jumpDistance"].GetFloat();
+    averageHeight = document["averageHeight"].GetFloat();
     nbOfPause = document["nbOfPause"].GetInt();
     totalScore = document["totalScore"].GetInt();
     endTime = document["endTime"].GetFloat();
     won = document["won"].GetBool();
+
+    if (!document["averageHeadPosition"].IsNull()) {
+        averageHeadPosition = HeadPosition(document["averageHeadPosition"]);
+    }
+}
+
+HeadPosition::HeadPosition() {}
+
+HeadPosition::HeadPosition(rapidjson::Value const& document) {
+    x = document["x"].GetFloat();
+    y = document["y"].GetFloat();
+    z = document["z"].GetFloat();
 }
 
 ScoreGraphTracker::ScoreGraphTracker() {}

@@ -40,12 +40,24 @@ struct HitTracker {
     HitTracker(rapidjson::Value const& document);
 };
 
+struct HeadPosition {
+    float x = 0;
+    float y = 0;
+    float z = 0;
+
+    HeadPosition();
+    HeadPosition(rapidjson::Value const& document);
+};
+
 struct WinTracker {
     float jumpDistance;
+    float averageHeight;
     int nbOfPause;
     int totalScore;
     float endTime;
     bool won;
+
+    HeadPosition averageHeadPosition;
 
     WinTracker();
     WinTracker(rapidjson::Value const& document);
