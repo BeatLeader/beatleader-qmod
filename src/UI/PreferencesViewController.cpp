@@ -11,6 +11,7 @@
 #include "Utils/ModConfig.hpp"
 #include "Utils/WebUtils.hpp"
 #include "API/PlayerController.hpp"
+#include "include/Core/ReplayPlayer.hpp"
 
 #include "include/UI/PreferencesViewController.hpp"
 #include "include/UI/LevelInfoUI.hpp"
@@ -180,7 +181,9 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         });
 
         saveToggle = AddConfigValueToggle(containerTransform, getModConfig().Save);
-        showReplaySettingsToggle = AddConfigValueToggle(containerTransform, getModConfig().ShowReplaySettings);
+        if (ReplayInstalled()) {
+            showReplaySettingsToggle = AddConfigValueToggle(containerTransform, getModConfig().ShowReplaySettings);
+        }
         errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "", false);
         label3 = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "To sign up, enter your login information.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile picture on the website.", false);
     }

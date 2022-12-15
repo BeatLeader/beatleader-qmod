@@ -158,6 +158,12 @@ namespace LeaderboardUI {
     static string lastVotingStatusUrl = "";
     static string votingUrl = "";
 
+    static ReplayUploadStatus cachedStatus;
+    static string cachedDescription;
+    static float cachedProgress; 
+    static bool cachedShowRestart;
+    static bool statusWasCached;
+
     void updatePlayerInfoLabel() {
         auto const& player = PlayerController::currentPlayer;
         if (player != std::nullopt) {
@@ -207,6 +213,9 @@ namespace LeaderboardUI {
         if (parentScreen != NULL) {
             visible = true;
             parentScreen->SetActive(true);
+            if (statusWasCached) {
+                updateStatus(cachedStatus, cachedDescription, cachedProgress, cachedShowRestart);
+            }
         }
     }
 
@@ -721,6 +730,7 @@ namespace LeaderboardUI {
         }
         
         if (visible) {
+            statusWasCached = false;
             uploadStatus->SetText(description);
             switch (status)
             {
@@ -740,6 +750,12 @@ namespace LeaderboardUI {
                         uploadStatus->SetText("<color=#b103fcff>Posting replay: Finishing up...");
                     break;
             }
+        } else {
+            statusWasCached = true;
+            cachedStatus = status;
+            cachedDescription = description;
+            cachedProgress = progress;
+            cachedShowRestart = showRestart;
         }
     }
 
