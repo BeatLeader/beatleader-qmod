@@ -65,11 +65,11 @@ void ReplayManager::TryPostReplay(string name, int tryIndex, function<void(Repla
                 remove(name.data());
             }
         } else {
-            getLogger().error("Replay was not posted!");
             if (statusCode == 100 || statusCode == 0) {
                 statusCode = 100;
                 result = "Timed out";
             }
+            getLogger().error("%s", ("Replay was not posted! " + to_string(statusCode) + result).c_str());
             finished(ReplayUploadStatus::error, std::string("<color=#008000ff>Replay was not posted. " + result), 0, statusCode);
         }
     }, [finished](float percent) {
