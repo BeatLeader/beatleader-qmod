@@ -24,6 +24,7 @@ Score::Score(rapidjson::Value const& document) {
 
     hmd = document["hmd"].GetInt();
     timeset = document["timeset"].GetString();
+    platform = document["platform"].GetString();
 
     if (!document["scoreImprovement"].IsNull()) {
         scoreImprovement = ScoreImprovement(document["scoreImprovement"]);

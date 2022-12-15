@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <sstream>
 
-#define TIMEOUT 10
+#define TIMEOUT 60
 #define USER_AGENT string(ID "/" VERSION " (BeatSaber/" + GameVersion + ") (Oculus)").c_str()
 #define X_BSSB "X-BSSB: ✔"
 

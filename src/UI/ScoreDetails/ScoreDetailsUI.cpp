@@ -65,7 +65,7 @@ void BeatLeader::initScoreDetailsPopup(
 
     UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(0, 18), UnityEngine::Vector2(58, 6));
     UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(0, -3), UnityEngine::Vector2(60, 34));
-    UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(0, -24), UnityEngine::Vector2(30, 6));
+    UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(0, -24), UnityEngine::Vector2(36, 6));
     if (ReplayInstalled()) {
         UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(-24.5, -24), UnityEngine::Vector2(7, 7));
     }
@@ -83,27 +83,33 @@ void BeatLeader::initScoreDetailsPopup(
         incognitoCallback();
     });
     modalUI->general = GeneralScoreDetails(modalUI->modal);
+    modalUI->additional = AdditionalScoreDetails(modalUI->modal);
     modalUI->overview = ScoreStatsOverview(modalUI->modal);
     modalUI->grid = ScoreStatsGrid(modalUI->modal);
     modalUI->graph = ScoreStatsGraph(modalUI->modal);
 
-    modalUI->generalButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->overview1Icon, UnityEngine::Vector2(-10.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->generalButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->overview1Icon, UnityEngine::Vector2(-14, -24), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(0);
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->generalButton, "General score info");
 
-    modalUI->overviewButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->detailsIcon, UnityEngine::Vector2(-3.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->additionalButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->overview2Icon, UnityEngine::Vector2(-7, -24), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(1);
+    });
+    ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->generalButton, "General score info");
+
+    modalUI->overviewButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->detailsIcon, UnityEngine::Vector2(0, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+        modalUI->selectTab(2);
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->overviewButton, "Detailed score info");
 
-    modalUI->gridButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->gridIcon, UnityEngine::Vector2(3.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
-        modalUI->selectTab(2);
+    modalUI->gridButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->gridIcon, UnityEngine::Vector2(7, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+        modalUI->selectTab(3);
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->gridButton, "Note accuracy distribution");
 
-    modalUI->graphButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->graphIcon, UnityEngine::Vector2(10.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
-        modalUI->selectTab(3);
+    modalUI->graphButton = ::QuestUI::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->graphIcon, UnityEngine::Vector2(14, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+        modalUI->selectTab(4);
     });
     ::QuestUI::BeatSaberUI::AddHoverHint(modalUI->graphButton, "Accuracy timeline graph");
 
@@ -138,6 +144,7 @@ void BeatLeader::ScoreDetailsPopup::updatePlayerDetails(Player player) {
 void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
     scoreId = score.id;
     replayLink = score.replay;
+    platform = score.platform;
 
     updatePlayerDetails(score.player);
     
@@ -168,12 +175,14 @@ void selectButton(QuestUI::ClickableImage* button, bool selected) {
 
 void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
     selectButton(generalButton, false);
+    selectButton(additionalButton, false);
     selectButton(overviewButton, false);
     selectButton(gridButton, false);
     selectButton(graphButton, false);
     loadingText->get_gameObject()->SetActive(false);
 
     general.setSelected(false);
+    additional.setSelected(false);
     overview.setSelected(false);
     grid.setSelected(false);
     graph.setSelected(false);
@@ -185,20 +194,27 @@ void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
         general.setSelected(true);
         break;
     case 1:
+        selectButton(additionalButton, true);
+        if (scoreStatsFetched) {
+            additional.setScore(platform, scoreStats);
+            additional.setSelected(true);
+        }
+        break;
+    case 2:
         selectButton(overviewButton, true);
         if (scoreStatsFetched) {
             overview.setScore(scoreStats);
             overview.setSelected(true);
         }
         break;
-    case 2:
+    case 3:
         selectButton(gridButton, true);
         if (scoreStatsFetched) {
             grid.setScore(scoreStats);
             grid.setSelected(true);
         }
         break;
-    case 3:
+    case 4:
         selectButton(graphButton, true);
         if (scoreStatsFetched) {
             graph.setScore(scoreStats);
@@ -237,6 +253,7 @@ void BeatLeader::ScoreDetailsPopup::setButtonsMaterial() const {
         replayButton->set_highlightColor(FadedHoverColor);
     }
     generalButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
+    additionalButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
     overviewButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
     gridButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
     graphButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);

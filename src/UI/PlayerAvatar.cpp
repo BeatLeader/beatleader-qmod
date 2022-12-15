@@ -64,30 +64,46 @@ void BeatLeader::PlayerAvatar::SetPlayer(
     currentFrame = 0;
     frameTime = 0;
 
-    if (!Sprites::has_Icon(url)) {
-      materialInstance->SetFloat(FadeValuePropertyId, 0);
-    }
+    if (url != "defaultAvatar") {
+      if (!Sprites::has_Icon(url)) {
+        materialInstance->SetFloat(FadeValuePropertyId, 0);
+      }
 
-    auto self = this;
-    Sprites::get_AnimatedIcon(url, [self](AllFramesResult result) {
-        self->imageView->set_sprite(UnityEngine::Sprite::Create(
-                result.frames[0], 
-                UnityEngine::Rect(0.0, 0.0, (float)result.frames[0]->get_width(), (float)result.frames[0]->get_height()), 
-                UnityEngine::Vector2(0.5, 0.5), 
-                100.0, 
-                0, 
-                UnityEngine::SpriteMeshType::FullRect, 
-                UnityEngine::Vector4(0.0, 0.0, 0.0, 0.0), 
-                false));
-        self->animationFrames = result.frames;
-        self->animationTimings = result.timings;
-        self->materialInstance->SetFloat(FadeValuePropertyId, 1.0f);
-        self->play = true;
-    });
+      auto self = this;
+      Sprites::get_AnimatedIcon(url, [self](AllFramesResult result) {
+          self->imageView->set_sprite(UnityEngine::Sprite::Create(
+                  result.frames[0], 
+                  UnityEngine::Rect(0.0, 0.0, (float)result.frames[0]->get_width(), (float)result.frames[0]->get_height()), 
+                  UnityEngine::Vector2(0.5, 0.5), 
+                  100.0, 
+                  0, 
+                  UnityEngine::SpriteMeshType::FullRect, 
+                  UnityEngine::Vector4(0.0, 0.0, 0.0, 0.0), 
+                  false));
+          self->animationFrames = result.frames;
+          self->animationTimings = result.timings;
+          self->materialInstance->SetFloat(FadeValuePropertyId, 1.0f);
+          self->play = true;
+      });
+    } else {
+      auto sprite = BundleLoader::bundle->defaultAvatar;
+      imageView->set_sprite(sprite);
+
+      Texture2D* texture = sprite->get_texture();
+      ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(1);
+      ArrayW<float> timings = ArrayW<float> (1);
+
+      frames[0] = texture;
+      timings[0] = 0;
+      animationFrames = frames;
+      animationTimings = timings;
+      materialInstance->SetFloat(FadeValuePropertyId, 1.0f);
+      play = true;
+    }
 }
 
 void BeatLeader::PlayerAvatar::SetHiddenPlayer() {
-  SetPlayer("https://beatleadercdn.blob.core.windows.net/assets/IncognitoAvatar.png", BundleLoader::bundle->defaultAvatarMaterial, 0, 0);
+  SetPlayer("defaultAvatar", BundleLoader::bundle->defaultAvatarMaterial, 0, 0);
 }
 
 void BeatLeader::PlayerAvatar::HideImage() {

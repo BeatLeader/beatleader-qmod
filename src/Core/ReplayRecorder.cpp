@@ -104,11 +104,13 @@ namespace ReplayRecorder {
     bool automaticPlayerHeight = false;
     PlayerHeadAndObstacleInteraction* phoi;
 
+    static map<NoteData *, int> _noteIdCache;
     map<int, NoteEvent> _noteEventCache;
+    map<int, NoteController *> _noteControllerCache;
+
     map<SaberMovementData *, float> _preSwingContainer;
     map<SaberSwingRatingCounter *, float> _postSwingContainer;
 
-    static map<NoteData *, int> _noteIdCache;
     static map<NoteData *, int> _replayNoteIdCache;
     map<ISaberSwingRatingCounter*, int> _swingIdCache;
     int _noteId;
@@ -256,6 +258,7 @@ namespace ReplayRecorder {
         if (replay == nullopt) return;
         _noteId++;
         _noteIdCache[noteData] = _noteId;
+        _noteControllerCache[_noteId] = noteController;
 
         int colorType = (int)noteData->colorType;
         if (colorType < 0) {
@@ -285,7 +288,7 @@ namespace ReplayRecorder {
         }
     }
 
-    void PopulateNoteCutInfo(ReplayNoteCutInfo& noteCutInfo, NoteCutInfo const& cutInfo) {
+    void PopulateNoteCutInfo(ReplayNoteCutInfo& noteCutInfo, NoteCutInfo const& cutInfo, NoteController* noteController) {
         noteCutInfo.speedOK = cutInfo.speedOK;
         noteCutInfo.directionOK = cutInfo.directionOK;
         noteCutInfo.saberTypeOK = cutInfo.saberTypeOK;
@@ -299,6 +302,9 @@ namespace ReplayRecorder {
         noteCutInfo.cutNormal = cutInfo.cutNormal;
         noteCutInfo.cutDistanceToCenter = cutInfo.cutDistanceToCenter;
         noteCutInfo.cutAngle = cutInfo.cutAngle;
+        if (Sombrero::FastVector3::Dot(noteCutInfo.cutNormal, noteCutInfo.cutPoint - noteController->noteTransform->get_position()) <= 0) {
+            noteCutInfo.cutDistanceToCenterPositive = true;
+        }
     }
 
     static float ChooseSwingRating(float real, float unclamped) {
@@ -311,9 +317,10 @@ namespace ReplayRecorder {
         auto noteData = scoringElement->noteData;
 
         if (!_replayNoteIdCache.count(noteData)) return;
-        int noteId = _replayNoteIdCache[noteData];
-        if (replay->notes.size() <= noteId) return;
-        NoteEvent& noteEvent = replay->notes.at(noteId);
+        int noteId = _noteIdCache[noteData];
+        int replayNoteId = _replayNoteIdCache[noteData];
+        if (replay->notes.size() <= replayNoteId) return;
+        NoteEvent& noteEvent = replay->notes.at(replayNoteId);
         bool isBomb = noteData->colorType == ColorType::None;
         
         if (il2cpp_utils::try_cast<MissScoringElement>(scoringElement) != nullopt) {
@@ -328,7 +335,7 @@ namespace ReplayRecorder {
             SaberSwingRatingCounter* saberSwingRatingCounter = cutScoreBuffer->saberSwingRatingCounter;
 
             ReplayNoteCutInfo& noteCutInfo = noteEvent.noteCutInfo;
-            PopulateNoteCutInfo(noteCutInfo, cutScoreBuffer->noteCutInfo);
+            PopulateNoteCutInfo(noteCutInfo, cutScoreBuffer->noteCutInfo, _noteControllerCache[noteId]);
             
             noteCutInfo.beforeCutRating = ChooseSwingRating(saberSwingRatingCounter->beforeCutRating, _preSwingContainer[(SaberMovementData *)saberSwingRatingCounter->saberMovementData]);
             noteCutInfo.afterCutRating = ChooseSwingRating(saberSwingRatingCounter->afterCutRating, _postSwingContainer[saberSwingRatingCounter]);

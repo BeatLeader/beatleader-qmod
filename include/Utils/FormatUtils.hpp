@@ -133,4 +133,15 @@ namespace FormatUtils {
             string time = getModConfig().TimesetActive.GetValue() ? " <size=60%>" + GetRelativeTimeString(score.timeset) + "</size>" : "";
             return name + "<pos=40%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel + time; 
         }
+
+        inline string GetFullPlatformName(string serverPlatform) {
+            
+            if (serverPlatform == "oculus") {
+                return "Oculus Standalone";
+            } else if (serverPlatform == "oculuspc") {
+                return "Oculus PC";
+            } else {
+                return "Steam";
+            }
+        }
     }

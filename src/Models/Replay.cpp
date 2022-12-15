@@ -123,6 +123,16 @@ void Replay::Encode(Frame const &frame, ofstream& stream) {
     Encode(frame.rightHand.position, stream);
     Encode(frame.rightHand.rotation, stream);
 }
+static float ApplyBool(float value, bool flag) {
+    int intValue = *(int*)(&value);
+    if (flag) {
+        intValue |= 1;
+    } else {
+        intValue &= ~1;
+    }
+    return *(int*)(&intValue);
+}
+
 void Replay::Encode(NoteEvent const &note, ofstream& stream) {
     Encode(note.noteID, stream);
     Encode(note.eventTime, stream);
@@ -134,7 +144,7 @@ void Replay::Encode(NoteEvent const &note, ofstream& stream) {
         Encode(info.directionOK, stream);
         Encode(info.saberTypeOK, stream);
         Encode(info.wasCutTooSoon, stream);
-        Encode(info.saberSpeed, stream);
+        Encode(ApplyBool(info.saberSpeed, info.cutDistanceToCenterPositive), stream);
         Encode(info.saberDir, stream);
         Encode(info.saberType, stream);
         Encode(info.timeDeviation, stream);

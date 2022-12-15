@@ -70,6 +70,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     profileIcon = assetBundle->LoadAsset<Sprite*>("BL_ProfileIcon");
     friendsIcon = assetBundle->LoadAsset<Sprite*>("BL_FriendsIcon");
     incognitoIcon = assetBundle->LoadAsset<Sprite*>("BL_IncognitoIcon");
+    defaultAvatar = assetBundle->LoadAsset<Sprite*>("BL_DefaultAvatar");
 
     TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
 }

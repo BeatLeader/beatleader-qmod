@@ -72,6 +72,7 @@ struct ReplayNoteCutInfo {
     bool saberTypeOK;
     bool wasCutTooSoon;
     float saberSpeed;
+    bool cutDistanceToCenterPositive;
     Sombrero::FastVector3 saberDir;
     int saberType;
     float timeDeviation;

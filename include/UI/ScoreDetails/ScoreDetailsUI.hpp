@@ -9,6 +9,7 @@
 #include "include/UI/PlayerAvatar.hpp"
 
 #include "include/UI/ScoreDetails/GeneralScoreDetails.hpp"
+#include "include/UI/ScoreDetails/AdditionalScoreDetails.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsOverview.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsGrid.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsGraph.hpp"
@@ -28,11 +29,13 @@ namespace BeatLeader {
 
             PlayerButtons playerButtons;
             GeneralScoreDetails general;
+            AdditionalScoreDetails additional;
             ScoreStatsOverview overview;
             ScoreStatsGrid grid;
             ScoreStatsGraph graph;
 
             QuestUI::ClickableImage* generalButton;
+            QuestUI::ClickableImage* additionalButton;
             QuestUI::ClickableImage* overviewButton;
             QuestUI::ClickableImage* gridButton;
             QuestUI::ClickableImage* graphButton;
@@ -42,6 +45,7 @@ namespace BeatLeader {
             TMPro::TextMeshProUGUI* loadingText;
 
             int scoreId;
+            string platform;
             bool scoreStatsFetched;
             
             void setScore(const Score& score);

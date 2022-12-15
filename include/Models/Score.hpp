@@ -41,6 +41,7 @@ struct Score
     bool fullCombo;
     int hmd;
     string timeset;
+    string platform;
 
     Player player;
     ScoreImprovement scoreImprovement;
