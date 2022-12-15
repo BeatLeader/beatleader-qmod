@@ -52,7 +52,7 @@ namespace ResultsView {
             BeatLeader::initVotingPopup(&votingUI, self->get_transform(), LeaderboardUI::voteCallback);
 
             // Create voting button
-            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(self->get_transform(), BundleLoader::bundle->modifiersIcon, {-65, -2}, {8, 8}, []() {
+            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(self->get_transform(), BundleLoader::bundle->modifiersIcon, {-67, 9}, {8, 8}, []() {
                 if (resultsVotingButton->state != 2) return;
                 
                 votingUI->reset();
