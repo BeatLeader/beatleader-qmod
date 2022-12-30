@@ -61,7 +61,7 @@ void ReplayManager::TryPostReplay(string name, int tryIndex, function<void(Repla
             auto duration = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now() - replayPostStart).count();
             getLogger().info("%s", ("Replay was posted! It took: " + to_string((int)duration) + "msec. \n Headers:\n" + headers).c_str());
             finished(ReplayUploadStatus::finished, "<color=#008000ff>Replay was posted!</color>", 100, statusCode);
-            if (!getModConfig().Save.GetValue()) {
+            if (!getModConfig().SaveLocalReplays.GetValue()) {
                 remove(name.data());
             }
         } else {

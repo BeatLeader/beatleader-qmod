@@ -35,8 +35,6 @@ ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the mod
 
 static std::optional<ReplaySynchronizer> synchronizer;
 
-DEFINE_CONFIG(ModConfig);
-
 // Returns a logger, useful for printing debug messages
 Logger& getLogger() {
     static Logger* logger = new Logger(modInfo, LoggerOptions(false, true));

@@ -27,22 +27,22 @@
     },
     {
       "id": "codegen",
-      "versionRange": "^0.28.0",
+      "versionRange": "^0.32.0",
       "additionalData": {}
     },
     {
       "id": "questui",
-      "versionRange": "^0.17.3",
+      "versionRange": "^0.17.10",
       "additionalData": {}
     },
     {
       "id": "custom-types",
-      "versionRange": "^0.15.21",
+      "versionRange": "^0.15.22",
       "additionalData": {}
     },
     {
       "id": "config-utils",
-      "versionRange": "^0.8.0",
+      "versionRange": "^1.0.1",
       "additionalData": {}
     },
     {
@@ -62,7 +62,7 @@
     },
     {
       "id": "songloader",
-      "versionRange": "^0.10.9",
+      "versionRange": "^0.10.13",
       "additionalData": {}
     },
     {
