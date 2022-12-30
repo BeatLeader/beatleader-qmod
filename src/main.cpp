@@ -24,6 +24,7 @@
 #include "custom-types/shared/register.hpp"
 
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
+#include "GlobalNamespace/AppInit.hpp"
 
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 #include "questui/shared/QuestUI.hpp"
@@ -82,14 +83,10 @@ void replayPostCallback(ReplayUploadStatus status, const string& description, fl
     }
 }
 
-MAKE_HOOK_MATCH(MainMenuViewControllerDidActivate, &MainMenuViewController::DidActivate, void,
-    MainMenuViewController *self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling
-) {
-     MainMenuViewControllerDidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
-
-     if (firstActivation) {
-        self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle(self->get_gameObject())));
-     }
+MAKE_HOOK_MATCH(AppInitStart, &AppInit::Start, void,
+    AppInit *self) {
+    self->::UnityEngine::MonoBehaviour::StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle(self->get_gameObject())));
+    AppInitStart(self);
 }
 
 #include "HMUI/ModalView.hpp"
@@ -164,7 +161,7 @@ extern "C" void load() {
     getLogger().info("Installing main hooks...");
     
     INSTALL_HOOK(logger, Restart);
-    INSTALL_HOOK(logger, MainMenuViewControllerDidActivate);
+    INSTALL_HOOK(logger, AppInitStart);
 
     getLogger().info("Installed main hooks!");
 }

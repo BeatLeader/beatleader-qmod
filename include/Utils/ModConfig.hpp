@@ -33,7 +33,7 @@ inline bool UploadEnabled() {
 
 inline bool UploadDisabledByReplay() {
     for (auto kv : bs_utils::Submission::getDisablingMods()) {
-        if (kv.id == "replay") {
+        if (kv.id == "Replay") {
             return true;
         }
     } 

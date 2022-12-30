@@ -34,6 +34,9 @@ static UnityEngine::Color FadedHoverColor = UnityEngine::Color(0.5f, 0.5f, 0.5f,
 static string replayLink;
 static ScoreStats scoreStats;
 
+static int scoreId;
+static string platform;
+
 static void MakeModalTransparent(HMUI::ModalView *modal) {
     int childCount = modal->get_transform()->get_childCount();
     for (int i = 0; i < childCount; i++) {
