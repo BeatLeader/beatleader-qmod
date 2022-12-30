@@ -180,7 +180,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
             });
         });
 
-        saveToggle = AddConfigValueToggle(containerTransform, getModConfig().Save);
+        saveToggle = AddConfigValueToggle(containerTransform, getModConfig().SaveLocalReplays);
         if (ReplayInstalled()) {
             showReplaySettingsToggle = AddConfigValueToggle(containerTransform, getModConfig().ShowReplaySettings);
         }

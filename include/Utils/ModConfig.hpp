@@ -3,9 +3,8 @@
 #include "bs-utils/shared/utils.hpp"
 
 DECLARE_CONFIG(ModConfig,
-
     CONFIG_VALUE(ServerType, std::string, "ServerType", "Main", "");
-    CONFIG_VALUE(Save, bool, "Keep local replays", true, "Save replays on this device");
+    CONFIG_VALUE(SaveLocalReplays, bool, "Keep local replays", true, "Save replays on this device");
     CONFIG_VALUE(Modifiers, bool, "Positive modifiers", true, "Show leaderboards with positive modifiers");
     CONFIG_VALUE(AvatarsActive, bool, "Show Avatars", false);
     CONFIG_VALUE(ClansActive, bool, "Show Clans", true);
@@ -13,18 +12,6 @@ DECLARE_CONFIG(ModConfig,
     CONFIG_VALUE(TimesetActive, bool, "Show Timeset", true);
     CONFIG_VALUE(IncognitoList, std::string, "Hidden players", "{}");
     CONFIG_VALUE(ShowReplaySettings, bool, "Show replay settings", true);
-
-    CONFIG_INIT_FUNCTION(
-        CONFIG_INIT_VALUE(ServerType);
-        CONFIG_INIT_VALUE(Save);
-        CONFIG_INIT_VALUE(Modifiers);
-        CONFIG_INIT_VALUE(AvatarsActive);
-        CONFIG_INIT_VALUE(ClansActive);
-        CONFIG_INIT_VALUE(ScoresActive);
-        CONFIG_INIT_VALUE(TimesetActive);
-        CONFIG_INIT_VALUE(IncognitoList);
-        CONFIG_INIT_VALUE(ShowReplaySettings);
-    )
 )
 
 inline bool UploadEnabled() {
