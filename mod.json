@@ -3,7 +3,7 @@
   "name": "BeatLeader",
   "id": "BeatLeader",
   "author": "NSGolova",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.27.0_3631150051",
   "coverImage": "cover.png",
@@ -21,7 +21,7 @@
     {
       "version": "^0.10.13",
       "id": "songloader",
-      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.13/SongLoader.qmod"
+      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.14/SongLoader.qmod"
     },
     {
       "version": "^0.15.22",
