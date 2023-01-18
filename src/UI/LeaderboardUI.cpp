@@ -269,6 +269,7 @@ namespace LeaderboardUI {
         }
         
         LeaderboardDeactivate(self, removedFromHierarchy, screenSystemDisabling);
+        hidePopups();
 
         if (parentScreen != NULL) {
             visible = false;
