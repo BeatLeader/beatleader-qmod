@@ -197,6 +197,10 @@ void EmojiSupport::AddSupport(TMPro::TextMeshProUGUI* text) {
     text->set_spriteAsset(rootEmojiAsset);
 }
 
+void EmojiSupport::RemoveSupport(TMPro::TextMeshProUGUI* text) {
+    text->set_spriteAsset(NULL);
+}
+
 void EmojiSupport::Reset() {
     rootEmojiAsset = NULL;
 }

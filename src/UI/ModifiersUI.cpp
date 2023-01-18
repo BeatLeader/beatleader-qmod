@@ -47,6 +47,8 @@ namespace ModifiersUI {
         {"MODIFIER_NO_FAIL_ON_0_ENERGY", "NF"},
     };
 
+    static vector<GameplayModifierToggle*> modifiers;
+
     string_view getRankForMultiplier(float modifier) {
         if (modifier > 0.9) {
             return "SS";
@@ -135,5 +137,22 @@ namespace ModifiersUI {
 
         INSTALL_HOOK(logger, ModifierStart);
         INSTALL_HOOK(logger, RefreshMultipliers);
+    }
+
+    void SetModifiersActive(bool active) {
+        if (active) {
+            refreshAllModifiers();
+        } else {
+            for (auto& [key, value] : allModifierToggles) {
+                if(songModifiers.contains(key)){
+                    float modifierValue = value->gameplayModifier->multiplier;
+                    value->multiplierText->SetText((modifierValue > 0 ? "+" : "") + to_string_wprecision(modifierValue * 100.0f, 1) + "%");
+                }
+            }
+        }
+    }
+
+    void ResetModifiersUI() {
+        allModifierToggles = {};
     }
 }

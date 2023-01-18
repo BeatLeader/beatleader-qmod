@@ -18,6 +18,9 @@
 #include "include/UI/RoleColorScheme.hpp"
 #include "include/UI/Themes/ThemeUtils.hpp"
 #include "include/UI/ResultsViewController.hpp"
+#include "include/UI/LevelInfoUI.hpp"
+#include "include/UI/LeaderboardUI.hpp"
+#include "include/UI/ModifiersUI.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -26,6 +29,7 @@
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson/include/rapidjson/filereadstream.h"
 
 #include "questui/shared/QuestUI.hpp"
 #include "questui/shared/ArrayUtil.hpp"
@@ -60,7 +64,7 @@
 #include "UnityEngine/Texture.hpp"
 #include "UnityEngine/Bounds.hpp"
 #include "UnityEngine/UI/Toggle.hpp"
-#include "UnityEngine/Events/UnityAction_1.hpp"
+#include "UnityEngine/Events/UnityAction.hpp"
 
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
@@ -111,6 +115,7 @@ namespace LeaderboardUI {
 
     TMPro::TextMeshProUGUI* playerName = NULL;
     BeatLeader::PlayerAvatar* playerAvatar = NULL;
+    UnityEngine::UI::Toggle* showBeatLeaderButton = NULL;
 
     TMPro::TextMeshProUGUI* globalRank = NULL;
     HMUI::ImageView* globalRankIcon = NULL;
@@ -124,6 +129,7 @@ namespace LeaderboardUI {
     QuestUI::ClickableImage* downPageButton = NULL;
     QuestUI::ClickableImage* modifiersButton = NULL;
     BeatLeader::VotingButton* votingButton = NULL;
+    HMUI::HoverHint* modifiersButtonHover;
     UnityEngine::GameObject* parentScreen = NULL;
 
     TMPro::TextMeshProUGUI* loginPrompt = NULL;
@@ -134,8 +140,11 @@ namespace LeaderboardUI {
     BeatLeader::LinksContainerPopup* linkContainer = NULL;
     HMUI::ModalView* settingsContainer = NULL;
     bool visible = false;
-
+    bool hooksInstalled = false;
+    int cachedSelector = -1;
+     bool leaderboardLoaded = false;
     int page = 1;
+    bool showRetryButton = false;
     int selectedScore = 11;
     bool modifiers = true;
     static vector<Score> scoreVector = vector<Score>(11);
@@ -163,6 +172,18 @@ namespace LeaderboardUI {
     static float cachedProgress; 
     static bool cachedShowRestart;
     static bool statusWasCached;
+    static vector<UnityEngine::Transform*> ssElements;
+    bool ssInstalled = true;
+    bool ssWasOpened = false;
+    bool showBeatLeader = false;
+    bool restoredFromPreferences = false;
+
+    UnityEngine::UI::Button* sspageUpButton;
+    UnityEngine::UI::Button::ButtonClickedEvent* ssUpAction;
+    UnityEngine::UI::Button::ButtonClickedEvent* blUpAction;
+    UnityEngine::UI::Button* sspageDownButton;
+    UnityEngine::UI::Button::ButtonClickedEvent* ssDownAction;
+    UnityEngine::UI::Button::ButtonClickedEvent* blDownAction;
 
     void updatePlayerInfoLabel() {
         auto const& player = PlayerController::currentPlayer;
@@ -178,13 +199,16 @@ namespace LeaderboardUI {
                 playerAvatar->SetPlayer(player->avatar, params.baseMaterial, params.hueShift, params.saturation);
                 
                 if (plvc != NULL) {
-                    auto countryControl = plvc->scopeSegmentedControl->dataItems.get(3);
-                    countryControl->set_hintText("Country");
                     auto sprite = BundleLoader::bundle->GetCountryIcon(player->country);
+                    if (!ssInstalled) {
+                        auto countryControl = plvc->scopeSegmentedControl->dataItems.get(3);
+                        countryControl->set_hintText("Country");
 
-                    plvc->scopeSegmentedControl->dataItems.get(3)->set_icon(sprite);
+                        plvc->scopeSegmentedControl->dataItems.get(3)->set_icon(sprite);
+                        plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
+                    }
+
                     countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), sprite, {135, 45}, {3.2, sprite->get_bounds().get_size().y * 10});
-                    plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
                 }
 
             } else {
@@ -203,23 +227,47 @@ namespace LeaderboardUI {
 
     MAKE_HOOK_MATCH(LeaderboardActivate, &PlatformLeaderboardViewController::DidActivate, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHeirarchy, bool screenSystemEnabling) {
         LeaderboardActivate(self, firstActivation, addedToHeirarchy, screenSystemEnabling);
-        if (firstActivation) {
+        if (showBeatLeader && firstActivation) {
             HMUI::ImageView* imageView = self->get_transform()->Find("HeaderPanel")->GetComponentInChildren<HMUI::ImageView*>();
             imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
             imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
             imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
         }
 
+        plvc = self;
+
         if (parentScreen != NULL) {
-            visible = true;
-            parentScreen->SetActive(true);
-            if (statusWasCached) {
+            visible = showBeatLeader;
+            parentScreen->SetActive(showBeatLeader);
+            if (statusWasCached && showBeatLeader) {
                 updateStatus(cachedStatus, cachedDescription, cachedProgress, cachedShowRestart);
             }
         }
     }
 
+    MAKE_HOOK_MATCH(
+        SegmentedControlHandleCellSelection, 
+        &SegmentedControl::HandleCellSelectionDidChange,
+        void, 
+        SegmentedControl* self,
+        ::HMUI::SelectableCell* selectableCell, 
+        ::HMUI::SelectableCell::TransitionType transitionType, 
+        ::Il2CppObject* changeOwner) {
+        SegmentedControlHandleCellSelection(self, selectableCell, transitionType, changeOwner);
+
+        if (plvc &&
+            leaderboardLoaded &&
+            self == plvc->scopeSegmentedControl) {
+            cachedSelector = -1;
+        }
+    }
+
     MAKE_HOOK_MATCH(LeaderboardDeactivate, &PlatformLeaderboardViewController::DidDeactivate, void, PlatformLeaderboardViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
+        if (ssInstalled && plvc) {
+            cachedSelector = plvc->scopeSegmentedControl->selectedCellNumber;
+            leaderboardLoaded = false;
+        }
+        
         LeaderboardDeactivate(self, removedFromHierarchy, screenSystemDisabling);
 
         if (parentScreen != NULL) {
@@ -273,12 +321,14 @@ namespace LeaderboardUI {
             url += "/standard";
         }
 
-        switch (PlatformLeaderboardViewController::_get__scoresScope())
+        int selectedCellNumber = cachedSelector != -1 ? cachedSelector : plvc->scopeSegmentedControl->selectedCellNumber;
+
+        switch (selectedCellNumber)
         {
-        case PlatformLeaderboardsModel::ScoresScope::AroundPlayer:
+        case 1:
             url += "/global/around";
             break;
-        case PlatformLeaderboardsModel::ScoresScope::Friends:
+        case 2:
             url += "/friends/page";
             break;
         case 3:
@@ -296,13 +346,13 @@ namespace LeaderboardUI {
 
         WebUtils::GetAsync(url, [url](long status, string stringResult){
             if (url != lastUrl) return;
+            if (!showBeatLeader) return;
 
             if (status != 200) {
                 return;
             }
 
             QuestUI::MainThreadScheduler::Schedule([status, stringResult] {
-
                 rapidjson::Document result;
                 result.Parse(stringResult.c_str());
                 if (result.HasParseError() || !result.HasMember("data")) return;
@@ -380,8 +430,13 @@ namespace LeaderboardUI {
                     
                 plvc->leaderboardTableView->scores = plvc->scores;
                 plvc->leaderboardTableView->specialScorePos = 12;
-                upPageButton->get_gameObject()->SetActive(pageNum != 1);
-                downPageButton->get_gameObject()->SetActive(pageNum * perPage < total);
+                if (sspageUpButton != NULL) {
+                    sspageDownButton->set_interactable(pageNum != 1);
+                    sspageUpButton->set_interactable(pageNum * perPage < total);
+                } else if (upPageButton != NULL) {
+                    upPageButton->get_gameObject()->SetActive(pageNum != 1);
+                    downPageButton->get_gameObject()->SetActive(pageNum * perPage < total);
+                }
 
                 plvc->loadingControl->Hide();
                 plvc->hasScoresData = true;
@@ -407,9 +462,9 @@ namespace LeaderboardUI {
         modifiersButton->set_highlightColor(modifiers ? selectedColor : fadedHoverColor);
 
         if (modifiers) {
-            ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard without positive modifiers");
+            modifiersButtonHover->set_text("Show leaderboard without positive modifiers");
         } else {
-            ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard with positive modifiers");
+            modifiersButtonHover->set_text("Show leaderboard with positive modifiers");
         }
     }
 
@@ -449,19 +504,53 @@ namespace LeaderboardUI {
 
     void clearTable() {
         selectedScore = 11;
-        if (plvc->scores) {
-            plvc->scores->Clear();
+        if (plvc->leaderboardTableView->scores != NULL) {
+            plvc->leaderboardTableView->scores->Clear();
         }
         if (plvc->leaderboardTableView && plvc->leaderboardTableView->tableView) {
             plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
         }
     }
 
-    MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
-        plvc = self;
+    void PageUp() {
+        page++;
+
+        clearTable();
+        refreshFromTheServer();
+    }
+
+    void PageDown() {
+        if (page > 1) {
+            page--;
+        }
+
+        clearTable();
+        refreshFromTheServer();
+    }
+
+    void updateLeaderboard(PlatformLeaderboardViewController* self) {
         clearTable();
         page = 1;
         isLocal = false;
+
+        if (ssInstalled && ssElements.size() < 10) {
+            for (size_t i = 0; i < ssElements.size(); i++)
+            {
+                ssElements[i]->get_gameObject()->SetActive(true);
+            }
+            ssElements = vector<UnityEngine::Transform*>();
+            ArrayW<UnityEngine::Transform*> transforms = plvc->get_gameObject()->get_transform()->FindObjectsOfType<UnityEngine::Transform*>();
+            for (size_t i = 0; i < transforms.Length(); i++)
+            {
+                auto transform = transforms[i];
+                auto name =  transform->get_name();
+                if (to_utf8(csstrtostr(name)) == "ScoreSaberClickableImage" 
+                                || to_utf8(csstrtostr(name)) == "QuestUIHorizontalLayoutGroup") {
+                    transform->get_gameObject()->SetActive(false);
+                    ssElements.push_back(transform);
+                }
+            }
+        }
 
         if (PlayerController::currentPlayer == std::nullopt) {
             self->loadingControl->Hide();
@@ -484,18 +573,20 @@ namespace LeaderboardUI {
         }
 
         if (uploadStatus == NULL) {
-            ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(4);
-            ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(4);
-            for (int index = 0; index < 3; ++index)
-            {
-                dataItems[index] = self->scopeSegmentedControl->dataItems.get(index);
-                scoreScopes[index] = self->scoreScopes.get(index);
-            }
-            dataItems[3] = HMUI::IconSegmentedControl::DataItem::New_ctor(self->friendsLeaderboardIcon, "Country");
-            scoreScopes[3] = PlatformLeaderboardsModel::ScoresScope(3);
+            if (!ssInstalled) {
+                ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(4);
+                ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(4);
+                for (int index = 0; index < 3; ++index)
+                {
+                    dataItems[index] = self->scopeSegmentedControl->dataItems.get(index);
+                    scoreScopes[index] = self->scoreScopes.get(index);
+                }
+                dataItems[3] = HMUI::IconSegmentedControl::DataItem::New_ctor(self->friendsLeaderboardIcon, "Country");
+                scoreScopes[3] = PlatformLeaderboardsModel::ScoresScope(3);
 
-            self->scopeSegmentedControl->SetData(dataItems);
-            self->scoreScopes = scoreScopes;
+                plvc->scopeSegmentedControl->SetData(dataItems);
+                plvc->scoreScopes = scoreScopes;
+            }
 
             parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(480, 160), self->screen->get_transform()->get_position(), 140);
             visible = true;
@@ -521,7 +612,6 @@ namespace LeaderboardUI {
             
             globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(153, 42.5));
             countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(168, 42.5));
-
             if (PlayerController::currentPlayer != std::nullopt) {
                 updatePlayerInfoLabel();
             }
@@ -543,6 +633,7 @@ namespace LeaderboardUI {
             if (retryButton) UnityEngine::GameObject::Destroy(retryButton);
             retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){
                 retryButton->get_gameObject()->SetActive(false);
+                showRetryButton = false;
                 retryCallback();
             });
             retryButton->get_gameObject()->SetActive(false);
@@ -555,16 +646,18 @@ namespace LeaderboardUI {
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
 
-            upPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
-                page--;
-                clearTable();
-                refreshFromTheServer();
-            });
-            downPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -17), UnityEngine::Vector2(8, 5.12), [](){
-                page++;
-                clearTable();
-                refreshFromTheServer();
-            });
+            if (!ssInstalled) {
+                upPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
+                    page--;
+                    clearTable();
+                    refreshFromTheServer();
+                });
+                downPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -17), UnityEngine::Vector2(8, 5.12), [](){
+                    page++;
+                    clearTable();
+                    refreshFromTheServer();
+                });
+            }
 
             modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
                 modifiers = !modifiers;
@@ -574,10 +667,15 @@ namespace LeaderboardUI {
                 refreshFromTheServer();
             });
             modifiers = getModConfig().Modifiers.GetValue();
-            ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard without positive modifiers");
+            modifiersButtonHover = ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard without positive modifiers");
             updateModifiersButton();
 
-            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 22), UnityEngine::Vector2(4, 4), []() {
+            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(
+                parentScreen->get_transform(), 
+                BundleLoader::bundle->modifiersIcon, 
+                ssInstalled ? UnityEngine::Vector2(78, 0.5) : UnityEngine::Vector2(100, 22), 
+                UnityEngine::Vector2(4, 4), 
+                []() {
                 if (votingButton->state != 2) return;
                 
                 votingUI->reset();
@@ -597,8 +695,40 @@ namespace LeaderboardUI {
             settingsButton->set_highlightColor(SelectedColor);
         }
 
-        upPageButton->get_gameObject()->SetActive(false);
-        downPageButton->get_gameObject()->SetActive(false);
+        if (ssInstalled && !sspageUpButton) {
+            ArrayW<UnityEngine::UI::Button*> buttons = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::UI::Button*>();
+            for (size_t i = 0; i < buttons.Length(); i++)
+            {
+                auto button = buttons[i];
+
+                TMPro::TextMeshProUGUI* textMesh = button->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
+                if (textMesh && textMesh->get_text() && to_utf8(csstrtostr(textMesh->get_text())) == "") {
+                    auto position = button->GetComponent<UnityEngine::RectTransform *>()->get_anchoredPosition();
+                    if (position.x == -40 && position.y == 20) {
+                        ssDownAction = button->get_onClick();
+                        blDownAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
+                        sspageDownButton = button;
+
+                        auto delegate = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), button, PageDown);
+                        blDownAction->AddListener(delegate);
+                        button->set_onClick(blDownAction);
+                    } else if (position.x == -40 && position.y == -20) {
+                        ssUpAction = button->get_onClick();
+                        blUpAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
+                        sspageUpButton = button;
+
+                        auto delegate = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), button, PageUp);
+                        blUpAction->AddListener(delegate);
+                        button->set_onClick(blUpAction);
+                    }
+                }
+            }
+        }
+
+        if (upPageButton != NULL) {
+            upPageButton->get_gameObject()->SetActive(false);
+            downPageButton->get_gameObject()->SetActive(false);
+        }
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
         if (!levelData->get_levelID().starts_with("custom_level")) {
@@ -618,13 +748,113 @@ namespace LeaderboardUI {
         scoreDetailsUI->setScore(detailsTextWorkaround);
     }
 
+    void updateSelectedLeaderboard() {
+        if (preferencesButton && PlayerController::currentPlayer == std::nullopt) {
+            loginPrompt->get_gameObject()->SetActive(showBeatLeader);
+            preferencesButton->get_gameObject()->SetActive(showBeatLeader);
+        }
+
+        LevelInfoUI::SetLevelInfoActive(showBeatLeader);
+        ModifiersUI::SetModifiersActive(showBeatLeader);
+
+        for (size_t i = 0; i < ssElements.size(); i++)
+        {
+            ssElements[i]->get_gameObject()->SetActive(!showBeatLeader);
+        }
+
+        if (showBeatLeader) {
+            blDownAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
+
+            auto delegate = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), sspageDownButton, PageDown);
+            blDownAction->AddListener(delegate);
+
+            blUpAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
+
+            auto delegate2 = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), sspageUpButton, PageUp);
+            blUpAction->AddListener(delegate2);
+        }
+
+        if (sspageUpButton != NULL) {
+            sspageUpButton->set_onClick(showBeatLeader ? blUpAction : ssUpAction);
+            sspageDownButton->set_onClick(showBeatLeader ? blDownAction : ssDownAction);
+            sspageDownButton->set_interactable(!showBeatLeader);
+            sspageUpButton->set_interactable(!showBeatLeader);
+        }
+        
+        HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
+        
+        if (showBeatLeader) {
+            imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
+            imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
+            imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
+        } else {
+            imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
+            imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
+            imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
+        }
+
+        if (parentScreen != NULL) {
+            parentScreen->get_gameObject()->SetActive(showBeatLeader);
+            retryButton->get_gameObject()->SetActive(showBeatLeader && showRetryButton);
+
+            plvc->leaderboardTableView->rowHeight = 6;
+        }
+    }
+
+    void refreshLeaderboardCall(PlatformLeaderboardViewController* self) {
+        if (showBeatLeader) {
+            updateLeaderboard(self);
+        }
+
+        if (ssInstalled && showBeatLeaderButton == NULL) {
+            auto headerTransform = self->get_gameObject()->get_transform()->Find("HeaderPanel")->get_transform();
+            QuestUI::BeatSaberUI::CreateText(headerTransform, "BeatLeader", {-12.2, 2});
+            showBeatLeaderButton = CreateToggle(headerTransform, showBeatLeader, UnityEngine::Vector2(-84.5, 0), [](bool changed){
+                showBeatLeader = !showBeatLeader;
+                getModConfig().ShowBeatleader.SetValue(showBeatLeader);
+                plvc->Refresh(true, true);
+                updateSelectedLeaderboard();
+            });
+
+            if (!showBeatLeader) {
+                QuestUI::MainThreadScheduler::Schedule([] {
+                    HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
+                    imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
+                    imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
+                    imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
+                });
+            }
+            
+            updateSelectedLeaderboard();
+        }
+    }
+
+    MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
+        plvc = self;
+        if (!showBeatLeader) {
+            RefreshLeaderboard(self, showLoadingIndicator, clear);
+            ssWasOpened = true;
+        }
+
+        if (ssInstalled && showBeatLeader && sspageUpButton == NULL) {
+            QuestUI::MainThreadScheduler::Schedule([self] {
+                refreshLeaderboardCall(self);
+            });
+        } else {
+            refreshLeaderboardCall(self);
+        }
+
+        leaderboardLoaded = true;
+    }
+
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
         LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
 
-        if (!isLocal && result->playerNameText->get_fontSize() > 3) {
+        if (showBeatLeader || isLocal) {
+        if (result->playerNameText->get_fontSize() > 3) {
             result->playerNameText->set_enableAutoSizing(false);
             result->playerNameText->set_richText(true);
-            EmojiSupport::AddSupport(result->playerNameText);
+            
             resize(result->playerNameText, 24, 0);
             move(result->rankText, -6.2, -0.1);
             result->rankText->set_alignment(TMPro::TextAlignmentOptions::Right);
@@ -635,34 +865,54 @@ namespace LeaderboardUI {
             result->playerNameText->set_fontSize(3);
             result->fullComboText->set_fontSize(3);
             result->scoreText->set_fontSize(2);
+            EmojiSupport::AddSupport(result->playerNameText);
 
-            avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
-            avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
+            if (!cellBackgrounds.count(result)) {
+                avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
+                avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
 
-            auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
-                auto openEvent = il2cpp_utils::MakeDelegate<System::Action *>(
-                    classof(System::Action*),
-                    static_cast<Il2CppObject *>(nullptr), setTheScoreAgain);
-                detailsTextWorkaround = cellScores[result];
+                auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
+                    auto openEvent = il2cpp_utils::MakeDelegate<System::Action *>(
+                        classof(System::Action*),
+                        static_cast<Il2CppObject *>(nullptr), setTheScoreAgain);
+                    detailsTextWorkaround = cellScores[result];
 
-                scoreDetailsUI->modal->Show(true, true, openEvent);
-                scoreDetailsUI->setScore(cellScores[result]);
+                    scoreDetailsUI->modal->Show(true, true, openEvent);
+                    scoreDetailsUI->setScore(cellScores[result]);
+                });
                 
-            });
-            scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->scoreUnderlineMaterial));
-            
-            cellHighlights[result] = scoreSelector;
+                scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->scoreUnderlineMaterial));
+                
+                cellHighlights[result] = scoreSelector;
 
-            auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
-            backgroundImage->set_material(BundleLoader::bundle->scoreBackgroundMaterial);
-            backgroundImage->get_transform()->SetAsFirstSibling();
-            cellBackgrounds[result] = backgroundImage;  
+                auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
+                backgroundImage->set_material(BundleLoader::bundle->scoreBackgroundMaterial);
+                backgroundImage->get_transform()->SetAsFirstSibling();
+                cellBackgrounds[result] = backgroundImage;  
 
-            // auto tagsList = QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(result->get_transform());
-            // clanGroups[result] = tagsList;         
+                // auto tagsList = QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(result->get_transform());
+                // clanGroups[result] = tagsList;         
+            }
         }
+        } else {
+            if (result->scoreText->get_fontSize() == 2) {
+                EmojiSupport::RemoveSupport(result->playerNameText);
+                result->playerNameText->set_enableAutoSizing(true);
+                resize(result->playerNameText, -24, 0);
+                move(result->rankText, 6.2, 0.1);
+                result->rankText->set_alignment(TMPro::TextAlignmentOptions::Left);
+                move(result->playerNameText, 0.5, 0);
+                move(result->fullComboText, -0.2, 0);
+                move(result->scoreText, -4, 0);
+                result->playerNameText->set_fontSize(4);
+                result->fullComboText->set_fontSize(4);
+                result->scoreText->set_fontSize(4);
+            }
+        }
+        
 
-        if (!isLocal) {
+        if (!isLocal && showBeatLeader) {
+            if (cellBackgrounds.count(result)) {
             auto player = scoreVector[row].player;
             cellBackgrounds[result]->get_gameObject()->set_active(true);
             result->playerNameText->GetComponent<UnityEngine::RectTransform*>()->set_anchoredPosition({
@@ -711,8 +961,9 @@ namespace LeaderboardUI {
             scoreSelector->set_defaultColor(UnityEngine::Color(hg, 0.0, 0.0, 1.0));
             scoreSelector->set_highlightColor(underlineHoverColor);
             schemeForRole(player.role, false).Apply(scoreSelector->get_material());
+            }
         } else {
-            if (cellBackgrounds.count(result)) {
+            if (cellBackgrounds.count(result) && cellBackgrounds[result]) {
                 cellBackgrounds[result]->get_gameObject()->set_active(false);
                 avatars[result]->get_gameObject()->set_active(false);
                 cellHighlights[result]->get_gameObject()->set_active(false);
@@ -729,7 +980,7 @@ namespace LeaderboardUI {
             updateVotingButton();
         }
         
-        if (visible) {
+        if (visible && showBeatLeader) {
             statusWasCached = false;
             uploadStatus->SetText(description);
             switch (status)
@@ -742,6 +993,7 @@ namespace LeaderboardUI {
                     logoAnimation->SetAnimating(false);
                     if (showRestart) {
                         retryButton->get_gameObject()->SetActive(true);
+                        showRetryButton = true;
                     }
                     break;
                 case ReplayUploadStatus::inProgress:
@@ -822,13 +1074,16 @@ namespace LeaderboardUI {
     }
 
     void setup() {
+        if (hooksInstalled) return;
+
         LoggerContextObject logger = getLogger().WithContext("load");
 
         INSTALL_HOOK(logger, LeaderboardActivate);
         INSTALL_HOOK(logger, LeaderboardDeactivate);
+        INSTALL_HOOK(logger, LocalLeaderboardDidActivate);
         INSTALL_HOOK(logger, RefreshLeaderboard);
         INSTALL_HOOK(logger, LeaderboardCellSource);
-        INSTALL_HOOK(logger, LocalLeaderboardDidActivate);
+        INSTALL_HOOK(logger, SegmentedControlHandleCellSelection);
 
         PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
             QuestUI::MainThreadScheduler::Schedule([] {
@@ -837,6 +1092,19 @@ namespace LeaderboardUI {
                 }
             });
         });
+
+        ssInstalled = false;
+        showBeatLeader = true;
+
+        for(auto& [key, value] : Modloader::getMods()){
+            if (key == "ScoreSaber") {
+                ssInstalled = true;
+                showBeatLeader = getModConfig().ShowBeatleader.GetValue();
+                break;
+            }
+        }
+
+        hooksInstalled = true;
     }
 
     void reset() {
@@ -847,10 +1115,19 @@ namespace LeaderboardUI {
         linkContainer = NULL;
         settingsContainer = NULL;
         preferencesButton = NULL;
+        parentScreen = NULL;
+        sspageUpButton = NULL;
         cellScores.clear();
         avatars = {};
         cellHighlights = {};
         cellBackgrounds = {};
+        showBeatLeaderButton = NULL;
+        ssWasOpened = false;
+        if (ssInstalled) {
+            showBeatLeader = getModConfig().ShowBeatleader.GetValue();
+        }
+        ssElements = vector<UnityEngine::Transform*>();
+        ModifiersUI::ResetModifiersUI();
     }    
 
     void hidePopups() {

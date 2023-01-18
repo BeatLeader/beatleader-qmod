@@ -71,12 +71,11 @@ void replayPostCallback(ReplayUploadStatus status, const string& description, fl
     }
 
     if (!ReplayRecorder::recording) {
-        if (status == ReplayUploadStatus::finished) {
-            PlayerController::Refresh();
-        }
-        
         QuestUI::MainThreadScheduler::Schedule([status, description, progress, code] {
             LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
+            if (status == ReplayUploadStatus::finished) {
+                PlayerController::Refresh();
+            }
         });
     }
 }
@@ -85,6 +84,7 @@ MAKE_HOOK_MATCH(AppInitStart, &AppInit::Start, void,
     AppInit *self) {
     self->::UnityEngine::MonoBehaviour::StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle(self->get_gameObject())));
     AppInitStart(self);
+    LeaderboardUI::setup();
 }
 
 #include "HMUI/ModalView.hpp"
@@ -117,7 +117,6 @@ extern "C" void load() {
 
     QuestUI::Init();
     QuestUI::Register::RegisterModSettingsViewController<BeatLeader::PreferencesViewController*>(modInfo, "BeatLeader");
-    LeaderboardUI::setup();
     LeaderboardUI::retryCallback = []() {
         ReplayManager::RetryPosting(replayPostCallback);
     };

@@ -189,6 +189,18 @@ namespace LevelInfoUI {
         INSTALL_HOOK(logger, LevelRefreshContent);
     }
 
+    void SetLevelInfoActive(bool active) {
+        starsLabel->get_gameObject()->SetActive(active);
+        starsImage->get_gameObject()->SetActive(active);
+        ppLabel->get_gameObject()->SetActive(active);
+        ppImage->get_gameObject()->SetActive(active);
+        typeLabel->get_gameObject()->SetActive(active);
+        typeImage->get_gameObject()->SetActive(active);
+        statusLabel->get_gameObject()->SetActive(active);
+        statusImage->get_gameObject()->SetActive(active);
+        noSubmissionLabel->get_gameObject()->SetActive(active);
+    }
+
     void resetStars() {
         _mapInfos = {};
     }

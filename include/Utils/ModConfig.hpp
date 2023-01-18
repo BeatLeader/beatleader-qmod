@@ -12,6 +12,7 @@ DECLARE_CONFIG(ModConfig,
     CONFIG_VALUE(TimesetActive, bool, "Show Timeset", true);
     CONFIG_VALUE(IncognitoList, std::string, "Hidden players", "{}");
     CONFIG_VALUE(ShowReplaySettings, bool, "Show replay settings", true);
+    CONFIG_VALUE(ShowBeatleader, bool, "Show BeatLeader", true, "Priority for BeatLeader or SS");
 )
 
 inline bool UploadEnabled() {

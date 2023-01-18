@@ -11,4 +11,6 @@ namespace ModifiersUI {
     void setup();
     void refreshMultiplierAndMaxRank();
     void refreshAllModifiers();
+    void SetModifiersActive(bool active);
+    void ResetModifiersUI();
 }
