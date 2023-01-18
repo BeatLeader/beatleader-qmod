@@ -221,6 +221,7 @@ namespace LeaderboardUI {
 
     MAKE_HOOK_MATCH(LeaderboardDeactivate, &PlatformLeaderboardViewController::DidDeactivate, void, PlatformLeaderboardViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
         LeaderboardDeactivate(self, removedFromHierarchy, screenSystemDisabling);
+        hidePopups();
 
         if (parentScreen != NULL) {
             visible = false;
