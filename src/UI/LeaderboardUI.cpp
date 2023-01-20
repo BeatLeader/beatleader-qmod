@@ -179,11 +179,7 @@ namespace LeaderboardUI {
     bool restoredFromPreferences = false;
 
     UnityEngine::UI::Button* sspageUpButton;
-    UnityEngine::UI::Button::ButtonClickedEvent* ssUpAction;
-    UnityEngine::UI::Button::ButtonClickedEvent* blUpAction;
     UnityEngine::UI::Button* sspageDownButton;
-    UnityEngine::UI::Button::ButtonClickedEvent* ssDownAction;
-    UnityEngine::UI::Button::ButtonClickedEvent* blDownAction;
 
     void updatePlayerInfoLabel() {
         auto const& player = PlayerController::currentPlayer;
@@ -431,10 +427,7 @@ namespace LeaderboardUI {
                     
                 plvc->leaderboardTableView->scores = plvc->scores;
                 plvc->leaderboardTableView->specialScorePos = 12;
-                if (sspageUpButton != NULL) {
-                    sspageDownButton->set_interactable(pageNum != 1);
-                    sspageUpButton->set_interactable(pageNum * perPage < total);
-                } else if (upPageButton != NULL) {
+                if (upPageButton != NULL) {
                     upPageButton->get_gameObject()->SetActive(pageNum != 1);
                     downPageButton->get_gameObject()->SetActive(pageNum * perPage < total);
                 }
@@ -513,14 +506,14 @@ namespace LeaderboardUI {
         }
     }
 
-    void PageUp() {
+    void PageDown() {
         page++;
 
         clearTable();
         refreshFromTheServer();
     }
 
-    void PageDown() {
+    void PageUp() {
         if (page > 1) {
             page--;
         }
@@ -534,7 +527,9 @@ namespace LeaderboardUI {
         page = 1;
         isLocal = false;
 
-        if (ssInstalled && ssElements.size() < 10) {
+        if (ssInstalled && 
+            ((ssElements.size() == 0 && !ssWasOpened) 
+            || (ssElements.size() < 10 && ssWasOpened))) {
             for (size_t i = 0; i < ssElements.size(); i++)
             {
                 ssElements[i]->get_gameObject()->SetActive(true);
@@ -545,8 +540,12 @@ namespace LeaderboardUI {
             {
                 auto transform = transforms[i];
                 auto name =  transform->get_name();
-                if (to_utf8(csstrtostr(name)) == "ScoreSaberClickableImage" 
-                                || to_utf8(csstrtostr(name)) == "QuestUIHorizontalLayoutGroup") {
+
+                bool infoIcon = to_utf8(csstrtostr(name)) == "ScoreSaberClickableImage";
+                bool header = to_utf8(csstrtostr(name)) == "QuestUIHorizontalLayoutGroup" &&
+                            transform->get_parent() && transform->get_parent()->get_parent() &&
+                            to_utf8(csstrtostr(transform->get_parent()->get_parent()->get_name())) == "PlatformLeaderboardViewController";
+                if (infoIcon || header) {
                     transform->get_gameObject()->SetActive(false);
                     ssElements.push_back(transform);
                 }
@@ -646,19 +645,12 @@ namespace LeaderboardUI {
             resize(uploadStatus, 10, 0);
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
-
-            if (!ssInstalled) {
-                upPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
-                    page--;
-                    clearTable();
-                    refreshFromTheServer();
-                });
-                downPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -17), UnityEngine::Vector2(8, 5.12), [](){
-                    page++;
-                    clearTable();
-                    refreshFromTheServer();
-                });
-            }
+            upPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
+                PageUp();
+            });
+            downPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -20), UnityEngine::Vector2(8, 5.12), [](){
+                PageDown();
+            });
 
             modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
                 modifiers = !modifiers;
@@ -674,7 +666,7 @@ namespace LeaderboardUI {
             auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(
                 parentScreen->get_transform(), 
                 BundleLoader::bundle->modifiersIcon, 
-                ssInstalled ? UnityEngine::Vector2(78, 0.5) : UnityEngine::Vector2(100, 22), 
+                UnityEngine::Vector2(100, 22), 
                 UnityEngine::Vector2(4, 4), 
                 []() {
                 if (votingButton->state != 2) return;
@@ -706,21 +698,11 @@ namespace LeaderboardUI {
                 if (textMesh && textMesh->get_text() && to_utf8(csstrtostr(textMesh->get_text())) == "") {
                     auto position = button->GetComponent<UnityEngine::RectTransform *>()->get_anchoredPosition();
                     if (position.x == -40 && position.y == 20) {
-                        ssDownAction = button->get_onClick();
-                        blDownAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
                         sspageDownButton = button;
-
-                        auto delegate = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), button, PageDown);
-                        blDownAction->AddListener(delegate);
-                        button->set_onClick(blDownAction);
+                        sspageDownButton->get_gameObject()->SetActive(false);
                     } else if (position.x == -40 && position.y == -20) {
-                        ssUpAction = button->get_onClick();
-                        blUpAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
                         sspageUpButton = button;
-
-                        auto delegate = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), button, PageUp);
-                        blUpAction->AddListener(delegate);
-                        button->set_onClick(blUpAction);
+                        sspageUpButton->get_gameObject()->SetActive(false);
                     }
                 }
             }
@@ -763,23 +745,14 @@ namespace LeaderboardUI {
             ssElements[i]->get_gameObject()->SetActive(!showBeatLeader);
         }
 
-        if (showBeatLeader) {
-            blDownAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
-
-            auto delegate = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), sspageDownButton, PageDown);
-            blDownAction->AddListener(delegate);
-
-            blUpAction = UnityEngine::UI::Button::ButtonClickedEvent::New_ctor();
-
-            auto delegate2 = il2cpp_utils::MakeDelegate<UnityEngine::Events::UnityAction*>(classof(UnityEngine::Events::UnityAction*), sspageUpButton, PageUp);
-            blUpAction->AddListener(delegate2);
+        if (sspageUpButton != NULL) {
+            sspageDownButton->get_gameObject()->SetActive(!showBeatLeader);
+            sspageUpButton->get_gameObject()->SetActive(!showBeatLeader);
         }
 
-        if (sspageUpButton != NULL) {
-            sspageUpButton->set_onClick(showBeatLeader ? blUpAction : ssUpAction);
-            sspageDownButton->set_onClick(showBeatLeader ? blDownAction : ssDownAction);
-            sspageDownButton->set_interactable(!showBeatLeader);
-            sspageUpButton->set_interactable(!showBeatLeader);
+        if (upPageButton != NULL) {
+            upPageButton->get_gameObject()->SetActive(showBeatLeader);
+            downPageButton->get_gameObject()->SetActive(showBeatLeader);
         }
         
         HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
@@ -852,7 +825,7 @@ namespace LeaderboardUI {
         LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
 
         if (showBeatLeader || isLocal) {
-        if (result->playerNameText->get_fontSize() > 3) {
+        if (result->playerNameText->get_fontSize() > 3 || result->playerNameText->get_enableAutoSizing()) {
             result->playerNameText->set_enableAutoSizing(false);
             result->playerNameText->set_richText(true);
             
