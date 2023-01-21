@@ -105,6 +105,7 @@ using UnityEngine::Resources;
 
 namespace LeaderboardUI {
     function<void()> retryCallback;
+    BeatLeader::Leaderboard leaderboard = BeatLeader::Leaderboard();
     PlatformLeaderboardViewController* plvc = NULL;
 
     TMPro::TextMeshProUGUI* uploadStatus = NULL;
@@ -203,6 +204,8 @@ namespace LeaderboardUI {
 
     MAKE_HOOK_MATCH(LeaderboardActivate, &PlatformLeaderboardViewController::DidActivate, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHeirarchy, bool screenSystemEnabling) {
         LeaderboardActivate(self, firstActivation, addedToHeirarchy, screenSystemEnabling);
+
+        if (leaderboard.get_leaderboardViewController() != self) return;
         if (firstActivation) {
             HMUI::ImageView* imageView = self->get_transform()->Find("HeaderPanel")->GetComponentInChildren<HMUI::ImageView*>();
             imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
@@ -221,7 +224,7 @@ namespace LeaderboardUI {
 
     MAKE_HOOK_MATCH(LeaderboardDeactivate, &PlatformLeaderboardViewController::DidDeactivate, void, PlatformLeaderboardViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
         LeaderboardDeactivate(self, removedFromHierarchy, screenSystemDisabling);
-
+        if (leaderboard.get_leaderboardViewController() != self) return;
         if (parentScreen != NULL) {
             visible = false;
             parentScreen->SetActive(false);
@@ -458,6 +461,11 @@ namespace LeaderboardUI {
     }
 
     MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
+        if (leaderboard.get_leaderboardViewController() != self) {
+            RefreshLeaderboard(self, showLoadingIndicator, clear);
+            return;
+        }
+
         plvc = self;
         clearTable();
         page = 1;
@@ -620,6 +628,10 @@ namespace LeaderboardUI {
 
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
         LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
+
+        if (plvc == NULL || plvc->leaderboardTableView != self) {
+            return result;
+        }
 
         if (!isLocal && result->playerNameText->get_fontSize() > 3) {
             result->playerNameText->set_enableAutoSizing(false);

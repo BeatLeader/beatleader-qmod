@@ -29,6 +29,8 @@
 #include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 #include "questui/shared/QuestUI.hpp"
 
+#include "leaderboardcore/shared/LeaderboardCore.hpp"
+
 using namespace GlobalNamespace;
 using namespace QuestUI;
 
@@ -44,7 +46,7 @@ Logger& getLogger() {
 
 // Called at the early stages of game loading
 extern "C" void setup(ModInfo& info) {
-    info.id = ID;
+    info.id = MOD_ID;
     info.version = VERSION;
     modInfo = info;
 	
@@ -162,4 +164,6 @@ extern "C" void load() {
     INSTALL_HOOK(logger, AppInitStart);
 
     getLogger().info("Installed main hooks!");
+
+    LeaderboardCore::Register::RegisterLeaderboard(&LeaderboardUI::leaderboard, modInfo);
 }

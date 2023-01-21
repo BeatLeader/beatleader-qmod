@@ -74,6 +74,16 @@
       "id": "bs-utils",
       "versionRange": "^0.7.0",
       "additionalData": {}
+    },
+    {
+      "id": "leaderboardcore",
+      "versionRange": "*",
+      "additionalData": {}
+    },
+    {
+      "id": "bsml",
+      "versionRange": "*",
+      "additionalData": {}
     }
   ],
   "additionalData": {}
