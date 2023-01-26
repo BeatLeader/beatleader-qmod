@@ -21,6 +21,7 @@ class Sprites {
     static const string PixelB64;
     static const string ClipboardB64;
     static const string ArrowsB64;
+    static const string GlobalB64;
 
     static map<string, std::vector<uint8_t>> iconCache;
 public:
@@ -33,6 +34,7 @@ public:
     static UnityEngine::Sprite* get_TransparentPixel();
     static UnityEngine::Sprite* get_ClipboardIcon();
     static UnityEngine::Sprite* get_ArrowIcon();
+    static UnityEngine::Sprite* get_GlobalIcon();
 
     static bool has_Icon(string url);
     static void get_Icon(string url, const std::function<void(UnityEngine::Sprite*)>& completion, bool nullable = false);

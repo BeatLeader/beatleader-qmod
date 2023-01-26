@@ -5,7 +5,6 @@
 
 #include "include/Utils/ReplayManager.hpp"
 #include "include/UI/LevelInfoUI.hpp"
-#include "include/UI/Leaderboard.hpp"
 
 #include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
 #include "UnityEngine/Transform.hpp"
@@ -18,7 +17,6 @@ using namespace std;
 
 namespace LeaderboardUI {
     extern function<void()> retryCallback; 
-    extern BeatLeader::Leaderboard leaderboard;
 
     void setup();
     void reset();

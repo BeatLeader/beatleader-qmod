@@ -164,6 +164,4 @@ extern "C" void load() {
     INSTALL_HOOK(logger, AppInitStart);
 
     getLogger().info("Installed main hooks!");
-
-    LeaderboardCore::Register::RegisterLeaderboard(&LeaderboardUI::leaderboard, modInfo);
 }
