@@ -44,8 +44,6 @@ namespace BeatLeader {
 
             TMPro::TextMeshProUGUI* loadingText;
 
-            int scoreId;
-            string platform;
             bool scoreStatsFetched;
             
             void setScore(const Score& score);

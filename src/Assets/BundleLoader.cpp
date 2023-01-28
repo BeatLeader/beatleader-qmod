@@ -26,6 +26,8 @@ custom_types::Helpers::Coroutine BundleLoader::LoadBundle(UnityEngine::GameObjec
 
     bundle = container->AddComponent<BeatLeader::Bundle*>();
     bundle->Init(assetBundle);
+    
+    co_return;
 }
 
 Material* getMaterial(std::string name, AssetBundle* assetBundle) {

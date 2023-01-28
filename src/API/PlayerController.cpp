@@ -29,12 +29,14 @@ void callbackWrapper(optional<Player> const& player) {
         fn(player);
 }
 
-void PlayerController::Refresh(const function<void(optional<Player> const&, string)>& finished) {
-    WebUtils::GetJSONAsync(WebUtils::API_URL + "user/modinterface", [finished](long status, bool error, rapidjson::Document const& result){
+void PlayerController::Refresh(int retry, const function<void(optional<Player> const&, string)>& finished) {
+    WebUtils::GetJSONAsync(WebUtils::API_URL + "user/modinterface", [retry, finished](long status, bool error, rapidjson::Document const& result){
         if (status == 200 && !error) {
             currentPlayer = Player(result.GetObject());
             if (finished) finished(currentPlayer, "");
             callbackWrapper(currentPlayer);
+        } else if (retry < 3) {
+            Refresh(retry + 1, finished);
         } else {
             currentPlayer = nullopt;
             if (finished) finished(nullopt, "Failed to retrieve player");
@@ -48,7 +50,7 @@ void PlayerController::SignUp(string login, string password, const function<void
     WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", password, login, "signup",
                             [finished](long statusCode, string error) {
         if (statusCode == 200) {
-            Refresh(finished);
+            Refresh(0, finished);
         } else {
             lastErrorDescription = error;
             getLogger().error("BeatLeader %s",
@@ -64,7 +66,7 @@ void PlayerController::LogIn(string login, string password, const function<void(
     WebUtils::PostFormAsync(WebUtils::API_URL + "signinoculus", password, login, "login",
                             [finished](long statusCode, string error) {
         if (statusCode == 200) {
-            Refresh(finished);
+            Refresh(0, finished);
         } else {
             lastErrorDescription = error;
             getLogger().error("BeatLeader %s",
