@@ -14,21 +14,19 @@ string ReplayManager::lastReplayFilename = "";
 
 void ReplayManager::ProcessReplay(Replay const &replay, bool skipUpload, function<void(ReplayUploadStatus, string, float,
                                                                                   int)> const &finished) {
-
-    if(!UploadEnabled()) {
-        finished(ReplayUploadStatus::finished, "<color=#008000ff>Upload disabled</color>", 0, -1);
-        return;
-    }
-    
     string filename = FileManager::ToFilePath(replay);
     lastReplayFilename = filename;
 
     FileManager::WriteReplay(replay);
-
     getLogger().info("%s",("Replay saved " + filename).c_str());
+
+    if(!UploadEnabled()) {
+        finished(ReplayUploadStatus::finished, "<color=#800000ff>Upload disabled. But replay was saved.</color>", 0, -1);
+        return;
+    }    
     
     if (replay.info.failTime > 0.001 || replay.info.speed > 0.001) {
-        finished(ReplayUploadStatus::finished, "<color=#008000ff>Failed attempt was saved!</color>", 0, -1);
+        finished(ReplayUploadStatus::finished, "<color=#800000ff>Failed attempt was saved!</color>", 0, -1);
         return; 
     }
     if(skipUpload)
