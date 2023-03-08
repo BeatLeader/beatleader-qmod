@@ -5,33 +5,33 @@
   "author": "NSGolova",
   "version": "0.5.6",
   "packageId": "com.beatgames.beatsaber",
-  "packageVersion": "1.27.0_3631150051",
+  "packageVersion": "1.28.0_4124311467",
   "coverImage": "cover.png",
   "dependencies": [
+    {
+      "version": "^0.33.0",
+      "id": "codegen",
+      "downloadIfMissing": "https://github.com/sc2ad/BeatSaber-Quest-Codegen/releases/download/v0.33.0/Codegen.qmod"
+    },
+    {
+      "version": "^0.17.11",
+      "id": "questui",
+      "downloadIfMissing": "https://github.com/darknight1050/QuestUI/releases/download/v0.17.11/QuestUI.qmod"
+    },
+    {
+      "version": "^0.15.23",
+      "id": "custom-types",
+      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.23/CustomTypes.qmod"
+    },
+    {
+      "version": "^0.10.15",
+      "id": "songloader",
+      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.15/SongLoader.qmod"
+    },
     {
       "version": "^0.7.0",
       "id": "bs-utils",
       "downloadIfMissing": "https://github.com/sc2ad/QuestBS-Utils/releases/download/v0.7.2/BS-Utils.qmod"
-    },
-    {
-      "version": "^0.17.10",
-      "id": "questui",
-      "downloadIfMissing": "https://github.com/darknight1050/QuestUI/releases/download/v0.17.10/QuestUI.qmod"
-    },
-    {
-      "version": "^0.10.13",
-      "id": "songloader",
-      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.14/SongLoader.qmod"
-    },
-    {
-      "version": "^0.15.22",
-      "id": "custom-types",
-      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.22/CustomTypes.qmod"
-    },
-    {
-      "version": "^0.32.0",
-      "id": "codegen",
-      "downloadIfMissing": "https://github.com/sc2ad/BeatSaber-Quest-Codegen/releases/download/v0.32.0/Codegen.qmod"
     }
   ],
   "modFiles": [

@@ -1,41 +1,50 @@
 #include "include/Models/Player.hpp"
 
-Player::Player(rapidjson::Value const& document) {
-    id = document["id"].GetString();
-    name = document["name"].GetString();
-    country = document["country"].GetString();
-    avatar = document["avatar"].GetString();
-    role = document["role"].GetString();
+#include "include/Utils/ModConfig.hpp"
+#include "include/main.hpp"
 
-    rank = document["rank"].GetInt();
-    countryRank = document["countryRank"].GetInt();
-    pp = document["pp"].GetFloat();
+Player::Player(rapidjson::Value const& userModInterface) {
+    id = userModInterface["id"].GetString();
+    name = userModInterface["name"].GetString();
+    country = userModInterface["country"].GetString();
+    avatar = userModInterface["avatar"].GetString();
+    role = userModInterface["role"].GetString();
 
-    auto clansList = document["clans"].GetArray();
+    rank = userModInterface["rank"].GetInt();
+    countryRank = userModInterface["countryRank"].GetInt();
+    pp = userModInterface["pp"].GetFloat();
+
+    auto clansList = userModInterface["clans"].GetArray();
     for (int index = 0; index < (int)clansList.Size(); ++index) {
         auto const& clan = clansList[index];
         clans.push_back(Clan(clan));
     }
 
-    if (document.HasMember("friends") && !document["friends"].IsNull()) {
-        auto friendsList = document["friends"].GetArray();
+    if (userModInterface.HasMember("friends") && !userModInterface["friends"].IsNull()) {
+        auto friendsList = userModInterface["friends"].GetArray();
         for (int index = 0; index < (int)friendsList.Size(); ++index) {
             auto const& friendId = friendsList[index].GetString();
             friends.push_back(friendId);
         }
     }
 
-    if (document.HasMember("socials") && !document["socials"].IsNull()) {
-        auto socialsList = document["socials"].GetArray();
+    if (userModInterface.HasMember("socials") && !userModInterface["socials"].IsNull()) {
+        auto socialsList = userModInterface["socials"].GetArray();
         for (int index = 0; index < (int)socialsList.Size(); ++index) {
             auto const& social = socialsList[index];
             socials.push_back(Social(social));
         }
     }
 
-    if (document.HasMember("profileSettings")) {
-        profileSettings.emplace(ProfileSettings(document["profileSettings"].GetObject()));
+    if (userModInterface.HasMember("profileSettings")) {
+        profileSettings.emplace(ProfileSettings(userModInterface["profileSettings"].GetObject()));
     }
+}
+
+void Player::SetHistory(rapidjson::Value const& history) {
+    lastRank = history["rank"].GetInt();
+    lastCountryRank = history["countryRank"].GetInt();
+    lastPP = history["pp"].GetFloat();
 }
 
 Social::Social(rapidjson::Value const& document) {
