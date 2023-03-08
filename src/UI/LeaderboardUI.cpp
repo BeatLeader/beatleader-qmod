@@ -181,13 +181,30 @@ namespace LeaderboardUI {
     UnityEngine::UI::Button* sspageUpButton;
     UnityEngine::UI::Button* sspageDownButton;
 
+    void updatePlayerRank() {
+        auto getColoredChange = [](float change){
+            bool positive = change > 0;
+            return " <color=#" + (std::string)(positive ? "00FF00" : "FF0000") + ">" + (positive ? "+" : "");
+        };
+
+        auto const& player = PlayerController::currentPlayer;
+        if (player != std::nullopt && player->rank > 0) {
+            int rankChange = player->lastRank - player->rank;
+            int countryRankChange = player->lastCountryRank - player->countryRank;
+            float ppChange = player->pp - player->lastPP;
+            globalRank->SetText("#" + to_string(player->rank) + (rankChange != 0 ? getColoredChange(rankChange) + to_string(rankChange) : ""));
+            countryRankAndPp->SetText("#" + to_string(player->countryRank) + " " + (countryRankChange != 0 ? getColoredChange(countryRankChange) + to_string(countryRankChange) : "")
+                + "   <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp " + (ppChange != 0 ? getColoredChange(ppChange)  + to_string_wprecision(ppChange, 2) + "pp" : ""));
+        }
+    }
+
     void updatePlayerInfoLabel() {
         auto const& player = PlayerController::currentPlayer;
         if (player != std::nullopt) {
             if (player->rank > 0) {
 
-                globalRank->SetText("#" + to_string(player->rank));
-                countryRankAndPp->SetText("#" + to_string(player->countryRank) + "        <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp");
+                updatePlayerRank();
+                
                 playerName->set_alignment(TMPro::TextAlignmentOptions::Center);
                 playerName->SetText(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value(), 25));
 
@@ -204,7 +221,7 @@ namespace LeaderboardUI {
                         plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
                     }
 
-                    countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), sprite, {135, 45}, {3.2, sprite->get_bounds().get_size().y * 10});
+                    countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), sprite, {130, 45}, {3.2, sprite->get_bounds().get_size().y * 10});
                 }
 
             } else {
@@ -604,14 +621,14 @@ namespace LeaderboardUI {
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->globalLeaderboardIcon, UnityEngine::Vector2(120, 45), UnityEngine::Vector2(4, 4));
             playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
 
             EmojiSupport::AddSupport(playerName);
             
-            globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(153, 42.5));
-            countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(168, 42.5));
+            globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->globalLeaderboardIcon, UnityEngine::Vector2(110, 45), UnityEngine::Vector2(4, 4));
+            globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(143, 42.5));
+            countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(163, 42.5));
             if (PlayerController::currentPlayer != std::nullopt) {
                 updatePlayerInfoLabel();
             }

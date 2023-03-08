@@ -30,16 +30,33 @@ void callbackWrapper(optional<Player> const& player) {
 }
 
 void PlayerController::Refresh(int retry, const function<void(optional<Player> const&, string)>& finished) {
-    WebUtils::GetJSONAsync(WebUtils::API_URL + "user/modinterface", [retry, finished](long status, bool error, rapidjson::Document const& result){
-        if (status == 200 && !error) {
-            currentPlayer = Player(result.GetObject());
-            if (finished) finished(currentPlayer, "");
-            callbackWrapper(currentPlayer);
-        } else if (retry < 3) {
+    auto handleError = [retry, finished](){
+        if (retry < 3) {
             Refresh(retry + 1, finished);
         } else {
             currentPlayer = nullopt;
             if (finished) finished(nullopt, "Failed to retrieve player");
+        }
+    };
+
+    WebUtils::GetJSONAsync(WebUtils::API_URL + "user/modinterface", [retry, finished, handleError](long status, bool error, rapidjson::Document const& result){
+        if (status == 200 && !error) {
+            getLogger().warning("GotUserRes");
+            currentPlayer = Player(result.GetObject());
+            WebUtils::GetJSONAsync(WebUtils::API_URL + "player/" + currentPlayer->id + "/history?count=1", [finished, handleError](long historyStatus, bool historyError, rapidjson::Document const& historyResult){
+                if(historyStatus == 200 && !historyError){
+                    getLogger().warning("GotHistoryRes");
+                    currentPlayer->SetHistory(historyResult.GetArray()[0]);
+                    if (finished) finished(currentPlayer, "");
+                    callbackWrapper(currentPlayer);
+                }
+                else {
+                    handleError();
+                }
+            });
+        }
+        else{
+            handleError();
         }
     });
 }
