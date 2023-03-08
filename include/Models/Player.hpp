@@ -36,12 +36,16 @@ class Player
     int rank;
     int countryRank;
     float pp;
+    int lastRank;
+    int lastCountryRank;
+    float lastPP;
     std::optional<ProfileSettings> profileSettings;
     
     vector<string> friends;
     vector<Social> socials;
     vector<Clan> clans;
 
-    Player(rapidjson::Value const& document);
+    Player(rapidjson::Value const& userModInterface);
+    void SetHistory(rapidjson::Value const& history);
     Player() = default;
 };
