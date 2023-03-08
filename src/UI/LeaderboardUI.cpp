@@ -182,16 +182,21 @@ namespace LeaderboardUI {
     UnityEngine::UI::Button* sspageDownButton;
 
     void updatePlayerRank() {
+        // Function to calculate the coloring and add the + sign if positive 
         auto getColoredChange = [](float change){
             bool positive = change > 0;
             return " <color=#" + (std::string)(positive ? "00FF00" : "FF0000") + ">" + (positive ? "+" : "");
         };
 
+        // If we have a player, update the global rank, country rank and pp
         auto const& player = PlayerController::currentPlayer;
         if (player != std::nullopt && player->rank > 0) {
+            // Calculate the changes
             int rankChange = player->lastRank - player->rank;
             int countryRankChange = player->lastCountryRank - player->countryRank;
             float ppChange = player->pp - player->lastPP;
+
+            // Actually set the labels
             globalRank->SetText("#" + to_string(player->rank) + (rankChange != 0 ? getColoredChange(rankChange) + to_string(rankChange) : ""));
             countryRankAndPp->SetText("#" + to_string(player->countryRank) + " " + (countryRankChange != 0 ? getColoredChange(countryRankChange) + to_string(countryRankChange) : "")
                 + "   <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp " + (ppChange != 0 ? getColoredChange(ppChange)  + to_string_wprecision(ppChange, 2) + "pp" : ""));
