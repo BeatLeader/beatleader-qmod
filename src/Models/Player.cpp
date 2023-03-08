@@ -4,7 +4,6 @@
 #include "include/main.hpp"
 
 Player::Player(rapidjson::Value const& userModInterface) {
-    getLogger().info("CreatePlayer");
     id = userModInterface["id"].GetString();
     name = userModInterface["name"].GetString();
     country = userModInterface["country"].GetString();
@@ -43,7 +42,6 @@ Player::Player(rapidjson::Value const& userModInterface) {
 }
 
 void Player::SetHistory(rapidjson::Value const& history) {
-    getLogger().info("CreateHistory");
     lastRank = history["rank"].GetInt();
     lastCountryRank = history["countryRank"].GetInt();
     lastPP = history["pp"].GetFloat();

@@ -30,6 +30,7 @@ void callbackWrapper(optional<Player> const& player) {
 }
 
 void PlayerController::Refresh(int retry, const function<void(optional<Player> const&, string)>& finished) {
+    // Error Handler
     auto handleError = [retry, finished](){
         if (retry < 3) {
             Refresh(retry + 1, finished);
@@ -39,14 +40,18 @@ void PlayerController::Refresh(int retry, const function<void(optional<Player> c
         }
     };
 
+    // Get new userdata and refresh the interface with it
     WebUtils::GetJSONAsync(WebUtils::API_URL + "user/modinterface", [retry, finished, handleError](long status, bool error, rapidjson::Document const& result){
         if (status == 200 && !error) {
-            getLogger().warning("GotUserRes");
             currentPlayer = Player(result.GetObject());
+            // We also need the history so we can display the ranking change
             WebUtils::GetJSONAsync(WebUtils::API_URL + "player/" + currentPlayer->id + "/history?count=1", [finished, handleError](long historyStatus, bool historyError, rapidjson::Document const& historyResult){
+                // Only do stuff if we are successful
                 if(historyStatus == 200 && !historyError){
-                    getLogger().warning("GotHistoryRes");
+                    // Set the new Historydata on the player
                     currentPlayer->SetHistory(historyResult.GetArray()[0]);
+
+                    // Call callbacks
                     if (finished) finished(currentPlayer, "");
                     callbackWrapper(currentPlayer);
                 }
