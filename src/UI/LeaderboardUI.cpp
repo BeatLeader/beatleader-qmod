@@ -65,6 +65,9 @@
 #include "UnityEngine/Bounds.hpp"
 #include "UnityEngine/UI/Toggle.hpp"
 #include "UnityEngine/Events/UnityAction.hpp"
+#include "UnityEngine/TextAnchor.hpp"
+#include "UnityEngine/RectOffset.hpp"
+#include "UnityEngine/UI/ContentSizeFitter.hpp"
 
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
@@ -199,7 +202,7 @@ namespace LeaderboardUI {
             // Actually set the labels
             globalRank->SetText("#" + to_string(player->rank) + (rankChange != 0 ? getColoredChange(rankChange) + to_string(rankChange) : ""));
             countryRankAndPp->SetText("#" + to_string(player->countryRank) + " " + (countryRankChange != 0 ? getColoredChange(countryRankChange) + to_string(countryRankChange) : "")
-                + "   <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp " + (ppChange != 0 ? getColoredChange(ppChange)  + to_string_wprecision(ppChange, 2) + "pp" : ""));
+                + "  <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp " + (ppChange != 0 ? getColoredChange(ppChange) + to_string_wprecision(ppChange, 2) + "pp" : ""));
         }
     }
 
@@ -226,7 +229,11 @@ namespace LeaderboardUI {
                         plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
                     }
 
-                    countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), sprite, {130, 45}, {3.2, sprite->get_bounds().get_size().y * 10});
+                    if (countryRankIcon) {
+                        countryRankIcon->set_sprite(sprite);
+                        RectTransform* rectTransform = (RectTransform*)countryRankIcon->get_transform();
+                        rectTransform->set_sizeDelta({3.2, sprite->get_bounds().get_size().y * 10});
+                    }
                 }
 
             } else {
@@ -237,7 +244,7 @@ namespace LeaderboardUI {
             countryRankAndPp->SetText("#0");
             playerAvatar->HideImage();
             if (countryRankIcon) {
-                countryRankIcon->set_sprite(plvc->friendsLeaderboardIcon);
+                countryRankIcon->set_sprite(BundleLoader::bundle->globeIcon);
             }
             playerName->SetText("");
         }
@@ -630,10 +637,26 @@ namespace LeaderboardUI {
             playerName->set_fontSize(6);
 
             EmojiSupport::AddSupport(playerName);
-            
-            globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->globalLeaderboardIcon, UnityEngine::Vector2(110, 45), UnityEngine::Vector2(4, 4));
-            globalRank = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(143, 42.5));
-            countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(163, 42.5));
+
+            auto rankLayout = ::QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(parentScreen->get_transform());
+            rankLayout->set_spacing(3);
+            EnableHorizontalFit(rankLayout);
+            auto rectTransform = (RectTransform*)rankLayout->get_transform();
+            rectTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
+            rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
+            rectTransform->set_anchoredPosition({138, 45});
+
+            auto globalLayout = ::QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(rankLayout->get_transform());
+            globalLayout->set_spacing(1);
+            EnableHorizontalFit(globalLayout);
+            globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(globalLayout->get_transform(), BundleLoader::bundle->globeIcon);
+            globalRank = ::QuestUI::BeatSaberUI::CreateText(globalLayout->get_transform(), "", false);
+
+            auto countryLayout = ::QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(rankLayout->get_transform());
+            countryLayout->set_spacing(1);
+            EnableHorizontalFit(countryLayout);
+            countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(countryLayout->get_transform(), BundleLoader::bundle->globeIcon);
+            countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(countryLayout->get_transform(), "", false);
             if (PlayerController::currentPlayer != std::nullopt) {
                 updatePlayerInfoLabel();
             }
