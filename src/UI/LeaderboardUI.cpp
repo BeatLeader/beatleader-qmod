@@ -102,6 +102,9 @@
 #include <regex>
 #include <map>
 #include <tuple>
+#include <chrono>
+#include <thread>
+#include <future>
 
 using namespace GlobalNamespace;
 using namespace HMUI;
@@ -571,7 +574,7 @@ namespace LeaderboardUI {
                 auto name =  transform->get_name();
 
                 bool infoIcon = to_utf8(csstrtostr(name)) == "ScoreSaberClickableImage";
-                bool header = to_utf8(csstrtostr(name)) == "QuestUIHorizontalLayoutGroup" &&
+                bool header = (to_utf8(csstrtostr(name)) == "QuestUIHorizontalLayoutGroup" || to_utf8(csstrtostr(name)) == "QuestUIVerticalLayoutGroup") &&
                             transform->get_parent() && transform->get_parent()->get_parent() &&
                             to_utf8(csstrtostr(transform->get_parent()->get_parent()->get_name())) == "PlatformLeaderboardViewController";
                 if (infoIcon || header) {
@@ -820,7 +823,8 @@ namespace LeaderboardUI {
         }
     }
 
-    void refreshLeaderboardCall(PlatformLeaderboardViewController* self) {
+    void refreshLeaderboardCall() {
+        auto self = plvc;
         if (showBeatLeader) {
             updateLeaderboard(self);
         }
@@ -856,11 +860,14 @@ namespace LeaderboardUI {
         }
 
         if (ssInstalled && showBeatLeader && sspageUpButton == NULL) {
-            QuestUI::MainThreadScheduler::Schedule([self] {
-                refreshLeaderboardCall(self);
+            std::async(std::launch::async, [] () {
+                std::this_thread::sleep_for(std::chrono::seconds{1});
+                QuestUI::MainThreadScheduler::Schedule([] {
+                    refreshLeaderboardCall();
+                });
             });
         } else {
-            refreshLeaderboardCall(self);
+            refreshLeaderboardCall();
         }
 
         leaderboardLoaded = true;
@@ -1141,11 +1148,12 @@ namespace LeaderboardUI {
         cellHighlights = {};
         cellBackgrounds = {};
         showBeatLeaderButton = NULL;
+        upPageButton = NULL;
         ssWasOpened = false;
         if (ssInstalled) {
             showBeatLeader = getModConfig().ShowBeatleader.GetValue();
         }
-        ssElements = vector<UnityEngine::Transform*>();
+        ssElements = {};
         ModifiersUI::ResetModifiersUI();
     }    
 
