@@ -196,7 +196,7 @@ namespace LeaderboardUI {
 
         // If we have a player, update the global rank, country rank and pp
         auto const& player = PlayerController::currentPlayer;
-        if (player != std::nullopt && player->rank > 0) {
+        if (player != std::nullopt && player->rank > 0 && globalRank && countryRankAndPp) {
             // Calculate the changes
             int rankChange = player->lastRank - player->rank;
             int countryRankChange = player->lastCountryRank - player->countryRank;
@@ -520,10 +520,10 @@ namespace LeaderboardUI {
 
     void hideVotingUIs()
     {
-        if (votingUI) {
+        if (votingUI && votingUI->modal) {
             votingUI->modal->Hide(true, nullptr);
         }
-        if(ResultsView::votingUI){ ResultsView::votingUI->modal->Hide(true, nullptr); }
+        if(ResultsView::votingUI && ResultsView::votingUI->modal){ ResultsView::votingUI->modal->Hide(true, nullptr); }
     }
 
     static bool isLocal = false;
