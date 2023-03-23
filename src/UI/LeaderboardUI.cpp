@@ -876,7 +876,7 @@ namespace LeaderboardUI {
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
         LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
 
-        if (showBeatLeader || isLocal) {
+        if (showBeatLeader && !isLocal) {
         if (result->playerNameText->get_fontSize() > 3 || result->playerNameText->get_enableAutoSizing()) {
             result->playerNameText->set_enableAutoSizing(false);
             result->playerNameText->set_richText(true);
