@@ -4,6 +4,9 @@
 #include "UnityEngine/Component.hpp"
 #include "UnityEngine/UI/LayoutElement.hpp"
 #include "UnityEngine/GameObject.hpp"
+#include "UnityEngine/UI/HorizontalLayoutGroup.hpp"
+#include "UnityEngine/UI/ContentSizeFitter.hpp"
+
 #include "HMUI/CurvedCanvasSettings.hpp"
 #include "HMUI/Screen.hpp"
 #include "HMUI/ViewController.hpp"
@@ -42,6 +45,13 @@ inline UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootVie
         screen->get_gameObject()->GetComponent<UnityEngine::RectTransform*>()->set_sizeDelta(screenSize);
     }
     return gameObject;
+}
+
+inline void EnableHorizontalFit(UnityEngine::UI::HorizontalLayoutGroup* layoutGroup) {
+    layoutGroup->set_childForceExpandHeight(false);
+    layoutGroup->set_childAlignment(UnityEngine::TextAnchor::MiddleCenter);
+    auto groupFitter = layoutGroup->GetComponent<UnityEngine::UI::ContentSizeFitter*>();
+    groupFitter->set_horizontalFit(UnityEngine::UI::ContentSizeFitter::FitMode::PreferredSize);
 }
 
 namespace UIUtils {
