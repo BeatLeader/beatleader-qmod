@@ -17,6 +17,7 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include "include/Assets/Sprites.hpp"
+#include "include/Assets/BundleLoader.hpp"
 #include "include/Models/Song.hpp"
 #include "include/Models/Difficulty.hpp"
 #include "include/UI/LevelInfoUI.hpp"
@@ -57,6 +58,9 @@ namespace LevelInfoUI {
     HMUI::ImageView* typeImage = NULL;
     HMUI::ImageView* statusImage = NULL;
 
+    SafePtrUnity<HMUI::ModalView> skillTriangleContainer = NULL;
+    SafePtrUnity<UnityEngine::Material> skillTriangleMat = NULL;
+
     TMPro::TextMeshProUGUI* noSubmissionLabel = NULL;
 
     static map<string, Song> _mapInfos;
@@ -79,6 +83,7 @@ namespace LevelInfoUI {
     static pair<string, string> lastKey;
 
     const Difficulty defaultDiff = Difficulty(0, 0, 0, {}, {}, 0, 0, 0);
+    static Difficulty currentlySelectedDiff = defaultDiff;
 
     MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
         LevelRefreshContent(self);
@@ -88,11 +93,50 @@ namespace LevelInfoUI {
             self->beatmapCharacteristicSegmentedControlController == NULL ||
             self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic == NULL) return;
         if (starsLabel == NULL) {
+
+            ///////////////////////////
+            // Skill Triangle
+            ///////////////////////////
+
+            // Create Modal
+            skillTriangleContainer = QuestUI::BeatSaberUI::CreateModal(self->get_transform(), {40,40}, nullptr, true);
+
+            // Create Actual Triangle Image
+            auto skillTriangleImage = QuestUI::BeatSaberUI::CreateImage(skillTriangleContainer->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 0}, {35, 35});
+            skillTriangleMat = UnityEngine::Material::Instantiate(BundleLoader::bundle->skillTriangleMaterial);
+            skillTriangleImage->set_material(skillTriangleMat.ptr());
+            int normalizedValuesPropertyId = UnityEngine::Shader::PropertyToID("_Normalized");
+
+            // Create Star Value Labels for Triangle
+            auto techLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Tech - ", {12, 12});
+            auto accLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Acc - ", {34, 12});
+            auto passLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Pass - ", {24, -16});
+
+            // OnClick Function to open the SkillTriangle
+            auto openSkillTriangle = [techLabel, accLabel, passLabel, normalizedValuesPropertyId](){
+                int mapType = currentlySelectedDiff.status;
+                if(mapType != 0 && mapType != 4 && mapType != 5) {
+                    techLabel->SetText("Tech - " + to_string_wprecision(currentlySelectedDiff.techRating, 2));
+                    accLabel->SetText("Acc - " + to_string_wprecision(currentlySelectedDiff.accRating, 2));
+                    passLabel->SetText("Pass - " + to_string_wprecision(currentlySelectedDiff.passRating, 2));
+                    skillTriangleMat->SetVector(normalizedValuesPropertyId, {
+                        clamp(currentlySelectedDiff.techRating / 15.0f, 0.0f, 1.0f),
+                        clamp(currentlySelectedDiff.accRating / 15.0f, 0.0f, 1.0f),
+                        clamp(currentlySelectedDiff.passRating / 15.0f, 0.0f, 1.0f),
+                        0.0f
+                    });
+                    skillTriangleContainer->Show(true, true, NULL);
+                }
+            };
+
+            ///////////////////////////
+            // Init Stars, PP, Type, Status and NoSubmission Label
+            ///////////////////////////
+
             starsLabel = CreateText(self->levelParamsPanel->get_transform(), "0.00", true, UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
             starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
-
-            starsImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3));
+            starsImage = CreateClickableImage(self->levelParamsPanel->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3), openSkillTriangle);
 
             ppLabel = CreateText(self->levelParamsPanel->get_transform(), "0", true, UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
             ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
@@ -221,6 +265,7 @@ namespace LevelInfoUI {
 
     void setLabels(Difficulty selectedDifficulty)
     {
+        currentlySelectedDiff = selectedDifficulty;
         // Find the wanted star value
         float stars;
         switch(getModConfig().StarValueToShow.GetValue()){

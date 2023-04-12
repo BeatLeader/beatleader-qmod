@@ -47,6 +47,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     accuracyGraphLine = getMaterial("AccuracyGraphLine", assetBundle);
     accDetailsRowMaterial = getMaterial("AccDetailsRowMaterial", assetBundle);
     miniProfileBackgroundMaterial = getMaterial("UIMiniProfileBackgroundMaterial", assetBundle);
+    skillTriangleMaterial = getMaterial("UISkillTriangleMaterial", assetBundle);
 
     locationIcon = assetBundle->LoadAsset<Sprite*>("LocationIcon");
     rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>("RowSeparatorIcon");
