@@ -18,12 +18,19 @@ Difficulty::Difficulty(rapidjson::Value const& document) {
         std::transform(key.begin(), key.end(), key.begin(), ::toupper);
         modifierValues[key] = kv.value.GetFloat();
     }
+
+    passRating = document["passRating"].GetFloat();
+    accRating = document["accRating"].GetFloat();
+    techRating = document["techRating"].GetFloat();
 }
 
-Difficulty::Difficulty(float starsGiven, int statusGiven, int typeGiven, vector<float> votesGiven, unordered_map<string, float> modifierValuesGiven) {
+Difficulty::Difficulty(float starsGiven, int statusGiven, int typeGiven, vector<float> votesGiven, unordered_map<string, float> modifierValuesGiven, float passRatingGiven, float accRatingGiven, float techRatingGiven) {
     stars = starsGiven;
     status = statusGiven;
     type = typeGiven;
     votes = votesGiven;
     modifierValues = modifierValuesGiven;
+    passRating = passRatingGiven;
+    accRating = accRatingGiven;
+    techRating = techRatingGiven;
 }

@@ -78,7 +78,7 @@ namespace LevelInfoUI {
     static string selectedMap;
     static pair<string, string> lastKey;
 
-    const Difficulty defaultDiff = Difficulty(0, 0, 0, {}, {});
+    const Difficulty defaultDiff = Difficulty(0, 0, 0, {}, {}, 0, 0, 0);
 
     MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
         LevelRefreshContent(self);
@@ -91,7 +91,6 @@ namespace LevelInfoUI {
             starsLabel = CreateText(self->levelParamsPanel->get_transform(), "0.00", true, UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
             starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            AddHoverHint(starsLabel, "BeatLeader ranked stars");
 
             starsImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3));
 
@@ -222,10 +221,35 @@ namespace LevelInfoUI {
 
     void setLabels(Difficulty selectedDifficulty)
     {
-        // Set the Stars & PP Label
-        float stars = selectedDifficulty.stars;
+        // Find the wanted star value
+        float stars;
+        switch(getModConfig().StarValueToShow.GetValue()){
+            case 1:
+                stars = selectedDifficulty.techRating;
+                break;
+            case 2:
+                stars = selectedDifficulty.accRating;
+                break;
+            case 3:
+                stars = selectedDifficulty.passRating;
+                break;
+            default:
+                stars = selectedDifficulty.stars;
+                break;
+        }
+        
+        // Set the stars and pp
         starsLabel->SetText(to_string_wprecision(stars, 2));
-        ppLabel->SetText(to_string_wprecision(stars * 51.0f, 2));
+        ppLabel->SetText(to_string_wprecision(selectedDifficulty.stars * 51.0f, 2));
+
+        // Add Hoverhint with all star ratings
+        if(stars)
+        {
+            AddHoverHint(starsLabel, "Overall - " + to_string_wprecision(selectedDifficulty.stars, 2) 
+            + "\nTech - " + to_string_wprecision(selectedDifficulty.techRating, 2) 
+            + "\nAcc - " + to_string_wprecision(selectedDifficulty.accRating, 2)
+            + "\nPass - " + to_string_wprecision(selectedDifficulty.passRating, 2));
+        }
 
         // Create a list of all song types, that are definied for this sond
         vector<string> typeStrings;
@@ -295,7 +319,7 @@ namespace LevelInfoUI {
         // Set Color according to calculated VoteRatio (0% = red, 100% = green)
         statusLabel->SetText(rankingStatus.substr(0, shortWritingChars) + ".");
         if (rating == 0) {
-             statusLabel->set_color(UnityEngine::Color(0.5, 0.5, 0.5, 1));
+            statusLabel->set_color(UnityEngine::Color(0.5, 0.5, 0.5, 1));
         } else {
             statusLabel->set_color(UnityEngine::Color(1 - rating, rating, 0, 1));
         }
@@ -305,7 +329,7 @@ namespace LevelInfoUI {
         rating *= 100;
         reviewScore *= 100;
         AddHoverHint(statusLabel, "Ranking status - " + rankingStatus 
-                                + "\nRating -" + to_string(static_cast<int>(rating))
+                                + "\nRating - " + to_string(static_cast<int>(rating))
                                 + "%\nPositivity ratio - " + to_string(static_cast<int>(reviewScore)) 
                                 + "%\nVotes - " + to_string(selectedDifficulty.votes.size())
                                 + "\nTo vote for a song to be ranked, click the message box on the leaderboard");

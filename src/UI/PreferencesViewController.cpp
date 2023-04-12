@@ -181,6 +181,12 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         });
 
         saveToggle = AddConfigValueToggle(containerTransform, getModConfig().SaveLocalReplays);
+        AddConfigValueDropdownEnum(containerTransform, getModConfig().StarValueToShow, {
+            "Overall",
+            "Tech",
+            "Acc",
+            "Pass"
+        });
         if (ReplayInstalled()) {
             showReplaySettingsToggle = AddConfigValueToggle(containerTransform, getModConfig().ShowReplaySettings);
         }
