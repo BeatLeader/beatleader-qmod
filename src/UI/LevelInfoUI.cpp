@@ -110,7 +110,7 @@ namespace LevelInfoUI {
             // Create Star Value Labels for Triangle
             auto techLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Tech - ", {12, 12});
             auto accLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Acc - ", {34, 12});
-            auto passLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Pass - ", {24, -16});
+            auto passLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Pass - ", {23, -17});
 
             // OnClick Function to open the SkillTriangle
             auto openSkillTriangle = [techLabel, accLabel, passLabel, normalizedValuesPropertyId](){
@@ -288,13 +288,19 @@ namespace LevelInfoUI {
         ppLabel->SetText(to_string_wprecision(selectedDifficulty.stars * 51.0f, 2));
 
         // Add Hoverhint with all star ratings
+        string starsHoverHint;
         if(stars)
         {
-            AddHoverHint(starsLabel, "Overall - " + to_string_wprecision(selectedDifficulty.stars, 2) 
+            starsHoverHint = "Overall - " + to_string_wprecision(selectedDifficulty.stars, 2) 
             + "\nTech - " + to_string_wprecision(selectedDifficulty.techRating, 2) 
             + "\nAcc - " + to_string_wprecision(selectedDifficulty.accRating, 2)
-            + "\nPass - " + to_string_wprecision(selectedDifficulty.passRating, 2));
+            + "\nPass - " + to_string_wprecision(selectedDifficulty.passRating, 2);
         }
+        else 
+        {
+            starsHoverHint = "Song not ranked";
+        }
+        AddHoverHint(starsLabel, starsHoverHint);
 
         // Create a list of all song types, that are definied for this sond
         vector<string> typeStrings;
