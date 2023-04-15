@@ -81,7 +81,7 @@ namespace LevelInfoUI {
     };
     static string selectedMap;
     static pair<string, string> lastKey;
-
+    
     const Difficulty defaultDiff = Difficulty(0, 0, 0, {}, {}, 0, 0, 0);
     static Difficulty currentlySelectedDiff = defaultDiff;
 
@@ -137,6 +137,7 @@ namespace LevelInfoUI {
             starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
             starsImage = CreateClickableImage(self->levelParamsPanel->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3), openSkillTriangle);
+            AddHoverHint(starsLabel, "Song not ranked");
 
             ppLabel = CreateText(self->levelParamsPanel->get_transform(), "0", true, UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
             ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
@@ -261,6 +262,12 @@ namespace LevelInfoUI {
 
     void reset() {
         starsLabel = NULL;
+    }
+
+    void refreshLabelsDiff(){
+        if(starsLabel){
+            setLabels(currentlySelectedDiff);
+        }
     }
 
     void setLabels(Difficulty selectedDifficulty)
