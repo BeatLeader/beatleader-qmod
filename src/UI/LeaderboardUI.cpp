@@ -546,9 +546,7 @@ namespace LeaderboardUI {
     }
 
     void PageUp() {
-        if (page > 1) {
-            page--;
-        }
+        page--;
 
         clearTable();
         refreshFromTheServer();
