@@ -38,6 +38,14 @@ string FileManager::ToFilePath(Replay const &replay) {
     string fail = replay.info.failTime > 0.0001 ? "-fail" : "";
     // TODO: Use fmt
     string filename = replay.info.playerID + std::string(practice + fail) + "-" + replay.info.songName + "-" + replay.info.difficulty + "-" + replay.info.mode + "-" + replay.info.hash + ".bsor";
+
+    string illegalChars = "\\/:?*\"<>|";
+    for (auto it = filename.begin() ; it < filename.end() ; ++it){
+        bool found = illegalChars.find(*it) != string::npos;
+        if(found){
+            *it = '';
+        }
+    }
     string file = getDataDir(modInfo) + "replays/" + regex_replace(filename, basic_regex("/"), "");;
     // string regexSearch = new string(System::IO::Path::GetInvalidFileNameChars()) + new string(System::IO::Path::GetInvalidPathChars());
     // string reg = "[{" + regexSearch + "}]";
