@@ -40,10 +40,10 @@ string FileManager::ToFilePath(Replay const &replay) {
     string filename = replay.info.playerID + std::string(practice + fail) + "-" + replay.info.songName + "-" + replay.info.difficulty + "-" + replay.info.mode + "-" + replay.info.hash + ".bsor";
 
     string illegalChars = "\\/:?*\"<>|";
-    for (auto it = filename.begin() ; it < filename.end() ; ++it){
+    for (auto it = filename.begin(); it < filename.end(); ++it){
         bool found = illegalChars.find(*it) != string::npos;
         if(found){
-            *it = '';
+            *it = '_';
         }
     }
     string file = getDataDir(modInfo) + "replays/" + regex_replace(filename, basic_regex("/"), "");;
