@@ -58,8 +58,8 @@ namespace LevelInfoUI {
     HMUI::ImageView* typeImage = NULL;
     HMUI::ImageView* statusImage = NULL;
 
-    SafePtrUnity<HMUI::ModalView> skillTriangleContainer = NULL;
-    SafePtrUnity<UnityEngine::Material> skillTriangleMat = NULL;
+    static SafePtrUnity<HMUI::ModalView> skillTriangleContainer = NULL;
+    static SafePtrUnity<UnityEngine::Material> skillTriangleMat = NULL;
 
     TMPro::TextMeshProUGUI* noSubmissionLabel = NULL;
 
@@ -85,6 +85,13 @@ namespace LevelInfoUI {
     const Difficulty defaultDiff = Difficulty(0, 0, 0, {}, {}, 0, 0, 0);
     static Difficulty currentlySelectedDiff = defaultDiff;
 
+    MAKE_HOOK_MATCH(DidDeactivate, &StandardLevelDetailViewController::DidDeactivate, void, StandardLevelDetailViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
+        DidDeactivate(self, removedFromHierarchy, screenSystemDisabling);
+        // Ensure that the skillTriangle is closed when exiting the LevelDetailView. Otherwise we will get a ghost modal on the next open
+        if(skillTriangleContainer)
+            skillTriangleContainer->Hide(false, nullptr);
+    }
+
     MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
         LevelRefreshContent(self);
 
@@ -99,7 +106,7 @@ namespace LevelInfoUI {
             ///////////////////////////
 
             // Create Modal
-            skillTriangleContainer = QuestUI::BeatSaberUI::CreateModal(self->get_transform(), {40,40}, nullptr, true);
+            skillTriangleContainer = QuestUI::BeatSaberUI::CreateModal(self->levelParamsPanel->get_transform(), {40,40}, nullptr, true);
 
             // Create Actual Triangle Image
             auto skillTriangleImage = QuestUI::BeatSaberUI::CreateImage(skillTriangleContainer->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 0}, {35, 35});
@@ -231,6 +238,7 @@ namespace LevelInfoUI {
         LoggerContextObject logger = getLogger().WithContext("load");
 
         INSTALL_HOOK(logger, LevelRefreshContent);
+        INSTALL_HOOK(logger, DidDeactivate);
     }
 
     void SetLevelInfoActive(bool active) {
@@ -243,6 +251,7 @@ namespace LevelInfoUI {
         statusLabel->get_gameObject()->SetActive(active);
         statusImage->get_gameObject()->SetActive(active);
         noSubmissionLabel->get_gameObject()->SetActive(active);
+        skillTriangleContainer->Hide(false, nullptr);
     }
 
     void resetStars() {
