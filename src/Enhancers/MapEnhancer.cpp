@@ -38,15 +38,17 @@ vector<string> MapEnhancer::Modifiers() const {
     if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Faster) { result.emplace_back("FS"); }
     if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Slower) { result.emplace_back("SS"); }
     if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::SuperFast) { result.emplace_back("SF"); }
-    if (gameplayModifiers->strictAngles) { result.emplace_back("SA"); }
-    if (gameplayModifiers->proMode) { result.emplace_back("PM"); }
-    if (gameplayModifiers->smallCubes) { result.emplace_back("SC"); }
-    if (gameplayModifiers->failOnSaberClash) { result.emplace_back("CS"); }
     if (gameplayModifiers->ghostNotes) { result.emplace_back("GN"); }
     if (gameplayModifiers->noArrows) { result.emplace_back("NA"); }
     if (gameplayModifiers->noBombs) { result.emplace_back("NB"); }
     if (gameplayModifiers->noFailOn0Energy && energy == 0) { result.emplace_back("NF"); }
     if (gameplayModifiers->enabledObstacleType == GameplayModifiers::EnabledObstacleType::NoObstacles) { result.emplace_back("NO"); }
+    if (gameplayModifiers->strictAngles) { result.emplace_back("SA"); }
+    if (gameplayModifiers->proMode) { result.emplace_back("PM"); }
+    if (gameplayModifiers->smallCubes) { result.emplace_back("SC"); }
+    if (gameplayModifiers->failOnSaberClash) { result.emplace_back("CS"); }
+    if (gameplayModifiers->instaFail) { result.emplace_back("IF"); }
+    if (gameplayModifiers->energyType == GameplayModifiers::EnergyType::Battery) { result.emplace_back("BE"); }
 
     return result;
 }
