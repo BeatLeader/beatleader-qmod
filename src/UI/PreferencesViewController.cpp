@@ -7,6 +7,11 @@
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/GUIUtility.hpp"
 #include "UnityEngine/HideFlags.hpp"
+#include "System/Action_2.hpp"
+
+#include "HMUI/DropdownWithTableView.hpp"
+
+#include "custom-types/shared/delegate.hpp"
 
 #include "Utils/ModConfig.hpp"
 #include "Utils/WebUtils.hpp"
@@ -181,6 +186,18 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         });
 
         saveToggle = AddConfigValueToggle(containerTransform, getModConfig().SaveLocalReplays);
+        auto dropdown = AddConfigValueDropdownEnum(containerTransform, getModConfig().StarValueToShow, {
+            "Overall",
+            "Tech",
+            "Acc",
+            "Pass"
+        });
+        // After switching the setting we need to manually call refresh, because StandardLevelDetailView::RefreshContent is not called again,
+        // if the same map, that was selected before changing the setting, is selected again before selecting any other map. 
+        // This results in setLabels not being called again and the stars of the old setting are displayed, which is why we call it manually here after selecting an option
+        dropdown->add_didSelectCellWithIdxEvent(custom_types::MakeDelegate<System::Action_2<HMUI::DropdownWithTableView*, int>*>((function<void(HMUI::DropdownWithTableView*, int)>)[](auto throwaway1, auto throwaway2){
+            LevelInfoUI::refreshLabelsDiff();
+        }));
         if (ReplayInstalled()) {
             showReplaySettingsToggle = AddConfigValueToggle(containerTransform, getModConfig().ShowReplaySettings);
         }

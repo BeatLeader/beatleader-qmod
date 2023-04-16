@@ -32,6 +32,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Material*, accuracyGraphLine);
     DECLARE_INSTANCE_FIELD(Material*, accDetailsRowMaterial);
     DECLARE_INSTANCE_FIELD(Material*, miniProfileBackgroundMaterial);
+    DECLARE_INSTANCE_FIELD(Material*, skillTriangleMaterial);
 
     DECLARE_INSTANCE_FIELD(Sprite*, locationIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, rowSeparatorIcon);
