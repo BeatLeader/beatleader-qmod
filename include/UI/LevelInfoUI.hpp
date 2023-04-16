@@ -11,4 +11,5 @@ namespace LevelInfoUI {
     void addVoteToCurrentLevel(bool rankable, int type);
 
     void setLabels(Difficulty selectedDifficulty);
+    void refreshLabelsDiff();
 }

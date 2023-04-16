@@ -17,6 +17,7 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include "include/Assets/Sprites.hpp"
+#include "include/Assets/BundleLoader.hpp"
 #include "include/Models/Song.hpp"
 #include "include/Models/Difficulty.hpp"
 #include "include/UI/LevelInfoUI.hpp"
@@ -57,6 +58,9 @@ namespace LevelInfoUI {
     HMUI::ImageView* typeImage = NULL;
     HMUI::ImageView* statusImage = NULL;
 
+    static SafePtrUnity<HMUI::ModalView> skillTriangleContainer = NULL;
+    static SafePtrUnity<UnityEngine::Material> skillTriangleMat = NULL;
+
     TMPro::TextMeshProUGUI* noSubmissionLabel = NULL;
 
     static map<string, Song> _mapInfos;
@@ -77,8 +81,16 @@ namespace LevelInfoUI {
     };
     static string selectedMap;
     static pair<string, string> lastKey;
+    
+    const Difficulty defaultDiff = Difficulty(0, 0, 0, {}, {}, 0, 0, 0);
+    static Difficulty currentlySelectedDiff = defaultDiff;
 
-    const Difficulty defaultDiff = Difficulty(0, 0, 0, {}, {});
+    MAKE_HOOK_MATCH(DidDeactivate, &StandardLevelDetailViewController::DidDeactivate, void, StandardLevelDetailViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
+        DidDeactivate(self, removedFromHierarchy, screenSystemDisabling);
+        // Ensure that the skillTriangle is closed when exiting the LevelDetailView. Otherwise we will get a ghost modal on the next open
+        if(skillTriangleContainer)
+            skillTriangleContainer->Hide(false, nullptr);
+    }
 
     MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
         LevelRefreshContent(self);
@@ -88,12 +100,51 @@ namespace LevelInfoUI {
             self->beatmapCharacteristicSegmentedControlController == NULL ||
             self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic == NULL) return;
         if (starsLabel == NULL) {
+
+            ///////////////////////////
+            // Skill Triangle
+            ///////////////////////////
+
+            // Create Modal
+            skillTriangleContainer = QuestUI::BeatSaberUI::CreateModal(self->levelParamsPanel->get_transform(), {40,40}, nullptr, true);
+
+            // Create Actual Triangle Image
+            auto skillTriangleImage = QuestUI::BeatSaberUI::CreateImage(skillTriangleContainer->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 0}, {35, 35});
+            skillTriangleMat = UnityEngine::Material::Instantiate(BundleLoader::bundle->skillTriangleMaterial);
+            skillTriangleImage->set_material(skillTriangleMat.ptr());
+            int normalizedValuesPropertyId = UnityEngine::Shader::PropertyToID("_Normalized");
+
+            // Create Star Value Labels for Triangle
+            auto techLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Tech - ", {12, 12});
+            auto accLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Acc - ", {34, 12});
+            auto passLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Pass - ", {23, -17});
+
+            // OnClick Function to open the SkillTriangle
+            auto openSkillTriangle = [techLabel, accLabel, passLabel, normalizedValuesPropertyId](){
+                int mapType = currentlySelectedDiff.status;
+                if(mapType != 0 && mapType != 4 && mapType != 5) {
+                    techLabel->SetText("Tech - " + to_string_wprecision(currentlySelectedDiff.techRating, 2));
+                    accLabel->SetText("Acc - " + to_string_wprecision(currentlySelectedDiff.accRating, 2));
+                    passLabel->SetText("Pass - " + to_string_wprecision(currentlySelectedDiff.passRating, 2));
+                    skillTriangleMat->SetVector(normalizedValuesPropertyId, {
+                        clamp(currentlySelectedDiff.techRating / 15.0f, 0.0f, 1.0f),
+                        clamp(currentlySelectedDiff.accRating / 15.0f, 0.0f, 1.0f),
+                        clamp(currentlySelectedDiff.passRating / 15.0f, 0.0f, 1.0f),
+                        0.0f
+                    });
+                    skillTriangleContainer->Show(true, true, NULL);
+                }
+            };
+
+            ///////////////////////////
+            // Init Stars, PP, Type, Status and NoSubmission Label
+            ///////////////////////////
+
             starsLabel = CreateText(self->levelParamsPanel->get_transform(), "0.00", true, UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
             starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            AddHoverHint(starsLabel, "BeatLeader ranked stars");
-
-            starsImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3));
+            starsImage = CreateClickableImage(self->levelParamsPanel->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3), openSkillTriangle);
+            AddHoverHint(starsLabel, "Song not ranked");
 
             ppLabel = CreateText(self->levelParamsPanel->get_transform(), "0", true, UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
             ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
@@ -187,6 +238,7 @@ namespace LevelInfoUI {
         LoggerContextObject logger = getLogger().WithContext("load");
 
         INSTALL_HOOK(logger, LevelRefreshContent);
+        INSTALL_HOOK(logger, DidDeactivate);
     }
 
     void SetLevelInfoActive(bool active) {
@@ -199,6 +251,7 @@ namespace LevelInfoUI {
         statusLabel->get_gameObject()->SetActive(active);
         statusImage->get_gameObject()->SetActive(active);
         noSubmissionLabel->get_gameObject()->SetActive(active);
+        skillTriangleContainer->Hide(false, nullptr);
     }
 
     void resetStars() {
@@ -220,12 +273,50 @@ namespace LevelInfoUI {
         starsLabel = NULL;
     }
 
+    void refreshLabelsDiff(){
+        if(starsLabel){
+            setLabels(currentlySelectedDiff);
+        }
+    }
+
     void setLabels(Difficulty selectedDifficulty)
     {
-        // Set the Stars & PP Label
-        float stars = selectedDifficulty.stars;
+        currentlySelectedDiff = selectedDifficulty;
+        // Find the wanted star value
+        float stars;
+        switch(getModConfig().StarValueToShow.GetValue()){
+            case 1:
+                stars = selectedDifficulty.techRating;
+                break;
+            case 2:
+                stars = selectedDifficulty.accRating;
+                break;
+            case 3:
+                stars = selectedDifficulty.passRating;
+                break;
+            default:
+                stars = selectedDifficulty.stars;
+                break;
+        }
+        
+        // Set the stars and pp
         starsLabel->SetText(to_string_wprecision(stars, 2));
-        ppLabel->SetText(to_string_wprecision(stars * 51.0f, 2));
+        ppLabel->SetText(to_string_wprecision(selectedDifficulty.stars * 51.0f, 2));
+
+        // Add Hoverhint with all star ratings
+        string starsHoverHint;
+        if(stars)
+        {
+            starsHoverHint = "Overall - " + to_string_wprecision(selectedDifficulty.stars, 2) 
+            + "\nTech - " + to_string_wprecision(selectedDifficulty.techRating, 2) 
+            + "\nAcc - " + to_string_wprecision(selectedDifficulty.accRating, 2)
+            + "\nPass - " + to_string_wprecision(selectedDifficulty.passRating, 2);
+        }
+        else 
+        {
+            starsHoverHint = "Song not ranked";
+        }
+        AddHoverHint(starsLabel, starsHoverHint);
 
         // Create a list of all song types, that are definied for this sond
         vector<string> typeStrings;
@@ -295,7 +386,7 @@ namespace LevelInfoUI {
         // Set Color according to calculated VoteRatio (0% = red, 100% = green)
         statusLabel->SetText(rankingStatus.substr(0, shortWritingChars) + ".");
         if (rating == 0) {
-             statusLabel->set_color(UnityEngine::Color(0.5, 0.5, 0.5, 1));
+            statusLabel->set_color(UnityEngine::Color(0.5, 0.5, 0.5, 1));
         } else {
             statusLabel->set_color(UnityEngine::Color(1 - rating, rating, 0, 1));
         }
@@ -305,7 +396,7 @@ namespace LevelInfoUI {
         rating *= 100;
         reviewScore *= 100;
         AddHoverHint(statusLabel, "Ranking status - " + rankingStatus 
-                                + "\nRating -" + to_string(static_cast<int>(rating))
+                                + "\nRating - " + to_string(static_cast<int>(rating))
                                 + "%\nPositivity ratio - " + to_string(static_cast<int>(reviewScore)) 
                                 + "%\nVotes - " + to_string(selectedDifficulty.votes.size())
                                 + "\nTo vote for a song to be ranked, click the message box on the leaderboard");
