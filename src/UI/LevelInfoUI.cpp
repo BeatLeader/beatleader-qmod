@@ -20,8 +20,10 @@
 #include "include/Assets/BundleLoader.hpp"
 #include "include/Models/Song.hpp"
 #include "include/Models/Difficulty.hpp"
+#include "include/Models/TriangleRating.hpp"
 #include "include/UI/LevelInfoUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
+#include "include/UI/UIUtils.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -82,8 +84,8 @@ namespace LevelInfoUI {
     static string selectedMap;
     static pair<string, string> lastKey;
     
-    const Difficulty defaultDiff = Difficulty(0, 0, 0, {}, {}, {}, 0, 0, 0);
-    static Difficulty currentlySelectedDiff = defaultDiff;
+    const Difficulty defaultDiff = Difficulty(0, 0, {}, {}, {}, {});
+    static TriangleRating currentlySelectedRating = defaultDiff.rating;
 
     MAKE_HOOK_MATCH(DidDeactivate, &StandardLevelDetailViewController::DidDeactivate, void, StandardLevelDetailViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
         DidDeactivate(self, removedFromHierarchy, screenSystemDisabling);
@@ -121,15 +123,14 @@ namespace LevelInfoUI {
 
             // OnClick Function to open the SkillTriangle
             auto openSkillTriangle = [techLabel, accLabel, passLabel, normalizedValuesPropertyId](){
-                int mapType = currentlySelectedDiff.status;
-                if(mapType != 0 && mapType != 4 && mapType != 5) {
-                    techLabel->SetText("Tech - " + to_string_wprecision(currentlySelectedDiff.techRating, 2));
-                    accLabel->SetText("Acc - " + to_string_wprecision(currentlySelectedDiff.accRating, 2));
-                    passLabel->SetText("Pass - " + to_string_wprecision(currentlySelectedDiff.passRating, 2));
+                if(currentlySelectedRating.stars > 0) {
+                    techLabel->SetText("Tech - " + to_string_wprecision(currentlySelectedRating.techRating, 2));
+                    accLabel->SetText("Acc - " + to_string_wprecision(currentlySelectedRating.accRating, 2));
+                    passLabel->SetText("Pass - " + to_string_wprecision(currentlySelectedRating.passRating, 2));
                     skillTriangleMat->SetVector(normalizedValuesPropertyId, {
-                        clamp(currentlySelectedDiff.techRating / 15.0f, 0.0f, 1.0f),
-                        clamp(currentlySelectedDiff.accRating / 15.0f, 0.0f, 1.0f),
-                        clamp(currentlySelectedDiff.passRating / 15.0f, 0.0f, 1.0f),
+                        clamp(currentlySelectedRating.techRating / 15.0f, 0.0f, 1.0f),
+                        clamp(currentlySelectedRating.accRating / 15.0f, 0.0f, 1.0f),
+                        clamp(currentlySelectedRating.passRating / 15.0f, 0.0f, 1.0f),
                         0.0f
                     });
                     skillTriangleContainer->Show(true, true, NULL);
@@ -273,50 +274,18 @@ namespace LevelInfoUI {
         starsLabel = NULL;
     }
 
-    void refreshLabelsDiff(){
-        if(starsLabel){
-            setLabels(currentlySelectedDiff);
+    void refreshRatingLabels(){
+        if(starsLabel){ 
+            setRatingLabels(_mapInfos[lastKey.first].difficulties[lastKey.second].rating);
         }
     }
 
     void setLabels(Difficulty selectedDifficulty)
     {
-        currentlySelectedDiff = selectedDifficulty;
-        // Find the wanted star value
-        float stars;
-        switch(getModConfig().StarValueToShow.GetValue()){
-            case 1:
-                stars = selectedDifficulty.techRating;
-                break;
-            case 2:
-                stars = selectedDifficulty.accRating;
-                break;
-            case 3:
-                stars = selectedDifficulty.passRating;
-                break;
-            default:
-                stars = selectedDifficulty.stars;
-                break;
-        }
-        
-        // Set the stars and pp
-        starsLabel->SetText(to_string_wprecision(stars, 2));
-        ppLabel->SetText(to_string_wprecision(selectedDifficulty.stars * 51.0f, 2));
-
-        // Add Hoverhint with all star ratings
-        string starsHoverHint;
-        if(stars)
-        {
-            starsHoverHint = "Overall - " + to_string_wprecision(selectedDifficulty.stars, 2) 
-            + "\nTech - " + to_string_wprecision(selectedDifficulty.techRating, 2) 
-            + "\nAcc - " + to_string_wprecision(selectedDifficulty.accRating, 2)
-            + "\nPass - " + to_string_wprecision(selectedDifficulty.passRating, 2);
-        }
-        else 
-        {
-            starsHoverHint = "Song not ranked";
-        }
-        AddHoverHint(starsLabel, starsHoverHint);
+        // Set the modifier values of this song on the gameplaymodifiers panel
+        ModifiersUI::songModifiers = selectedDifficulty.modifierValues;
+        ModifiersUI::songModifierRatings = selectedDifficulty.modifiersRating;
+        setRatingLabels(selectedDifficulty.rating);
 
         // Create a list of all song types, that are definied for this sond
         vector<string> typeStrings;
@@ -400,9 +369,32 @@ namespace LevelInfoUI {
                                 + "%\nPositivity ratio - " + to_string(static_cast<int>(reviewScore)) 
                                 + "%\nVotes - " + to_string(selectedDifficulty.votes.size())
                                 + "\nTo vote for a song to be ranked, click the message box on the leaderboard");
+    }
 
-        // Set the modifier values of this song on the gameplaymodifiers panel
-        ModifiersUI::songModifiers = selectedDifficulty.modifierValues;
-        ModifiersUI::refreshAllModifiers();
+    void setRatingLabels(TriangleRating rating) {
+        currentlySelectedRating = rating;
+        TriangleRating modifierRating = ModifiersUI::refreshAllModifiers();
+
+        if(modifierRating.stars > 0)
+            currentlySelectedRating = modifierRating;
+        
+        // Set the stars and pp
+        starsLabel->SetText(to_string_wprecision(UIUtils::getStarsToShow(currentlySelectedRating), 2));
+        ppLabel->SetText(to_string_wprecision(currentlySelectedRating.stars * 51.0f, 2));
+
+        // Add Hoverhint with all star ratings
+        string starsHoverHint;
+        if (currentlySelectedRating.stars)
+        {
+            starsHoverHint = "Overall - " + to_string_wprecision(currentlySelectedRating.stars, 2) 
+            + "\nTech - " + to_string_wprecision(currentlySelectedRating.techRating, 2) 
+            + "\nAcc - " + to_string_wprecision(currentlySelectedRating.accRating, 2)
+            + "\nPass - " + to_string_wprecision(currentlySelectedRating.passRating, 2);
+        }
+        else 
+        {
+            starsHoverHint = "Song not ranked";
+        }
+        AddHoverHint(starsLabel, starsHoverHint);
     }
 }

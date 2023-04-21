@@ -1,11 +1,11 @@
 #pragma once
 
-struct ModifierRating 
+struct TriangleRating 
 {
     float stars;
     float techRating;
     float accRating;
     float passRating;
 
-    ModifierRating() = default;
+    TriangleRating() = default;
 };

@@ -1,8 +1,7 @@
 #include "include/Models/Difficulty.hpp"
-#include "include/Models/ModifierRating.hpp"
+#include "include/Models/TriangleRating.hpp"
 
 Difficulty::Difficulty(rapidjson::Value const& document) {
-    stars = document["stars"].GetFloat();
     status = document["status"].GetInt();
     type = document["type"].GetInt();
 
@@ -29,7 +28,7 @@ Difficulty::Difficulty(rapidjson::Value const& document) {
         }
 
         // Extract aspect (tech, acc, pass, stars) and shorten key (to fs/sf/ss)
-        string aspect = key.substr(3);
+        string aspect = key.substr(2);
         key = key.substr(0, 2);
 
         std::transform(key.begin(), key.end(), key.begin(), ::toupper);
@@ -43,21 +42,22 @@ Difficulty::Difficulty(rapidjson::Value const& document) {
             modifiersRating[key].accRating = value;
         else if (aspect == "PassRating")
             modifiersRating[key].passRating = value;
+        else if (aspect == "PredictedAcc"){}
+        else
+            modifiersRating[key].stars = -1;
     }
 
-    passRating = document["passRating"].GetFloat();
-    accRating = document["accRating"].GetFloat();
-    techRating = document["techRating"].GetFloat();
+    rating.stars = document["stars"].GetFloat();
+    rating.passRating = document["passRating"].GetFloat();
+    rating.accRating = document["accRating"].GetFloat();
+    rating.techRating = document["techRating"].GetFloat();
 }
 
-Difficulty::Difficulty(float starsGiven, int statusGiven, int typeGiven, vector<float> votesGiven, unordered_map<string, float> modifierValuesGiven,unordered_map<string, ModifierRating> modifiersRatingGiven, float passRatingGiven, float accRatingGiven, float techRatingGiven) {
-    stars = starsGiven;
+Difficulty::Difficulty(int statusGiven, int typeGiven, vector<float> votesGiven, unordered_map<string, float> modifierValuesGiven,unordered_map<string, TriangleRating> modifiersRatingGiven, TriangleRating ratingGiven) {
     status = statusGiven;
     type = typeGiven;
     votes = votesGiven;
     modifierValues = modifierValuesGiven;
     modifiersRating = modifiersRatingGiven;
-    passRating = passRatingGiven;
-    accRating = accRatingGiven;
-    techRating = techRatingGiven;
+    rating = ratingGiven;
 }
