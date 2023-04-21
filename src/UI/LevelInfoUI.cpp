@@ -82,7 +82,7 @@ namespace LevelInfoUI {
     static string selectedMap;
     static pair<string, string> lastKey;
     
-    const Difficulty defaultDiff = Difficulty(0, 0, 0, {}, {}, 0, 0, 0);
+    const Difficulty defaultDiff = Difficulty(0, 0, 0, {}, {}, {}, 0, 0, 0);
     static Difficulty currentlySelectedDiff = defaultDiff;
 
     MAKE_HOOK_MATCH(DidDeactivate, &StandardLevelDetailViewController::DidDeactivate, void, StandardLevelDetailViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
