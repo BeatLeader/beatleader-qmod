@@ -275,6 +275,7 @@ namespace LevelInfoUI {
     }
 
     void refreshRatingLabels(){
+        // Refresh rating labels from cache
         if(starsLabel){ 
             setRatingLabels(_mapInfos[lastKey.first].difficulties[lastKey.second].rating);
         }
@@ -282,9 +283,11 @@ namespace LevelInfoUI {
 
     void setLabels(Difficulty selectedDifficulty)
     {
-        // Set the modifier values of this song on the gameplaymodifiers panel
+        // The difficulty may have changed therefor we need to tell the ModifiersUI the new Values and Ratings
         ModifiersUI::songModifiers = selectedDifficulty.modifierValues;
         ModifiersUI::songModifierRatings = selectedDifficulty.modifiersRating;
+
+        // After that we set the rating labels (stars & pp). This also sets the rating labels on the ModifiersUI
         setRatingLabels(selectedDifficulty.rating);
 
         // Create a list of all song types, that are definied for this sond
@@ -372,9 +375,13 @@ namespace LevelInfoUI {
     }
 
     void setRatingLabels(TriangleRating rating) {
+        // Save rating so that the triangle window knows which values to show
         currentlySelectedRating = rating;
+
+        // refresh ModifiersRating and get potentially selected rating
         TriangleRating modifierRating = ModifiersUI::refreshAllModifiers();
 
+        // if a modifier rating is selected we want to show that one
         if(modifierRating.stars > 0)
             currentlySelectedRating = modifierRating;
         

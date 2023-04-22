@@ -78,6 +78,7 @@ namespace ModifiersUI {
         RefreshMultipliers(self);
 
         modifiersPanel = self;
+        // Refresh Rating labels as a rating modifier could have been selected (this also calls refreshAllModifiers)
         LevelInfoUI::refreshRatingLabels();
     }
 
@@ -101,6 +102,7 @@ namespace ModifiersUI {
                 modifierSubText = (modifierValue > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(modifierValue * 100.0f, 1) + "%";
             }
 
+            // Set the text underneath the modifier when we have either a rating or a % value for this modifier
             if(!modifierSubText.empty())
                 value->multiplierText->SetText(modifierSubText);
         }
@@ -121,22 +123,20 @@ namespace ModifiersUI {
             for (size_t i = 0; i < modifierParams->get_Count(); i++)
             {
                 auto param = modifierParams->get_Item(i);
-
-                if (!param->multiplierConditionallyValid) { // for now only NoFail being ignored
-                    if (!songModifiers.empty() && modifierKeyFromName.contains(param->get_modifierNameLocalizationKey())){
-                        string key = modifierKeyFromName[param->get_modifierNameLocalizationKey()];
-                        if (songModifierRatings.contains(key)){
-                            // ModifierRatings apply to star value and have no effect on max rank
-                            ratingSelected = songModifierRatings[key];
-                            continue;
-                        }
-                        else if (songModifiers.contains(key)) {
-                            totalMultiplier += songModifiers[key];
-                        }
-                        else {
-                            totalMultiplier += param->multiplier;
-                        }
-
+                
+                // If parameter is not nofail, we have a received any modifiers from the server and we have a short form of this modifier
+                if (!param->multiplierConditionallyValid && !songModifiers.empty() && modifierKeyFromName.contains(param->get_modifierNameLocalizationKey())) {
+                    string key = modifierKeyFromName[param->get_modifierNameLocalizationKey()];
+                    if (songModifierRatings.contains(key)) {
+                        // ModifierRatings apply to star value and have no effect on max rank.
+                        // But we need to return it so that it can be shown in the respective labels
+                        ratingSelected = songModifierRatings[key];
+                    }
+                    else if (songModifiers.contains(key)) {
+                        totalMultiplier += songModifiers[key];
+                    }
+                    else {
+                        totalMultiplier += param->multiplier;
                     }
                 }
             }
