@@ -38,7 +38,7 @@ jobs:
         workflow: cargo-build.yml
         name: linux-qpm-rust
         path: QPM
-        repo: RedBrumbler/QuestPackageManager-Rust
+        repo: QuestPackageManager/QPM.CLI
         
     - name: QPM Collapse
       run: |
@@ -69,9 +69,6 @@ jobs:
         echo cache:
         ls -la $HOME/.local/share/QPM-Rust/cache
         
-    - name: Apply Legacy Fix
-      run: |
-        ./QPM/qpm-rust cache legacy-fix
     - name: Build
       run: |
         cd ${GITHUB_WORKSPACE}
@@ -88,7 +85,7 @@ jobs:
         files=( $pattern )
         echo ::set-output name=NAME::"${files[0]}"
     
-    - name: Upload non-debug artifact
+    - name: Upload so artifact
       uses: actions/upload-artifact@v2
       with:
         name: ${{ steps.libname.outputs.NAME }}
