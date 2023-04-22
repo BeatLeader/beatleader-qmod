@@ -43,8 +43,8 @@ jobs:
         
     - name: QPM Collapse
       run: |
-        chmod +x ./QPM/qpm-rust
-        ./QPM/qpm-rust collapse
+        chmod +x ./QPM/qpm
+        ./QPM/qpm collapse
     
     - name: QPM Dependencies Cache
       id: cache-qpm-deps
@@ -52,7 +52,7 @@ jobs:
       env:
         cache-name: cache-qpm-deps
       with:
-        path: /home/runner/.local/share/QPM-Rust/cache
+        path: /home/runner/.local/share/QPM-Rs/cache
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('qpm.json') }}
         restore-keys: |
           ${{ runner.os }}-build-${{ env.cache-name }}-
@@ -60,7 +60,7 @@ jobs:
           ${{ runner.os }}-
     - name: QPM Restore
       run: |
-        ./QPM/qpm-rust restore
+        ./QPM/qpm restore
     - name: List Post Restore
       run: |
         echo includes:
@@ -68,12 +68,12 @@ jobs:
         echo libs:
         ls -la ${GITHUB_WORKSPACE}/extern/libs
         echo cache:
-        ls -la $HOME/.local/share/QPM-Rust/cache
+        ls -la $HOME/.local/share/QPM-Rs/cache
         
     - name: Build
       run: |
         cd ${GITHUB_WORKSPACE}
-        ./QPM/qpm-rust qmod build
+        ./QPM/qpm qmod build
         pwsh -Command ./build.ps1
     - name: Create Qmod
       run: |
