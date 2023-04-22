@@ -77,7 +77,7 @@ jobs:
         pwsh -Command ./build.ps1
     - name: Create Qmod
       run: |
-        pwsh -Command ./createqmod.ps1 ${{env.qmodName}}
+        pwsh -Command ./buildQMOD.ps1 ${{env.qmodName}}
     - name: Get Library Name
       id: libname
       run: |
