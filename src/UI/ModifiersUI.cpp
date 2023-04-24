@@ -9,6 +9,8 @@
 #include "GlobalNamespace/GameplayModifiersPanelController.hpp"
 #include "GlobalNamespace/GameplayModifiersModelSO.hpp"
 
+#include "GlobalNamespace/GameServerLobbyFlowCoordinator.hpp"
+
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/utils/logging.hpp"
 
@@ -31,6 +33,8 @@ namespace ModifiersUI {
     unordered_map<string, GameplayModifierToggle*> allModifierToggles;
     unordered_map<string, float> songModifiers;
     unordered_map<string, TriangleRating> songModifierRatings;
+    bool ssActive = false;
+    bool multiActive = false;
 
     static unordered_map<string, string> modifierKeyFromName = {
         {"MODIFIER_PRO_MODE", "PM"},
@@ -74,12 +78,25 @@ namespace ModifiersUI {
         return "E";
     }
 
+    MAKE_HOOK_MATCH(ActivateMultiplayer, &GameServerLobbyFlowCoordinator::DidActivate, void, GameServerLobbyFlowCoordinator* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling){
+        ActivateMultiplayer(self, firstActivation, addedToHierarchy, screenSystemEnabling);
+
+        multiActive = true;
+    }
+
+    MAKE_HOOK_MATCH(DeActivateMultiplayer, &GameServerLobbyFlowCoordinator::DidDeactivate, void, GameServerLobbyFlowCoordinator* self, bool removedFromHierarchy, bool screenSystemDisabling){
+        DeActivateMultiplayer(self, removedFromHierarchy, screenSystemDisabling);
+
+        multiActive = false;
+    }
+
     MAKE_HOOK_MATCH(RefreshMultipliers, &GameplayModifiersPanelController::RefreshTotalMultiplierAndRankUI, void, GameplayModifiersPanelController* self) {
         RefreshMultipliers(self);
 
         modifiersPanel = self;
         // Refresh Rating labels as a rating modifier could have been selected (this also calls refreshAllModifiers)
-        LevelInfoUI::refreshRatingLabels();
+        if(!ssActive && !multiActive)
+            LevelInfoUI::refreshRatingLabels();
     }
 
     MAKE_HOOK_MATCH(ModifierStart, &GameplayModifierToggle::Start, void, GameplayModifierToggle* self) {
@@ -159,6 +176,8 @@ namespace ModifiersUI {
 
         INSTALL_HOOK(logger, ModifierStart);
         INSTALL_HOOK(logger, RefreshMultipliers);
+        INSTALL_HOOK(logger, ActivateMultiplayer);
+        INSTALL_HOOK(logger, DeActivateMultiplayer);
     }
 
     void SetModifiersActive(bool active) {
@@ -172,6 +191,7 @@ namespace ModifiersUI {
                 }
             }
         }
+        ssActive = !active;
     }
 
     void ResetModifiersUI() {
