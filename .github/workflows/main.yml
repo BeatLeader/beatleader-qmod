@@ -106,11 +106,16 @@ jobs:
         name: ${{env.qmodName}}.qmod
         path: ./${{ env.qmodName }}.qmod
         if-no-files-found: error
+
+    - name: Prepare debug artifact for release
+      run: mv "./build/debug/${{ steps.libname.outputs.NAME }}" "./debug_${{ steps.libname.outputs.NAME }}"
         
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: ./${{ env.qmodName }}.qmod
+        files: |
+            ./${{ env.qmodName }}.qmod
+            ./debug_${{ steps.libname.outputs.NAME }}
       env: 
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
