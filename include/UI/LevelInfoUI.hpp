@@ -1,6 +1,7 @@
 #pragma once
 
 #include "include/Models/Difficulty.hpp"
+#include "include/Models/TriangleRating.hpp"
 
 namespace LevelInfoUI {
     void setup();
@@ -11,5 +12,6 @@ namespace LevelInfoUI {
     void addVoteToCurrentLevel(bool rankable, int type);
 
     void setLabels(Difficulty selectedDifficulty);
-    void refreshLabelsDiff();
+    void refreshRatingLabels();
+    void setRatingLabels(TriangleRating rating);
 }
