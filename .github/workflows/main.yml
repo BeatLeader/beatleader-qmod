@@ -1,6 +1,13 @@
-name: CI build
+# Credit to darknight1050 https://github.com/darknight1050/CrashReporter/blob/master/.github/workflows/build-ndk.yml
+
+name: NDK build
+
+env:
+    module_id: bl
+    qmodName: BeatLeader
 
 on:
+  workflow_dispatch:
   push:
     branches: [ master ]
     tags: v*
@@ -17,44 +24,93 @@ jobs:
       with:
         submodules: true
         lfs: true
-    - name: Install Powershell
-      run: sudo apt-get install -y powershell
     
-    - name: Setup NDK
-      id: setup-ndk
-      uses: nttld/setup-ndk@v1.0.6
-      with:
-        ndk-version: r23
-      
+    - uses: seanmiddleditch/gha-setup-ninja@v3
+
     - name: Create ndkpath.txt
-      run: echo ${{ steps.setup-ndk.outputs.ndk-path }} > ${GITHUB_WORKSPACE}/ndkpath.txt
-      
+      run: |
+        echo "$ANDROID_NDK_LATEST_HOME" > ${GITHUB_WORKSPACE}/ndkpath.txt
+        cat ${GITHUB_WORKSPACE}/ndkpath.txt
     - name: Get QPM
+      if: steps.cache-qpm.outputs.cache-hit != 'true'
       uses: dawidd6/action-download-artifact@v2
       with:
         github_token: ${{secrets.GITHUB_TOKEN}}
         workflow: cargo-build.yml
-        name: linux-qpm-rust
-        path: ./
-        repo: RedBrumbler/QuestPackageManager-Rust
-      
+        name: linux-qpm
+        path: QPM
+        repo: QuestPackageManager/QPM.CLI
+        
+    - name: QPM Collapse
+      run: |
+        chmod +x ./QPM/qpm
+        ./QPM/qpm collapse
+    
+    - name: QPM Dependencies Cache
+      id: cache-qpm-deps
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-qpm-deps
+      with:
+        path: /home/runner/.local/share/QPM-Rs/cache
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('qpm.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
     - name: QPM Restore
       run: |
-        chmod +x ./qpm-rust
-        ./qpm-rust restore
-        ./qpm-rust qmod build
-    - uses: seanmiddleditch/gha-setup-ninja@master
+        ./QPM/qpm restore
+    - name: List Post Restore
+      run: |
+        echo includes:
+        ls -la ${GITHUB_WORKSPACE}/extern/includes
+        echo libs:
+        ls -la ${GITHUB_WORKSPACE}/extern/libs
+        echo cache:
+        ls -la $HOME/.local/share/QPM-Rs/cache
+        
     - name: Build
-      run: pwsh -Command ./buildQMOD.ps1
-    - name: Upload artifact
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        ./QPM/qpm qmod build
+        pwsh -Command ./build.ps1
+    - name: Create Qmod
+      run: |
+        pwsh -Command ./buildQMOD.ps1 ${{env.qmodName}}
+    - name: Get Library Name
+      id: libname
+      run: |
+        cd ./build/
+        pattern="lib${module_id}*.so"
+        files=( $pattern )
+        echo ::set-output name=NAME::"${files[0]}"
+    
+    - name: Upload so artifact
       uses: actions/upload-artifact@v2
       with:
-        path: ./BeatLeader.qmod
+        name: ${{ steps.libname.outputs.NAME }}
+        path: ./build/${{ steps.libname.outputs.NAME }}
         if-no-files-found: error
+
+    - name: Upload debug artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: debug_${{ steps.libname.outputs.NAME }}
+        path: ./build/debug/${{ steps.libname.outputs.NAME }}
+        if-no-files-found: error
+
+    - name: Upload qmod artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{env.qmodName}}.qmod
+        path: ./${{ env.qmodName }}.qmod
+        if-no-files-found: error
+        
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: ./BeatLeader.qmod
+        files: ./${{ env.qmodName }}.qmod
       env: 
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

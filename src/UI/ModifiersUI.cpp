@@ -1,6 +1,8 @@
-
+#include "include/UI/LevelInfoUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
+#include "include/UI/UIUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
+#include "include/Models/TriangleRating.hpp"
 
 #include "GlobalNamespace/GameplayModifierToggle.hpp"
 #include "GlobalNamespace/GameplayModifierParamsSO.hpp"
@@ -28,6 +30,7 @@ namespace ModifiersUI {
     SafePtrUnity<GameplayModifiersPanelController> modifiersPanel;
     unordered_map<string, GameplayModifierToggle*> allModifierToggles;
     unordered_map<string, float> songModifiers;
+    unordered_map<string, TriangleRating> songModifierRatings;
 
     static unordered_map<string, string> modifierKeyFromName = {
         {"MODIFIER_PRO_MODE", "PM"},
@@ -75,7 +78,8 @@ namespace ModifiersUI {
         RefreshMultipliers(self);
 
         modifiersPanel = self;
-        refreshMultiplierAndMaxRank();
+        // Refresh Rating labels as a rating modifier could have been selected (this also calls refreshAllModifiers)
+        LevelInfoUI::refreshRatingLabels();
     }
 
     MAKE_HOOK_MATCH(ModifierStart, &GameplayModifierToggle::Start, void, GameplayModifierToggle* self) {
@@ -86,19 +90,28 @@ namespace ModifiersUI {
         allModifierToggles[key] = self;
     }
 
-    void refreshAllModifiers(){
+    TriangleRating refreshAllModifiers(){
         // Set the map dependant modifier values on the toggles (with colors)
         for(auto& [key, value] : allModifierToggles){
-            if(songModifiers.contains(key)){
-                float modifierValue = songModifiers[key];
-                value->multiplierText->SetText((modifierValue > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(modifierValue * 100.0f, 1) + "%");
+            string modifierSubText;
+            if (songModifierRatings.contains(key)){
+                modifierSubText = (key != "SS" ? "<color=#00FF77>" : "<color=#00FFFF>") + (string)"New stars " + to_string_wprecision(UIUtils::getStarsToShow(songModifierRatings[key]), 2);
             }
+            else if(songModifiers.contains(key)){
+                float modifierValue = songModifiers[key];
+                modifierSubText = (modifierValue > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(modifierValue * 100.0f, 1) + "%";
+            }
+
+            // Set the text underneath the modifier when we have either a rating or a % value for this modifier
+            if(!modifierSubText.empty())
+                value->multiplierText->SetText(modifierSubText);
         }
-        refreshMultiplierAndMaxRank();
+        return refreshMultiplierAndMaxRank();
     }
 
-    void refreshMultiplierAndMaxRank()
+    TriangleRating refreshMultiplierAndMaxRank()
     {
+        TriangleRating ratingSelected;
         // If we dont have a panel reference we cant do anything
         if (modifiersPanel) {
 
@@ -110,10 +123,16 @@ namespace ModifiersUI {
             for (size_t i = 0; i < modifierParams->get_Count(); i++)
             {
                 auto param = modifierParams->get_Item(i);
-
-                if (!param->multiplierConditionallyValid) { // for now only NoFail being ignored
-                    string key;
-                    if (!songModifiers.empty() && modifierKeyFromName.contains(param->get_modifierNameLocalizationKey()) && songModifiers.contains(key = modifierKeyFromName[param->get_modifierNameLocalizationKey()])) {
+                
+                // If parameter is not nofail, we have a received any modifiers from the server and we have a short form of this modifier
+                if (!param->multiplierConditionallyValid && !songModifiers.empty() && modifierKeyFromName.contains(param->get_modifierNameLocalizationKey())) {
+                    string key = modifierKeyFromName[param->get_modifierNameLocalizationKey()];
+                    if (songModifierRatings.contains(key)) {
+                        // ModifierRatings apply to star value and have no effect on max rank.
+                        // But we need to return it so that it can be shown in the respective labels
+                        ratingSelected = songModifierRatings[key];
+                    }
+                    else if (songModifiers.contains(key)) {
                         totalMultiplier += songModifiers[key];
                     }
                     else {
@@ -124,12 +143,15 @@ namespace ModifiersUI {
 
             if (totalMultiplier < 0) totalMultiplier = 0; // thanks Beat Games for Zen mode -1000%
 
+            // Correct texts & color of total multiplier & rank with our values
             modifiersPanel->totalMultiplierValueText->SetText((totalMultiplier > 1 ? "+" : "") + to_string_wprecision(totalMultiplier * 100.0f, 1) + "%");
-            //modifiersPanel->totalMultiplierValueText->set_color(totalMultiplier > 1 ? positiveColor : negativeColor);
-
             modifiersPanel->maxRankValueText->SetText(getRankForMultiplier(totalMultiplier));
-            // self->maxRankValueText->set_color(totalMultiplier > 1 ? positiveColor : negativeColor);
+
+            auto color = totalMultiplier >= 1 ? modifiersPanel->positiveColor : modifiersPanel->negativeColor;
+            modifiersPanel->totalMultiplierValueText->set_color(color);
+            modifiersPanel->maxRankValueText->set_color(color);
         }
+        return ratingSelected;
     }
 
     void setup() {
