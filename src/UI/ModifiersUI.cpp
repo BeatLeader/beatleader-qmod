@@ -104,7 +104,8 @@ namespace ModifiersUI {
 
         string key = modifierKeyFromName[self->get_gameplayModifier()->get_modifierNameLocalizationKey()];
         getLogger().info("%s", key.c_str());
-        allModifierToggles[key] = self;
+        if(!multiActive)
+            allModifierToggles[key] = self;
     }
 
     TriangleRating refreshAllModifiers(){
