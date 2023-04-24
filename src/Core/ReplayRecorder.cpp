@@ -107,6 +107,7 @@ namespace ReplayRecorder {
     static map<NoteData *, int> _noteIdCache;
     map<int, NoteEvent> _noteEventCache;
     map<int, NoteController *> _noteControllerCache;
+    map<int, NoteCutInfo> _noteCutInfoCache;
 
     map<SaberMovementData *, float> _preSwingContainer;
     map<SaberSwingRatingCounter *, float> _postSwingContainer;
@@ -307,6 +308,19 @@ namespace ReplayRecorder {
         }
     }
 
+    MAKE_HOOK_MATCH(HandleNoteControllerNoteWasCut, &BeatmapObjectManager::HandleNoteControllerNoteWasCut, void, BeatmapObjectManager* self, NoteController* noteController, ByRef<::GlobalNamespace::NoteCutInfo> noteCutInfo) {
+        HandleNoteControllerNoteWasCut(self, noteController, noteCutInfo);
+
+        if (replay == nullopt) return;
+
+        auto noteData = noteController->noteData;
+
+        if (!_noteIdCache.count(noteData)) return;
+
+        int noteId = _noteIdCache[noteData];
+        _noteCutInfoCache[noteId] = noteCutInfo.heldRef;
+    }
+
     static float ChooseSwingRating(float real, float unclamped) {
         return real < 1 ? real : max(real, unclamped);
     }
@@ -329,6 +343,12 @@ namespace ReplayRecorder {
             noteEvent.eventType = NoteEventType::MISS;
         } else if (il2cpp_utils::try_cast<BadCutScoringElement>(scoringElement) != nullopt) {
             noteEvent.eventType = isBomb ? NoteEventType::BOMB : NoteEventType::BAD;
+
+            if (!_noteCutInfoCache.count(noteId)) return;
+
+            ReplayNoteCutInfo& noteCutInfo = noteEvent.noteCutInfo;
+            PopulateNoteCutInfo(noteCutInfo, _noteCutInfoCache[noteId], _noteControllerCache[noteId]);
+                
         } else if (il2cpp_utils::try_cast<GoodCutScoringElement>(scoringElement) != nullopt) {
             GoodCutScoringElement* goodCut = il2cpp_utils::try_cast<GoodCutScoringElement>(scoringElement).value();
             CutScoreBuffer* cutScoreBuffer = goodCut->cutScoreBuffer;
@@ -551,6 +571,7 @@ namespace ReplayRecorder {
         INSTALL_HOOK(logger, ScoreControllerStart);
         INSTALL_HOOK(logger, ScoreControllerLateUpdate);
         INSTALL_HOOK(logger, ProcessResultsMultiplayer);
+        INSTALL_HOOK(logger, HandleNoteControllerNoteWasCut);
 
         getLogger().info("Installed all ReplayRecorder hooks!");
 
