@@ -43,6 +43,7 @@ TMPro::TextMeshProUGUI* label3;
 TMPro::TextMeshProUGUI* errorDescriptionLabel;
 
 HMUI::SimpleTextDropdown* serverDropdown;
+HMUI::SimpleTextDropdown* starsDropdown;
 UnityEngine::UI::Toggle* saveToggle;
 UnityEngine::UI::Toggle* showReplaySettingsToggle;
 
@@ -67,6 +68,11 @@ void UpdateUI(optional<Player> player) {
         passwordField->get_gameObject()->SetActive(false);
         loginButton->get_gameObject()->SetActive(false);
         signupButton->get_gameObject()->SetActive(false);
+
+        saveToggle->get_transform()->get_parent()->get_gameObject()->SetActive(true);
+        starsDropdown->get_transform()->get_parent()->get_gameObject()->SetActive(true);
+        if(showReplaySettingsToggle)
+            showReplaySettingsToggle->get_transform()->get_parent()->get_gameObject()->SetActive(true);
     } else {
         name->get_gameObject()->SetActive(false);
         label3->get_gameObject()->SetActive(true);
@@ -81,6 +87,11 @@ void UpdateUI(optional<Player> player) {
         passwordField->set_interactable(true);
         loginButton->set_interactable(true);
         signupButton->set_interactable(true);
+
+        saveToggle->get_transform()->get_parent()->get_gameObject()->SetActive(false);
+        starsDropdown->get_transform()->get_parent()->get_gameObject()->SetActive(false);
+        if(showReplaySettingsToggle)
+            showReplaySettingsToggle->get_transform()->get_parent()->get_gameObject()->SetActive(false);
     }
 
     errorDescriptionLabel->SetText(errorDescription);
@@ -186,7 +197,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         });
 
         saveToggle = AddConfigValueToggle(containerTransform, getModConfig().SaveLocalReplays);
-        auto dropdown = AddConfigValueDropdownEnum(containerTransform, getModConfig().StarValueToShow, {
+        starsDropdown = AddConfigValueDropdownEnum(containerTransform, getModConfig().StarValueToShow, {
             "Overall",
             "Tech",
             "Acc",
@@ -195,7 +206,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         // After switching the setting we need to manually call refresh, because StandardLevelDetailView::RefreshContent is not called again,
         // if the same map, that was selected before changing the setting, is selected again before selecting any other map. 
         // This results in setLabels not being called again and the stars of the old setting are displayed, which is why we call it manually here after selecting an option
-        dropdown->add_didSelectCellWithIdxEvent(custom_types::MakeDelegate<System::Action_2<HMUI::DropdownWithTableView*, int>*>((function<void(HMUI::DropdownWithTableView*, int)>)[](auto throwaway1, auto throwaway2){
+        starsDropdown->add_didSelectCellWithIdxEvent(custom_types::MakeDelegate<System::Action_2<HMUI::DropdownWithTableView*, int>*>((function<void(HMUI::DropdownWithTableView*, int)>)[](auto throwaway1, auto throwaway2){
             LevelInfoUI::refreshRatingLabels();
         }));
         if (ReplayInstalled()) {
