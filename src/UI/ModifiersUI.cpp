@@ -112,15 +112,16 @@ namespace ModifiersUI {
         // Set the map dependant modifier values on the toggles (with colors)
         for(auto& [key, value] : allModifierToggles){
             string modifierSubText;
-            if (songModifierRatings.contains(key)){
+            if (songModifierRatings.contains(key)) {
                 modifierSubText = (key != "SS" ? "<color=#00FF77>" : "<color=#00FFFF>") + (string)"New stars " + to_string_wprecision(UIUtils::getStarsToShow(songModifierRatings[key]), 2);
             }
-            else if(songModifiers.contains(key)){
+            else if(songModifiers.contains(key)) {
                 float modifierValue = songModifiers[key];
                 modifierSubText = (modifierValue > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(modifierValue * 100.0f, 1) + "%";
             }
             else {
-                modifierSubText = (value->gameplayModifier->multiplier > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string((int)(clamp(value->gameplayModifier->multiplier, -1.0f, 1.0f) * 100)) + "%";
+                float modifierValue = value->gameplayModifier->multiplier;
+                modifierSubText = (modifierValue > 0 ? "+" : "") + to_string_wprecision(modifierValue * 100.0f, 1) + "%";
             }
 
             // Set the text underneath the modifier
