@@ -119,10 +119,12 @@ namespace ModifiersUI {
                 float modifierValue = songModifiers[key];
                 modifierSubText = (modifierValue > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(modifierValue * 100.0f, 1) + "%";
             }
+            else {
+                modifierSubText = (value->gameplayModifier->multiplier > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string((int)(clamp(value->gameplayModifier->multiplier, -1.0f, 1.0f) * 100)) + "%";
+            }
 
-            // Set the text underneath the modifier when we have either a rating or a % value for this modifier
-            if(!modifierSubText.empty())
-                value->multiplierText->SetText(modifierSubText);
+            // Set the text underneath the modifier
+            value->multiplierText->SetText(modifierSubText);
         }
         return refreshMultiplierAndMaxRank();
     }
