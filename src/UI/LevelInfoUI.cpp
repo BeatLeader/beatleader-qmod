@@ -276,7 +276,7 @@ namespace LevelInfoUI {
 
     void refreshRatingLabels(){
         // Refresh rating labels from cache
-        if(starsLabel){ 
+        if(starsLabel && _mapInfos.contains(lastKey.first)){ 
             setRatingLabels(_mapInfos[lastKey.first].difficulties[lastKey.second].rating);
         }
     }
