@@ -1,6 +1,7 @@
 #include "include/Models/Replay.hpp"
 #include "include/main.hpp"
 #include <fstream>
+#include <cstring> // For memcpy
 
 enum struct StructType {
     info = 0,
@@ -123,14 +124,20 @@ void Replay::Encode(Frame const &frame, ofstream& stream) {
     Encode(frame.rightHand.position, stream);
     Encode(frame.rightHand.rotation, stream);
 }
+
+// Thanks chatgpt
 static float ApplyBool(float value, bool flag) {
-    int intValue = *(int*)(&value);
+    int intValue;
+    std::memcpy(&intValue, &value, sizeof value); // Copy bits from value to intValue
+
     if (flag) {
-        intValue |= 1;
+        intValue |= 1; // Set the least significant bit
     } else {
-        intValue &= ~1;
+        intValue &= ~1; // Unset the least significant bit
     }
-    return *(int*)(&intValue);
+
+    std::memcpy(&value, &intValue, sizeof intValue); // Copy bits back from intValue to value
+    return value;
 }
 
 void Replay::Encode(NoteEvent const &note, ofstream& stream) {
