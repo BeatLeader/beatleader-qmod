@@ -14,7 +14,7 @@
 #include "include/Models/Clan.hpp"
 #include "include/Models/Score.hpp"
 #include "include/API/PlayerController.hpp"
-
+#include <regex>
 using namespace std;
 using namespace UnityEngine;
 
@@ -106,33 +106,46 @@ namespace FormatUtils {
         inline string FormatNameWithClans(Player const& player, int limit) {
             string clansLabel = "<size=90%>";
             int clanCount = player.clans.size();
+
             if (clanCount == 2) {
                 clansLabel = "<size=80%>";
-            } else if (clanCount == 3) {
+            } 
+            else if (clanCount == 3) {
                 clansLabel = "<size=70%>";
             }
+
             for (size_t i = 0; i < clanCount; i++) {
                 Clan clan = player.clans[i];
                 clansLabel += "  <color=" + clan.color + ">" + clan.tag + "</color>";
             }
             clansLabel += "</size>";
 
-            return truncate(player.name, limit - clanCount * 3) + clansLabel;
-        }
-
-        inline string FormatPlayerScore(Score const& score) {
-            string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
-
             string name = "";
-            if (!PlayerController::IsIncognito(score.player)) {
-                name = getModConfig().ClansActive.GetValue() ? FormatNameWithClans(score.player, 24) : truncate(score.player.name, 24);
+            if (!player.name.empty() && player.name != "<blank>") {
+                name = player.name;
             } else {
                 name = "[REDACTED]";
             }
 
-            string time = getModConfig().TimesetActive.GetValue() ? " <size=60%>" + GetRelativeTimeString(score.timeset) + "</size>" : "";
-            return name + "<pos=40%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel + time; 
+            return "<noparse>" + truncate(name, limit - clanCount * 3) + "</noparse>" + clansLabel;
         }
+
+        inline string FormatPlayerScore(Score const& score) {
+            string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
+            string name = "";
+
+            if (!PlayerController::IsIncognito(score.player)) {
+                name = getModConfig().ClansActive.GetValue() ? FormatNameWithClans(score.player, 24) : "<noparse>" + truncate(score.player.name, 24) + "</noparse>";
+            } 
+            else {
+                name = "[REDACTED]";
+            }
+
+            string time = getModConfig().TimesetActive.GetValue() ? " <size=60%>" + GetRelativeTimeString(score.timeset) + "</size>" : "";
+
+            return name + "<pos=40%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel + time;
+        }
+
 
         inline string GetFullPlatformName(string serverPlatform) {
             
