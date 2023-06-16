@@ -117,26 +117,23 @@ namespace FormatUtils {
             }
             clansLabel += "</size>";
 
-            string playerName = truncate(player.name, limit - clanCount * 3);
-            // Remove the color tag from the player's name
-            playerName = std::regex_replace(playerName, std::regex("<[^>]+>"), "");
+            string name = "";
+            if (!player.name.empty() && player.name != "<blank>") {
+                // Wrap the player's name with the <noparse> tags
+                name = player.name;
+            } else {
+                name = "[REDACTED]";
+            }
 
-            return playerName + clansLabel;
+            return "<noparse>" + truncate(name, limit - clanCount * 3) + "</noparse>" + clansLabel;
         }
-
 
         inline string FormatPlayerScore(Score const& score) {
             string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
 
             string name = "";
             if (!PlayerController::IsIncognito(score.player)) {
-                if (getModConfig().ClansActive.GetValue()) {
-                    name = FormatNameWithClans(score.player, 24);
-                } else {
-                    name = truncate(score.player.name, 24);
-                    // Remove the color tag from the player's name if it exists
-                    name = std::regex_replace(name, std::regex("<[^>]+>"), "");
-                }
+                name = getModConfig().ClansActive.GetValue() ? FormatNameWithClans(score.player, 24) : "<noparse>" + truncate(score.player.name, 24) + "</noparse>";
             } else {
                 name = "[REDACTED]";
             }
@@ -144,6 +141,7 @@ namespace FormatUtils {
             string time = getModConfig().TimesetActive.GetValue() ? " <size=60%>" + GetRelativeTimeString(score.timeset) + "</size>" : "";
             return name + "<pos=40%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel + time;
         }
+
 
         inline string GetFullPlatformName(string serverPlatform) {
             
