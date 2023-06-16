@@ -14,7 +14,7 @@
 #include "include/Models/Clan.hpp"
 #include "include/Models/Score.hpp"
 #include "include/API/PlayerController.hpp"
-
+#include <regex>
 using namespace std;
 using namespace UnityEngine;
 
@@ -117,21 +117,32 @@ namespace FormatUtils {
             }
             clansLabel += "</size>";
 
-            return truncate(player.name, limit - clanCount * 3) + clansLabel;
+            string playerName = truncate(player.name, limit - clanCount * 3);
+            // Remove the color tag from the player's name
+            playerName = std::regex_replace(playerName, std::regex("<[^>]+>"), "");
+
+            return playerName + clansLabel;
         }
+
 
         inline string FormatPlayerScore(Score const& score) {
             string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
 
             string name = "";
             if (!PlayerController::IsIncognito(score.player)) {
-                name = getModConfig().ClansActive.GetValue() ? FormatNameWithClans(score.player, 24) : truncate(score.player.name, 24);
+                if (getModConfig().ClansActive.GetValue()) {
+                    name = FormatNameWithClans(score.player, 24);
+                } else {
+                    name = truncate(score.player.name, 24);
+                    // Remove the color tag from the player's name if it exists
+                    name = std::regex_replace(name, std::regex("<[^>]+>"), "");
+                }
             } else {
                 name = "[REDACTED]";
             }
 
             string time = getModConfig().TimesetActive.GetValue() ? " <size=60%>" + GetRelativeTimeString(score.timeset) + "</size>" : "";
-            return name + "<pos=40%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel + time; 
+            return name + "<pos=40%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel + time;
         }
 
         inline string GetFullPlatformName(string serverPlatform) {
