@@ -106,11 +106,14 @@ namespace FormatUtils {
         inline string FormatNameWithClans(Player const& player, int limit) {
             string clansLabel = "<size=90%>";
             int clanCount = player.clans.size();
+
             if (clanCount == 2) {
                 clansLabel = "<size=80%>";
-            } else if (clanCount == 3) {
+            } 
+            else if (clanCount == 3) {
                 clansLabel = "<size=70%>";
             }
+
             for (size_t i = 0; i < clanCount; i++) {
                 Clan clan = player.clans[i];
                 clansLabel += "  <color=" + clan.color + ">" + clan.tag + "</color>";
@@ -119,7 +122,6 @@ namespace FormatUtils {
 
             string name = "";
             if (!player.name.empty() && player.name != "<blank>") {
-                // Wrap the player's name with the <noparse> tags
                 name = player.name;
             } else {
                 name = "[REDACTED]";
@@ -130,15 +132,17 @@ namespace FormatUtils {
 
         inline string FormatPlayerScore(Score const& score) {
             string fcLabel = "<color=#FFFFFF>" + (string)(score.fullCombo ? "FC" : "") + (score.modifiers.length() > 0 && score.fullCombo ? "," : "") + score.modifiers;
-
             string name = "";
+
             if (!PlayerController::IsIncognito(score.player)) {
                 name = getModConfig().ClansActive.GetValue() ? FormatNameWithClans(score.player, 24) : "<noparse>" + truncate(score.player.name, 24) + "</noparse>";
-            } else {
+            } 
+            else {
                 name = "[REDACTED]";
             }
 
             string time = getModConfig().TimesetActive.GetValue() ? " <size=60%>" + GetRelativeTimeString(score.timeset) + "</size>" : "";
+
             return name + "<pos=40%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel + time;
         }
 
