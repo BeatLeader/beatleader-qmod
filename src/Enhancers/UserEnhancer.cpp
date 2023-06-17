@@ -47,5 +47,5 @@ void UserEnhancer::Enhance(Replay& replay)
         replay.info.controller = "Unknown";
         break;
     }
-    replay.info.trackingSytem = "Oculus";
+    replay.info.trackingSystem = "Oculus";
 }

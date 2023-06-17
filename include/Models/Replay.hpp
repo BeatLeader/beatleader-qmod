@@ -25,7 +25,7 @@ struct ReplayInfo {
     string playerName;
     string platform;
 
-    string trackingSytem;
+    string trackingSystem;
     string hmd;
     string controller;
 

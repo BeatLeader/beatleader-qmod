@@ -82,7 +82,7 @@ void Replay::Encode(ReplayInfo const &info, ofstream& stream) {
     Encode(info.playerName, stream);
     Encode(info.platform, stream);
 
-    Encode(info.trackingSytem, stream);
+    Encode(info.trackingSystem, stream);
     Encode(info.hmd, stream);
     Encode(info.controller, stream);
 
@@ -215,23 +215,25 @@ string Replay::DecodeString(ifstream& stream) {
     return cstring;
 }
 
+const int REPLAY_MAGIC_NUMBER = 0x442d3d69;
+
 std::optional<ReplayInfo> Replay::DecodeInfo(ifstream& stream) {
-    // TODO: Make a constant
-    if (DecodeInt(stream) != 0x442d3d69 || DecodeChar(stream) != 1 || DecodeChar(stream) != 0) {
+    // Check magic number and version
+    if (DecodeInt(stream) != REPLAY_MAGIC_NUMBER || DecodeChar(stream) != 1 || DecodeChar(stream) != 0) {
         return std::nullopt;
     }
 
     auto version = DecodeString(stream);
     auto gameVersion = DecodeString(stream);
     auto timestamp = DecodeString(stream);
-    
+
     ReplayInfo info(version, gameVersion, timestamp);
-    
+
     info.playerID = DecodeString(stream);
     info.playerName = DecodeString(stream);
     info.platform = DecodeString(stream);
 
-    info.trackingSytem = DecodeString(stream);
+    info.trackingSystem = DecodeString(stream);
     info.hmd = DecodeString(stream);
     info.controller = DecodeString(stream);
 
@@ -251,5 +253,6 @@ std::optional<ReplayInfo> Replay::DecodeInfo(ifstream& stream) {
     info.startTime = DecodeFloat(stream);
     info.failTime = DecodeFloat(stream);
     info.speed = DecodeFloat(stream);
+
     return info;
 }
