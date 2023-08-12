@@ -149,7 +149,6 @@ namespace WebUtils {
         curl_easy_setopt(curl, CURLOPT_URL, query_encode(url).c_str());
 
         curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str());
-        curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFile.c_str());
 
         // Don't wait forever, time out after TIMEOUT seconds.
         curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
@@ -209,7 +208,6 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_URL, query_encode(url).c_str());
 
                 curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str());
-                curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFile.c_str());
 
                 // Don't wait forever, time out after TIMEOUT seconds.
                 curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
@@ -274,7 +272,6 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_URL, query_encode(url).c_str());
 
                 curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str());
-                curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFile.c_str());
 
                 // Don't wait forever, time out after TIMEOUT seconds.
                 curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
@@ -360,7 +357,6 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_URL, query_encode(url).c_str());
 
                 curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str());
-                curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFile.c_str());
 
                 // Don't wait forever, time out after TIMEOUT seconds.
                 curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
@@ -413,7 +409,6 @@ namespace WebUtils {
 
                 curl_easy_setopt(curl, CURLOPT_URL, query_encode(url).c_str());
 
-                curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str());
                 curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFile.c_str());
 
                 // Don't wait forever, time out after TIMEOUT seconds.
@@ -514,7 +509,6 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
 
                 curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str());
-                curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFile.c_str());
 
                 // Don't wait forever, time out after TIMEOUT seconds.
                 curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
