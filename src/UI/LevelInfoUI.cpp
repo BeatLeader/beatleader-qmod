@@ -189,11 +189,11 @@ namespace LevelInfoUI {
 
         if (bslInstalled) return;
 
-        string levelID = reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID();
-        string hash = levelID.substr(strlen("custom_level_"));
-
+        // Why not just substr str.substr("custom_level_".size())?
+        // Because not every level is a custom level.
+        string hash = regex_replace((string)reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID(), basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(self->selectedDifficultyBeatmap->get_difficulty().value);
-        string mode = self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName;
+        string mode = (string)self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName;
 
         pair<string, string> key = {hash, difficulty + mode};
 
