@@ -42,14 +42,7 @@ struct RoleColorScheme {
 };
 
 RoleColorScheme inline schemeForRole(string roles, bool avatar = true) {
-    if (roles.find("tipper") != string::npos) {
-        return RoleColorScheme(
-            UnityEngine::Color(0.0f, 0.0f, 0.0f, 0.4f),
-            UnityEngine::Color(1.0f, 1.0f, 0.7f, 1.0f),
-            UnityEngine::Color(1.0f, 0.6f, 0.0f, 1.0f),
-            0.3f
-        );
-    } else if (roles.find("supporter") != string::npos) {
+    if (roles.find("supporter") != string::npos) {
         return RoleColorScheme(
             UnityEngine::Color(0.0f, 0.0f, 0.0f, 0.4f),
             UnityEngine::Color(1.0f, 1.0f, 0.7f, 1.0f),
@@ -62,6 +55,20 @@ RoleColorScheme inline schemeForRole(string roles, bool avatar = true) {
             UnityEngine::Color(1.0f, 1.0f, 0.6f, 1.0f),
             UnityEngine::Color(1.0f, 0.3f, 0.0f, 1.0f),
             1.0f
+        );
+    } else if (roles.find("booster") != string::npos) {
+        return RoleColorScheme(
+            UnityEngine::Color(0.0f, 0.0f, 0.0f, 0.4f),
+            UnityEngine::Color(1.0f, 0.2f, 0.7f, 1.0f),
+            UnityEngine::Color(1.0f, 0.3f, 0.5f, 1.0f),
+            0.1f
+        );
+    } else if (roles.find("tipper") != string::npos) {
+        return RoleColorScheme(
+            UnityEngine::Color(0.0f, 0.0f, 0.0f, 0.4f),
+            UnityEngine::Color(1.0f, 1.0f, 0.7f, 1.0f),
+            UnityEngine::Color(1.0f, 0.6f, 0.0f, 1.0f),
+            0.3f
         );
     } else {
         if (avatar) {
