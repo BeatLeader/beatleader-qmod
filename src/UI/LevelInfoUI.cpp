@@ -65,6 +65,9 @@ namespace LevelInfoUI {
 
     TMPro::TextMeshProUGUI* noSubmissionLabel = NULL;
 
+    bool bslInstalled = false;
+    bool submissionLabel = false;
+
     static map<string, Song> _mapInfos;
     static map<int, string> mapTypes = {
         {1, "acc"},
@@ -101,7 +104,7 @@ namespace LevelInfoUI {
             self->level->get_beatmapLevelData() == NULL || 
             self->beatmapCharacteristicSegmentedControlController == NULL ||
             self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic == NULL) return;
-        if (starsLabel == NULL) {
+        if (starsLabel == NULL && !bslInstalled) {
 
             ///////////////////////////
             // Skill Triangle
@@ -167,8 +170,11 @@ namespace LevelInfoUI {
             AddHoverHint(statusLabel, "Ranking status - unranked \nTo vote for a song to be ranked, click the message box on the leaderboard");
 
             statusImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_ClipboardIcon(), {20.5, 5.6}, {3,3});
+        }
 
-            noSubmissionLabel = CreateText(self->levelParamsPanel->get_transform(), "", true, UnityEngine::Vector2(-5, -20));
+        if (!submissionLabel) {
+            submissionLabel = true;
+            noSubmissionLabel = CreateText(self->levelParamsPanel->get_transform(), "", true, UnityEngine::Vector2(-5, bslInstalled ? -24 : -20));
             noSubmissionLabel->set_color(UnityEngine::Color(1.0, 0.0, 0.0, 1));
             noSubmissionLabel->set_fontSize(3);
             AddHoverHint(noSubmissionLabel, "Check their settings for 'force' or 'hitbox'");
@@ -180,6 +186,8 @@ namespace LevelInfoUI {
             noSubmissionLabel->set_text(UploadDisablers());
             noSubmissionLabel->set_alignment(TMPro::TextAlignmentOptions::Center);
         }
+
+        if (bslInstalled) return;
 
         string levelID = reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID();
         string hash = levelID.substr(strlen("custom_level_"));
@@ -240,19 +248,32 @@ namespace LevelInfoUI {
 
         INSTALL_HOOK(logger, LevelRefreshContent);
         INSTALL_HOOK(logger, DidDeactivate);
+
+        for(auto& [key, value] : Modloader::getMods()){
+            if (key == "BetterSongList") {
+                bslInstalled = true;
+                break;
+            }
+        }
     }
 
     void SetLevelInfoActive(bool active) {
-        starsLabel->get_gameObject()->SetActive(active);
-        starsImage->get_gameObject()->SetActive(active);
-        ppLabel->get_gameObject()->SetActive(active);
-        ppImage->get_gameObject()->SetActive(active);
-        typeLabel->get_gameObject()->SetActive(active);
-        typeImage->get_gameObject()->SetActive(active);
-        statusLabel->get_gameObject()->SetActive(active);
-        statusImage->get_gameObject()->SetActive(active);
-        noSubmissionLabel->get_gameObject()->SetActive(active);
-        skillTriangleContainer->Hide(false, nullptr);
+        if (starsLabel != NULL) {
+            starsLabel->get_gameObject()->SetActive(active);
+            starsImage->get_gameObject()->SetActive(active);
+            ppLabel->get_gameObject()->SetActive(active);
+            ppImage->get_gameObject()->SetActive(active);
+            typeLabel->get_gameObject()->SetActive(active);
+            typeImage->get_gameObject()->SetActive(active);
+            statusLabel->get_gameObject()->SetActive(active);
+            statusImage->get_gameObject()->SetActive(active);
+        }
+        if (submissionLabel) {
+            noSubmissionLabel->get_gameObject()->SetActive(active);
+        }
+        if (skillTriangleContainer != NULL) {
+            skillTriangleContainer->Hide(false, nullptr);
+        }
     }
 
     void resetStars() {
@@ -272,6 +293,7 @@ namespace LevelInfoUI {
 
     void reset() {
         starsLabel = NULL;
+        submissionLabel = false;
     }
 
     void refreshRatingLabels(){
