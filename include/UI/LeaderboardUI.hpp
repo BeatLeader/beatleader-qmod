@@ -24,9 +24,18 @@ namespace LeaderboardUI {
     tuple<string, string, string> getLevelDetails(GlobalNamespace::IPreviewBeatmapLevel* levelData);
     void setVotingButtonsState(int state);
     void initSettingsModal(UnityEngine::Transform* parent);
+    void initContextsModal(UnityEngine::Transform* parent);
     void voteCallback(bool voted, bool rankable, float stars, int type);
     void hideVotingUIs();
     void hidePopups();
     void updatePlayerRank();
     UnityEngine::UI::Toggle* CreateToggle(UnityEngine::Transform* parent, bool currentValue, UnityEngine::Vector2 anchoredPosition, std::function<void(bool)> onValueChange);
+
+    enum class Context
+    {
+        Standard,
+        Modifiers,
+        NoPause,
+        Golf
+    };
 }

@@ -145,6 +145,7 @@ namespace LeaderboardUI {
     BeatLeader::RankVotingPopup* votingUI = NULL;
     BeatLeader::LinksContainerPopup* linkContainer = NULL;
     HMUI::ModalView* settingsContainer = NULL;
+    HMUI::ModalView* contextsContainer = NULL;
     bool visible = false;
     bool hooksInstalled = false;
     int cachedSelector = -1;
@@ -152,7 +153,6 @@ namespace LeaderboardUI {
     int page = 1;
     bool showRetryButton = false;
     int selectedScore = 11;
-    bool modifiers = true;
     static vector<Score> scoreVector = vector<Score>(11);
 
     map<LeaderboardTableCell*, HMUI::ImageView*> avatars;
@@ -187,6 +187,20 @@ namespace LeaderboardUI {
     UnityEngine::UI::Button* sspageUpButton;
     UnityEngine::UI::Button* sspageDownButton;
 
+    static map<Context, string> contextToUrlString = {
+        {Context::Standard, "standard"},
+        {Context::Modifiers, "modifiers"},
+        {Context::NoPause, "nopause"},
+        {Context::Golf, "golf"},
+    };
+
+    static map<Context, string> contextToDisplayString = {
+        {Context::Standard, "General"},
+        {Context::Modifiers, "No Mods"},
+        {Context::NoPause, "No Pauses"},
+        {Context::Golf, "Golf"},
+    };
+
     void updatePlayerRank() {
         // Function to calculate the coloring and add the + sign if positive 
         auto getColoredChange = [](float change){
@@ -212,7 +226,7 @@ namespace LeaderboardUI {
     void updatePlayerInfoLabel() {
         auto const& player = PlayerController::currentPlayer;
         if (player != std::nullopt) {
-            if (player->rank > 0) {
+            if (!player->name.empty()) {
 
                 updatePlayerRank();
                 
@@ -342,13 +356,7 @@ namespace LeaderboardUI {
 
     void refreshFromTheServer() {
         auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
-        string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode;
-
-        if (modifiers) {
-            url += "/modifiers";
-        } else {
-            url += "/standard";
-        }
+        string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode + "/" + contextToUrlString[static_cast<Context>(getModConfig().Context.GetValue())];
 
         int selectedCellNumber = cachedSelector != -1 ? cachedSelector : plvc->scopeSegmentedControl->selectedCellNumber;
 
@@ -479,19 +487,10 @@ namespace LeaderboardUI {
         plvc->loadingControl->ShowText("Loading", true);
     }
 
-    static UnityEngine::Color selectedColor = UnityEngine::Color(0.0, 0.4, 1.0, 1.0);
-    static UnityEngine::Color fadedColor = UnityEngine::Color(0.8, 0.8, 0.8, 0.2);
-    static UnityEngine::Color fadedHoverColor = UnityEngine::Color(0.5, 0.5, 0.5, 0.2);
-
     void updateModifiersButton() {
-        modifiersButton->set_defaultColor(modifiers ? selectedColor : fadedColor);
-        modifiersButton->set_highlightColor(modifiers ? selectedColor : fadedHoverColor);
+        modifiersButtonHover->set_text("Currently selected leaderboard - " + contextToDisplayString[static_cast<Context>(getModConfig().Context.GetValue())]);
 
-        if (modifiers) {
-            modifiersButtonHover->set_text("Show leaderboard without positive modifiers");
-        } else {
-            modifiersButtonHover->set_text("Show leaderboard with positive modifiers");
-        }
+        // TODO Set Icons
     }
 
     void voteCallback(bool voted, bool rankable, float stars, int type) {
@@ -699,14 +698,12 @@ namespace LeaderboardUI {
             });
 
             modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
-                modifiers = !modifiers;
-                getModConfig().Modifiers.SetValue(modifiers);
-                clearTable();
-                updateModifiersButton();
-                refreshFromTheServer();
+                contextsContainer->Show(true, true, nullptr);
             });
-            modifiers = getModConfig().Modifiers.GetValue();
-            modifiersButtonHover = ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "Show leaderboard without positive modifiers");
+            modifiersButton->set_defaultColor(SelectedColor);
+            modifiersButton->set_highlightColor(SelectedColor);
+            modifiersButtonHover = ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "");
+            initContextsModal(self->get_transform());
             updateModifiersButton();
 
             auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(
@@ -1035,6 +1032,30 @@ namespace LeaderboardUI {
         }
     }
 
+    void initContextsModal(UnityEngine::Transform* parent){
+        auto container = QuestUI::BeatSaberUI::CreateModal(parent, {40, static_cast<float>((static_cast<int>(Context::Golf) + 2) * 10 + 5)}, nullptr, true);
+
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Scores Context", {20, 19});
+
+        for(int i = 0; i <= static_cast<int>(Context::Golf); i++)
+        {
+            QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), contextToDisplayString[static_cast<Context>(i)], {0.0f, static_cast<float>(21 - (i + 1) * 10)}, [i](){
+                getModConfig().Context.SetValue(i);
+                contextsContainer->Hide(true, nullptr);
+                clearTable();
+                updateModifiersButton();
+                refreshFromTheServer();
+                PlayerController::Refresh(0, [](auto player, auto str){
+                    QuestUI::MainThreadScheduler::Schedule([]{
+                        LeaderboardUI::updatePlayerRank();
+                    });
+                });
+            });
+        }
+
+        contextsContainer = container;
+    }
+
     void initSettingsModal(UnityEngine::Transform* parent){
         auto container = QuestUI::BeatSaberUI::CreateModal(parent, {40,50}, nullptr, true);
         
@@ -1138,6 +1159,7 @@ namespace LeaderboardUI {
         votingUI = NULL;
         linkContainer = NULL;
         settingsContainer = NULL;
+        contextsContainer = NULL;
         preferencesButton = NULL;
         parentScreen = NULL;
         sspageUpButton = NULL;
@@ -1167,6 +1189,9 @@ namespace LeaderboardUI {
         }
         if (settingsContainer) {
             settingsContainer->Hide(false, nullptr);
+        }
+        if (contextsContainer) {
+            contextsContainer->Hide(false, nullptr);
         }
     }
 }
