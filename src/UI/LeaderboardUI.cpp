@@ -490,7 +490,27 @@ namespace LeaderboardUI {
     void updateModifiersButton() {
         modifiersButtonHover->set_text("Currently selected leaderboard - " + contextToDisplayString[static_cast<Context>(getModConfig().Context.GetValue())]);
 
-        // TODO Set Icons
+        Sprite* modifiersIcon = NULL;
+        switch(static_cast<Context>(getModConfig().Context.GetValue()))
+        {
+            case Context::Standard:
+                modifiersIcon = BundleLoader::bundle->generalContextIcon;
+                break;
+            case Context::Modifiers:
+                modifiersIcon = BundleLoader::bundle->noModifiersIcon;
+                break;
+            case Context::NoPause:
+                modifiersIcon = BundleLoader::bundle->noPauseIcon;
+                break;
+            case Context::Golf:
+                modifiersIcon = BundleLoader::bundle->golfIcon;
+                break;
+        }
+
+        if(modifiersIcon != NULL)
+        {
+            modifiersButton->set_sprite(modifiersIcon);
+        }
     }
 
     void voteCallback(bool voted, bool rankable, float stars, int type) {
@@ -697,7 +717,7 @@ namespace LeaderboardUI {
                 PageDown();
             });
 
-            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(4, 4), [](){
+            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(6, 6), [](){
                 contextsContainer->Show(true, true, nullptr);
             });
             modifiersButton->set_defaultColor(SelectedColor);
