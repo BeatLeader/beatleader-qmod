@@ -2,6 +2,7 @@
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
 #include "include/main.hpp"
+#include "include/UI/LeaderboardUI.hpp"
 
 #include "GlobalNamespace/IPlatformUserModel.hpp"
 #include "GlobalNamespace/UserInfo.hpp"
@@ -29,6 +30,13 @@ void callbackWrapper(optional<Player> const& player) {
         fn(player);
 }
 
+static map<LeaderboardUI::Context, string> contextToPlayerUrlString = {
+    {LeaderboardUI::Context::Standard, "general"},
+    {LeaderboardUI::Context::NoMods, "nomods"},
+    {LeaderboardUI::Context::NoPause, "nopause"},
+    {LeaderboardUI::Context::Golf, "golf"},
+};
+
 void PlayerController::Refresh(int retry, const function<void(optional<Player> const&, string)>& finished) {
     // Error Handler
     auto handleError = [retry, finished](){
@@ -46,7 +54,7 @@ void PlayerController::Refresh(int retry, const function<void(optional<Player> c
             currentPlayer = Player(result.GetObject());
             // We also need the history so we can display the ranking change
             // Leaderboard Context on Server is a bit flag and ours just a normal enum. Therefor we need to calculate 2^Context to get the right parameter
-            WebUtils::GetJSONAsync(WebUtils::API_URL + "player/" + currentPlayer->id + "/history?leaderboardContext="+std::to_string(static_cast<int>(std::pow(2,getModConfig().Context.GetValue() + 1)))+"&count=1", [finished, handleError](long historyStatus, bool historyError, rapidjson::Document const& historyResult){
+            WebUtils::GetJSONAsync(WebUtils::API_URL + "player/" + currentPlayer->id + "/history?leaderboardContext="+contextToPlayerUrlString[static_cast<LeaderboardUI::Context>(getModConfig().Context.GetValue())]+"&count=1", [finished, handleError](long historyStatus, bool historyError, rapidjson::Document const& historyResult){
                 // Only do stuff if we are successful
                 if(historyStatus == 200 && !historyError){
                     // Set the new Historydata on the player
