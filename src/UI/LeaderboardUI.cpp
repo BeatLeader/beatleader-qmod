@@ -133,9 +133,9 @@ namespace LeaderboardUI {
     
     QuestUI::ClickableImage* upPageButton = NULL;
     QuestUI::ClickableImage* downPageButton = NULL;
-    QuestUI::ClickableImage* modifiersButton = NULL;
+    QuestUI::ClickableImage* contextsButton = NULL;
     BeatLeader::VotingButton* votingButton = NULL;
-    HMUI::HoverHint* modifiersButtonHover;
+    HMUI::HoverHint* contextsButtonHover;
     UnityEngine::GameObject* parentScreen = NULL;
 
     TMPro::TextMeshProUGUI* loginPrompt = NULL;
@@ -488,7 +488,7 @@ namespace LeaderboardUI {
     }
 
     void updateModifiersButton() {
-        modifiersButtonHover->set_text("Currently selected leaderboard - " + contextToDisplayString[static_cast<Context>(getModConfig().Context.GetValue())]);
+        contextsButtonHover->set_text("Currently selected leaderboard - " + contextToDisplayString[static_cast<Context>(getModConfig().Context.GetValue())]);
 
         Sprite* modifiersIcon = NULL;
         switch(static_cast<Context>(getModConfig().Context.GetValue()))
@@ -509,7 +509,7 @@ namespace LeaderboardUI {
 
         if(modifiersIcon != NULL)
         {
-            modifiersButton->set_sprite(modifiersIcon);
+            contextsButton->set_sprite(modifiersIcon);
         }
     }
 
@@ -717,12 +717,13 @@ namespace LeaderboardUI {
                 PageDown();
             });
 
-            modifiersButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(6, 6), [](){
+            contextsButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(6, 6), [](){
                 contextsContainer->Show(true, true, nullptr);
             });
-            modifiersButton->set_defaultColor(SelectedColor);
-            modifiersButton->set_highlightColor(SelectedColor);
-            modifiersButtonHover = ::QuestUI::BeatSaberUI::AddHoverHint(modifiersButton, "");
+            contextsButton->set_defaultColor(SelectedColor);
+            contextsButton->set_highlightColor(SelectedColor);
+            // We need to add an empty hover hint, so we can set it later to the correct content depending on the selected context
+            contextsButtonHover = ::QuestUI::BeatSaberUI::AddHoverHint(contextsButton, "");
             initContextsModal(self->get_transform());
             updateModifiersButton();
 
@@ -1060,11 +1061,17 @@ namespace LeaderboardUI {
         for(int i = 0; i <= static_cast<int>(Context::Golf); i++)
         {
             QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), contextToDisplayString[static_cast<Context>(i)], {0.0f, static_cast<float>(21 - (i + 1) * 10)}, [i](){
+                // Set the new value
                 getModConfig().Context.SetValue(i);
+                // Hide the modal
                 contextsContainer->Hide(true, nullptr);
+                // Clear the leaderboard
                 clearTable();
+                // Refresh the context button icon
                 updateModifiersButton();
+                // Fill the leaderboard
                 refreshFromTheServer();
+                // Refresh the player rank
                 PlayerController::Refresh(0, [](auto player, auto str){
                     QuestUI::MainThreadScheduler::Schedule([]{
                         LeaderboardUI::updatePlayerRank();

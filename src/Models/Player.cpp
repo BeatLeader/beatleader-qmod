@@ -14,11 +14,12 @@ Player::Player(rapidjson::Value const& userModInterface) {
     // For standard context and players from v3/scores (where contextExtension is null cause we request for one context) we use the main player
     int currentContext = getModConfig().Context.GetValue();
     std::optional<rapidjson::GenericArray<true, rapidjson::Value>> contextExtensions = userModInterface.HasMember("contextExtensions") && !userModInterface["contextExtensions"].IsNull() ? userModInterface["contextExtensions"].GetArray() : std::optional<rapidjson::GenericArray<true, rapidjson::Value>>();
-    rapidjson::Value const& playerRes = currentContext == 0 || !contextExtensions || currentContext - 1 >= contextExtensions.value().Size() ? userModInterface : contextExtensions.value()[currentContext - 1];
+    // If we are Standard Context or we have no contexts or our selected context is not in contextextensions we use the normal rank. Else we use the correct context extension rank
+    rapidjson::Value const& contextRank = currentContext == 0 || !contextExtensions || currentContext - 1 >= contextExtensions.value().Size() ? userModInterface : contextExtensions.value()[currentContext - 1];
 
-    rank = playerRes["rank"].GetInt();
-    countryRank = playerRes["countryRank"].GetInt();
-    pp = playerRes["pp"].GetFloat();
+    rank = contextRank["rank"].GetInt();
+    countryRank = contextRank["countryRank"].GetInt();
+    pp = contextRank["pp"].GetFloat();
 
     auto clansList = userModInterface["clans"].GetArray();
     for (int index = 0; index < (int)clansList.Size(); ++index) {
