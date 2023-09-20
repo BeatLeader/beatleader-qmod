@@ -188,15 +188,15 @@ namespace LeaderboardUI {
     UnityEngine::UI::Button* sspageDownButton;
 
     static map<Context, string> contextToUrlString = {
-        {Context::Standard, "standard"},
-        {Context::Modifiers, "modifiers"},
+        {Context::Standard, "modifiers"},
+        {Context::NoMods, "standard"},
         {Context::NoPause, "nopause"},
         {Context::Golf, "golf"},
     };
 
     static map<Context, string> contextToDisplayString = {
         {Context::Standard, "General"},
-        {Context::Modifiers, "No Mods"},
+        {Context::NoMods, "No Mods"},
         {Context::NoPause, "No Pauses"},
         {Context::Golf, "Golf"},
     };
@@ -496,7 +496,7 @@ namespace LeaderboardUI {
             case Context::Standard:
                 modifiersIcon = BundleLoader::bundle->generalContextIcon;
                 break;
-            case Context::Modifiers:
+            case Context::NoMods:
                 modifiersIcon = BundleLoader::bundle->noModifiersIcon;
                 break;
             case Context::NoPause:

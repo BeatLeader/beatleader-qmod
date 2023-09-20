@@ -34,7 +34,7 @@ namespace LeaderboardUI {
     enum class Context
     {
         Standard,
-        Modifiers,
+        NoMods,
         NoPause,
         Golf
     };
