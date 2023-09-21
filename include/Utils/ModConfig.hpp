@@ -1,11 +1,11 @@
 #pragma once
 #include "config-utils/shared/config-utils.hpp"
 #include "bs-utils/shared/utils.hpp"
+#include "include/UI/LeaderboardUI.hpp"
 
 DECLARE_CONFIG(ModConfig,
     CONFIG_VALUE(ServerType, std::string, "ServerType", "Main", "");
     CONFIG_VALUE(SaveLocalReplays, bool, "Keep local replays", true, "Save replays on this device");
-    CONFIG_VALUE(Modifiers, bool, "Positive modifiers", true, "Show leaderboards with positive modifiers");
     CONFIG_VALUE(AvatarsActive, bool, "Show Avatars", false);
     CONFIG_VALUE(ClansActive, bool, "Show Clans", true);
     CONFIG_VALUE(ScoresActive, bool, "Show Scores", true);
@@ -14,6 +14,7 @@ DECLARE_CONFIG(ModConfig,
     CONFIG_VALUE(ShowReplaySettings, bool, "Show replay settings", true);
     CONFIG_VALUE(ShowBeatleader, bool, "Show BeatLeader", true, "Priority for BeatLeader or SS");
     CONFIG_VALUE(StarValueToShow, int, "Display Stars", 0);
+    CONFIG_VALUE(Context, int, "Selected Context", static_cast<int>(LeaderboardUI::Context::Standard))
 )
 
 inline bool UploadEnabled() {
