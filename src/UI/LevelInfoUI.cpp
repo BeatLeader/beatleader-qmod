@@ -271,7 +271,7 @@ namespace LevelInfoUI {
         if (submissionLabel) {
             noSubmissionLabel->get_gameObject()->SetActive(active);
         }
-        if (skillTriangleContainer != NULL) {
+        if (skillTriangleContainer) {
             skillTriangleContainer->Hide(false, nullptr);
         }
     }
