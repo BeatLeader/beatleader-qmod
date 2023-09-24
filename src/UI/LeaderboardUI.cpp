@@ -115,6 +115,7 @@ using UnityEngine::Resources;
 
 namespace LeaderboardUI {
     function<void()> retryCallback;
+    BeatLeader::Leaderboard leaderboard = BeatLeader::Leaderboard();
     PlatformLeaderboardViewController* plvc = NULL;
 
     TMPro::TextMeshProUGUI* uploadStatus = NULL;
@@ -269,6 +270,8 @@ namespace LeaderboardUI {
 
     MAKE_HOOK_MATCH(LeaderboardActivate, &PlatformLeaderboardViewController::DidActivate, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHeirarchy, bool screenSystemEnabling) {
         LeaderboardActivate(self, firstActivation, addedToHeirarchy, screenSystemEnabling);
+
+        if (leaderboard.get_leaderboardViewController() != self) return;
         if (showBeatLeader && firstActivation) {
             HMUI::ImageView* imageView = self->get_transform()->Find("HeaderPanel")->GetComponentInChildren<HMUI::ImageView*>();
             imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
@@ -311,7 +314,9 @@ namespace LeaderboardUI {
         }
         
         LeaderboardDeactivate(self, removedFromHierarchy, screenSystemDisabling);
+
         hidePopups();
+        if (leaderboard.get_leaderboardViewController() != self) return;
 
         if (parentScreen != NULL) {
             visible = false;
@@ -870,6 +875,10 @@ namespace LeaderboardUI {
 
     MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
         plvc = self;
+        if (leaderboard.get_leaderboardViewController() != self) {
+            RefreshLeaderboard(self, showLoadingIndicator, clear);
+            return;
+        }
         if (!showBeatLeader) {
             RefreshLeaderboard(self, showLoadingIndicator, clear);
             ssWasOpened = true;
@@ -891,6 +900,10 @@ namespace LeaderboardUI {
 
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
         LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
+
+        if (plvc == NULL || plvc->leaderboardTableView != self) {
+            return result;
+        }
 
         if (showBeatLeader && !isLocal) {
         if (result->playerNameText->get_fontSize() > 3 || result->playerNameText->get_enableAutoSizing()) {
