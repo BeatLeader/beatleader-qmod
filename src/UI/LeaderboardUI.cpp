@@ -315,7 +315,7 @@ namespace LeaderboardUI {
     }
 
     void LeaderboardDidDeactivate() {
-        if (originalplvc && !plvc->isActivated) {
+        if (originalplvc && plvc && !plvc->isActivated) {
             HMUI::ImageView* imageView = originalplvc->get_transform()->Find("HeaderPanel")->GetComponentInChildren<HMUI::ImageView*>();
             imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
             imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
@@ -326,6 +326,7 @@ namespace LeaderboardUI {
             visible = false;
             parentScreen->SetActive(false);
         }
+        hidePopups();
     }
 
     MAKE_HOOK_MATCH(LeaderboardActivate, &PlatformLeaderboardViewController::DidActivate, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHeirarchy, bool screenSystemEnabling) {
@@ -669,11 +670,11 @@ namespace LeaderboardUI {
             BeatLeader::initLinksContainerPopup(&linkContainer, plvc->get_transform());
             BeatLeader::initVotingPopup(&votingUI, plvc->get_transform(), voteCallback);
 
-            auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), BundleLoader::bundle->incognitoIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(16, 16));
+            auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), BundleLoader::bundle->defaultAvatar, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(16, 16));
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), Sprites::get_GlobalIcon(), UnityEngine::Vector2(120, 45), UnityEngine::Vector2(4, 4));
+            globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), BundleLoader::bundle->globeIcon, UnityEngine::Vector2(120, 45), UnityEngine::Vector2(4, 4));
             playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
 
@@ -702,7 +703,7 @@ namespace LeaderboardUI {
                 updatePlayerInfoLabel();
             }
 
-            auto websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(16, 16), []() {
+            auto websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(105, 50), UnityEngine::Vector2(16, 16), []() {
                 linkContainer->modal->Show(true, true, nullptr);
             });
             
@@ -731,14 +732,14 @@ namespace LeaderboardUI {
             resize(uploadStatus, 10, 0);
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
-            upPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
+            upPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(plvc->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(-40, 23), UnityEngine::Vector2(8, 5.12), [](){
                 PageUp();
             });
-            downPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -20), UnityEngine::Vector2(8, 5.12), [](){
+            downPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(plvc->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(-40, -13), UnityEngine::Vector2(8, 5.12), [](){
                 PageDown();
             });
 
-            contextsButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(6, 6), [](){
+            contextsButton = ::QuestUI::BeatSaberUI::CreateClickableImage(plvc->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(-40, 34), UnityEngine::Vector2(6, 6), [](){
                 contextsContainer->Show(true, true, nullptr);
             });
             contextsButton->set_defaultColor(SelectedColor);
@@ -749,9 +750,9 @@ namespace LeaderboardUI {
             updateModifiersButton();
 
             auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(
-                parentScreen->get_transform(), 
+                plvc->get_transform(), 
                 BundleLoader::bundle->modifiersIcon, 
-                UnityEngine::Vector2(100, 22), 
+                UnityEngine::Vector2(-40, 28), 
                 UnityEngine::Vector2(4, 4), 
                 []() {
                 if (votingButton->state != 2) return;
@@ -937,7 +938,7 @@ namespace LeaderboardUI {
             EmojiSupport::AddSupport(result->playerNameText);
 
             if (!cellBackgrounds.count(result)) {
-                avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), BundleLoader::bundle->incognitoIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
+                avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), BundleLoader::bundle->defaultAvatar, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
                 avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
 
                 auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
@@ -1270,6 +1271,7 @@ namespace LeaderboardUI {
             BSML::parse_and_construct(bsml, get_transform(), this);
         }
         LeaderboardDidActivate();
+        Refresh();
     }
 
     void LeaderboardViewController::DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
@@ -1279,13 +1281,12 @@ namespace LeaderboardUI {
 
     void LeaderboardViewController::PostParse(){
         Array<IconSegmentedControl::DataItem*>* array = ::Array<IconSegmentedControl::DataItem*>::New({
-            IconSegmentedControl::DataItem::New_ctor(Sprites::get_GlobalIcon(), "Global"),
-            IconSegmentedControl::DataItem::New_ctor(BundleLoader::bundle->locationIcon, "Around You"),
-            IconSegmentedControl::DataItem::New_ctor(BundleLoader::bundle->friendsIcon, "Friends"),
+            IconSegmentedControl::DataItem::New_ctor(BundleLoader::bundle->globeIcon, "Global"),
+            IconSegmentedControl::DataItem::New_ctor(BundleLoader::bundle->defaultAvatar, "Around You"),
+            IconSegmentedControl::DataItem::New_ctor(BundleLoader::bundle->friendsSelectorIcon, "Friends"),
             IconSegmentedControl::DataItem::New_ctor(BundleLoader::bundle->locationIcon, "Country"),
         });
         scopeSegmentedControl->SetData(array);
-        Refresh();
     }
 
     void LeaderboardViewController::OnIconSelected(IconSegmentedControl* segmentedControl, int index){
