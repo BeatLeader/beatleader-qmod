@@ -77,7 +77,7 @@
     },
     {
       "id": "leaderboardcore",
-      "versionRange": "*",
+      "versionRange": "^0.0.4-rc1",
       "additionalData": {}
     },
     {
