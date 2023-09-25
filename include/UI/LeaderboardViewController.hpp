@@ -9,12 +9,15 @@
 #include "GlobalNamespace/LeaderboardTableView.hpp"
 #include "GlobalNamespace/IDifficultyBeatmap.hpp"
 
+#include "UnityEngine/UI/HorizontalLayoutGroup.hpp"
+
 DECLARE_CLASS_CODEGEN(
     LeaderboardUI, LeaderboardViewController, 
     HMUI::ViewController,
     DECLARE_INSTANCE_FIELD(GlobalNamespace::LeaderboardTableView*, leaderboardTableView);
     DECLARE_INSTANCE_FIELD(HMUI::IconSegmentedControl*, scopeSegmentedControl);
     DECLARE_INSTANCE_FIELD(HMUI::CurvedTextMeshPro*, loadingLabel);
+    DECLARE_INSTANCE_FIELD(UnityEngine::UI::HorizontalLayoutGroup*, BLHeader);
 
     DECLARE_OVERRIDE_METHOD(void, DidActivate, il2cpp_utils::il2cpp_type_check::MetadataGetter<&HMUI::ViewController::DidActivate>::get(), bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling);
     DECLARE_OVERRIDE_METHOD(void, DidDeactivate, il2cpp_utils::il2cpp_type_check::MetadataGetter<&HMUI::ViewController::DidDeactivate>::get(), bool removedFromHierarchy, bool screenSystemDisabling);

@@ -41,10 +41,12 @@ namespace UIUtils {
         if (!roundRectSprite) {
             roundRectSprite = QuestUI::ArrayUtil::First(UnityEngine::Resources::FindObjectsOfTypeAll<HMUI::ImageView*>(), [](HMUI::ImageView* image){ 
                 auto sprite = image->get_sprite();
-                if (!sprite || sprite->get_name() != "RoundRect10") return false;
+                if (!sprite || !sprite->m_CachedPtr.m_value) return false;
+                if (sprite->get_name() != "RoundRect10") return false;
 
                 auto parent = image->get_transform()->get_parent();
-                if (!parent || parent->get_name() != "Wrapper") return false;
+                if (!parent || !parent->m_CachedPtr.m_value) return false;
+                if (parent->get_name() != "Wrapper") return false;
 
                 auto goName = image->get_gameObject()->get_name();
                 if (goName != "KeyboardWrapper") return false;

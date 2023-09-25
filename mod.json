@@ -9,19 +9,9 @@
   "coverImage": "cover.png",
   "dependencies": [
     {
-      "version": "*",
-      "id": "bsml",
-      "downloadIfMissing": "https://github.com/RedBrumbler/Quest-BSML/releases/download/v0.3.3/BSML.qmod"
-    },
-    {
-      "version": "^0.7.0",
-      "id": "bs-utils",
-      "downloadIfMissing": "https://github.com/sc2ad/QuestBS-Utils/releases/download/v0.7.2/BS-Utils.qmod"
-    },
-    {
-      "version": "*",
-      "id": "leaderboardcore",
-      "downloadIfMissing": "https://github.com/raineio/LeaderboardCore/releases/download/v0.0.4-rc1/LeaderboardCore.qmod"
+      "version": "^0.33.0",
+      "id": "codegen",
+      "downloadIfMissing": "https://github.com/sc2ad/BeatSaber-Quest-Codegen/releases/download/v0.33.0/Codegen.qmod"
     },
     {
       "version": "^0.17.11",
@@ -29,19 +19,29 @@
       "downloadIfMissing": "https://github.com/darknight1050/QuestUI/releases/download/v0.17.12/QuestUI.qmod"
     },
     {
-      "version": "^0.10.15",
-      "id": "songloader",
-      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.17/SongLoader.qmod"
-    },
-    {
       "version": "^0.15.23",
       "id": "custom-types",
       "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.24/CustomTypes.qmod"
     },
     {
-      "version": "^0.33.0",
-      "id": "codegen",
-      "downloadIfMissing": "https://github.com/sc2ad/BeatSaber-Quest-Codegen/releases/download/v0.33.0/Codegen.qmod"
+      "version": "^0.10.15",
+      "id": "songloader",
+      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.17/SongLoader.qmod"
+    },
+    {
+      "version": "^0.7.0",
+      "id": "bs-utils",
+      "downloadIfMissing": "https://github.com/sc2ad/QuestBS-Utils/releases/download/v0.7.2/BS-Utils.qmod"
+    },
+    {
+      "version": "^0.0.4-rc1",
+      "id": "leaderboardcore",
+      "downloadIfMissing": "https://github.com/raineio/LeaderboardCore/releases/download/v0.0.4-rc1/LeaderboardCore.qmod"
+    },
+    {
+      "version": "*",
+      "id": "bsml",
+      "downloadIfMissing": "https://github.com/RedBrumbler/Quest-BSML/releases/download/v0.3.3/BSML.qmod"
     }
   ],
   "modFiles": [

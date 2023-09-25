@@ -269,13 +269,7 @@ namespace LeaderboardUI {
 
 
     void LeaderboardDidActivate() {
-        if (plvc && plvc->isActivated) {
-            if (originalplvc) {
-                HMUI::ImageView* imageView = originalplvc->get_transform()->Find("HeaderPanel")->GetComponentInChildren<HMUI::ImageView*>();
-                imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
-                imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
-                imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
-            }
+        if (plvc && plvc->isActivated) {      
             if (parentScreen != NULL) {
                 visible = true;
                 parentScreen->SetActive(true);
@@ -318,7 +312,7 @@ namespace LeaderboardUI {
         setVotingButtonsState(0);
         hideVotingUIs();
         
-        if (plvc) {
+        if (plvc && (plvc->isActivated || plvc->wasActivatedBefore)) {
             auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(difficultyBeatmap->get_level()));
             string votingStatusUrl = WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode;
 
@@ -738,18 +732,6 @@ namespace LeaderboardUI {
             upPageButton->get_gameObject()->SetActive(showBeatLeader);
             downPageButton->get_gameObject()->SetActive(showBeatLeader);
         }
-        
-        HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
-        
-        if (showBeatLeader) {
-            imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
-            imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
-            imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
-        } else {
-            imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
-            imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
-            imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
-        }
 
         if (parentScreen != NULL) {
             parentScreen->get_gameObject()->SetActive(showBeatLeader);
@@ -760,7 +742,7 @@ namespace LeaderboardUI {
     }
 
     void Refresh() {
-        if (!plvc) return;
+        if (!plvc || (!plvc->isActivated && !plvc->wasActivatedBefore)) return;
         updateLeaderboard(plvc);
     }
 
@@ -907,7 +889,7 @@ namespace LeaderboardUI {
             updateVotingButton();
         }
         
-        if (visible && showBeatLeader) {
+        if (plvc && (plvc->isActivated || plvc->wasActivatedBefore)) {
             statusWasCached = false;
             uploadStatus->SetText(description);
             switch (status)
@@ -1090,7 +1072,9 @@ namespace LeaderboardUI {
 
     static const std::string bsml = R""""(
     <bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:noNamespaceSchemaLocation='https://raw.githubusercontent.com/RedBrumbler/Quest-BSML-Docs/gh-pages/schema.xsd'>
-
+    <horizontal id="BLHeader" pref-width="91" pref-height="8" anchor-pos-y="41.5" horizontal-fit="PreferredSize" background="title-gradient">
+        <text text="HIGHSCORES" font-size="6" align="Midline" italics="true" rich-text="true"/>
+    </horizontal>
     <!-- Leaderboard scrollers -->
     <bg anchor-pos-x="-40" anchor-pos-y="-15">
         <vertical-icon-segments id="scopeSegmentedControl" contents='~leaderboardIcons' select-cell='OnIconSelected' anchor-pos-y="20" />
@@ -1110,6 +1094,10 @@ namespace LeaderboardUI {
         if (firstActivation) {
             plvc = this;
             BSML::parse_and_construct(bsml, get_transform(), this);
+            HMUI::ImageView* imageView = plvc->BLHeader->get_transform()->GetComponentInChildren<HMUI::ImageView*>();
+            imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
+            imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
+            imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
         }
         LeaderboardDidActivate();
         Refresh();
