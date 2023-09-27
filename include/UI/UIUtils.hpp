@@ -37,8 +37,6 @@ inline UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootVie
     auto gameObject = QuestUI::BeatSaberUI::CreateCanvas();
     auto screen = gameObject->AddComponent<HMUI::Screen*>();
     screen->rootViewController = rootView;
-    auto curvedCanvasSettings = gameObject->AddComponent<HMUI::CurvedCanvasSettings*>();
-    curvedCanvasSettings->SetRadius(curvatureRadius);
 
     auto transform = gameObject->get_transform();
     UnityEngine::GameObject* screenSystem = UnityEngine::GameObject::Find("ScreenContainer");

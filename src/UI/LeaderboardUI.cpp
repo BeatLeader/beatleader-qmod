@@ -271,8 +271,6 @@ namespace LeaderboardUI {
     void LeaderboardDidActivate() {
         if (plvc && plvc->isActivated) {      
             if (parentScreen != NULL) {
-                visible = true;
-                parentScreen->SetActive(true);
                 if (statusWasCached) {
                     updateStatus(cachedStatus, cachedDescription, cachedProgress, cachedShowRestart);
                 }
@@ -281,17 +279,6 @@ namespace LeaderboardUI {
     }
 
     void LeaderboardDidDeactivate() {
-        if (originalplvc && plvc && !plvc->isActivated) {
-            HMUI::ImageView* imageView = originalplvc->get_transform()->Find("HeaderPanel")->GetComponentInChildren<HMUI::ImageView*>();
-            imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
-            imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
-            imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
-        }
-        hidePopups();
-        if (parentScreen != NULL) {
-            visible = false;
-            parentScreen->SetActive(false);
-        }
         hidePopups();
     }
 
@@ -582,7 +569,8 @@ namespace LeaderboardUI {
         }
 
         if (uploadStatus == NULL) {
-            parentScreen = CreateCustomScreen(plvc, UnityEngine::Vector2(480, 160), plvc->screen->get_transform()->get_position(), 140);
+            parentScreen = CreateCustomScreen(leaderboard.get_panelViewController(), UnityEngine::Vector2(480, 160), leaderboard.get_panelViewController()->get_transform()->get_position(), 0);
+            parentScreen->get_transform()->SetParent(leaderboard.get_panelViewController()->get_transform());
             visible = true;
 
             BeatLeader::initScoreDetailsPopup(
@@ -734,8 +722,7 @@ namespace LeaderboardUI {
         }
 
         if (parentScreen != NULL) {
-            parentScreen->get_gameObject()->SetActive(showBeatLeader);
-            retryButton->get_gameObject()->SetActive(showBeatLeader && showRetryButton);
+            retryButton->get_gameObject()->SetActive(showRetryButton);
 
             plvc->leaderboardTableView->rowHeight = 6;
         }
