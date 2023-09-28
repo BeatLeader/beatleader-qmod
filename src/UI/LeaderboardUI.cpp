@@ -630,7 +630,7 @@ namespace LeaderboardUI {
             };
 
             if (retryButton) UnityEngine::GameObject::Destroy(retryButton);
-            retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){
+            retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 59), UnityEngine::Vector2(15, 7), [](){
                 retryButton->get_gameObject()->SetActive(false);
                 showRetryButton = false;
                 retryCallback();
@@ -640,7 +640,7 @@ namespace LeaderboardUI {
 
             if(uploadStatus) UnityEngine::GameObject::Destroy(uploadStatus);
             uploadStatus = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false);
-            move(uploadStatus, 150, 60);
+            move(uploadStatus, 150, 56);
             resize(uploadStatus, 10, 0);
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
