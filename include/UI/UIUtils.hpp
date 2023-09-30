@@ -33,20 +33,6 @@ inline void resize(UnityEngine::Component* label, float x, float y) {
     transform->set_sizeDelta(sizeDelta);
 }
 
-inline UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootView, UnityEngine::Vector2 screenSize, UnityEngine::Vector3 position, float curvatureRadius) {
-    auto gameObject = QuestUI::BeatSaberUI::CreateCanvas();
-    auto screen = gameObject->AddComponent<HMUI::Screen*>();
-    screen->rootViewController = rootView;
-
-    auto transform = gameObject->get_transform();
-    UnityEngine::GameObject* screenSystem = UnityEngine::GameObject::Find("ScreenContainer");
-    if(screenSystem) {
-        transform->set_position(screenSystem->get_transform()->get_position());
-        screen->get_gameObject()->GetComponent<UnityEngine::RectTransform*>()->set_sizeDelta(screenSize);
-    }
-    return gameObject;
-}
-
 inline void EnableHorizontalFit(UnityEngine::UI::HorizontalLayoutGroup* layoutGroup) {
     layoutGroup->set_childForceExpandHeight(false);
     layoutGroup->set_childAlignment(UnityEngine::TextAnchor::MiddleCenter);
