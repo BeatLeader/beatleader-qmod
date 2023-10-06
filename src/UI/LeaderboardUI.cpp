@@ -71,6 +71,7 @@
 #include "UnityEngine/TextAnchor.hpp"
 #include "UnityEngine/RectOffset.hpp"
 #include "UnityEngine/UI/ContentSizeFitter.hpp"
+#include "UnityEngine/BoxCollider.hpp"
 
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
@@ -271,8 +272,6 @@ namespace LeaderboardUI {
     void LeaderboardDidActivate() {
         if (plvc && plvc->isActivated) {      
             if (parentScreen != NULL) {
-                visible = true;
-                parentScreen->SetActive(true);
                 if (statusWasCached) {
                     updateStatus(cachedStatus, cachedDescription, cachedProgress, cachedShowRestart);
                 }
@@ -281,17 +280,6 @@ namespace LeaderboardUI {
     }
 
     void LeaderboardDidDeactivate() {
-        if (originalplvc && plvc && !plvc->isActivated) {
-            HMUI::ImageView* imageView = originalplvc->get_transform()->Find("HeaderPanel")->GetComponentInChildren<HMUI::ImageView*>();
-            imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
-            imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
-            imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
-        }
-        hidePopups();
-        if (parentScreen != NULL) {
-            visible = false;
-            parentScreen->SetActive(false);
-        }
         hidePopups();
     }
 
@@ -582,7 +570,8 @@ namespace LeaderboardUI {
         }
 
         if (uploadStatus == NULL) {
-            parentScreen = CreateCustomScreen(plvc, UnityEngine::Vector2(480, 160), plvc->screen->get_transform()->get_position(), 140);
+            parentScreen = leaderboard.get_panelViewController()->get_gameObject();
+            
             visible = true;
 
             BeatLeader::initScoreDetailsPopup(
@@ -594,12 +583,11 @@ namespace LeaderboardUI {
             BeatLeader::initLinksContainerPopup(&linkContainer, plvc->get_transform());
             BeatLeader::initVotingPopup(&votingUI, plvc->get_transform(), voteCallback);
 
-            auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), BundleLoader::bundle->defaultAvatar, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(16, 16));
+            auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), BundleLoader::bundle->defaultAvatar, UnityEngine::Vector2(35.0f, 0.0f), UnityEngine::Vector2(16, 16));
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), BundleLoader::bundle->globeIcon, UnityEngine::Vector2(120, 45), UnityEngine::Vector2(4, 4));
-            playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
+            playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(-2.5f, 3.0f), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
 
             EmojiSupport::AddSupport(playerName);
@@ -610,7 +598,7 @@ namespace LeaderboardUI {
             auto rectTransform = (RectTransform*)rankLayout->get_transform();
             rectTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
             rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
-            rectTransform->set_anchoredPosition({138, 45});
+            rectTransform->set_anchoredPosition({-2.5f, -5.0f});
 
             auto globalLayout = ::QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(rankLayout->get_transform());
             globalLayout->set_spacing(1);
@@ -627,7 +615,7 @@ namespace LeaderboardUI {
                 updatePlayerInfoLabel();
             }
 
-            auto websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(105, 50), UnityEngine::Vector2(16, 16), []() {
+            auto websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(-38.0f, 0.0f), UnityEngine::Vector2(16, 16), []() {
                 linkContainer->modal->Show(true, true, nullptr);
             });
             
@@ -642,7 +630,7 @@ namespace LeaderboardUI {
             };
 
             if (retryButton) UnityEngine::GameObject::Destroy(retryButton);
-            retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){
+            retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(-38.0f, 9.0f), UnityEngine::Vector2(15, 7), [](){
                 retryButton->get_gameObject()->SetActive(false);
                 showRetryButton = false;
                 retryCallback();
@@ -651,9 +639,7 @@ namespace LeaderboardUI {
             retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
 
             if(uploadStatus) UnityEngine::GameObject::Destroy(uploadStatus);
-            uploadStatus = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false);
-            move(uploadStatus, 150, 60);
-            resize(uploadStatus, 10, 0);
+            uploadStatus = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, {-24.0f, 11.0f}, {10.0f, 0.0f});
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
             upPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(plvc->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(-40, 23), UnityEngine::Vector2(8, 5.12), [](){
@@ -689,13 +675,6 @@ namespace LeaderboardUI {
 
             initSettingsModal(plvc->get_transform());
 
-            auto settingsButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->settingsIcon, {180, 36}, {4.5, 4.5}, [](){
-                settingsContainer->Show(true, true, nullptr);
-            });
-
-            settingsButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
-            settingsButton->set_defaultColor(FadedColor);
-            settingsButton->set_highlightColor(SelectedColor);
         }
 
         if (upPageButton != NULL) {
@@ -734,8 +713,7 @@ namespace LeaderboardUI {
         }
 
         if (parentScreen != NULL) {
-            parentScreen->get_gameObject()->SetActive(showBeatLeader);
-            retryButton->get_gameObject()->SetActive(showBeatLeader && showRetryButton);
+            retryButton->get_gameObject()->SetActive(showRetryButton);
 
             plvc->leaderboardTableView->rowHeight = 6;
         }
@@ -1098,6 +1076,16 @@ namespace LeaderboardUI {
             imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
             imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
             imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
+
+            auto settingsButton = ::QuestUI::BeatSaberUI::CreateClickableImage(plvc->get_transform(), BundleLoader::bundle->settingsIcon, {38.5f, 41.5f}, {4.5f, 4.5f}, [](){
+                settingsContainer->Show(true, true, nullptr);
+            });
+
+            settingsButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
+            settingsButton->set_defaultColor(FadedColor);
+            settingsButton->set_highlightColor(SelectedColor);
+            plvc->get_rectTransform()->set_sizeDelta({90.0f, 40.0f});
+            
         }
         LeaderboardDidActivate();
         Refresh();

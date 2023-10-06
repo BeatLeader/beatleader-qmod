@@ -16,6 +16,10 @@ namespace BeatLeader
 
     HMUI::ViewController* Leaderboard::get_panelViewController()
     {
-        return NULL;
+        if (!panelViewController)
+        {
+            panelViewController = QuestUI::BeatSaberUI::CreateViewController();
+        }
+        return panelViewController;
     }
 }
