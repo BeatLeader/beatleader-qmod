@@ -46,7 +46,7 @@ void ReplayManager::TryPostReplay(string name, int tryIndex, function<void(Repla
     FILE *replayFile = fopen(name.data(), "rb");
     chrono::steady_clock::time_point replayPostStart = chrono::steady_clock::now();
     
-    WebUtils::PostFileAsync(WebUtils::API_URL + "replayoculus", replayFile, (long)file_info.st_size, 100, [name, tryIndex, finished, replayFile, replayPostStart](long statusCode, string result, string headers) {
+    WebUtils::PostFileAsync(WebUtils::API_URL + "replayoculus", replayFile, (long)file_info.st_size, [name, tryIndex, finished, replayFile, replayPostStart](long statusCode, string result, string headers) {
         fclose(replayFile);
         if (statusCode >= 450 && tryIndex < 2) {
             getLogger().info("%s", ("Retrying posting replay after " + to_string(statusCode) + " #" + to_string(tryIndex) + " " + std::string(result)).c_str());

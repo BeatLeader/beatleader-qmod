@@ -484,9 +484,9 @@ namespace WebUtils {
         return nitems * size;
     }
 
-    std::thread PostFileAsync(string url, FILE* data, long length, long timeout, function<void(long, string, string)> const& finished, function<void(float)> const& progressUpdate) {
+    std::thread PostFileAsync(string url, FILE* data, long length, function<void(long, string, string)> const& finished, function<void(float)> const& progressUpdate) {
         std::thread t(
-            [url, timeout, data, finished, length, progressUpdate] {
+            [url, data, finished, length, progressUpdate] {
                 string val;
                 string cookieFile = getCookieFile();
 
@@ -511,7 +511,8 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str());
 
                 // Don't wait forever, time out after TIMEOUT seconds.
-                curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
+                // 2 minutes is a server side timeout. Doubled for a good measure
+                curl_easy_setopt(curl, CURLOPT_TIMEOUT, 240);
 
                 ProgressUpdateWrapper wrapper { progressUpdate, length };
                 if (progressUpdate) {
