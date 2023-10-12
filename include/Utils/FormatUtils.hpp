@@ -31,6 +31,7 @@ namespace FormatUtils {
                 case 64: return "Index";
                 case 128: return "Vive Cosmos";
                 case 256: return "Quest 2";
+                case 512: return "Quest 3";
             }
 
             return "Unknown HMD";
