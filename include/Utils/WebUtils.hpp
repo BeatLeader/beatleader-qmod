@@ -36,5 +36,5 @@ namespace WebUtils {
     std::thread PostFormAsync(const string& url, const string& password, const string& login, const string& action,
                        function<void(long, string)> const &finished);
 
-    std::thread PostFileAsync(string url, FILE* data, long length, long timeout, function<void(long, string, string)> const& finished, function<void(float)> const& progressUpdate);
+    std::thread PostFileAsync(string url, FILE* data, long length, function<void(long, string, string)> const& finished, function<void(float)> const& progressUpdate);
 }
