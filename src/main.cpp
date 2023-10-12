@@ -76,13 +76,16 @@ void replayPostCallback(ReplayUploadStatus status, const string& description, fl
         QuestUI::MainThreadScheduler::Schedule([status, description, progress, code] {
             LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
             if (status == ReplayUploadStatus::finished) {
-                QuestUI::MainThreadScheduler::Schedule([]{
+                std::thread t ([] {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                     PlayerController::Refresh(0, [](auto player, auto str){
                         QuestUI::MainThreadScheduler::Schedule([]{
                             LeaderboardUI::updatePlayerRank();
                         });
                     });
-                });
+                    }
+                );
+                t.detach();
             }
         });
     }

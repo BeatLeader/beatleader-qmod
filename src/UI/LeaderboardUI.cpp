@@ -222,8 +222,17 @@ namespace LeaderboardUI {
 
             // Actually set the labels
             globalRank->SetText("#" + to_string(player->rank) + (rankChange != 0 ? getColoredChange(rankChange) + to_string(rankChange) : ""));
-            countryRankAndPp->SetText("#" + to_string(player->countryRank) + " " + (countryRankChange != 0 ? getColoredChange(countryRankChange) + to_string(countryRankChange) : "")
-                + "  <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp " + (ppChange != 0 ? getColoredChange(ppChange) + to_string_wprecision(ppChange, 2) + "pp" : ""));
+            auto rankText = "#" + to_string(player->countryRank) + " " + (countryRankChange != 0 ? getColoredChange(countryRankChange) + to_string(countryRankChange) : "")
+                + "  <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp " + (ppChange != 0 ? getColoredChange(ppChange) + to_string_wprecision(ppChange, 2) + "pp" : "");
+            countryRankAndPp->SetText(rankText);
+
+            if (rankText.length() > 60) {
+                countryRankAndPp->set_fontSize(3);
+                globalRank->set_fontSize(3);
+            } else {
+                countryRankAndPp->set_fontSize(4);
+                globalRank->set_fontSize(4);
+            }
         }
     }
 
