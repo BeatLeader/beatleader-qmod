@@ -31,6 +31,12 @@ void UserEnhancer::Enhance(Replay& replay)
     case GlobalNamespace::OVRPlugin::SystemHeadset::Oculus_Quest_2:
         replay.info.hmd = "Oculus Quest 2";
         break;
+    case GlobalNamespace::OVRPlugin::SystemHeadset::Placeholder_10:
+        replay.info.hmd = "Meta Quest Pro";
+        break;
+    case GlobalNamespace::OVRPlugin::SystemHeadset::Placeholder_11:
+        replay.info.hmd = "Meta Quest 3";
+        break;
     default:
         replay.info.hmd = "Unknown";
         break;
