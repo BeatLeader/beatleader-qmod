@@ -3,30 +3,15 @@
   "name": "BeatLeader",
   "id": "BeatLeader",
   "author": "NSGolova",
-  "version": "0.5.9",
+  "version": "0.6.1",
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.28.0_4124311467",
   "coverImage": "cover.png",
   "dependencies": [
     {
-      "version": "^0.33.0",
-      "id": "codegen",
-      "downloadIfMissing": "https://github.com/sc2ad/BeatSaber-Quest-Codegen/releases/download/v0.33.0/Codegen.qmod"
-    },
-    {
-      "version": "^0.17.11",
-      "id": "questui",
-      "downloadIfMissing": "https://github.com/darknight1050/QuestUI/releases/download/v0.17.12/QuestUI.qmod"
-    },
-    {
-      "version": "^0.15.23",
-      "id": "custom-types",
-      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.24/CustomTypes.qmod"
-    },
-    {
-      "version": "^0.10.15",
-      "id": "songloader",
-      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.17/SongLoader.qmod"
+      "version": "*",
+      "id": "bsml",
+      "downloadIfMissing": "https://github.com/RedBrumbler/Quest-BSML/releases/download/v0.3.3/BSML.qmod"
     },
     {
       "version": "^0.7.0",
@@ -39,9 +24,24 @@
       "downloadIfMissing": "https://github.com/raineio/LeaderboardCore/releases/download/v0.0.4-rc1/LeaderboardCore.qmod"
     },
     {
-      "version": "*",
-      "id": "bsml",
-      "downloadIfMissing": "https://github.com/RedBrumbler/Quest-BSML/releases/download/v0.3.3/BSML.qmod"
+      "version": "^0.17.11",
+      "id": "questui",
+      "downloadIfMissing": "https://github.com/darknight1050/QuestUI/releases/download/v0.17.12/QuestUI.qmod"
+    },
+    {
+      "version": "^0.10.15",
+      "id": "songloader",
+      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.17/SongLoader.qmod"
+    },
+    {
+      "version": "^0.15.23",
+      "id": "custom-types",
+      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.24/CustomTypes.qmod"
+    },
+    {
+      "version": "^0.33.0",
+      "id": "codegen",
+      "downloadIfMissing": "https://github.com/sc2ad/BeatSaber-Quest-Codegen/releases/download/v0.33.0/Codegen.qmod"
     }
   ],
   "modFiles": [
