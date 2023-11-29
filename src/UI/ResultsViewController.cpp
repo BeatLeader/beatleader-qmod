@@ -48,13 +48,16 @@ namespace ResultsView {
         ResultsViewDidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
         if(firstActivation){
-            // Init voting modal
-            BeatLeader::initVotingPopup(&votingUI, self->get_transform(), LeaderboardUI::voteCallback);
-
+            auto transform = self->get_transform();
             // Create voting button
-            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(self->get_transform(), BundleLoader::bundle->modifiersIcon, {-67, 9}, {8, 8}, []() {
+            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(transform, BundleLoader::bundle->modifiersIcon, {-67, 9}, {8, 8}, [transform]() {
                 if (resultsVotingButton->state != 2) return;
                 
+                if (votingUI == NULL) {
+                    // Init voting modal
+                    BeatLeader::initVotingPopup(&votingUI, transform, LeaderboardUI::voteCallback);
+                }
+
                 votingUI->reset();
                 votingUI->modal->Show(true, true, nullptr);
             });
@@ -63,7 +66,7 @@ namespace ResultsView {
 
             // If we have replay, also show the replay button
             if(ReplayInstalled()) {
-                replayButton = QuestUI::BeatSaberUI::CreateUIButton(self->get_transform(), "", "PracticeButton", {-46, -19}, {12, 10}, []() {
+                replayButton = QuestUI::BeatSaberUI::CreateUIButton(transform, "", "PracticeButton", {-46, -19}, {12, 10}, []() {
                     // Dont crash if file doesnt exist yet
                     if(std::filesystem::exists(ReplayManager::lastReplayFilename)) {
                         auto flow = QuestUI::BeatSaberUI::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
