@@ -36,6 +36,7 @@ namespace LeaderboardUI {
         Standard,
         NoMods,
         NoPause,
-        Golf
+        Golf,
+        SCPM
     };
 }

@@ -82,6 +82,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     noModifiersIcon = assetBundle->LoadAsset<Sprite*>("BL_ContextNoModifiers");
     noPauseIcon = assetBundle->LoadAsset<Sprite*>("BL_ContextNoPause");
     golfIcon = assetBundle->LoadAsset<Sprite*>("BL_ContextGolf");
+    scpmIcon = assetBundle->LoadAsset<Sprite*>("BL_ContextSCPM");
 
     TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
 }

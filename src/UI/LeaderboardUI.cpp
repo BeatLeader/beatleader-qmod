@@ -192,6 +192,7 @@ namespace LeaderboardUI {
         {Context::NoMods, "standard"},
         {Context::NoPause, "nopause"},
         {Context::Golf, "golf"},
+        {Context::SCPM, "scpm"},
     };
 
     static map<Context, string> contextToDisplayString = {
@@ -199,6 +200,7 @@ namespace LeaderboardUI {
         {Context::NoMods, "No Mods"},
         {Context::NoPause, "No Pauses"},
         {Context::Golf, "Golf"},
+        {Context::SCPM, "SCPM"},
     };
 
     void updatePlayerRank() {
@@ -513,6 +515,9 @@ namespace LeaderboardUI {
                 break;
             case Context::Golf:
                 modifiersIcon = BundleLoader::bundle->golfIcon;
+                break;
+            case Context::SCPM:
+                modifiersIcon = BundleLoader::bundle->scpmIcon;
                 break;
         }
 
@@ -1063,11 +1068,11 @@ namespace LeaderboardUI {
     }
 
     void initContextsModal(UnityEngine::Transform* parent){
-        auto container = QuestUI::BeatSaberUI::CreateModal(parent, {40, static_cast<float>((static_cast<int>(Context::Golf) + 2) * 10 + 5)}, nullptr, true);
+        auto container = QuestUI::BeatSaberUI::CreateModal(parent, {40, static_cast<float>((static_cast<int>(Context::SCPM) + 2) * 10 + 5)}, nullptr, true);
 
         QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Scores Context", {20, 19});
 
-        for(int i = 0; i <= static_cast<int>(Context::Golf); i++)
+        for(int i = 0; i <= static_cast<int>(Context::SCPM); i++)
         {
             QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), contextToDisplayString[static_cast<Context>(i)], {0.0f, static_cast<float>(21 - (i + 1) * 10)}, [i](){
                 // Set the new value

@@ -35,6 +35,7 @@ static map<LeaderboardUI::Context, string> contextToPlayerUrlString = {
     {LeaderboardUI::Context::NoMods, "nomods"},
     {LeaderboardUI::Context::NoPause, "nopause"},
     {LeaderboardUI::Context::Golf, "golf"},
+    {LeaderboardUI::Context::SCPM, "scpm"},
 };
 
 void PlayerController::Refresh(int retry, const function<void(optional<Player> const&, string)>& finished) {
