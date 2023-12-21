@@ -125,6 +125,7 @@ namespace ReplayRecorder {
     chrono::steady_clock::time_point _pauseStartTime;
     System::Action_1<float>* _heightEvent;
     System::Action_1<ScoringElement*>* _scoreEvent;
+    System::Action_1<ObstacleController*>* _wallEvent;
 
     bool isOst = false;
     void collectMapData(StandardLevelScenesTransitionSetupDataSO* self) {
@@ -189,6 +190,7 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(PlayerHeightDetectorStart, &PlayerHeightDetector::Start, void, PlayerHeightDetector* self) {
         PlayerHeightDetectorStart(self);
+
         if (replay == nullopt) return;
 
         _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float> *>(
@@ -325,6 +327,10 @@ namespace ReplayRecorder {
         return real < 1 ? real : max(real, unclamped);
     }
 
+    void onObstacle(ObstacleController* obstacle) {
+        
+    }
+
     void scoringElementFinished(ScoringElement* scoringElement) {
         if (replay == nullopt) return;
 
@@ -408,6 +414,13 @@ namespace ReplayRecorder {
                         static_cast<Il2CppObject *>(nullptr), scoringElementFinished);
         self->add_scoringForNoteFinishedEvent(_scoreEvent);
 
+        <ObstacleController*>* _wallEvent;
+
+        _wallEvent = il2cpp_utils::MakeDelegate<System::Action_1<ObstacleController*> *>(
+                        classof(System::Action_1<ObstacleController*>*),
+                        static_cast<Il2CppObject *>(nullptr), onObstacle);
+        self->add_scoringForNoteFinishedEvent(_scoreEvent);
+
         audioTimeSyncController = self->audioTimeSyncController;
     }
 
@@ -479,9 +492,9 @@ namespace ReplayRecorder {
         _postSwingContainer[self] = postSwing;
     }
 
-    MAKE_HOOK_MATCH(ComboMultiplierChanged, &ScoreController::HandlePlayerHeadDidEnterObstacles, void,  ScoreController* self) {
-        ComboMultiplierChanged(self);
-        if (self->scoreMultiplierCounter->ProcessMultiplierEvent(ScoreMultiplierCounter::MultiplierEventType::Negative) && self->playerHeadAndObstacleInteraction->intersectingObstacles->get_Count() > 0 && replay != nullopt) {
+    MAKE_HOOK_MATCH(HandlePlayerHeadDidEnterObstacles, &ScoreController::HandlePlayerHeadDidEnterObstacles, void,  ScoreController* self) {
+        HandlePlayerHeadDidEnterObstacles(self);
+        if (replay != nullopt) {
             auto obstacleEnumerator = self->playerHeadAndObstacleInteraction->intersectingObstacles->GetEnumerator();
             if(obstacleEnumerator.MoveNext()) {
                 WallEvent& wallEvent = _wallEventCache.at(_wallCache[reinterpret_cast<ObstacleController*>(obstacleEnumerator.current)]);
@@ -560,7 +573,7 @@ namespace ReplayRecorder {
         INSTALL_HOOK(logger, SinglePlayerInstallBindings);
         INSTALL_HOOK(logger, SpawnNote);
         INSTALL_HOOK(logger, SpawnObstacle);
-        INSTALL_HOOK(logger, ComboMultiplierChanged);
+        INSTALL_HOOK(logger, HandlePlayerHeadDidEnterObstacles);
         INSTALL_HOOK(logger, BeatMapStart);
         INSTALL_HOOK(logger, LevelPause);
         INSTALL_HOOK(logger, LevelUnpause);
