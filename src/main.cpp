@@ -14,7 +14,6 @@
 #include "include/Assets/Sprites.hpp"
 
 #include "include/Utils/ModConfig.hpp"
-#include "include/Utils/ReplaySynchronizer.hpp"
 #include "include/Utils/PlaylistSynchronizer.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/RecorderUtils.hpp"
@@ -33,8 +32,6 @@ using namespace GlobalNamespace;
 using namespace QuestUI;
 
 ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
-
-static std::optional<ReplaySynchronizer> synchronizer;
 
 // Returns a logger, useful for printing debug messages
 Logger& getLogger() {
@@ -62,14 +59,6 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
 }
 
 void replayPostCallback(ReplayUploadStatus status, const string& description, float progress, int code) {
-    if (synchronizer != std::nullopt) {
-        if (code == 200) {
-            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::uptodate);
-        } else if ((code >= 400 && code < 500) || code < 0) {
-            synchronizer->updateStatus(ReplayManager::lastReplayFilename, ReplayStatus::shouldnotpost);
-        }
-    }
-
     if (!ReplayRecorder::recording) {
         QuestUI::MainThreadScheduler::Schedule([status, description, progress, code] {
             LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
@@ -152,17 +141,9 @@ extern "C" void load() {
         []() {
             LeaderboardUI::hidePopups();
         },
-        [](Replay const& replay, MapStatus status, bool skipUpload) {
-        if (status == MapStatus::cleared) {
-            ReplayManager::ProcessReplay(replay, skipUpload, replayPostCallback);
-        } else {
-            ReplayManager::ProcessReplay(replay, skipUpload, [](ReplayUploadStatus finished, string description, float progress, int code) {
-                QuestUI::MainThreadScheduler::Schedule([description, progress, finished, code] {
-                    LeaderboardUI::updateStatus(finished, description, progress, code > 450 || code < 200);
-                });
-            });
-        }
-    });
+        [](Replay const& replay, PlayEndData status, bool skipUpload) {
+            ReplayManager::ProcessReplay(replay, status, skipUpload, replayPostCallback); 
+        });
 
     getLogger().info("Installing main hooks...");
     

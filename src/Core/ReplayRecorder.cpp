@@ -30,7 +30,6 @@
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/BeatmapData.hpp"
 #include "GlobalNamespace/GameplayModifiers.hpp"
-#include "GlobalNamespace/LevelCompletionResults.hpp"
 #include "GlobalNamespace/StandardLevelScenesTransitionSetupDataSO.hpp"
 #include "GlobalNamespace/BeatmapEnvironmentHelper.hpp"
 #include "GlobalNamespace/OverrideEnvironmentSettings.hpp"
@@ -94,7 +93,7 @@ using UnityEngine::Resources;
 namespace ReplayRecorder {
 
     optional<Replay> replay;
-    std::function<void(Replay const&, MapStatus, bool)> replayCallback;
+    std::function<void(Replay const&, PlayEndData, bool)> replayCallback;
     std::function<void(void)> startedCallback;
 
     MapEnhancer mapEnhancer;
@@ -204,20 +203,14 @@ namespace ReplayRecorder {
 
         mapEnhancer.energy = levelCompletionResults->energy;
         mapEnhancer.Enhance(replay.value());
-        
-        switch (levelCompletionResults->levelEndStateType)
-        {
-            case LevelCompletionResults::LevelEndStateType::Cleared:
-                replayCallback(*replay, MapStatus::cleared, isOst || skipUpload);
-                break;
-            case LevelCompletionResults::LevelEndStateType::Failed:
-                if (levelCompletionResults->levelEndAction != LevelCompletionResults::LevelEndAction::Restart)
-                {
-                    replay->info.failTime = audioTimeSyncController->songTime;
-                    replayCallback(*replay, MapStatus::failed, isOst || skipUpload);
-                }
-                break;
+
+        auto playEndData = PlayEndData(levelCompletionResults);
+
+        if (playEndData.GetEndType() == LevelEndType::Fail) {
+            replay->info.failTime = audioTimeSyncController->songTime;
         }
+        
+        replayCallback(*replay, playEndData, isOst || skipUpload);
     }
 
     MAKE_HOOK_MATCH(ProcessResultsSolo, &StandardLevelScenesTransitionSetupDataSO::Finish, void, StandardLevelScenesTransitionSetupDataSO* self, LevelCompletionResults* levelCompletionResults) {
@@ -237,12 +230,13 @@ namespace ReplayRecorder {
             {
                 case MultiplayerLevelCompletionResults::MultiplayerPlayerLevelEndReason::Cleared:
                     auto results = levelCompletionResults->localPlayerResultData->multiplayerLevelCompletionResults->levelCompletionResults; 
+                    auto playEndData = PlayEndData(results);
 
                     replay->info.score = results->multipliedScore;
 
                     mapEnhancer.energy = results->energy;
                     mapEnhancer.Enhance(replay.value());
-                    replayCallback(*replay, MapStatus::cleared, isOst);
+                    replayCallback(*replay, playEndData, isOst);
                     break;
             }
         }
@@ -555,7 +549,7 @@ namespace ReplayRecorder {
 
     void StartRecording(
         function<void(void)> const &started,
-        function<void(Replay const &, MapStatus, bool)> const &callback) {
+        function<void(Replay const &, PlayEndData, bool)> const &callback) {
         LoggerContextObject logger = getLogger().WithContext("load");
 
         getLogger().info("Installing ReplayRecorder hooks...");
