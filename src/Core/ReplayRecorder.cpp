@@ -204,7 +204,7 @@ namespace ReplayRecorder {
         mapEnhancer.energy = levelCompletionResults->energy;
         mapEnhancer.Enhance(replay.value());
 
-        auto playEndData = PlayEndData(levelCompletionResults);
+        auto playEndData = PlayEndData(levelCompletionResults, replay->info.speed);
 
         if (playEndData.GetEndType() == LevelEndType::Fail) {
             replay->info.failTime = audioTimeSyncController->songTime;
@@ -230,7 +230,7 @@ namespace ReplayRecorder {
             {
                 case MultiplayerLevelCompletionResults::MultiplayerPlayerLevelEndReason::Cleared:
                     auto results = levelCompletionResults->localPlayerResultData->multiplayerLevelCompletionResults->levelCompletionResults; 
-                    auto playEndData = PlayEndData(results);
+                    auto playEndData = PlayEndData(results, replay->info.speed);
 
                     replay->info.score = results->multipliedScore;
 

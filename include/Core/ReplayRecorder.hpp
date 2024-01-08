@@ -16,13 +16,14 @@ enum class LevelEndType {
     Clear = 1,
     Fail = 2,
     Restart = 3,
-    Quit = 4
+    Quit = 4,
+    Practice = 5
 };
 
 class PlayEndData {
 public:
-    PlayEndData(const GlobalNamespace::LevelCompletionResults* results) 
-        : _endType(ToLevelEndAction(results)),
+    PlayEndData(const GlobalNamespace::LevelCompletionResults* results, float speed) 
+        : _endType(ToLevelEndAction(results, speed)),
           _time(results->endSongTime)
     {}
 
@@ -54,7 +55,9 @@ private:
         { { LevelEndStateType::Cleared   , LevelEndAction::None    }, LevelEndType::Clear   }
     };
 
-    LevelEndType ToLevelEndAction(const GlobalNamespace::LevelCompletionResults* results) {
+    LevelEndType ToLevelEndAction(const GlobalNamespace::LevelCompletionResults* results, float speed) {
+        if (speed != 0) return LevelEndType::Practice;
+
         LevelEndStateType levelEndStateType = results->levelEndStateType;
         LevelEndAction levelEndAction = results->levelEndAction;
 
