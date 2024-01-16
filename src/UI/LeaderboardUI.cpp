@@ -792,15 +792,7 @@ namespace LeaderboardUI {
         }
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
-        if (!levelData->get_levelID().starts_with("custom_level")) {
-            setVotingButtonsState(-1);
-            self->loadingControl->Hide();
-            self->hasScoresData = false;
-            self->loadingControl->ShowText("Leaderboards for this map are not supported!", false);
-            self->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)self->leaderboardTableView, true);
-        } else {
-            refreshFromTheServer();
-        }
+        refreshFromTheServer();
     }
 
     Score detailsTextWorkaround;

@@ -125,10 +125,8 @@ namespace ReplayRecorder {
     System::Action_1<float>* _heightEvent;
     System::Action_1<ScoringElement*>* _scoreEvent;
     System::Action_1<ObstacleController*>* _wallEvent;
-
-    bool isOst = false;
+    
     void collectMapData(StandardLevelScenesTransitionSetupDataSO* self) {
-        isOst = !self->gameplayCoreSceneSetupData->previewBeatmapLevel->get_levelID().starts_with("custom_level");
 
         mapEnhancer.difficultyBeatmap = self->difficultyBeatmap;
         mapEnhancer.previewBeatmapLevel = self->gameplayCoreSceneSetupData->previewBeatmapLevel;
@@ -143,8 +141,6 @@ namespace ReplayRecorder {
 
     void collectMultiplayerMapData(MultiplayerLevelScenesTransitionSetupDataSO* self) {
         GameplayCoreSceneSetupData* gameplayCoreSceneSetupData = reinterpret_cast<GameplayCoreSceneSetupData*>(self->sceneSetupDataArray->get(2));
-
-        isOst = !to_utf8(csstrtostr(gameplayCoreSceneSetupData->previewBeatmapLevel->get_levelID())).starts_with("custom_level");
 
         mapEnhancer.difficultyBeatmap = self->difficultyBeatmap;
         mapEnhancer.previewBeatmapLevel = gameplayCoreSceneSetupData->previewBeatmapLevel;
@@ -210,7 +206,7 @@ namespace ReplayRecorder {
             replay->info.failTime = audioTimeSyncController->songTime;
         }
         
-        replayCallback(*replay, playEndData, isOst || skipUpload);
+        replayCallback(*replay, playEndData, skipUpload);
     }
 
     MAKE_HOOK_MATCH(ProcessResultsSolo, &StandardLevelScenesTransitionSetupDataSO::Finish, void, StandardLevelScenesTransitionSetupDataSO* self, LevelCompletionResults* levelCompletionResults) {
@@ -236,7 +232,7 @@ namespace ReplayRecorder {
 
                     mapEnhancer.energy = results->energy;
                     mapEnhancer.Enhance(replay.value());
-                    replayCallback(*replay, playEndData, isOst);
+                    replayCallback(*replay, playEndData, false);
                     break;
             }
         }

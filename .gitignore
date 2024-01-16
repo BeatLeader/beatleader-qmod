@@ -9,6 +9,7 @@ logcat.log
 tombstone*
 extern/
 qpm-rust
+qpm.exe
 qpm.shared.json
 ndkpath.txt
 extern.cmake
