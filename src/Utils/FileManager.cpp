@@ -39,7 +39,7 @@ string FileManager::ToFilePath(Replay const &replay) {
     // TODO: Use fmt
     string filename = replay.info.playerID + std::string(practice + fail) + "-" + replay.info.songName + "-" + replay.info.difficulty + "-" + replay.info.mode + "-" + replay.info.hash + ".bsor";
 
-    string illegalChars = "\\/:?*\"<>|";
+    string illegalChars = "\\/:?*\"<>()|\r\n";
     for (auto it = filename.begin(); it < filename.end(); ++it){
         bool found = illegalChars.find(*it) != string::npos;
         if(found){
