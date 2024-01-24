@@ -895,8 +895,25 @@ namespace LeaderboardUI {
         leaderboardLoaded = true;
     }
 
+    LeaderboardTableCell* CellForIdxReimplement(LeaderboardTableView* self, HMUI::TableView* tableView) {
+        LeaderboardTableCell* leaderboardTableCell = (LeaderboardTableCell *)tableView->DequeueReusableCellForIdentifier("Cell");
+        if (leaderboardTableCell == NULL)
+        {
+            leaderboardTableCell = (LeaderboardTableCell *)Object::Instantiate<LeaderboardTableCell*>(self->cellPrefab);
+            ((TableCell *)leaderboardTableCell)->set_reuseIdentifier("Cell");
+        }
+        auto score = self->scores->get_Item(10);
+        leaderboardTableCell->set_rank(score->rank);
+        leaderboardTableCell->set_playerName(score->playerName);
+        leaderboardTableCell->set_score(score->score);
+        leaderboardTableCell->set_showFullCombo(score->fullCombo);
+        leaderboardTableCell->set_showSeparator(false);
+        leaderboardTableCell->set_specialScore(self->specialScorePos == 10);
+        return leaderboardTableCell;
+    }
+
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, HMUI::TableCell*, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
-        LeaderboardTableCell* result = (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
+        LeaderboardTableCell* result = row == 10 ? CellForIdxReimplement(self, tableView) : (LeaderboardTableCell *)LeaderboardCellSource(self, tableView, row);
 
         if (showBeatLeader && !isLocal) {
         if (result->playerNameText->get_fontSize() > 3 || result->playerNameText->get_enableAutoSizing()) {
