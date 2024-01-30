@@ -1,5 +1,7 @@
 #include "Assets/BundleLoader.hpp"
 
+#include "include/Utils/StringUtils.hpp"
+
 #include <utility>
 #include "main.hpp"
 
@@ -30,71 +32,102 @@ custom_types::Helpers::Coroutine BundleLoader::LoadBundle(UnityEngine::GameObjec
     co_return;
 }
 
-Material* getMaterial(std::string name, AssetBundle* assetBundle) {
-    return assetBundle->LoadAsset<Material*>(std::move(name));
-}
-
-void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
-    logoMaterial = getMaterial("LogoMaterial", assetBundle);
-    defaultAvatarMaterial = getMaterial("DefaultAvatar", assetBundle);
-    UIAdditiveGlowMaterial = getMaterial("UIAdditiveGlow", assetBundle);
-    scoreBackgroundMaterial = getMaterial("ScoreBackgroundMaterial", assetBundle);
-    scoreUnderlineMaterial = getMaterial("ScoreUnderlineMaterial", assetBundle);
-    VotingButtonMaterial = getMaterial("VotingButtonMaterial", assetBundle);
-    handAccIndicatorMaterial = getMaterial("HandAccIndicatorMaterial", assetBundle);
-    accGridBackgroundMaterial = getMaterial("AccGridBackgroundMaterial", assetBundle);
-    accuracyGraphMaterial = getMaterial("AccuracyGraphBackground", assetBundle);
-    accuracyGraphLine = getMaterial("AccuracyGraphLine", assetBundle);
-    accDetailsRowMaterial = getMaterial("AccDetailsRowMaterial", assetBundle);
-    miniProfileBackgroundMaterial = getMaterial("UIMiniProfileBackgroundMaterial", assetBundle);
-    skillTriangleMaterial = getMaterial("UISkillTriangleMaterial", assetBundle);
-
-    locationIcon = assetBundle->LoadAsset<Sprite*>("LocationIcon");
-    rowSeparatorIcon = assetBundle->LoadAsset<Sprite*>("RowSeparatorIcon");
-    beatLeaderLogoGradient = assetBundle->LoadAsset<Sprite*>("BeatLeaderLogoGradient");
-    transparentPixel = assetBundle->LoadAsset<Sprite*>("TransparentPixel");
-    fileError = assetBundle->LoadAsset<Sprite*>("FileError");
-    modifiersIcon = assetBundle->LoadAsset<Sprite*>("ModifiersIcon");
-    settingsIcon = assetBundle->LoadAsset<Sprite*>("BL_SettingsIcon");
-
-    overview1Icon = assetBundle->LoadAsset<Sprite*>("BL_Overview1Icon");
-    overview2Icon = assetBundle->LoadAsset<Sprite*>("BL_Overview2Icon");
-    detailsIcon = assetBundle->LoadAsset<Sprite*>("BL_DetailsIcon");
-    gridIcon = assetBundle->LoadAsset<Sprite*>("BL_GridIcon");
-    graphIcon = assetBundle->LoadAsset<Sprite*>("BL_GraphIcon");
-    websiteLinkIcon = assetBundle->LoadAsset<Sprite*>("BL_Website");
-    discordLinkIcon = assetBundle->LoadAsset<Sprite*>("BL_Discord");
-    patreonLinkIcon = assetBundle->LoadAsset<Sprite*>("BL_Patreon");
-    replayIcon = assetBundle->LoadAsset<Sprite*>("BL_QuestReplayIcon");
-
-    twitterIcon = assetBundle->LoadAsset<Sprite*>("BL_TwitterIcon");
-    twitchIcon = assetBundle->LoadAsset<Sprite*>("BL_TwitchIcon");
-    youtubeIcon = assetBundle->LoadAsset<Sprite*>("BL_YoutubeIcon");
-    profileIcon = assetBundle->LoadAsset<Sprite*>("BL_ProfileIcon");
-    friendsIcon = assetBundle->LoadAsset<Sprite*>("BL_FriendsIcon");
-    incognitoIcon = assetBundle->LoadAsset<Sprite*>("BL_IncognitoIcon");
-    defaultAvatar = assetBundle->LoadAsset<Sprite*>("BL_DefaultAvatar");
-
-    friendsSelectorIcon = assetBundle->LoadAsset<Sprite*>("BL_FriendsSelectorIcon");
-    globeIcon = assetBundle->LoadAsset<Sprite*>("BL_GlobeIcon");
-
-    generalContextIcon = assetBundle->LoadAsset<Sprite*>("BL_ContextGeneral");
-    noModifiersIcon = assetBundle->LoadAsset<Sprite*>("BL_ContextNoModifiers");
-    noPauseIcon = assetBundle->LoadAsset<Sprite*>("BL_ContextNoPause");
-    golfIcon = assetBundle->LoadAsset<Sprite*>("BL_ContextGolf");
-    scpmIcon = assetBundle->LoadAsset<Sprite*>("BL_ContextSCPM");
-
-    TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
+Material* BeatLeader::Bundle::GetMaterial(StringW name) {
+    if (materials->ContainsKey(name)) {
+        return materials->get_Item(name);
+    } else {
+        return NULL;
+    }
 }
 
 Material* BeatLeader::Bundle::GetAvatarMaterial(StringW effectName) {
-    Material* result;
+    Material* result = NULL;
+    
     if (((string)effectName).find("_") != string::npos) {
-        result = getMaterial(effectName, BundleLoader::assetBundle);
+        result = GetMaterial(effectName);
     }
     return result != NULL ? result : defaultAvatarMaterial;
 }
 
+Sprite* BeatLeader::Bundle::GetSprite(StringW name) {
+    if (sprites->ContainsKey(name)) {
+        return sprites->get_Item(name);
+    } else {
+        return NULL;
+    }
+}
+
 Sprite* BeatLeader::Bundle::GetCountryIcon(StringW country) {
-    return BundleLoader::assetBundle->LoadAsset<Sprite*>(country);
+    return GetSprite(toLower((string)country));
+}
+
+void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
+    auto allnames = assetBundle->GetAllAssetNames();
+    materials = System::Collections::Generic::Dictionary_2<StringW, Material*>::New_ctor();
+    sprites = System::Collections::Generic::Dictionary_2<StringW, Sprite*>::New_ctor();
+
+    for (size_t i = 0; i < allnames.Length(); i++)
+    {
+        StringW name = allnames[i];
+        auto material = assetBundle->LoadAsset<Material*>(name);
+        if (material != NULL) {
+            materials->Add(material->get_name(), material);
+        }
+        auto sprite = assetBundle->LoadAsset<Sprite*>(name);
+        if (sprite != NULL) {
+            sprites->Add(sprite->get_name(), sprite);
+        }
+    }
+
+    logoMaterial = GetMaterial("LogoMaterial");
+    defaultAvatarMaterial = GetMaterial("DefaultAvatar");
+    UIAdditiveGlowMaterial = GetMaterial("UIAdditiveGlow");
+    scoreBackgroundMaterial = GetMaterial("ScoreBackgroundMaterial");
+    scoreUnderlineMaterial = GetMaterial("ScoreUnderlineMaterial");
+    VotingButtonMaterial = GetMaterial("VotingButtonMaterial");
+    handAccIndicatorMaterial = GetMaterial("HandAccIndicatorMaterial");
+    accGridBackgroundMaterial = GetMaterial("AccGridBackgroundMaterial");
+    accuracyGraphMaterial = GetMaterial("AccuracyGraphBackground");
+    accuracyGraphLine = GetMaterial("AccuracyGraphLine");
+    accDetailsRowMaterial = GetMaterial("AccDetailsRowMaterial");
+    miniProfileBackgroundMaterial = GetMaterial("UIMiniProfileBackgroundMaterial");
+    skillTriangleMaterial = GetMaterial("UISkillTriangleMaterial");
+    clanTagBackgroundMaterial = GetMaterial("ClanTagBackgroundMaterial");
+
+    locationIcon = GetSprite("LocationIcon");
+    rowSeparatorIcon = GetSprite("RowSeparatorIcon");
+    beatLeaderLogoGradient = GetSprite("BeatLeaderLogoGradient");
+    transparentPixel = GetSprite("TransparentPixel");
+    fileError = GetSprite("FileError");
+    modifiersIcon = GetSprite("ModifiersIcon");
+    settingsIcon = GetSprite("BL_SettingsIcon");
+
+    overview1Icon = GetSprite("BL_Overview1Icon");
+    overview2Icon = GetSprite("BL_Overview2Icon");
+    detailsIcon = GetSprite("BL_DetailsIcon");
+    gridIcon = GetSprite("BL_GridIcon");
+    graphIcon = GetSprite("BL_GraphIcon");
+    websiteLinkIcon = GetSprite("BL_Website");
+    discordLinkIcon = GetSprite("BL_Discord");
+    patreonLinkIcon = GetSprite("BL_Patreon");
+    replayIcon = GetSprite("BL_QuestReplayIcon");
+
+    twitterIcon = GetSprite("BL_TwitterIcon");
+    twitchIcon = GetSprite("BL_TwitchIcon");
+    youtubeIcon = GetSprite("BL_YoutubeIcon");
+    profileIcon = GetSprite("BL_ProfileIcon");
+    friendsIcon = GetSprite("BL_FriendsIcon");
+    incognitoIcon = GetSprite("BL_IncognitoIcon");
+    defaultAvatar = GetSprite("BL_DefaultAvatar");
+
+    friendsSelectorIcon = GetSprite("BL_FriendsSelectorIcon");
+    globeIcon = GetSprite("BL_GlobeIcon");
+
+    generalContextIcon = GetSprite("BL_ContextGeneral");
+    noModifiersIcon = GetSprite("BL_ContextNoModifiers");
+    noPauseIcon = GetSprite("BL_ContextNoPause");
+    golfIcon = GetSprite("BL_ContextGolf");
+    scpmIcon = GetSprite("BL_ContextSCPM");
+
+    TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
 }

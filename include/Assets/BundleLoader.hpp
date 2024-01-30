@@ -11,6 +11,8 @@
 #include "custom-types/shared/macros.hpp"
 #include "custom-types/shared/coroutine.hpp"
 
+#include "System/Collections/Generic/Dictionary_2.hpp"
+
 using namespace UnityEngine;
 using namespace std;
 
@@ -19,7 +21,13 @@ using namespace std;
 #define DECLARE_FILE(name, prefix) extern "C" uint8_t _binary_##name##_start[]; extern "C" uint8_t _binary_##name##_end[]; struct prefix##name { static size_t getLength() { return _binary_##name##_end - _binary_##name##_start; } static uint8_t* getData() { return _binary_##name##_start; } };
 DECLARE_FILE(bl_bundle,)
 
+typedef System::Collections::Generic::Dictionary_2<StringW, Material *> MaterialsDictionary;
+typedef System::Collections::Generic::Dictionary_2<StringW, Sprite *> SpritesDictionary;
+
 DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
+
+    DECLARE_INSTANCE_FIELD(MaterialsDictionary*, materials);
+    DECLARE_INSTANCE_FIELD(SpritesDictionary*, sprites);
     DECLARE_INSTANCE_FIELD(Material*, logoMaterial);
     DECLARE_INSTANCE_FIELD(Material*, defaultAvatarMaterial);
     DECLARE_INSTANCE_FIELD(Material*, UIAdditiveGlowMaterial);
@@ -33,6 +41,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Material*, accDetailsRowMaterial);
     DECLARE_INSTANCE_FIELD(Material*, miniProfileBackgroundMaterial);
     DECLARE_INSTANCE_FIELD(Material*, skillTriangleMaterial);
+    DECLARE_INSTANCE_FIELD(Material*, clanTagBackgroundMaterial);
 
     DECLARE_INSTANCE_FIELD(Sprite*, locationIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, rowSeparatorIcon);
@@ -74,6 +83,9 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_METHOD(void, Init, AssetBundle* bundle);
     DECLARE_INSTANCE_METHOD(Material*, GetAvatarMaterial, StringW effectName);
     DECLARE_INSTANCE_METHOD(Sprite*, GetCountryIcon, StringW country);
+
+    DECLARE_INSTANCE_METHOD(Material*, GetMaterial, StringW name);
+    DECLARE_INSTANCE_METHOD(Sprite*, GetSprite, StringW name);
 )
 
 class BundleLoader {
