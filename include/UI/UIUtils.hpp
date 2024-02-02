@@ -60,6 +60,7 @@ namespace UIUtils {
     extern SafePtrUnity<HMUI::ImageView> roundRectSprite;
 
     HMUI::ImageView* getRoundRectSprite();
+    void AddRoundRect(HMUI::ImageView* background);
     HMUI::ImageView* GetCopyOf(HMUI::ImageView* comp, HMUI::ImageView* other);
     void OpenSettings();
     HMUI::ImageView* CreateRoundRectImage(UnityEngine::Transform* parent, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta);

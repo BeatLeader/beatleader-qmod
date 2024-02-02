@@ -1,6 +1,7 @@
 #include "include/API/PlayerController.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
+#include "include/Utils/StringUtils.hpp"
 #include "include/main.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 
@@ -120,6 +121,15 @@ bool PlayerController::IsFriend(Player anotherPlayer) {
     if (currentPlayer == nullopt) return false;
 
     return std::find(currentPlayer->friends.begin(), currentPlayer->friends.end(), anotherPlayer.id) != currentPlayer->friends.end();
+}
+
+bool PlayerController::InClan(string tag) {
+    if (currentPlayer == nullopt) return false;
+
+    auto it = std::find_if(currentPlayer->clans.begin(), currentPlayer->clans.end(), 
+                           [&tag](const auto& clan) { return toLower(clan.tag) == toLower(tag); });
+
+    return it != currentPlayer->clans.end();
 }
 
 bool PlayerController::IsIncognito(Player anotherPlayer) {

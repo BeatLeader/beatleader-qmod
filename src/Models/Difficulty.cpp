@@ -57,6 +57,12 @@ Difficulty::Difficulty(rapidjson::Value const& document) {
     rating.passRating = document["passRating"].GetFloat();
     rating.accRating = document["accRating"].GetFloat();
     rating.techRating = document["techRating"].GetFloat();
+
+    if (document.HasMember("clanStatus") && !document["clanStatus"].IsNull()) {
+        clanStatus = ClanRankingStatus(document["clanStatus"].GetObject());
+    } else {
+        clanStatus = ClanRankingStatus();
+    }
 }
 
 Difficulty::Difficulty(int statusGiven, int typeGiven, vector<float> votesGiven, unordered_map<string, float> modifierValuesGiven,unordered_map<string, TriangleRating> modifiersRatingGiven, TriangleRating ratingGiven) {

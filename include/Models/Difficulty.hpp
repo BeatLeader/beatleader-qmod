@@ -2,6 +2,7 @@
 
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 #include "include/Models/TriangleRating.hpp"
+#include "include/Models/Clan.hpp"
 
 #include <vector>
 #include <string>
@@ -17,6 +18,7 @@ struct Difficulty
     unordered_map<string, float> modifierValues;
     unordered_map<string, TriangleRating> modifiersRating;
     TriangleRating rating;
+    ClanRankingStatus clanStatus;
 
     Difficulty(rapidjson::Value const& document);
     Difficulty(int statusGiven, int typeGiven, vector<float> votesGive, unordered_map<string, float> modifierValuesGiven, unordered_map<string, TriangleRating> modifiersRatingGiven, TriangleRating ratingGiven);

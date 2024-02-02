@@ -2,6 +2,7 @@
 
 #include "include/Models/Replay.hpp"
 #include "include/Models/Score.hpp"
+#include "include/Models/ClanScore.hpp"
 #include "include/API/PlayerController.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
@@ -21,6 +22,7 @@
 #include "include/UI/LevelInfoUI.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
+#include "include/UI/CaptorClanUI.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -154,6 +156,7 @@ namespace LeaderboardUI {
     bool showRetryButton = false;
     int selectedScore = 11;
     static vector<Score> scoreVector = vector<Score>(11);
+    static vector<ClanScore> clanScoreVector = vector<ClanScore>(11);
 
     map<LeaderboardTableCell*, HMUI::ImageView*> avatars;
     map<LeaderboardTableCell*, HMUI::ImageView*> cellBackgrounds;
@@ -242,7 +245,7 @@ namespace LeaderboardUI {
                 updatePlayerRank();
                 
                 playerName->set_alignment(TMPro::TextAlignmentOptions::Center);
-                playerName->SetText(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value(), 25));
+                playerName->SetText(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value(), 25, false));
 
                 auto params = GetAvatarParams(player.value(), false);
                 playerAvatar->SetPlayer(player->avatar, params.baseMaterial, params.hueShift, params.saturation);
@@ -365,7 +368,7 @@ namespace LeaderboardUI {
         return make_tuple(hash, difficulty, mode);
     }
 
-    void refreshFromTheServer() {
+    void refreshFromTheServerScores() {
         auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
         string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode + "/" + contextToUrlString[static_cast<Context>(getModConfig().Context.GetValue())];
 
@@ -498,6 +501,82 @@ namespace LeaderboardUI {
         plvc->loadingControl->ShowText("Loading", true);
     }
 
+    void refreshFromTheServerClans() {
+        auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
+        string url = WebUtils::API_URL + "v1/clanScores/" + hash + "/" + difficulty + "/" + mode + "/page";
+
+        url += "?page=" + to_string(page);
+
+        lastUrl = url;
+
+        WebUtils::GetAsync(url, [url](long status, string stringResult){
+            if (url != lastUrl) return;
+            if (!showBeatLeader) return;
+
+            if (status != 200) {
+                return;
+            }
+
+            QuestUI::MainThreadScheduler::Schedule([status, stringResult] {
+                rapidjson::Document result;
+                result.Parse(stringResult.c_str());
+                if (result.HasParseError() || !result.HasMember("data")) return;
+
+                auto scores = result["data"].GetArray();
+
+                plvc->scores->Clear();
+                if ((int)scores.Size() == 0) {
+                    plvc->loadingControl->Hide();
+                    plvc->hasScoresData = false;
+                    plvc->loadingControl->ShowText("No clan rankings were found!", true);
+                    
+                    plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
+                    return;
+                }
+
+                auto metadata = result["metadata"].GetObject();
+                int perPage = metadata["itemsPerPage"].GetInt();
+                int pageNum = metadata["page"].GetInt();
+                int total = metadata["total"].GetInt();
+
+                for (int index = 0; index < 10; ++index)
+                {
+                    if (index < (int)scores.Size())
+                    {
+                        auto const& score = scores[index];
+                        
+                        ClanScore currentScore = ClanScore(score);
+                        clanScoreVector[index] = currentScore;
+
+                        getLogger().info("ClanScore");
+                        LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
+                            currentScore.modifiedScore, 
+                            FormatUtils::FormatClanScore(currentScore), 
+                            currentScore.rank, 
+                            false);
+                        plvc->scores->Add(scoreData);
+                    }
+                }
+
+                plvc->leaderboardTableView->rowHeight = 6;
+                    
+                plvc->leaderboardTableView->scores = plvc->scores;
+                plvc->leaderboardTableView->specialScorePos = 12;
+
+                if (upPageButton != NULL) {
+                    upPageButton->get_gameObject()->SetActive(pageNum != 1);
+                    downPageButton->get_gameObject()->SetActive(pageNum * perPage < total);
+                }
+
+                plvc->loadingControl->Hide();
+                plvc->hasScoresData = true;
+                plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
+            });
+        });
+
+        plvc->loadingControl->ShowText("Loading", true);
+    }
+
     void updateModifiersButton() {
         contextsButtonHover->set_text("Currently selected leaderboard - " + contextToDisplayString[static_cast<Context>(getModConfig().Context.GetValue())]);
 
@@ -571,18 +650,26 @@ namespace LeaderboardUI {
         }
     }
 
+    void refreshFromTheServerCurrent() {
+        if (CaptorClanUI::showClanRanking) {
+            refreshFromTheServerClans();
+        } else {
+            refreshFromTheServerScores();
+        }
+    }
+
     void PageDown() {
         page++;
 
         clearTable();
-        refreshFromTheServer();
+        refreshFromTheServerCurrent();
     }
 
     void PageUp() {
         page--;
 
         clearTable();
-        refreshFromTheServer();
+        refreshFromTheServerCurrent();
     }
 
     void updateLeaderboard(PlatformLeaderboardViewController* self) {
@@ -764,6 +851,12 @@ namespace LeaderboardUI {
             settingsButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
             settingsButton->set_defaultColor(FadedColor);
             settingsButton->set_highlightColor(SelectedColor);
+            
+            CaptorClanUI::initCaptorClan(parentScreen, plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<TMPro::TextMeshProUGUI*>());
+            CaptorClanUI::showClanRankingCallback = []() {
+                clearTable();
+                refreshFromTheServerCurrent();
+            };
         }
 
         if (ssInstalled && !sspageUpButton) {
@@ -792,7 +885,7 @@ namespace LeaderboardUI {
         }
 
         IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
-        refreshFromTheServer();
+        refreshFromTheServerCurrent();
     }
 
     Score detailsTextWorkaround;
@@ -809,6 +902,7 @@ namespace LeaderboardUI {
 
         LevelInfoUI::SetLevelInfoActive(showBeatLeader);
         ModifiersUI::SetModifiersActive(showBeatLeader);
+        CaptorClanUI::setActive(showBeatLeader && getModConfig().CaptureActive.GetValue());
 
         for (size_t i = 0; i < ssElements.size(); i++)
         {
@@ -978,54 +1072,81 @@ namespace LeaderboardUI {
 
         if (!isLocal && showBeatLeader) {
             if (cellBackgrounds.count(result)) {
-            auto player = scoreVector[row].player;
-            cellBackgrounds[result]->get_gameObject()->set_active(true);
-            result->playerNameText->GetComponent<UnityEngine::RectTransform*>()->set_anchoredPosition({
-                getModConfig().AvatarsActive.GetValue() ? 10.5f : 6.5f,
-                result->playerNameText->GetComponent<UnityEngine::RectTransform*>()->get_anchoredPosition().y
-            });
-            avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
-            result->scoreText->get_gameObject()->set_active(getModConfig().ScoresActive.GetValue());
-            
-            if (row == selectedScore) {
-                cellBackgrounds[result]->set_color(ownScoreColor);
-            } else {
-                cellBackgrounds[result]->set_color(someoneElseScoreColor);
-            }
-            cellScores[result] = scoreVector[row];
+                if (!CaptorClanUI::showClanRanking) {
+                    auto player = scoreVector[row].player;
+                    cellBackgrounds[result]->get_gameObject()->set_active(true);
 
-            if(getModConfig().AvatarsActive.GetValue()){
-                avatars[result]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
-                
-                if (!PlayerController::IsIncognito(player)) {
-                    Sprites::get_Icon(player.avatar, [result](UnityEngine::Sprite* sprite) {
-                        if (sprite != NULL && avatars[result] != NULL && sprite->get_texture() != NULL) {
-                            avatars[result]->set_sprite(sprite);
-                        }
+                    result->playerNameText->GetComponent<UnityEngine::RectTransform*>()->set_anchoredPosition({
+                        getModConfig().AvatarsActive.GetValue() ? 10.5f : 6.5f,
+                        result->playerNameText->GetComponent<UnityEngine::RectTransform*>()->get_anchoredPosition().y
                     });
+                    avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
+                    result->scoreText->get_gameObject()->set_active(getModConfig().ScoresActive.GetValue());
+                    
+                    if (row == selectedScore) {
+                        cellBackgrounds[result]->set_color(ownScoreColor);
+                    } else {
+                        cellBackgrounds[result]->set_color(someoneElseScoreColor);
+                    }
+                    cellScores[result] = scoreVector[row];
+
+                    if (getModConfig().AvatarsActive.GetValue()){
+                        avatars[result]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
+                        
+                        if (!PlayerController::IsIncognito(player)) {
+                            Sprites::get_Icon(player.avatar, [result](UnityEngine::Sprite* sprite) {
+                                if (sprite != NULL && avatars[result] != NULL && sprite->get_texture() != NULL) {
+                                    avatars[result]->set_sprite(sprite);
+                                }
+                            });
+                        }
+                    }
+
+                    auto scoreSelector = cellHighlights[result];
+                    scoreSelector->get_gameObject()->set_active(true);
+
+                    
+                    float hg = idleHighlight(player.role);
+                    scoreSelector->set_defaultColor(UnityEngine::Color(hg, 0.0, 0.0, 1.0));
+                    scoreSelector->set_highlightColor(underlineHoverColor);
+                    schemeForRole(player.role, false).Apply(scoreSelector->get_material());
+                } else {
+                    auto clan = clanScoreVector[row].clan;
+                    cellBackgrounds[result]->get_gameObject()->set_active(true);
+
+                    result->playerNameText->GetComponent<UnityEngine::RectTransform*>()->set_anchoredPosition({
+                        getModConfig().AvatarsActive.GetValue() ? 10.5f : 6.5f,
+                        result->playerNameText->GetComponent<UnityEngine::RectTransform*>()->get_anchoredPosition().y
+                    });
+                    avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
+                    result->scoreText->get_gameObject()->set_active(getModConfig().ScoresActive.GetValue());
+                    
+                    if (PlayerController::InClan(clan.tag)) {
+                        cellBackgrounds[result]->set_color(ownScoreColor);
+                    } else {
+                        cellBackgrounds[result]->set_color(someoneElseScoreColor);
+                    }
+
+                    if (getModConfig().AvatarsActive.GetValue()){
+                        avatars[result]->set_sprite(plvc->aroundPlayerLeaderboardIcon);
+                        
+                        
+                        Sprites::get_Icon(clan.icon, [result](UnityEngine::Sprite* sprite) {
+                            if (sprite != NULL && avatars[result] != NULL && sprite->get_texture() != NULL) {
+                                avatars[result]->set_sprite(sprite);
+                            }
+                        });
+                    }
+
+                    auto scoreSelector = cellHighlights[result];
+                    scoreSelector->get_gameObject()->set_active(false);
+
+                    
+                    float hg = idleHighlight("");
+                    scoreSelector->set_defaultColor(UnityEngine::Color(hg, 0.0, 0.0, 1.0));
+                    scoreSelector->set_highlightColor(underlineHoverColor);
+                    schemeForRole("", false).Apply(scoreSelector->get_material());
                 }
-            }
-
-            // TODO
-            // auto tagList = clanGroups[result];
-            // for (int i = 0; i < tagList->get_transform()->get_childCount(); i++)
-            //  UnityEngine::GameObject::Destroy(tagList->get_transform()->GetChild(i)->get_gameObject());
-            // for (size_t i = 0; i < player.clans.size(); i++) {
-            //     getLogger().info("%s", player.clans[i].tag.c_str());
-            //     auto text = ::QuestUI::BeatSaberUI::CreateText(tagList->get_transform(), player.clans[i].tag, false);
-            //     text->set_alignment(TMPro::TextAlignmentOptions::Center);
-            //     auto background = text->get_gameObject()->AddComponent<HMUI::ImageView*>();
-                
-            //     background->set_material(BundleLoader::clanTagBackgroundMaterial);
-            //     background->set_color(FormatUtils::hex2rgb(player.clans[i].color));
-            // }
-
-            auto scoreSelector = cellHighlights[result];
-            scoreSelector->get_gameObject()->set_active(true);
-            float hg = idleHighlight(player.role);
-            scoreSelector->set_defaultColor(UnityEngine::Color(hg, 0.0, 0.0, 1.0));
-            scoreSelector->set_highlightColor(underlineHoverColor);
-            schemeForRole(player.role, false).Apply(scoreSelector->get_material());
             }
         } else {
             if (cellBackgrounds.count(result) && cellBackgrounds[result]) {
@@ -1093,7 +1214,7 @@ namespace LeaderboardUI {
                 // Refresh the context button icon
                 updateModifiersButton();
                 // Fill the leaderboard
-                refreshFromTheServer();
+                refreshFromTheServerCurrent();
                 // Refresh the player rank
                 PlayerController::Refresh(0, [](auto player, auto str){
                     QuestUI::MainThreadScheduler::Schedule([]{
@@ -1107,35 +1228,43 @@ namespace LeaderboardUI {
     }
 
     void initSettingsModal(UnityEngine::Transform* parent){
-        auto container = QuestUI::BeatSaberUI::CreateModal(parent, {40,50}, nullptr, true);
+        auto container = QuestUI::BeatSaberUI::CreateModal(parent, {40,60}, nullptr, true);
         
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Leaderboard Settings", {16, 19});
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Leaderboard Settings", {16, 24});
 
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Avatar", {12, 9});
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Avatar", {12, 14});
 
-        CreateToggle(container->get_transform(), getModConfig().AvatarsActive.GetValue(), {-3, 11}, [](bool value){
+        CreateToggle(container->get_transform(), getModConfig().AvatarsActive.GetValue(), {-3, 16}, [](bool value){
             getModConfig().AvatarsActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Clans", {12, -1});
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Clans", {12, 4});
 
-        CreateToggle(container->get_transform(), getModConfig().ClansActive.GetValue(), {-3, 1}, [](bool value){
+        CreateToggle(container->get_transform(), getModConfig().ClansActive.GetValue(), {-3, 6}, [](bool value){
             getModConfig().ClansActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Score", {12, -11});
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Score", {12, -6});
 
-        CreateToggle(container->get_transform(), getModConfig().ScoresActive.GetValue(), {-3, -9}, [](bool value){
+        CreateToggle(container->get_transform(), getModConfig().ScoresActive.GetValue(), {-3, -4}, [](bool value){
             getModConfig().ScoresActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Time", {12, -21});
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Time", {12, -16});
 
-        CreateToggle(container->get_transform(), getModConfig().TimesetActive.GetValue(), {-3, -19}, [](bool value){
+        CreateToggle(container->get_transform(), getModConfig().TimesetActive.GetValue(), {-3, -14}, [](bool value){
             getModConfig().TimesetActive.SetValue(value);
+            plvc->Refresh(true, true);
+        });
+
+        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Capture", {12, -26});
+
+        CreateToggle(container->get_transform(), getModConfig().CaptureActive.GetValue(), {-3, -24}, [](bool value){
+            getModConfig().CaptureActive.SetValue(value);
+            CaptorClanUI::setActive(value);
             plvc->Refresh(true, true);
         });
 

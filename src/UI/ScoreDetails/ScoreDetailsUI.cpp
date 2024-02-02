@@ -135,7 +135,7 @@ void BeatLeader::initScoreDetailsPopup(
 
 void BeatLeader::ScoreDetailsPopup::updatePlayerDetails(Player player) {
     if (!PlayerController::IsIncognito(player)) {
-        name->SetText(FormatUtils::FormatNameWithClans(player, 20));
+        name->SetText(FormatUtils::FormatNameWithClans(player, 20, true));
         auto params = GetAvatarParams(player, false);
         playerAvatar->SetPlayer(player.avatar, params.baseMaterial, params.hueShift, params.saturation);
     } else {

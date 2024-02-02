@@ -21,6 +21,8 @@ public:
     static bool IsIncognito(Player anotherPlayer);
     static void SetIsIncognito(Player anotherPlayer, bool value);
 
+    static bool InClan(string tag);
+
     static optional<Player> currentPlayer;
     static string lastErrorDescription;
 };

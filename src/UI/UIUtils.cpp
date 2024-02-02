@@ -96,11 +96,7 @@ namespace UIUtils {
         }
     }
 
-    // Copied from BSML
-    HMUI::ImageView* CreateRoundRectImage(UnityEngine::Transform* parent, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta) {
-        static ConstString name("QuestUIImage");
-        UnityEngine::GameObject* gameObj = UnityEngine::GameObject::New_ctor(name);
-        HMUI::ImageView* background = gameObj->AddComponent<HMUI::ImageView*>();// GetCopyOf(, getRoundRectSprite());
+    void AddRoundRect(HMUI::ImageView* background) {
         auto bgTemplate = getRoundRectSprite();
         background->set_alphaHitTestMinimumThreshold(bgTemplate->get_alphaHitTestMinimumThreshold());
 		background->set_color(bgTemplate->get_color());
@@ -130,6 +126,14 @@ namespace UIUtils {
 		background->set_useGUILayout(bgTemplate->get_useGUILayout());
 		background->set_useLegacyMeshGeneration(bgTemplate->get_useLegacyMeshGeneration());
 		background->set_useSpriteMesh(bgTemplate->get_useSpriteMesh());
+    }
+
+    // Copied from BSML
+    HMUI::ImageView* CreateRoundRectImage(UnityEngine::Transform* parent, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta) {
+        static ConstString name("QuestUIImage");
+        UnityEngine::GameObject* gameObj = UnityEngine::GameObject::New_ctor(name);
+        HMUI::ImageView* background = gameObj->AddComponent<HMUI::ImageView*>();// GetCopyOf(, getRoundRectSprite());
+        AddRoundRect(background);
         
         background->get_transform()->SetParent(parent, false);
         background->set_enabled(true);

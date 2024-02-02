@@ -13,6 +13,7 @@
 #include "include/Models/Player.hpp"
 #include "include/Models/Clan.hpp"
 #include "include/Models/Score.hpp"
+#include "include/Models/ClanScore.hpp"
 #include "include/API/PlayerController.hpp"
 #include <regex>
 using namespace std;
@@ -104,22 +105,23 @@ namespace FormatUtils {
             return "<alpha=#00>.<alpha=#FF><b><noparse>" + tag + "</noparse></b><alpha=#00>.<alpha=#FF>";
         }
 
-        inline string FormatNameWithClans(Player const& player, int limit) {
-            string clansLabel = "<size=90%>";
+        inline string FormatNameWithClans(Player const& player, int limit, bool withClans) {
+            string clansLabel = withClans ? "<size=90%>" : "";
             int clanCount = player.clans.size();
+            if (withClans) {                
+                if (clanCount == 2) {
+                    clansLabel = "<size=80%>";
+                } 
+                else if (clanCount == 3) {
+                    clansLabel = "<size=70%>";
+                }
 
-            if (clanCount == 2) {
-                clansLabel = "<size=80%>";
-            } 
-            else if (clanCount == 3) {
-                clansLabel = "<size=70%>";
+                for (size_t i = 0; i < clanCount; i++) {
+                    Clan clan = player.clans[i];
+                    clansLabel += "  <color=" + clan.color + ">" + clan.tag + "</color>";
+                }
+                clansLabel += "</size>";
             }
-
-            for (size_t i = 0; i < clanCount; i++) {
-                Clan clan = player.clans[i];
-                clansLabel += "  <color=" + clan.color + ">" + clan.tag + "</color>";
-            }
-            clansLabel += "</size>";
 
             string name = "";
             if (!player.name.empty() && player.name != "<blank>") {
@@ -136,7 +138,7 @@ namespace FormatUtils {
             string name = "";
 
             if (!PlayerController::IsIncognito(score.player)) {
-                name = getModConfig().ClansActive.GetValue() ? FormatNameWithClans(score.player, 24) : "<noparse>" + truncate(score.player.name, 24) + "</noparse>";
+                name = getModConfig().ClansActive.GetValue() ? FormatNameWithClans(score.player, 24, true) : "<noparse>" + truncate(score.player.name, 24) + "</noparse>";
             } 
             else {
                 name = "[REDACTED]";
@@ -147,6 +149,15 @@ namespace FormatUtils {
             return name + "<pos=40%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + fcLabel + time;
         }
 
+        inline string FormatClanScore(ClanScore const& score) {
+            string name = "";
+            
+            name = "<noparse>" + truncate(score.clan.name, 24) + "</noparse>  <color=" + score.clan.color + ">" + score.clan.tag + "</color>";
+
+            string time = getModConfig().TimesetActive.GetValue() ? " <size=60%>" + GetRelativeTimeString(score.timeset) + "</size>" : "";
+
+            return name + "<pos=40%>" + FormatPP(score.pp) + "   " + formatAcc(score.accuracy) + " " + time;
+        }
 
         inline string GetFullPlatformName(string serverPlatform) {
             

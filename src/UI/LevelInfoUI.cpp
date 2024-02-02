@@ -24,6 +24,7 @@
 #include "include/UI/LevelInfoUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/UIUtils.hpp"
+#include "include/UI/CaptorClanUI.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -187,8 +188,6 @@ namespace LevelInfoUI {
             noSubmissionLabel->set_alignment(TMPro::TextAlignmentOptions::Center);
         }
 
-        if (bslInstalled) return;
-
         // Why not just substr str.substr("custom_level_".size())?
         // Because not every level is a custom level.
         string hash = regex_replace((string)reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID(), basic_regex("custom_level_"), "");
@@ -203,8 +202,12 @@ namespace LevelInfoUI {
         lastKey = key;
         if (_mapInfos.contains(key.first)) {
             setLabels(_mapInfos[key.first].difficulties[key.second]);
+            CaptorClanUI::setClan(_mapInfos[key.first].difficulties[key.second].clanStatus);
         } else {
             string url = WebUtils::API_URL + "map/modinterface/" + key.first;
+
+            setLabels(Difficulty());
+            CaptorClanUI::setClan(ClanRankingStatus());
 
             WebUtils::GetAsync(url, [key](long status, string stringResult){
                 // If the map was already switched again, the response is irrelevant
@@ -238,6 +241,8 @@ namespace LevelInfoUI {
                     }
                 
                     setLabels(selectedDifficulty);
+
+                    CaptorClanUI::setClan(selectedDifficulty.clanStatus);
                 });
             });
         }
@@ -305,6 +310,8 @@ namespace LevelInfoUI {
 
     void setLabels(Difficulty selectedDifficulty)
     {
+        if (!starsLabel) return;
+
         // The difficulty may have changed therefor we need to tell the ModifiersUI the new Values and Ratings
         ModifiersUI::songModifiers = selectedDifficulty.modifierValues;
         ModifiersUI::songModifierRatings = selectedDifficulty.modifiersRating;
