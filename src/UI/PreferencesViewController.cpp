@@ -213,7 +213,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
             showReplaySettingsToggle = AddConfigValueToggle(containerTransform, getModConfig().ShowReplaySettings);
         }
         errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "", false);
-        label3 = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "To sign up, enter your login information.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile picture on the website.", false);
+        label3 = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "Never used BeatLeader? Sign up with any new login/password.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile details on the website.", false);
     }
 
     UpdateUI(PlayerController::currentPlayer);
