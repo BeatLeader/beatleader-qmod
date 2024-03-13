@@ -177,11 +177,11 @@ namespace CaptorClanUI {
             clanTag->set_text(clanText);
             bool useDarkFont = (color.r * 0.299f + color.g * 0.687f + color.b * 0.114f) > 0.73f;
             clanTag->set_color(useDarkFont ? UnityEngine::Color::get_black() : UnityEngine::Color::get_white());
-            clanImage->set_color(ColorExtensions::ColorWithAlpha(color, alpha));
-
-            clanImage->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredWidth(WidthPerCharacter * clan->tag.length());
             
             color = hexToRGB(clan->color);
+
+            clanImage->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredWidth(WidthPerCharacter * clan->tag.length());
+            clanImage->set_color(ColorExtensions::ColorWithAlpha(color, alpha));
             
             string text = "👑   ";
             captorClanStatus->set_text(text);
