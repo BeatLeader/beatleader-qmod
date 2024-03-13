@@ -103,7 +103,7 @@ namespace CaptorClanUI {
     void initCaptorClan(UnityEngine::GameObject* headerPanel, TMPro::TextMeshProUGUI* headerPanelText) {
         headerText = headerPanelText;
 
-        backgroundImage = CreateClickableImage(headerPanel->get_transform(), Sprites::get_TransparentPixel(), {140, 36}, {17, 6}, []() {
+        backgroundImage = CreateClickableImage(headerPanel->get_transform(), Sprites::get_TransparentPixel(), {0, 0}, {17, 6}, []() {
             showClanRanking = !showClanRanking;
             showClanRankingCallback();
         });

@@ -852,7 +852,7 @@ namespace LeaderboardUI {
             settingsButton->set_defaultColor(FadedColor);
             settingsButton->set_highlightColor(SelectedColor);
             
-            CaptorClanUI::initCaptorClan(parentScreen, plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<TMPro::TextMeshProUGUI*>());
+            CaptorClanUI::initCaptorClan(plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject(), plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<TMPro::TextMeshProUGUI*>());
             CaptorClanUI::showClanRankingCallback = []() {
                 clearTable();
                 refreshFromTheServerCurrent();
