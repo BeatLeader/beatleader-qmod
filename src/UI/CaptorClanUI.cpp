@@ -3,10 +3,9 @@
 #include "GlobalNamespace/LevelSelectionNavigationController.hpp"
 #include "GlobalNamespace/StandardLevelDetailViewController.hpp"
 #include "GlobalNamespace/StandardLevelDetailView.hpp"
-#include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
-#include "GlobalNamespace/IDifficultyBeatmap.hpp"
+"GlobalNamespace/BeatmapLevel.hpp"
+#include "GlobalNamespace/BeatmapKey.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
-#include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/IBeatmapLevel.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSegmentedControlController.hpp"
@@ -35,10 +34,10 @@
 
 #include "TMPro/TMP_Text.hpp"
 
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/ArrayUtil.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/ArrayUtil.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
 #include <numeric>
 #include <map>
@@ -47,7 +46,7 @@
 
 using namespace GlobalNamespace;
 using namespace std;
-using namespace QuestUI;
+using namespace bsml;
 using namespace BeatSaberUI;
 
 namespace CaptorClanUI {
@@ -63,7 +62,7 @@ namespace CaptorClanUI {
     TMPro::TextMeshProUGUI* clanTag;
     TMPro::TextMeshProUGUI* captorClanStatus;
 
-    QuestUI::ClickableImage* backgroundImage;
+    bsml::ClickableImage* backgroundImage;
     HMUI::ImageView* clanImage;
 
     HMUI::HoverHint* clanHint;

@@ -28,8 +28,8 @@
 #include "UnityEngine/Transform.hpp"
 #include "UnityEngine/Time.hpp"
 
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/QuestUI.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/bsml.hpp"
 
 #include "VRUIControls/VRPointer.hpp"
 

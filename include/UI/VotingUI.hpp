@@ -2,13 +2,13 @@
 
 #include "custom-types/shared/macros.hpp"
 #include "custom-types/shared/register.hpp"
-#include "modloader/shared/modloader.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/QuestUI.hpp"
+#include "scotland2/shared/loader.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/bsml.hpp"
 #include "HMUI/ModalView.hpp"
 #include "UnityEngine/RectOffset.hpp"
 #include "GlobalNamespace/ScoreFormatter.hpp"
-#include "GlobalNamespace/IDifficultyBeatmap.hpp"
+#include "GlobalNamespace/BeatmapKey.hpp"
 #include "GlobalNamespace/PlayerLevelStatsData.hpp"
 #include "GlobalNamespace/BeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
@@ -34,7 +34,7 @@ namespace BeatLeader {
             UnityEngine::UI::Button* noButton;
 
             TMPro::TextMeshProUGUI* header2;
-            QuestUI::SliderSetting* starSlider;
+            bsml::SliderSetting* starSlider;
             TMPro::TextMeshProUGUI* subheader2;
 
             UnityEngine::UI::Button* accButton;

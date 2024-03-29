@@ -13,8 +13,8 @@
 
 #include "UnityEngine/HideFlags.hpp"
 
-// Access into internal QuestUI structures
-namespace QuestUI::ModSettingsInfos {
+// Access into internal bsml structures
+namespace bsml::ModSettingsInfos {
     struct ModSettingsInfo {
         ModInfo modInfo;
         bool showModInfo;
@@ -39,7 +39,7 @@ namespace UIUtils {
 
     HMUI::ImageView* getRoundRectSprite() {
         if (!roundRectSprite) {
-            roundRectSprite = QuestUI::ArrayUtil::First(UnityEngine::Resources::FindObjectsOfTypeAll<HMUI::ImageView*>(), [](HMUI::ImageView* image){ 
+            roundRectSprite = bsml::ArrayUtil::First(UnityEngine::Resources::FindObjectsOfTypeAll<HMUI::ImageView*>(), [](HMUI::ImageView* image){ 
                 auto sprite = image->get_sprite();
                 if (!sprite || sprite->get_name() != "RoundRect10") return false;
 
@@ -89,7 +89,7 @@ namespace UIUtils {
 
     void OpenSettings() {
         // Get all of the mod settings infos, and get the one that is for beatleader
-        for (auto& s : QuestUI::ModSettingsInfos::get()) {
+        for (auto& s : bsml::ModSettingsInfos::get()) {
             if (s.modInfo.id == MOD_ID) {
                 s.Present();
             }
@@ -130,7 +130,7 @@ namespace UIUtils {
 
     // Copied from BSML
     HMUI::ImageView* CreateRoundRectImage(UnityEngine::Transform* parent, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta) {
-        static ConstString name("QuestUIImage");
+        static ConstString name("bsmlImage");
         UnityEngine::GameObject* gameObj = UnityEngine::GameObject::New_ctor(name);
         HMUI::ImageView* background = gameObj->AddComponent<HMUI::ImageView*>();// GetCopyOf(, getRoundRectSprite());
         AddRoundRect(background);

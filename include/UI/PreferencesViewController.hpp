@@ -9,8 +9,8 @@
 #include "HMUI/TableCell.hpp"
 #include "System/Object.hpp"
 #include "TMPro/TextMeshProUGUI.hpp"
-#include "questui/shared/CustomTypes/Components/List/QuestUITableView.hpp"
-#include "questui/shared/CustomTypes/Components/Backgroundable.hpp"
+#include "bsml/shared/CustomTypes/Components/List/bsmlTableView.hpp"
+#include "bsml/shared/CustomTypes/Components/Backgroundable.hpp"
 
 #define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::get()
 

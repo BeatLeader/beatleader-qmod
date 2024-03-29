@@ -2,8 +2,8 @@
 
 #include "HMUI/ModalView.hpp"
 
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/QuestUI.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/bsml.hpp"
 
 namespace BeatLeader {
     class LinksContainerPopup {
@@ -12,9 +12,9 @@ namespace BeatLeader {
 
             TMPro::TextMeshProUGUI* versionText;
 
-            QuestUI::ClickableImage* profile;
-            QuestUI::ClickableImage* discord;
-            QuestUI::ClickableImage* patreon;
+            bsml::ClickableImage* profile;
+            bsml::ClickableImage* discord;
+            bsml::ClickableImage* patreon;
 
             UnityEngine::UI::Button* nominated;
             UnityEngine::UI::Button* qualified;

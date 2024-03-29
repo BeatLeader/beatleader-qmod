@@ -33,10 +33,10 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/filereadstream.h"
 
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/ArrayUtil.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/ArrayUtil.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
 #include "HMUI/TableView.hpp"
 #include "HMUI/TableCell.hpp"
@@ -82,10 +82,9 @@
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/IBeatmapLevel.hpp"
 #include "GlobalNamespace/IBeatmapLevelData.hpp"
-#include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
-#include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
+#include "GlobalNamespace/BeatmapLevel.hpp"
 #include "GlobalNamespace/LeaderboardTableCell.hpp"
 #include "GlobalNamespace/SinglePlayerLevelSelectionFlowCoordinator.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
@@ -110,7 +109,7 @@
 
 using namespace GlobalNamespace;
 using namespace HMUI;
-using namespace QuestUI;
+using namespace bsml;
 using namespace BeatLeader;
 using namespace std;
 using UnityEngine::Resources;
@@ -133,9 +132,9 @@ namespace LeaderboardUI {
     UnityEngine::UI::Button* retryButton = NULL;
     BeatLeader::LogoAnimation* logoAnimation = NULL;
     
-    QuestUI::ClickableImage* upPageButton = NULL;
-    QuestUI::ClickableImage* downPageButton = NULL;
-    QuestUI::ClickableImage* contextsButton = NULL;
+    bsml::ClickableImage* upPageButton = NULL;
+    bsml::ClickableImage* downPageButton = NULL;
+    bsml::ClickableImage* contextsButton = NULL;
     BeatLeader::VotingButton* votingButton = NULL;
     HMUI::HoverHint* contextsButtonHover;
     UnityEngine::GameObject* parentScreen = NULL;
@@ -160,7 +159,7 @@ namespace LeaderboardUI {
 
     map<LeaderboardTableCell*, HMUI::ImageView*> avatars;
     map<LeaderboardTableCell*, HMUI::ImageView*> cellBackgrounds;
-    map<LeaderboardTableCell*, QuestUI::ClickableImage*> cellHighlights;
+    map<LeaderboardTableCell*, bsml::ClickableImage*> cellHighlights;
     map<LeaderboardTableCell*, Score> cellScores;
     map<string, int> imageRows;
 
@@ -337,13 +336,13 @@ namespace LeaderboardUI {
         setVotingButtonsState(0);
         hideVotingUIs();
         if (plvc) {
-            auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
+            auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<BeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
             string votingStatusUrl = WebUtils::API_URL + "votestatus/" + hash + "/" + difficulty + "/" + mode;
 
             lastVotingStatusUrl = votingStatusUrl;
             WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
                 if (votingStatusUrl == lastVotingStatusUrl && status == 200) {
-                    QuestUI::MainThreadScheduler::Schedule([response] {
+                    bsml::MainThreadScheduler::Schedule([response] {
                         setVotingButtonsState(stoi(response));
                     });
                 }
@@ -360,7 +359,7 @@ namespace LeaderboardUI {
         }
     }
 
-    tuple<string, string, string> getLevelDetails(IPreviewBeatmapLevel* levelData)
+    tuple<string, string, string> getLevelDetails(BeatmapLevel* levelData)
     {
         string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(plvc->difficultyBeatmap->get_difficulty().value);
@@ -369,7 +368,7 @@ namespace LeaderboardUI {
     }
 
     void refreshFromTheServerScores() {
-        auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
+        auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<BeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
         string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode + "/" + contextToUrlString[static_cast<Context>(getModConfig().Context.GetValue())];
 
         int selectedCellNumber = cachedSelector != -1 ? cachedSelector : plvc->scopeSegmentedControl->selectedCellNumber;
@@ -403,7 +402,7 @@ namespace LeaderboardUI {
                 return;
             }
 
-            QuestUI::MainThreadScheduler::Schedule([status, stringResult] {
+            bsml::MainThreadScheduler::Schedule([status, stringResult] {
                 rapidjson::Document result;
                 result.Parse(stringResult.c_str());
                 if (result.HasParseError() || !result.HasMember("data")) return;
@@ -502,7 +501,7 @@ namespace LeaderboardUI {
     }
 
     void refreshFromTheServerClans() {
-        auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<IPreviewBeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
+        auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<BeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
         string url = WebUtils::API_URL + "v1/clanScores/" + hash + "/" + difficulty + "/" + mode + "/page";
 
         url += "?page=" + to_string(page);
@@ -517,7 +516,7 @@ namespace LeaderboardUI {
                 return;
             }
 
-            QuestUI::MainThreadScheduler::Schedule([status, stringResult] {
+            bsml::MainThreadScheduler::Schedule([status, stringResult] {
                 rapidjson::Document result;
                 result.Parse(stringResult.c_str());
                 if (result.HasParseError() || !result.HasMember("data")) return;
@@ -616,7 +615,7 @@ namespace LeaderboardUI {
             WebUtils::PostJSONAsync(votingUrl + rankableString + starsString + typeString, "", [currentVotingUrl, rankable, type](long status, string response) {
                 if (votingUrl != currentVotingUrl) return;
 
-                QuestUI::MainThreadScheduler::Schedule([status, response, rankable, type] {
+                bsml::MainThreadScheduler::Schedule([status, response, rankable, type] {
                     if (status == 200) {
                         setVotingButtonsState(stoi(response));
                         LevelInfoUI::addVoteToCurrentLevel(rankable, type);
@@ -692,7 +691,7 @@ namespace LeaderboardUI {
                 auto name =  transform->get_name();
 
                 bool infoIcon = to_utf8(csstrtostr(name)) == "ScoreSaberClickableImage";
-                bool header = (to_utf8(csstrtostr(name)) == "QuestUIHorizontalLayoutGroup" || to_utf8(csstrtostr(name)) == "QuestUIVerticalLayoutGroup") &&
+                bool header = (to_utf8(csstrtostr(name)) == "bsmlHorizontalLayoutGroup" || to_utf8(csstrtostr(name)) == "bsmlVerticalLayoutGroup") &&
                             transform->get_parent() && transform->get_parent()->get_parent() &&
                             to_utf8(csstrtostr(transform->get_parent()->get_parent()->get_name())) == "PlatformLeaderboardViewController";
                 if (infoIcon || header) {
@@ -706,8 +705,8 @@ namespace LeaderboardUI {
             self->loadingControl->Hide();
             
             if (preferencesButton == NULL) {
-                loginPrompt = ::QuestUI::BeatSaberUI::CreateText(plvc->get_transform(), "Please sign up or log in to post scores!", false, UnityEngine::Vector2(4, 10));
-                preferencesButton = ::QuestUI::BeatSaberUI::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
+                loginPrompt = ::bsml::BeatSaberUI::CreateText(plvc->get_transform(), "Please sign up or log in to post scores!", false, UnityEngine::Vector2(4, 10));
+                preferencesButton = ::bsml::BeatSaberUI::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
                     UIUtils::OpenSettings();
                 });
             }
@@ -750,16 +749,16 @@ namespace LeaderboardUI {
             BeatLeader::initLinksContainerPopup(&linkContainer, self->get_transform());
             BeatLeader::initVotingPopup(&votingUI, self->get_transform(), voteCallback);
 
-            auto playerAvatarImage = ::QuestUI::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(16, 16));
+            auto playerAvatarImage = ::bsml::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(16, 16));
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            playerName = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
+            playerName = ::bsml::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
 
             EmojiSupport::AddSupport(playerName);
 
-            auto rankLayout = ::QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(parentScreen->get_transform());
+            auto rankLayout = ::bsml::BeatSaberUI::CreateHorizontalLayoutGroup(parentScreen->get_transform());
             rankLayout->set_spacing(3);
             EnableHorizontalFit(rankLayout);
             auto rectTransform = (RectTransform*)rankLayout->get_transform();
@@ -767,22 +766,22 @@ namespace LeaderboardUI {
             rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
             rectTransform->set_anchoredPosition({138, 45});
 
-            auto globalLayout = ::QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(rankLayout->get_transform());
+            auto globalLayout = ::bsml::BeatSaberUI::CreateHorizontalLayoutGroup(rankLayout->get_transform());
             globalLayout->set_spacing(1);
             EnableHorizontalFit(globalLayout);
-            globalRankIcon = ::QuestUI::BeatSaberUI::CreateImage(globalLayout->get_transform(), BundleLoader::bundle->globeIcon);
-            globalRank = ::QuestUI::BeatSaberUI::CreateText(globalLayout->get_transform(), "", false);
+            globalRankIcon = ::bsml::BeatSaberUI::CreateImage(globalLayout->get_transform(), BundleLoader::bundle->globeIcon);
+            globalRank = ::bsml::BeatSaberUI::CreateText(globalLayout->get_transform(), "", false);
 
-            auto countryLayout = ::QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(rankLayout->get_transform());
+            auto countryLayout = ::bsml::BeatSaberUI::CreateHorizontalLayoutGroup(rankLayout->get_transform());
             countryLayout->set_spacing(1);
             EnableHorizontalFit(countryLayout);
-            countryRankIcon = ::QuestUI::BeatSaberUI::CreateImage(countryLayout->get_transform(), BundleLoader::bundle->globeIcon);
-            countryRankAndPp = ::QuestUI::BeatSaberUI::CreateText(countryLayout->get_transform(), "", false);
+            countryRankIcon = ::bsml::BeatSaberUI::CreateImage(countryLayout->get_transform(), BundleLoader::bundle->globeIcon);
+            countryRankAndPp = ::bsml::BeatSaberUI::CreateText(countryLayout->get_transform(), "", false);
             if (PlayerController::currentPlayer != std::nullopt) {
                 updatePlayerInfoLabel();
             }
 
-            auto websiteLink = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(16, 16), []() {
+            auto websiteLink = ::bsml::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(16, 16), []() {
                 linkContainer->modal->Show(true, true, nullptr);
             });
             
@@ -797,7 +796,7 @@ namespace LeaderboardUI {
             };
 
             if (retryButton) UnityEngine::GameObject::Destroy(retryButton);
-            retryButton = ::QuestUI::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){
+            retryButton = ::bsml::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){
                 retryButton->get_gameObject()->SetActive(false);
                 showRetryButton = false;
                 retryCallback();
@@ -806,29 +805,29 @@ namespace LeaderboardUI {
             retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
 
             if(uploadStatus) UnityEngine::GameObject::Destroy(uploadStatus);
-            uploadStatus = ::QuestUI::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false);
+            uploadStatus = ::bsml::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false);
             move(uploadStatus, 150, 60);
             resize(uploadStatus, 10, 0);
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
-            upPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
+            upPageButton = ::bsml::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
                 PageUp();
             });
-            downPageButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -20), UnityEngine::Vector2(8, 5.12), [](){
+            downPageButton = ::bsml::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -20), UnityEngine::Vector2(8, 5.12), [](){
                 PageDown();
             });
 
-            contextsButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(6, 6), [](){
+            contextsButton = ::bsml::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(6, 6), [](){
                 contextsContainer->Show(true, true, nullptr);
             });
             contextsButton->set_defaultColor(SelectedColor);
             contextsButton->set_highlightColor(SelectedColor);
             // We need to add an empty hover hint, so we can set it later to the correct content depending on the selected context
-            contextsButtonHover = ::QuestUI::BeatSaberUI::AddHoverHint(contextsButton, "");
+            contextsButtonHover = ::bsml::BeatSaberUI::AddHoverHint(contextsButton, "");
             initContextsModal(self->get_transform());
             updateModifiersButton();
 
-            auto votingButtonImage = ::QuestUI::BeatSaberUI::CreateClickableImage(
+            auto votingButtonImage = ::bsml::BeatSaberUI::CreateClickableImage(
                 parentScreen->get_transform(), 
                 BundleLoader::bundle->modifiersIcon, 
                 UnityEngine::Vector2(100, 22), 
@@ -844,7 +843,7 @@ namespace LeaderboardUI {
 
             initSettingsModal(self->get_transform());
 
-            auto settingsButton = ::QuestUI::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->settingsIcon, {180, 36}, {4.5, 4.5}, [](){
+            auto settingsButton = ::bsml::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->settingsIcon, {180, 36}, {4.5, 4.5}, [](){
                 settingsContainer->Show(true, true, nullptr);
             });
 
@@ -884,7 +883,7 @@ namespace LeaderboardUI {
             downPageButton->get_gameObject()->SetActive(false);
         }
 
-        IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(self->difficultyBeatmap->get_level());
+        BeatmapLevel* levelData = reinterpret_cast<BeatmapLevel*>(self->difficultyBeatmap->get_level());
         refreshFromTheServerCurrent();
     }
 
@@ -947,7 +946,7 @@ namespace LeaderboardUI {
 
         if (ssInstalled && showBeatLeaderButton == NULL) {
             auto headerTransform = self->get_gameObject()->get_transform()->Find("HeaderPanel")->get_transform();
-            QuestUI::BeatSaberUI::CreateText(headerTransform, "BeatLeader", {-12.2, 2});
+            bsml::BeatSaberUI::CreateText(headerTransform, "BeatLeader", {-12.2, 2});
             showBeatLeaderButton = CreateToggle(headerTransform, showBeatLeader, UnityEngine::Vector2(-84.5, 0), [](bool changed){
                 showBeatLeader = !showBeatLeader;
                 getModConfig().ShowBeatleader.SetValue(showBeatLeader);
@@ -956,7 +955,7 @@ namespace LeaderboardUI {
             });
 
             if (!showBeatLeader) {
-                QuestUI::MainThreadScheduler::Schedule([] {
+                bsml::MainThreadScheduler::Schedule([] {
                     HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
                     imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
                     imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
@@ -978,7 +977,7 @@ namespace LeaderboardUI {
         if (ssInstalled && showBeatLeader && sspageUpButton == NULL) {
             std::async(std::launch::async, [] () {
                 std::this_thread::sleep_for(std::chrono::seconds{1});
-                QuestUI::MainThreadScheduler::Schedule([] {
+                bsml::MainThreadScheduler::Schedule([] {
                     refreshLeaderboardCall();
                 });
             });
@@ -1027,10 +1026,10 @@ namespace LeaderboardUI {
             EmojiSupport::AddSupport(result->playerNameText);
 
             if (!cellBackgrounds.count(result)) {
-                avatars[result] = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
+                avatars[result] = ::bsml::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
                 avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
 
-                auto scoreSelector = ::QuestUI::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
+                auto scoreSelector = ::bsml::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
                     auto openEvent = il2cpp_utils::MakeDelegate<System::Action *>(
                         classof(System::Action*),
                         static_cast<Il2CppObject *>(nullptr), setTheScoreAgain);
@@ -1044,12 +1043,12 @@ namespace LeaderboardUI {
                 
                 cellHighlights[result] = scoreSelector;
 
-                auto backgroundImage = ::QuestUI::BeatSaberUI::CreateImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
+                auto backgroundImage = ::bsml::BeatSaberUI::CreateImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
                 backgroundImage->set_material(BundleLoader::bundle->scoreBackgroundMaterial);
                 backgroundImage->get_transform()->SetAsFirstSibling();
                 cellBackgrounds[result] = backgroundImage;  
 
-                // auto tagsList = QuestUI::BeatSaberUI::CreateHorizontalLayoutGroup(result->get_transform());
+                // auto tagsList = bsml::BeatSaberUI::CreateHorizontalLayoutGroup(result->get_transform());
                 // clanGroups[result] = tagsList;         
             }
         }
@@ -1198,13 +1197,13 @@ namespace LeaderboardUI {
     }
 
     void initContextsModal(UnityEngine::Transform* parent){
-        auto container = QuestUI::BeatSaberUI::CreateModal(parent, {40, static_cast<float>((static_cast<int>(Context::SCPM) + 2) * 10 + 5)}, nullptr, true);
+        auto container = bsml::BeatSaberUI::CreateModal(parent, {40, static_cast<float>((static_cast<int>(Context::SCPM) + 2) * 10 + 5)}, nullptr, true);
 
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Scores Context", {20, 19});
+        bsml::BeatSaberUI::CreateText(container->get_transform(), "Scores Context", {20, 19});
 
         for(int i = 0; i <= static_cast<int>(Context::SCPM); i++)
         {
-            QuestUI::BeatSaberUI::CreateUIButton(container->get_transform(), contextToDisplayString[static_cast<Context>(i)], {0.0f, static_cast<float>(21 - (i + 1) * 10)}, [i](){
+            bsml::BeatSaberUI::CreateUIButton(container->get_transform(), contextToDisplayString[static_cast<Context>(i)], {0.0f, static_cast<float>(21 - (i + 1) * 10)}, [i](){
                 // Set the new value
                 getModConfig().Context.SetValue(i);
                 // Hide the modal
@@ -1217,7 +1216,7 @@ namespace LeaderboardUI {
                 refreshFromTheServerCurrent();
                 // Refresh the player rank
                 PlayerController::Refresh(0, [](auto player, auto str){
-                    QuestUI::MainThreadScheduler::Schedule([]{
+                    bsml::MainThreadScheduler::Schedule([]{
                         LeaderboardUI::updatePlayerRank();
                     });
                 });
@@ -1228,39 +1227,39 @@ namespace LeaderboardUI {
     }
 
     void initSettingsModal(UnityEngine::Transform* parent){
-        auto container = QuestUI::BeatSaberUI::CreateModal(parent, {40,60}, nullptr, true);
+        auto container = bsml::BeatSaberUI::CreateModal(parent, {40,60}, nullptr, true);
         
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Leaderboard Settings", {16, 24});
+        bsml::BeatSaberUI::CreateText(container->get_transform(), "Leaderboard Settings", {16, 24});
 
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Avatar", {12, 14});
+        bsml::BeatSaberUI::CreateText(container->get_transform(), "Avatar", {12, 14});
 
         CreateToggle(container->get_transform(), getModConfig().AvatarsActive.GetValue(), {-3, 16}, [](bool value){
             getModConfig().AvatarsActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Clans", {12, 4});
+        bsml::BeatSaberUI::CreateText(container->get_transform(), "Clans", {12, 4});
 
         CreateToggle(container->get_transform(), getModConfig().ClansActive.GetValue(), {-3, 6}, [](bool value){
             getModConfig().ClansActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Score", {12, -6});
+        bsml::BeatSaberUI::CreateText(container->get_transform(), "Score", {12, -6});
 
         CreateToggle(container->get_transform(), getModConfig().ScoresActive.GetValue(), {-3, -4}, [](bool value){
             getModConfig().ScoresActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Time", {12, -16});
+        bsml::BeatSaberUI::CreateText(container->get_transform(), "Time", {12, -16});
 
         CreateToggle(container->get_transform(), getModConfig().TimesetActive.GetValue(), {-3, -14}, [](bool value){
             getModConfig().TimesetActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        QuestUI::BeatSaberUI::CreateText(container->get_transform(), "Capture", {12, -26});
+        bsml::BeatSaberUI::CreateText(container->get_transform(), "Capture", {12, -26});
 
         CreateToggle(container->get_transform(), getModConfig().CaptureActive.GetValue(), {-3, -24}, [](bool value){
             getModConfig().CaptureActive.SetValue(value);
@@ -1273,7 +1272,7 @@ namespace LeaderboardUI {
 
     UnityEngine::UI::Toggle* CreateToggle(UnityEngine::Transform* parent, bool currentValue, UnityEngine::Vector2 anchoredPosition, std::function<void(bool)> onValueChange)
     {
-        // Code adapted from: https://github.com/darknight1050/QuestUI/blob/master/src/BeatSaberUI.cpp#L826
+        // Code adapted from: https://github.com/darknight1050/bsml/blob/master/src/BeatSaberUI.cpp#L826
         static SafePtrUnity<UnityEngine::UI::Toggle> toggleCopy;
         if(!toggleCopy){
             toggleCopy = Resources::FindObjectsOfTypeAll<UnityEngine::UI::Toggle*>().FirstOrDefault([](auto x) {return x->get_transform()->get_parent()->get_gameObject()->get_name() == "Fullscreen"; });
@@ -1310,7 +1309,7 @@ namespace LeaderboardUI {
         INSTALL_HOOK(logger, SegmentedControlHandleCellSelection);
 
         PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
-            QuestUI::MainThreadScheduler::Schedule([] {
+            bsml::MainThreadScheduler::Schedule([] {
                 if (playerName != NULL) {
                     updatePlayerInfoLabel();
                 }

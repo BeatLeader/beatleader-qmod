@@ -20,7 +20,7 @@
 
 #include <sstream>
 
-using namespace QuestUI::BeatSaberUI;
+using namespace bsml::BeatSaberUI;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
@@ -32,11 +32,11 @@ BeatLeader::MiniProfileButton::MiniProfileButton(
         string hint, 
         UnityEngine::Color glowColor, 
         bool labelOnLeft,
-        QuestUI::ClickableImage* button) noexcept {
+        bsml::ClickableImage* button) noexcept {
     this->button = button;
     this->glowColor = glowColor;
     this->labelOnLeft = labelOnLeft;
-    this->hint = ::QuestUI::BeatSaberUI::AddHoverHint(button, hint);
+    this->hint = ::bsml::BeatSaberUI::AddHoverHint(button, hint);
     // this->hint = CreateText(button->get_transform(), hint, UnityEngine::Vector2(0.0, 0.0));
     // UpdateLabelOffset();
 }

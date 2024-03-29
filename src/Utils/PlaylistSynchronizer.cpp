@@ -14,7 +14,7 @@
 
 #include "songloader/shared/API.hpp"
 
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
 #include "zip.h"
 
@@ -43,7 +43,7 @@ void DownloadBeatmap(string path, string hash, int index) {
         } else {
             done();
 
-            QuestUI::MainThreadScheduler::Schedule([] {
+            bsml::MainThreadScheduler::Schedule([] {
                 getLogger().info("%s", "Refreshing songs");
                 RuntimeSongLoader::API::RefreshSongs(false);
                 RuntimeSongLoader::API::RefreshPacks(true);
@@ -126,7 +126,7 @@ void PlaylistSynchronizer::SyncPlaylist() {
 
 void PlaylistSynchronizer::InstallPlaylist(string url, string filename) {
     DownloadPlaylist(url, filename, true, [](auto songs) {
-        QuestUI::MainThreadScheduler::Schedule([] {
+        bsml::MainThreadScheduler::Schedule([] {
             RuntimeSongLoader::API::RefreshSongs(false);
             RuntimeSongLoader::API::RefreshPacks(true);
         });

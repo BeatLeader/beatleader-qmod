@@ -10,7 +10,7 @@
 
 #include <sstream>
 
-using namespace QuestUI::BeatSaberUI;
+using namespace bsml::BeatSaberUI;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;

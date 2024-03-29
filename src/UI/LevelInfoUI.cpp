@@ -3,12 +3,10 @@
 #include "GlobalNamespace/LevelSelectionNavigationController.hpp"
 #include "GlobalNamespace/StandardLevelDetailViewController.hpp"
 #include "GlobalNamespace/StandardLevelDetailView.hpp"
-#include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
-#include "GlobalNamespace/IDifficultyBeatmap.hpp"
+#include "GlobalNamespace/BeatmapLevel.hpp"
+#include "GlobalNamespace/BeatmapKey.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
-#include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
-#include "GlobalNamespace/IBeatmapLevel.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSegmentedControlController.hpp"
 #include "GlobalNamespace/LevelParamsPanel.hpp"
 
@@ -34,10 +32,10 @@
 #include "TMPro/TMP_Text.hpp"
 #include "TMPro/TextMeshProUGUI.hpp"
 
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/ArrayUtil.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/ArrayUtil.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
 #include <numeric>
 #include <map>
@@ -46,7 +44,7 @@
 
 using namespace GlobalNamespace;
 using namespace std;
-using namespace QuestUI;
+using namespace bsml;
 using namespace BeatSaberUI;
 
 namespace LevelInfoUI {
@@ -112,18 +110,18 @@ namespace LevelInfoUI {
             ///////////////////////////
 
             // Create Modal
-            skillTriangleContainer = QuestUI::BeatSaberUI::CreateModal(self->levelParamsPanel->get_transform(), {40,40}, nullptr, true);
+            skillTriangleContainer = bsml::BeatSaberUI::CreateModal(self->levelParamsPanel->get_transform(), {40,40}, nullptr, true);
 
             // Create Actual Triangle Image
-            auto skillTriangleImage = QuestUI::BeatSaberUI::CreateImage(skillTriangleContainer->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 0}, {35, 35});
+            auto skillTriangleImage = bsml::BeatSaberUI::CreateImage(skillTriangleContainer->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 0}, {35, 35});
             skillTriangleMat = UnityEngine::Material::Instantiate(BundleLoader::bundle->skillTriangleMaterial);
             skillTriangleImage->set_material(skillTriangleMat.ptr());
             int normalizedValuesPropertyId = UnityEngine::Shader::PropertyToID("_Normalized");
 
             // Create Star Value Labels for Triangle
-            auto techLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Tech - ", {12, 12});
-            auto accLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Acc - ", {34, 12});
-            auto passLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Pass - ", {23, -17});
+            auto techLabel = bsml::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Tech - ", {12, 12});
+            auto accLabel = bsml::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Acc - ", {34, 12});
+            auto passLabel = bsml::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Pass - ", {23, -17});
 
             // OnClick Function to open the SkillTriangle
             auto openSkillTriangle = [techLabel, accLabel, passLabel, normalizedValuesPropertyId](){
@@ -190,7 +188,7 @@ namespace LevelInfoUI {
 
         // Why not just substr str.substr("custom_level_".size())?
         // Because not every level is a custom level.
-        string hash = regex_replace((string)reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID(), basic_regex("custom_level_"), "");
+        string hash = regex_replace((string)reinterpret_cast<BeatmapLevel*>(self->level)->get_levelID(), basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(self->selectedDifficultyBeatmap->get_difficulty().value);
         string mode = (string)self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName;
 
@@ -213,7 +211,7 @@ namespace LevelInfoUI {
                 // If the map was already switched again, the response is irrelevant
                 if(lastKey != key) return;
 
-                QuestUI::MainThreadScheduler::Schedule([status, key, stringResult] () {
+                bsml::MainThreadScheduler::Schedule([status, key, stringResult] () {
                     if (status != 200) {
                         setLabels(defaultDiff);
                         return;

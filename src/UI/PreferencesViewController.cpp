@@ -1,8 +1,8 @@
 #include "HMUI/Touchable.hpp"
 
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/GUIUtility.hpp"
@@ -28,7 +28,7 @@
 
 #include <string>
 
-using namespace QuestUI;
+using namespace bsml;
 using namespace std;
 
 DEFINE_TYPE(BeatLeader, PreferencesViewController);
@@ -123,27 +123,27 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
 
         auto containerTransform = container->get_transform();
 
-        auto spinnerImage = ::QuestUI::BeatSaberUI::CreateImage(this->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 20}, {20, 20});
+        auto spinnerImage = ::bsml::BeatSaberUI::CreateImage(this->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 20}, {20, 20});
         spinner = this->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
         spinner->Init(spinnerImage);
         spinnerImage->get_gameObject()->SetActive(false);
 
-        name = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "", false);
+        name = ::bsml::BeatSaberUI::CreateText(containerTransform, "", false);
         EmojiSupport::AddSupport(name);
 
-        logoutButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "Logout", [](){
+        logoutButton = ::bsml::BeatSaberUI::CreateUIButton(containerTransform, "Logout", [](){
             PlayerController::LogOut();
         });
 
-        loginField = ::QuestUI::BeatSaberUI::CreateStringSetting(containerTransform, "Login", "", [](StringW value) {
+        loginField = ::bsml::BeatSaberUI::CreateStringSetting(containerTransform, "Login", "", [](StringW value) {
             login = (string) value;
         });
         
-        passwordField = ::QuestUI::BeatSaberUI::CreateStringSetting(containerTransform, "Password", "", [](StringW value) {
+        passwordField = ::bsml::BeatSaberUI::CreateStringSetting(containerTransform, "Password", "", [](StringW value) {
             password = (string) value;
         });
 
-        loginButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "Log in", [spinnerImage]() {
+        loginButton = ::bsml::BeatSaberUI::CreateUIButton(containerTransform, "Log in", [spinnerImage]() {
             if (login.empty() || password.empty()) {
                 errorDescription = "Enter a username and/or password!";
                 UpdateUI(nullopt);
@@ -151,7 +151,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
             }
             showLoading();
             PlayerController::LogIn(login, password, [](std::optional<Player> const& player, string error) {
-                QuestUI::MainThreadScheduler::Schedule([player, error] {
+                bsml::MainThreadScheduler::Schedule([player, error] {
                 if (player == nullopt) {
                     errorDescription = error;
                 } else {
@@ -165,7 +165,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                 });
             });
         });
-        signupButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "Sign up", []() {
+        signupButton = ::bsml::BeatSaberUI::CreateUIButton(containerTransform, "Sign up", []() {
             if (login.empty() || password.empty()) {
                 errorDescription = "Enter a username and/or password!";
                 UpdateUI(nullopt);
@@ -173,7 +173,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
             }
             showLoading();
             PlayerController::SignUp((string)login, (string)password, [](std::optional<Player> const& player, string error) {
-                QuestUI::MainThreadScheduler::Schedule([player, error] {
+                bsml::MainThreadScheduler::Schedule([player, error] {
                 if (player == nullopt) {
                     errorDescription = error;
                 } else {
@@ -191,7 +191,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         auto captureSelf = this;
         PlayerController::playerChanged.emplace_back([captureSelf](std::optional<Player> const& updated) {
             if (!captureSelf->isActivated) return;
-            QuestUI::MainThreadScheduler::Schedule([updated] {
+            bsml::MainThreadScheduler::Schedule([updated] {
                 UpdateUI(updated);
             });
         });
@@ -212,8 +212,8 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         if (ReplayInstalled()) {
             showReplaySettingsToggle = AddConfigValueToggle(containerTransform, getModConfig().ShowReplaySettings);
         }
-        errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "", false);
-        label3 = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "Never used BeatLeader? Sign up with any new login/password.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile details on the website.", false);
+        errorDescriptionLabel = ::bsml::BeatSaberUI::CreateText(containerTransform, "", false);
+        label3 = ::bsml::BeatSaberUI::CreateText(containerTransform, "Never used BeatLeader? Sign up with any new login/password.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile details on the website.", false);
     }
 
     UpdateUI(PlayerController::currentPlayer);

@@ -13,9 +13,9 @@
 #include "HMUI/Screen.hpp"
 #include "HMUI/ViewController.hpp"
 
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/ArrayUtil.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
+#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/ArrayUtil.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
 
 inline void move(UnityEngine::Component* label, float x, float y) {
     UnityEngine::RectTransform* transform = label->GetComponent<UnityEngine::RectTransform *>();
@@ -34,7 +34,7 @@ inline void resize(UnityEngine::Component* label, float x, float y) {
 }
 
 inline UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootView, UnityEngine::Vector2 screenSize, UnityEngine::Vector3 position, float curvatureRadius) {
-    auto gameObject = QuestUI::BeatSaberUI::CreateCanvas();
+    auto gameObject = bsml::BeatSaberUI::CreateCanvas();
     auto screen = gameObject->AddComponent<HMUI::Screen*>();
     screen->rootViewController = rootView;
     auto curvedCanvasSettings = gameObject->AddComponent<HMUI::CurvedCanvasSettings*>();

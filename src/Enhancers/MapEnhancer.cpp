@@ -1,10 +1,8 @@
 #include "include/Enhancers/MapEnhancer.hpp"
 
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
-#include "GlobalNamespace/IBeatmapLevel.hpp"
-#include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
-#include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
+#include "GlobalNamespace/BeatmapLevel.hpp"
 
 #include <regex>
 #include <sstream>
@@ -13,7 +11,7 @@ void MapEnhancer::Enhance(Replay &replay)
 {
     ReplayInfo& info = replay.info;
     info.hash = regex_replace((string)previewBeatmapLevel->get_levelID(), basic_regex("custom_level_"), "");
-    IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(difficultyBeatmap->get_level());
+    BeatmapLevel* levelData = reinterpret_cast<BeatmapLevel*>(difficultyBeatmap->get_level());
     info.songName = (string)levelData->get_songName();
     info.mapper = (string)levelData->get_levelAuthorName();
     info.difficulty = DiffName(difficultyBeatmap->get_difficulty().value);

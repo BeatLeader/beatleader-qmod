@@ -1,7 +1,7 @@
 #include "HMUI/Touchable.hpp"
 
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
+#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
 
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/GUIUtility.hpp"
@@ -15,7 +15,7 @@
 #include <string>
 #include <cmath>
 
-using namespace QuestUI;
+using namespace bsml;
 using namespace std;
 
 DEFINE_TYPE(BeatLeader, VotingButton);
@@ -25,7 +25,7 @@ static int GradientValuePropertyId;
 static int StatePropertyId;
 static int TintPropertyId;
 
-void BeatLeader::VotingButton::Init(QuestUI::ClickableImage* imageView) {
+void BeatLeader::VotingButton::Init(bsml::ClickableImage* imageView) {
     this->imageView = imageView;
 
     this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::bundle->VotingButtonMaterial);
@@ -34,7 +34,7 @@ void BeatLeader::VotingButton::Init(QuestUI::ClickableImage* imageView) {
     imageView->set_defaultColor(UnityEngine::Color(0.0, 0.0, 0.0, 1.0));
     imageView->set_highlightColor(UnityEngine::Color(1.0, 0.0, 0.0, 1.0));
 
-    this->hoverHint = QuestUI::BeatSaberUI::AddHoverHint(imageView, "Rank voting");
+    this->hoverHint = bsml::BeatSaberUI::AddHoverHint(imageView, "Rank voting");
 
     SpinnerValuePropertyId = UnityEngine::Shader::PropertyToID("_SpinnerValue");
     GradientValuePropertyId = UnityEngine::Shader::PropertyToID("_GradientValue");

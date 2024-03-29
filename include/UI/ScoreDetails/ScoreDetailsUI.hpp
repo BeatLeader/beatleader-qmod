@@ -2,8 +2,8 @@
 
 #include "HMUI/ModalView.hpp"
 
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/QuestUI.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/bsml.hpp"
 
 #include "include/Models/Score.hpp"
 #include "include/UI/PlayerAvatar.hpp"
@@ -34,13 +34,13 @@ namespace BeatLeader {
             ScoreStatsGrid grid;
             ScoreStatsGraph graph;
 
-            QuestUI::ClickableImage* generalButton;
-            QuestUI::ClickableImage* additionalButton;
-            QuestUI::ClickableImage* overviewButton;
-            QuestUI::ClickableImage* gridButton;
-            QuestUI::ClickableImage* graphButton;
+            bsml::ClickableImage* generalButton;
+            bsml::ClickableImage* additionalButton;
+            bsml::ClickableImage* overviewButton;
+            bsml::ClickableImage* gridButton;
+            bsml::ClickableImage* graphButton;
 
-            QuestUI::ClickableImage* replayButton;
+            bsml::ClickableImage* replayButton;
 
             TMPro::TextMeshProUGUI* loadingText;
 

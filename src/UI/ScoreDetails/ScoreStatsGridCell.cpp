@@ -9,13 +9,13 @@
 #include "HMUI/ImageView.hpp"
 #include "UnityEngine/Component.hpp"
 
-#include "questui/shared/CustomTypes/Components/Backgroundable.hpp"
+#include "bsml/shared/CustomTypes/Components/Backgroundable.hpp"
 
 #include "main.hpp"
 
 #include <sstream>
 
-using namespace QuestUI::BeatSaberUI;
+using namespace bsml::BeatSaberUI;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
@@ -30,7 +30,7 @@ BeatLeader::ScoreStatsGridCell::ScoreStatsGridCell(HMUI::ModalView *modal, int i
     float row = (float)(index / 4);
     float column = (float)(index % 4);
 
-    imageView = ::QuestUI::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2((column - 2.0f) * 11.0 + 5, (row - 1.0f) * 11.0 - 3), UnityEngine::Vector2(10, 10));
+    imageView = ::bsml::BeatSaberUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2((column - 2.0f) * 11.0 + 5, (row - 1.0f) * 11.0 - 3), UnityEngine::Vector2(10, 10));
     imageView->set_color(EmptyColor);
     imageView->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->accGridBackgroundMaterial));
 

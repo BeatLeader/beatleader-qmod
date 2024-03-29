@@ -20,13 +20,13 @@
 #include "HMUI/CurvedCanvasSettingsHelper.hpp"
 #include "HMUI/CurvedCanvasSettings.hpp"
 
-#include "questui/shared/CustomTypes/Components/Backgroundable.hpp"
+#include "bsml/shared/CustomTypes/Components/Backgroundable.hpp"
 
 #include "main.hpp"
 
 #include <sstream>
 
-using namespace QuestUI::BeatSaberUI;
+using namespace bsml::BeatSaberUI;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
@@ -62,7 +62,7 @@ void BeatLeader::PlayerButtons::Setup(HMUI::ModalView *modal, function<void(Play
     auto leftTransform = leftBackground->get_transform();
     auto rightTransform = rightBackground->get_transform();
 
-    friendsButton = MiniProfileButton("Friends management", SelectedColor, true, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    friendsButton = MiniProfileButton("Friends management", SelectedColor, true, ::bsml::BeatSaberUI::CreateClickableImage(
             leftTransform, 
             BundleLoader::bundle->friendsIcon, 
             {0, 0}, 
@@ -71,7 +71,7 @@ void BeatLeader::PlayerButtons::Setup(HMUI::ModalView *modal, function<void(Play
     }));
     friendsButton.RegisterCallback();
 
-    incognitoButton = MiniProfileButton("Hide player info", SelectedColor, true, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    incognitoButton = MiniProfileButton("Hide player info", SelectedColor, true, ::bsml::BeatSaberUI::CreateClickableImage(
             leftTransform, 
             BundleLoader::bundle->incognitoIcon, 
             {0, 0}, 
@@ -80,7 +80,7 @@ void BeatLeader::PlayerButtons::Setup(HMUI::ModalView *modal, function<void(Play
     }));
     incognitoButton.RegisterCallback();
 
-    linkButton = MiniProfileButton("Open profile", SelectedColor, true, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    linkButton = MiniProfileButton("Open profile", SelectedColor, true, ::bsml::BeatSaberUI::CreateClickableImage(
             leftTransform, 
             BundleLoader::bundle->profileIcon, 
             {0, 0}, 
@@ -89,7 +89,7 @@ void BeatLeader::PlayerButtons::Setup(HMUI::ModalView *modal, function<void(Play
     }));
     linkButton.RegisterCallback();
 
-    twitterButton = MiniProfileButton("Twitter", TwitterColor, false, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    twitterButton = MiniProfileButton("Twitter", TwitterColor, false, ::bsml::BeatSaberUI::CreateClickableImage(
             rightTransform, 
             BundleLoader::bundle->twitterIcon, 
             {0, 0}, 
@@ -98,7 +98,7 @@ void BeatLeader::PlayerButtons::Setup(HMUI::ModalView *modal, function<void(Play
     }));
     twitterButton.RegisterCallback();
 
-    twitchButton = MiniProfileButton("Twitch", TwitchColor, false, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    twitchButton = MiniProfileButton("Twitch", TwitchColor, false, ::bsml::BeatSaberUI::CreateClickableImage(
             rightTransform, 
             BundleLoader::bundle->twitchIcon, 
             {0, 0}, 
@@ -107,7 +107,7 @@ void BeatLeader::PlayerButtons::Setup(HMUI::ModalView *modal, function<void(Play
     }));
     twitchButton.RegisterCallback();
 
-    youtubeButton = MiniProfileButton("YouTube", YoutubeColor, false, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    youtubeButton = MiniProfileButton("YouTube", YoutubeColor, false, ::bsml::BeatSaberUI::CreateClickableImage(
             rightTransform, 
             BundleLoader::bundle->youtubeIcon, 
             {0, 0}, 

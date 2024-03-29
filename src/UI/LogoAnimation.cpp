@@ -1,8 +1,8 @@
 #include "HMUI/Touchable.hpp"
 
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/GUIUtility.hpp"
@@ -21,7 +21,7 @@
 #include <string>
 #include <cmath>
 
-using namespace QuestUI;
+using namespace bsml;
 using namespace std;
 
 DEFINE_TYPE(BeatLeader, LogoAnimation);

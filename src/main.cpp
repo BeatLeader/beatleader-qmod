@@ -25,11 +25,11 @@
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "GlobalNamespace/AppInit.hpp"
 
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
-#include "questui/shared/QuestUI.hpp"
+#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/bsml.hpp"
 
 using namespace GlobalNamespace;
-using namespace QuestUI;
+using namespace bsml;
 
 ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
 
@@ -60,13 +60,13 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
 
 void replayPostCallback(ReplayUploadStatus status, const string& description, float progress, int code) {
     if (!ReplayRecorder::recording) {
-        QuestUI::MainThreadScheduler::Schedule([status, description, progress, code] {
+        bsml::MainThreadScheduler::Schedule([status, description, progress, code] {
             LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
             if (status == ReplayUploadStatus::finished) {
                 std::thread t ([] {
                     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                     PlayerController::Refresh(0, [](auto player, auto str){
-                        QuestUI::MainThreadScheduler::Schedule([]{
+                        bsml::MainThreadScheduler::Schedule([]{
                             LeaderboardUI::updatePlayerRank();
                         });
                     });
@@ -113,8 +113,8 @@ extern "C" void load() {
 
     LoggerContextObject logger = getLogger().WithContext("load");
 
-    QuestUI::Init();
-    QuestUI::Register::RegisterModSettingsViewController<BeatLeader::PreferencesViewController*>(modInfo, "BeatLeader");
+    bsml::Init();
+    bsml::Register::RegisterModSettingsViewController<BeatLeader::PreferencesViewController*>(modInfo, "BeatLeader");
     LeaderboardUI::retryCallback = []() {
         ReplayManager::RetryPosting(replayPostCallback);
     };
@@ -129,7 +129,7 @@ extern "C" void load() {
         //     synchronizer.emplace();
         // }
     });
-    QuestUI::MainThreadScheduler::Schedule([] {
+    bsml::MainThreadScheduler::Schedule([] {
         PlayerController::Refresh();
         LoggerContextObject logger = getLogger().WithContext("load");
         INSTALL_HOOK(logger, ModalView_Show);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "GlobalNamespace/IDifficultyBeatmap.hpp"
-#include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
+#include "GlobalNamespace/BeatmapKey.hpp"
+#include "GlobalNamespace/BeatmapLevel.hpp"
 #include "GlobalNamespace/PlayerSpecificSettings.hpp"
 #include "GlobalNamespace/GameplayModifiers.hpp"
 #include "GlobalNamespace/PracticeSettings.hpp"
@@ -15,8 +15,8 @@ using namespace GlobalNamespace;
 class MapEnhancer
 {
 public:
-    IDifficultyBeatmap* difficultyBeatmap;
-    IPreviewBeatmapLevel* previewBeatmapLevel;
+    BeatmapKey difficultyBeatmap;
+    BeatmapLevel* previewBeatmapLevel;
     GameplayModifiers* gameplayModifiers;
     PlayerSpecificSettings* playerSpecificSettings;
     PracticeSettings* practiceSettings;

@@ -2,8 +2,8 @@
 
 #include "HMUI/ModalView.hpp"
 
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/QuestUI.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/bsml.hpp"
 
 #include "include/UI/Components/SmoothHoverController.hpp"
 
@@ -18,9 +18,9 @@ namespace BeatLeader {
     class MiniProfileButton {
         public:
             MiniProfileButton() = default;
-            MiniProfileButton(std::string hint, UnityEngine::Color glowColor, bool labelOnLeft, QuestUI::ClickableImage* button) noexcept;
+            MiniProfileButton(std::string hint, UnityEngine::Color glowColor, bool labelOnLeft, bsml::ClickableImage* button) noexcept;
 
-            QuestUI::ClickableImage* button;
+            bsml::ClickableImage* button;
             HMUI::HoverHint* hint;
             BeatLeader::SmoothHoverController* hoverController;
             MiniProfileButtonState state;

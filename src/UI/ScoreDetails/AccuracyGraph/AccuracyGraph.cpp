@@ -54,7 +54,7 @@ void BeatLeader::AccuracyGraph::Construct(
 
     graphLineObject->set_material(BundleLoader::bundle->accuracyGraphLine);
     
-    underlineText = QuestUI::BeatSaberUI::CreateText(backgroundImage->get_transform(), "", UnityEngine::Vector2(2, -18));
+    underlineText = bsml::BeatSaberUI::CreateText(backgroundImage->get_transform(), "", UnityEngine::Vector2(2, -18));
 
     auto vrpointers = UnityEngine::Resources::FindObjectsOfTypeAll<VRUIControls::VRPointer *>();
     if (vrpointers.size() != 0) {

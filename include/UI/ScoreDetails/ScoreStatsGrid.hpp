@@ -2,8 +2,8 @@
 
 #include "HMUI/ModalView.hpp"
 
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/QuestUI.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/bsml.hpp"
 
 #include "include/Models/ScoreStats.hpp"
 #include "include/UI/PlayerAvatar.hpp"

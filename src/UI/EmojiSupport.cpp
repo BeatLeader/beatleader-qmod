@@ -13,7 +13,7 @@
 #include "UnityEngine/Graphics.hpp"
 #include "UnityEngine/TextCore/GlyphMetrics.hpp"
 #include "UnityEngine/TextCore/GlyphRect.hpp"
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/utils/logging.hpp"
