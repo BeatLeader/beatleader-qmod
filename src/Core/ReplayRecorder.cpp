@@ -545,27 +545,26 @@ namespace ReplayRecorder {
     void StartRecording(
         function<void(void)> const &started,
         function<void(Replay const &, PlayEndData, bool)> const &callback) {
-        LoggerContextObject logger = getLogger().WithContext("load");
 
-        getLogger().info("Installing ReplayRecorder hooks...");
+        BeatLeaderLogger.info("Installing ReplayRecorder hooks...");
 
-        INSTALL_HOOK(logger, ProcessResultsSolo);
-        INSTALL_HOOK(logger, SinglePlayerInstallBindings);
-        INSTALL_HOOK(logger, SpawnNote);
-        INSTALL_HOOK(logger, SpawnObstacle);
-        INSTALL_HOOK(logger, BeatMapStart);
-        INSTALL_HOOK(logger, LevelPause);
-        INSTALL_HOOK(logger, LevelUnpause);
-        INSTALL_HOOK(logger, Tick);
-        INSTALL_HOOK(logger, ComputeSwingRating);
-        INSTALL_HOOK(logger, ProcessNewSwingData);
-        INSTALL_HOOK(logger, PlayerHeightDetectorStart);
-        INSTALL_HOOK(logger, ScoreControllerStart);
-        INSTALL_HOOK(logger, ScoreControllerLateUpdate);
-        INSTALL_HOOK(logger, ProcessResultsMultiplayer);
-        INSTALL_HOOK(logger, HandleNoteControllerNoteWasCut);
+        INSTALL_HOOK(BeatLeaderLogger, ProcessResultsSolo);
+        INSTALL_HOOK(BeatLeaderLogger, SinglePlayerInstallBindings);
+        INSTALL_HOOK(BeatLeaderLogger, SpawnNote);
+        INSTALL_HOOK(BeatLeaderLogger, SpawnObstacle);
+        INSTALL_HOOK(BeatLeaderLogger, BeatMapStart);
+        INSTALL_HOOK(BeatLeaderLogger, LevelPause);
+        INSTALL_HOOK(BeatLeaderLogger, LevelUnpause);
+        INSTALL_HOOK(BeatLeaderLogger, Tick);
+        INSTALL_HOOK(BeatLeaderLogger, ComputeSwingRating);
+        INSTALL_HOOK(BeatLeaderLogger, ProcessNewSwingData);
+        INSTALL_HOOK(BeatLeaderLogger, PlayerHeightDetectorStart);
+        INSTALL_HOOK(BeatLeaderLogger, ScoreControllerStart);
+        INSTALL_HOOK(BeatLeaderLogger, ScoreControllerLateUpdate);
+        INSTALL_HOOK(BeatLeaderLogger, ProcessResultsMultiplayer);
+        INSTALL_HOOK(BeatLeaderLogger, HandleNoteControllerNoteWasCut);
 
-        getLogger().info("Installed all ReplayRecorder hooks!");
+        BeatLeaderLogger.info("Installed all ReplayRecorder hooks!");
 
         startedCallback = started;
         replayCallback = callback;

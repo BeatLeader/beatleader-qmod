@@ -103,7 +103,7 @@ namespace WebUtils {
             s.append((char*)contents, newLength);
         } catch(std::bad_alloc &e) {
             //handle memory problem
-            getLogger().critical("Failed to allocate string of size: %lu", newLength);
+            BeatLeaderLogger.critical("Failed to allocate string of size: %lu", newLength);
             return 0;
         }
         return newLength;
@@ -170,7 +170,7 @@ namespace WebUtils {
         auto res = curl_easy_perform(curl);
         /* Check for errors */ 
         if (res != CURLE_OK) {
-            getLogger().critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+            BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
         }
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
         curl_easy_cleanup(curl);
@@ -245,7 +245,7 @@ namespace WebUtils {
                 auto res = curl_easy_perform(curl);
                 /* Check for errors */ 
                 if (res != CURLE_OK) {
-                    getLogger().critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);
@@ -311,7 +311,7 @@ namespace WebUtils {
                 auto res = curl_easy_perform(curl);
                 /* Check for errors */ 
                 if (res != CURLE_OK) {
-                    getLogger().critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 if (val) {
@@ -378,7 +378,7 @@ namespace WebUtils {
                 CURLcode res = curl_easy_perform(curl);
                 /* Check for errors */
                 if (res != CURLE_OK) {
-                    getLogger().critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);
@@ -449,7 +449,7 @@ namespace WebUtils {
                 CURLcode res = curl_easy_perform(curl);
                 /* Check for errors */
                 if (res != CURLE_OK) {
-                    getLogger().critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);
@@ -556,7 +556,7 @@ namespace WebUtils {
                 CURLcode res = curl_easy_perform(curl);
                 /* Check for errors */
                 if (res != CURLE_OK) {
-                    getLogger().critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);

@@ -146,7 +146,7 @@ MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpri
             if (sprite != NULL) {
                 DrawSprite((UnityEngine::Texture*)sprite->get_texture(), indexToUse, glyph, assetToUse);
             } else {
-                getLogger().info("%s", (WebUtils::API_URL + "unicode/" + utf8ToHex(unicode) + ".png").c_str());
+                BeatLeaderLogger.info("%s", (WebUtils::API_URL + "unicode/" + utf8ToHex(unicode) + ".png").c_str());
             }
             
             loadingCount--;
@@ -187,9 +187,8 @@ void EmojiSupport::AddSupport(TMPro::TextMeshProUGUI* text) {
         currentEmojiIndex = 0;
     }
     if (!hooksInstalled) {
-        LoggerContextObject logger = getLogger().WithContext("load");
-        INSTALL_HOOK(logger, SearchForSpriteByUnicode);
-        INSTALL_HOOK(logger, SetArraySizes);
+        INSTALL_HOOK(BeatLeaderLogger, SearchForSpriteByUnicode);
+        INSTALL_HOOK(BeatLeaderLogger, SetArraySizes);
 
         hooksInstalled = true;
     }

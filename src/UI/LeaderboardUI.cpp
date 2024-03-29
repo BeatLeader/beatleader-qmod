@@ -547,7 +547,7 @@ namespace LeaderboardUI {
                         ClanScore currentScore = ClanScore(score);
                         clanScoreVector[index] = currentScore;
 
-                        getLogger().info("ClanScore");
+                        BeatLeaderLogger.info("ClanScore");
                         LeaderboardTableView::ScoreData* scoreData = LeaderboardTableView::ScoreData::New_ctor(
                             currentScore.modifiedScore, 
                             FormatUtils::FormatClanScore(currentScore), 
@@ -1299,14 +1299,12 @@ namespace LeaderboardUI {
     void setup() {
         if (hooksInstalled) return;
 
-        LoggerContextObject logger = getLogger().WithContext("load");
-
-        INSTALL_HOOK(logger, LeaderboardActivate);
-        INSTALL_HOOK(logger, LeaderboardDeactivate);
-        INSTALL_HOOK(logger, LocalLeaderboardDidActivate);
-        INSTALL_HOOK(logger, RefreshLeaderboard);
-        INSTALL_HOOK(logger, LeaderboardCellSource);
-        INSTALL_HOOK(logger, SegmentedControlHandleCellSelection);
+        INSTALL_HOOK(BeatLeaderLogger, LeaderboardActivate);
+        INSTALL_HOOK(BeatLeaderLogger, LeaderboardDeactivate);
+        INSTALL_HOOK(BeatLeaderLogger, LocalLeaderboardDidActivate);
+        INSTALL_HOOK(BeatLeaderLogger, RefreshLeaderboard);
+        INSTALL_HOOK(BeatLeaderLogger, LeaderboardCellSource);
+        INSTALL_HOOK(BeatLeaderLogger, SegmentedControlHandleCellSelection);
 
         PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
             bsml::MainThreadScheduler::Schedule([] {

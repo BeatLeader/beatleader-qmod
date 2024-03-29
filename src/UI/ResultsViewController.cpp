@@ -101,8 +101,7 @@ namespace ResultsView {
     }
 
     void setup() {
-        LoggerContextObject logger = getLogger().WithContext("load");
-        INSTALL_HOOK(logger, GetLastReplayStateHook);
-        INSTALL_HOOK(logger, ResultsViewDidActivate);
+        INSTALL_HOOK(BeatLeaderLogger, GetLastReplayStateHook);
+        INSTALL_HOOK(BeatLeaderLogger, ResultsViewDidActivate);
     }
 }

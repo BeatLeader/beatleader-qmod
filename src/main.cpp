@@ -25,28 +25,23 @@
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "GlobalNamespace/AppInit.hpp"
 
-#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
-#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML.hpp"
 
 using namespace GlobalNamespace;
-using namespace bsml;
+using namespace BSML;
 
-ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
-
-// Returns a logger, useful for printing debug messages
-Logger& getLogger() {
-    static Logger* logger = new Logger(modInfo, LoggerOptions(false, true));
-    return *logger;
-}
+modloader::ModInfo modInfo{MOD_ID, VERSION, 0};; // Stores the ID and version of our mod, and is sent to the modloader upon startup
 
 // Called at the early stages of game loading
-extern "C" void setup(ModInfo& info) {
-    info.id = ID;
-    info.version = VERSION;
-    modInfo = info;
-	
-    getModConfig().Init(modInfo); // Load the config file
-    getLogger().info("Completed setup!");
+MOD_EXPORT void setup(CModInfo *info) noexcept {
+    *info = modInfo.to_c();
+
+    getConfig().Load();
+
+    Paper::Logger::RegisterFileContextId(BeatLeaderLogger.tag);
+
+    BeatLeaderLogger.info("Completed setup!");
 }
 
 MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransitionsHelper* self, ::System::Action_1<::Zenject::DiContainer*>* finishCallback) {
@@ -60,13 +55,13 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
 
 void replayPostCallback(ReplayUploadStatus status, const string& description, float progress, int code) {
     if (!ReplayRecorder::recording) {
-        bsml::MainThreadScheduler::Schedule([status, description, progress, code] {
+        BSML::MainThreadScheduler::Schedule([status, description, progress, code] {
             LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
             if (status == ReplayUploadStatus::finished) {
                 std::thread t ([] {
                     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                     PlayerController::Refresh(0, [](auto player, auto str){
-                        bsml::MainThreadScheduler::Schedule([]{
+                        BSML::MainThreadScheduler::Schedule([]{
                             LeaderboardUI::updatePlayerRank();
                         });
                     });
@@ -105,16 +100,14 @@ MAKE_HOOK_MATCH(ModalView_Show, &HMUI::ModalView::Show, void, HMUI::ModalView* s
 }
 
 // Called later on in the game loading - a good time to install function hooks
-extern "C" void load() {
+MOD_EXPORT extern "C" void late_load() {
     il2cpp_functions::Init();
     custom_types::Register::AutoRegister();
     WebUtils::refresh_urls();
     FileManager::EnsureReplaysFolderExists();
 
-    LoggerContextObject logger = getLogger().WithContext("load");
-
-    bsml::Init();
-    bsml::Register::RegisterModSettingsViewController<BeatLeader::PreferencesViewController*>(modInfo, "BeatLeader");
+    BSML::Init();
+    BSML::Register::RegisterModSettingsViewController<BeatLeader::PreferencesViewController*>(modInfo, "BeatLeader");
     LeaderboardUI::retryCallback = []() {
         ReplayManager::RetryPosting(replayPostCallback);
     };
@@ -129,10 +122,9 @@ extern "C" void load() {
         //     synchronizer.emplace();
         // }
     });
-    bsml::MainThreadScheduler::Schedule([] {
+    BSML::MainThreadScheduler::Schedule([] {
         PlayerController::Refresh();
-        LoggerContextObject logger = getLogger().WithContext("load");
-        INSTALL_HOOK(logger, ModalView_Show);
+        INSTALL_HOOK(BeatLeaderLogger, ModalView_Show);
     });
 
     PlaylistSynchronizer::SyncPlaylist();
@@ -145,10 +137,10 @@ extern "C" void load() {
             ReplayManager::ProcessReplay(replay, status, skipUpload, replayPostCallback); 
         });
 
-    getLogger().info("Installing main hooks...");
+    BeatLeaderLogger.info("Installing main hooks...");
     
-    INSTALL_HOOK(logger, Restart);
-    INSTALL_HOOK(logger, AppInitStart);
+    INSTALL_HOOK(BeatLeaderLogger, Restart);
+    INSTALL_HOOK(BeatLeaderLogger, AppInitStart);
 
-    getLogger().info("Installed main hooks!");
+    BeatLeaderLogger.info("Installed main hooks!");
 }

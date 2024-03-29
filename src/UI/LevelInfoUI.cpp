@@ -247,10 +247,8 @@ namespace LevelInfoUI {
     }
 
     void setup() {
-        LoggerContextObject logger = getLogger().WithContext("load");
-
-        INSTALL_HOOK(logger, LevelRefreshContent);
-        INSTALL_HOOK(logger, DidDeactivate);
+        INSTALL_HOOK(BeatLeaderLogger, LevelRefreshContent);
+        INSTALL_HOOK(BeatLeaderLogger, DidDeactivate);
 
         for(auto& [key, value] : Modloader::getMods()){
             if (key == "BetterSongList") {

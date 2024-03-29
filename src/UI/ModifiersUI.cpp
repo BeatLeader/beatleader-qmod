@@ -103,7 +103,7 @@ namespace ModifiersUI {
         ModifierStart(self);
 
         string key = modifierKeyFromName[self->get_gameplayModifier()->get_modifierNameLocalizationKey()];
-        getLogger().info("%s", key.c_str());
+        BeatLeaderLogger.info("%s", key.c_str());
         if(!multiActive)
             allModifierToggles[key] = self;
     }
@@ -176,12 +176,10 @@ namespace ModifiersUI {
     }
 
     void setup() {
-        LoggerContextObject logger = getLogger().WithContext("load");
-
-        INSTALL_HOOK(logger, ModifierStart);
-        INSTALL_HOOK(logger, RefreshMultipliers);
-        INSTALL_HOOK(logger, ActivateMultiplayer);
-        INSTALL_HOOK(logger, DeActivateMultiplayer);
+        INSTALL_HOOK(BeatLeaderLogger, ModifierStart);
+        INSTALL_HOOK(BeatLeaderLogger, RefreshMultipliers);
+        INSTALL_HOOK(BeatLeaderLogger, ActivateMultiplayer);
+        INSTALL_HOOK(BeatLeaderLogger, DeActivateMultiplayer);
     }
 
     void SetModifiersActive(bool active) {
