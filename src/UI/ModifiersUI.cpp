@@ -125,7 +125,7 @@ namespace ModifiersUI {
             }
 
             // Set the text underneath the modifier
-            value->multiplierText->SetText(modifierSubText);
+            value->_multiplierText->SetText(modifierSubText, true);
         }
         return refreshMultiplierAndMaxRank();
     }
@@ -137,7 +137,7 @@ namespace ModifiersUI {
         if (modifiersPanel) {
 
             // Now we iterate all modifiers to set the totalMultiplier (% value on top) and the max achievable rank
-            auto modifierParams = modifiersPanel->gameplayModifiersModel->CreateModifierParamsList(modifiersPanel->gameplayModifiers);
+            auto modifierParams = modifiersPanel->_gameplayModifiersModel->CreateModifierParamsList(modifiersPanel->gameplayModifiers);
 
             float totalMultiplier = 1;
 
@@ -165,12 +165,12 @@ namespace ModifiersUI {
             if (totalMultiplier < 0) totalMultiplier = 0; // thanks Beat Games for Zen mode -1000%
 
             // Correct texts & color of total multiplier & rank with our values
-            modifiersPanel->totalMultiplierValueText->SetText((totalMultiplier > 1 ? "+" : "") + to_string_wprecision(totalMultiplier * 100.0f, 1) + "%");
-            modifiersPanel->maxRankValueText->SetText(getRankForMultiplier(totalMultiplier));
+            modifiersPanel->_totalMultiplierValueText->SetText((totalMultiplier > 1 ? "+" : "") + to_string_wprecision(totalMultiplier * 100.0f, 1) + "%", true);
+            modifiersPanel->_maxRankValueText->SetText(getRankForMultiplier(totalMultiplier), true);
 
-            auto color = totalMultiplier >= 1 ? modifiersPanel->positiveColor : modifiersPanel->negativeColor;
-            modifiersPanel->totalMultiplierValueText->set_color(color);
-            modifiersPanel->maxRankValueText->set_color(color);
+            auto color = totalMultiplier >= 1 ? modifiersPanel->_positiveColor : modifiersPanel->_negativeColor;
+            modifiersPanel->_totalMultiplierValueText->set_color(color);
+            modifiersPanel->_maxRankValueText->set_color(color);
         }
         return ratingSelected;
     }
@@ -189,7 +189,7 @@ namespace ModifiersUI {
             for (auto& [key, value] : allModifierToggles) {
                 if(songModifiers.contains(key)){
                     float modifierValue = value->gameplayModifier->multiplier;
-                    value->multiplierText->SetText((modifierValue > 0 ? "+" : "") + to_string_wprecision(modifierValue * 100.0f, 1) + "%");
+                    value->_multiplierText->SetText((modifierValue > 0 ? "+" : "") + to_string_wprecision(modifierValue * 100.0f, 1) + "%", true);
                 }
             }
         }

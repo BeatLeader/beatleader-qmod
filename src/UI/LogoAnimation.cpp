@@ -2,7 +2,7 @@
 
 #include "bsml/shared/bsml.hpp"
 #include "bsml/shared/BSML-Lite.hpp"
-#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/GUIUtility.hpp"
@@ -21,7 +21,7 @@
 #include <string>
 #include <cmath>
 
-using namespace bsml;
+using namespace BSML;
 using namespace std;
 
 DEFINE_TYPE(BeatLeader, LogoAnimation);

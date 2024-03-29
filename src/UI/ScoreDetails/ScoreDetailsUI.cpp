@@ -16,15 +16,15 @@
 #include "HMUI/ImageView.hpp"
 #include "UnityEngine/Component.hpp"
 
-#include "bsml/shared/CustomTypes/Components/Backgroundable.hpp"
-#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML/Components/Backgroundable.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "main.hpp"
 
 #include <sstream>
 #include <filesystem>
 
-using namespace bsml::BeatSaberUI;
+using namespace BSML::Lite;
 using namespace GlobalNamespace;
 
 static UnityEngine::Color SelectedColor = UnityEngine::Color(0.0f, 0.4f, 1.0f, 1.0f);
@@ -62,7 +62,7 @@ void BeatLeader::initScoreDetailsPopup(
 
     auto modalTransform = modalUI->modal->get_transform();
 
-    auto playerAvatarImage = ::bsml::BeatSaberUI::CreateImage(modalTransform, NULL, UnityEngine::Vector2(0, 30), UnityEngine::Vector2(24, 24));
+    auto playerAvatarImage = ::BSML::Lite::CreateImage(modalTransform, NULL, UnityEngine::Vector2(0, 30), UnityEngine::Vector2(24, 24));
     modalUI->playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
     modalUI->playerAvatar->Init(playerAvatarImage);
 
@@ -91,36 +91,36 @@ void BeatLeader::initScoreDetailsPopup(
     modalUI->grid = ScoreStatsGrid(modalUI->modal);
     modalUI->graph = ScoreStatsGraph(modalUI->modal);
 
-    modalUI->generalButton = ::bsml::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->overview1Icon, UnityEngine::Vector2(-14, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->generalButton = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->overview1Icon, UnityEngine::Vector2(-14, -24), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(0);
     });
-    ::bsml::BeatSaberUI::AddHoverHint(modalUI->generalButton, "General score info");
+    ::BSML::Lite::AddHoverHint(modalUI->generalButton, "General score info");
 
-    modalUI->additionalButton = ::bsml::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->overview2Icon, UnityEngine::Vector2(-7, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->additionalButton = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->overview2Icon, UnityEngine::Vector2(-7, -24), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(1);
     });
-    ::bsml::BeatSaberUI::AddHoverHint(modalUI->generalButton, "General score info");
+    ::BSML::Lite::AddHoverHint(modalUI->generalButton, "General score info");
 
-    modalUI->overviewButton = ::bsml::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->detailsIcon, UnityEngine::Vector2(0, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->overviewButton = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->detailsIcon, UnityEngine::Vector2(0, -24), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(2);
     });
-    ::bsml::BeatSaberUI::AddHoverHint(modalUI->overviewButton, "Detailed score info");
+    ::BSML::Lite::AddHoverHint(modalUI->overviewButton, "Detailed score info");
 
-    modalUI->gridButton = ::bsml::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->gridIcon, UnityEngine::Vector2(7, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->gridButton = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->gridIcon, UnityEngine::Vector2(7, -24), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(3);
     });
-    ::bsml::BeatSaberUI::AddHoverHint(modalUI->gridButton, "Note accuracy distribution");
+    ::BSML::Lite::AddHoverHint(modalUI->gridButton, "Note accuracy distribution");
 
-    modalUI->graphButton = ::bsml::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->graphIcon, UnityEngine::Vector2(14, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+    modalUI->graphButton = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->graphIcon, UnityEngine::Vector2(14, -24), UnityEngine::Vector2(5, 5), [modalUI](){
         modalUI->selectTab(4);
     });
-    ::bsml::BeatSaberUI::AddHoverHint(modalUI->graphButton, "Accuracy timeline graph");
+    ::BSML::Lite::AddHoverHint(modalUI->graphButton, "Accuracy timeline graph");
 
     if (ReplayInstalled()) {
-        modalUI->replayButton = ::bsml::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->replayIcon, UnityEngine::Vector2(-24.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
+        modalUI->replayButton = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->replayIcon, UnityEngine::Vector2(-24.5, -24), UnityEngine::Vector2(5, 5), [modalUI](){
             modalUI->playReplay();
         });
-        ::bsml::BeatSaberUI::AddHoverHint(modalUI->replayButton, "Watch the replay");
+        ::BSML::Lite::AddHoverHint(modalUI->replayButton, "Watch the replay");
     }
 
     modalUI->setButtonsMaterial();
@@ -171,7 +171,7 @@ void BeatLeader::ScoreDetailsPopup::setScore(const Score& score) {
     selectTab(0);
 }
 
-void selectButton(bsml::ClickableImage* button, bool selected) {
+void selectButton(BSML::ClickableImage* button, bool selected) {
     button->set_defaultColor(selected ? SelectedColor : FadedColor);
     button->set_highlightColor(selected ? SelectedColor : FadedHoverColor);
 }
@@ -234,13 +234,13 @@ void BeatLeader::ScoreDetailsPopup::selectTab(int index) {
         WebUtils::GetJSONAsync(url, [self, index](long status, bool error, rapidjson::Document const& result) {
             if (status == 200 && !error && result.HasMember("scoreGraphTracker")) {
                 scoreStats = ScoreStats(result);
-                bsml::MainThreadScheduler::Schedule([self, index] {
+                BSML::MainThreadScheduler::Schedule([self, index] {
                     self->scoreStatsFetched = true;
                     self->loadingText->get_gameObject()->SetActive(false);
                     self->selectTab(index);
                 });
             } else {
-                bsml::MainThreadScheduler::Schedule([self] {
+                BSML::MainThreadScheduler::Schedule([self] {
                     self->loadingText->SetText("Failed to fetch stats");
                 });
 
@@ -279,7 +279,7 @@ void BeatLeader::ScoreDetailsPopup::playReplay() {
     WebUtils::GetAsyncFile(replayLink, file, 64,
         [file, self](long httpCode) {
             if (httpCode == 200) {
-                bsml::MainThreadScheduler::Schedule([file, self] {
+                BSML::MainThreadScheduler::Schedule([file, self] {
                     if ((getModConfig().ShowReplaySettings.GetValue() && PlayReplayFromFile(file)) ||  (!getModConfig().ShowReplaySettings.GetValue() && PlayReplayFromFileWithoutSettings(file))) {
                         self->modal->Hide(true, nullptr);
                         ReplayManager::lastReplayFilename = file;
@@ -288,12 +288,12 @@ void BeatLeader::ScoreDetailsPopup::playReplay() {
                     }
                 });
             } else {
-                bsml::MainThreadScheduler::Schedule([file, self] {
+                BSML::MainThreadScheduler::Schedule([file, self] {
                     self->loadingText->SetText("Failed to download the replay");
                 });
             }
     }, [self](float progress) {
-        bsml::MainThreadScheduler::Schedule([progress, self] {
+        BSML::MainThreadScheduler::Schedule([progress, self] {
             self->loadingText->SetText("Downloading: " + to_string_wprecision(progress, 2) + "%");
         });
     });

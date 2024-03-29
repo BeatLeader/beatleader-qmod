@@ -15,7 +15,7 @@
 #include <string>
 #include <cmath>
 
-using namespace bsml;
+using namespace BSML;
 using namespace std;
 
 DEFINE_TYPE(BeatLeader, VotingButton);
@@ -25,7 +25,7 @@ static int GradientValuePropertyId;
 static int StatePropertyId;
 static int TintPropertyId;
 
-void BeatLeader::VotingButton::Init(bsml::ClickableImage* imageView) {
+void BeatLeader::VotingButton::Init(BSML::ClickableImage* imageView) {
     this->imageView = imageView;
 
     this->materialInstance = UnityEngine::Object::Instantiate(BundleLoader::bundle->VotingButtonMaterial);
@@ -34,7 +34,7 @@ void BeatLeader::VotingButton::Init(bsml::ClickableImage* imageView) {
     imageView->set_defaultColor(UnityEngine::Color(0.0, 0.0, 0.0, 1.0));
     imageView->set_highlightColor(UnityEngine::Color(1.0, 0.0, 0.0, 1.0));
 
-    this->hoverHint = bsml::BeatSaberUI::AddHoverHint(imageView, "Rank voting");
+    this->hoverHint = BSML::Lite::AddHoverHint(imageView, "Rank voting");
 
     SpinnerValuePropertyId = UnityEngine::Shader::PropertyToID("_SpinnerValue");
     GradientValuePropertyId = UnityEngine::Shader::PropertyToID("_GradientValue");

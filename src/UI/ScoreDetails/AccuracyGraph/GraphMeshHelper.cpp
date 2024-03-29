@@ -19,7 +19,7 @@ BeatLeader::GraphMeshHelper::GraphMeshHelper(int horizontalResolution, int verti
 }
 
 void BeatLeader::GraphMeshHelper::SetPoints(ArrayW<UnityEngine::Vector2> points) {
-    int size = points.Length();
+    int size = points.size();
 
     if (size <= 1) {
         spline = nullopt;
@@ -52,17 +52,17 @@ void BeatLeader::GraphMeshHelper::PopulateMesh(UnityEngine::UI::VertexHelper* vh
             float verticalRatio = ((float) rowIndex / verticalResolution - 0.5) * 2.0;
             int vertexIndex = GetVertexIndex(rowIndex, columnIndex);
 
-            auto widthOffset = verticalRatio * lineThickness * screenNodeNormal;
-            auto screenVertexPosition = screenNodePosition + widthOffset;
+            auto widthOffset =  UnityEngine::Vector2::op_Multiply(UnityEngine::Vector2::op_Multiply(screenNodeNormal, lineThickness), verticalRatio);
+            auto screenVertexPosition = UnityEngine::Vector2::op_Addition(widthOffset, screenNodePosition);
             auto screenNormalizedPosition = svt.NormalizeScreenPosition(screenVertexPosition);
 
             vh->AddVert(
                 UnityEngine::Vector3(screenVertexPosition.x, screenVertexPosition.y, 0),
-                UnityEngine::Color32(1, 1, 1, 1),
-                uv0[vertexIndex],
-                screenNormalizedPosition,
-                UnityEngine::Vector2(canvasRadius, 0),
-                node.position,
+                UnityEngine::Color32(0, 1, 1, 1, 1),
+                UnityEngine::Vector4::op_Implicit___UnityEngine__Vector4(uv0[vertexIndex]),
+                UnityEngine::Vector4::op_Implicit___UnityEngine__Vector4(screenNormalizedPosition),
+                UnityEngine::Vector4::op_Implicit___UnityEngine__Vector4(UnityEngine::Vector2(canvasRadius, 0)),
+                UnityEngine::Vector4::op_Implicit___UnityEngine__Vector4(node.position),
                 UnityEngine::Vector3{1,1,1},
                 UnityEngine::Vector4{1,1,1,1}
             );

@@ -18,9 +18,9 @@ namespace BeatLeader {
     class MiniProfileButton {
         public:
             MiniProfileButton() = default;
-            MiniProfileButton(std::string hint, UnityEngine::Color glowColor, bool labelOnLeft, bsml::ClickableImage* button) noexcept;
+            MiniProfileButton(std::string hint, UnityEngine::Color glowColor, bool labelOnLeft, BSML::ClickableImage* button) noexcept;
 
-            bsml::ClickableImage* button;
+            BSML::ClickableImage* button;
             HMUI::HoverHint* hint;
             BeatLeader::SmoothHoverController* hoverController;
             MiniProfileButtonState state;

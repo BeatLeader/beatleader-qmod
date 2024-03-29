@@ -31,8 +31,6 @@
 using namespace GlobalNamespace;
 using namespace BSML;
 
-modloader::ModInfo modInfo{MOD_ID, VERSION, 0};; // Stores the ID and version of our mod, and is sent to the modloader upon startup
-
 // Called at the early stages of game loading
 MOD_EXPORT void setup(CModInfo *info) noexcept {
     *info = modInfo.to_c();

@@ -2,8 +2,6 @@
 #include "include/API/PlayerController.hpp"
 
 #include "GlobalNamespace/OVRPlugin.hpp"
-#include "GlobalNamespace/OVRPlugin_Controller.hpp"
-#include "GlobalNamespace/OVRPlugin_SystemHeadset.hpp"
 
 void UserEnhancer::Enhance(Replay& replay)
 {

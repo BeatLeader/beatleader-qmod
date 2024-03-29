@@ -16,7 +16,7 @@ class MapEnhancer
 {
 public:
     BeatmapKey difficultyBeatmap;
-    BeatmapLevel* previewBeatmapLevel;
+    BeatmapLevel* beatmapLevel;
     GameplayModifiers* gameplayModifiers;
     PlayerSpecificSettings* playerSpecificSettings;
     PracticeSettings* practiceSettings;

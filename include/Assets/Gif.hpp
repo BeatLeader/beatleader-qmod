@@ -118,10 +118,10 @@ struct Gif
 
                 if (frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0])
                 {
-                    pixelData[locWithinFrame] = Color32(0xff, 0xff, 0xff, 0);
+                    pixelData[locWithinFrame] = Color32(0, 0xff, 0xff, 0xff, 0);
                 } else {
                     color = &colorMap->Colors[frame->RasterBits[loc]];
-                    pixelData[locWithinFrame] = Color32(color->Red, color->Green, color->Blue, 0xff);
+                    pixelData[locWithinFrame] = Color32(0, color->Red, color->Green, color->Blue, 0xff);
                 }
                 
             }
@@ -258,7 +258,7 @@ private:
         }
 
         vectorwrapbuf(Array<CharT>* arr) {
-            this->std::basic_streambuf<CharT, TraitsT>::setg(arr->values, arr->values, arr->values + arr->Length());
+            this->std::basic_streambuf<CharT, TraitsT>::setg(arr->_values, arr->_values, arr->_values + arr->get_Length());
         }
     };
 

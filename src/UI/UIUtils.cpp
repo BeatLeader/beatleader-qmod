@@ -14,7 +14,7 @@
 #include "UnityEngine/HideFlags.hpp"
 
 // Access into internal bsml structures
-namespace bsml::ModSettingsInfos {
+namespace BSML::ModSettingsInfos {
     struct ModSettingsInfo {
         ModInfo modInfo;
         bool showModInfo;
@@ -39,7 +39,7 @@ namespace UIUtils {
 
     HMUI::ImageView* getRoundRectSprite() {
         if (!roundRectSprite) {
-            roundRectSprite = bsml::ArrayUtil::First(UnityEngine::Resources::FindObjectsOfTypeAll<HMUI::ImageView*>(), [](HMUI::ImageView* image){ 
+            roundRectSprite = BSML::ArrayUtil::First(UnityEngine::Resources::FindObjectsOfTypeAll<HMUI::ImageView*>(), [](HMUI::ImageView* image){ 
                 auto sprite = image->get_sprite();
                 if (!sprite || sprite->get_name() != "RoundRect10") return false;
 
@@ -89,7 +89,7 @@ namespace UIUtils {
 
     void OpenSettings() {
         // Get all of the mod settings infos, and get the one that is for beatleader
-        for (auto& s : bsml::ModSettingsInfos::get()) {
+        for (auto& s : BSML::ModSettingsInfos::get()) {
             if (s.modInfo.id == MOD_ID) {
                 s.Present();
             }

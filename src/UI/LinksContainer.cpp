@@ -10,12 +10,12 @@
 #include "HMUI/ImageView.hpp"
 #include "UnityEngine/Component.hpp"
 
-#include "bsml/shared/CustomTypes/Components/Backgroundable.hpp"
-#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML/Components/Backgroundable.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "main.hpp"
 
-using namespace bsml::BeatSaberUI;
+using namespace BSML::Lite;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
@@ -29,7 +29,7 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     }
     if (modalUI == nullptr) modalUI = (BeatLeader::LinksContainerPopup*) malloc(sizeof(BeatLeader::LinksContainerPopup));
 
-    auto container = CreateModal(parent, UnityEngine::Vector2(75, 50), [](HMUI::ModalView *modal) {}, true);
+    auto container = CreateModal(parent, UnityEngine::Vector2(75, 50), []() {}, true);
     modalUI->modal = container;
 
     auto modalTransform = container->get_transform();
@@ -37,53 +37,53 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(-4.0, 14.0));
     CreateText(modalTransform, "<u>These buttons will open the browser!", UnityEngine::Vector2(-4.0, 4.0));
 
-    modalUI->profile = ::bsml::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->websiteLinkIcon, UnityEngine::Vector2(-24, -1), UnityEngine::Vector2(22, 6), [](){
+    modalUI->profile = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->websiteLinkIcon, [](){
         string url = WebUtils::WEB_URL;
         if (PlayerController::currentPlayer != std::nullopt) {
             url += "u/" + PlayerController::currentPlayer->id;
         }
         UnityEngine::Application::OpenURL(url);
-    });
-    ::bsml::BeatSaberUI::AddHoverHint(modalUI->profile, "Your web profile");
+    }, UnityEngine::Vector2(-24, -1), UnityEngine::Vector2(22, 6));
+    ::BSML::Lite::AddHoverHint(modalUI->profile, "Your web profile");
 
-    modalUI->discord = ::bsml::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->discordLinkIcon, UnityEngine::Vector2(0, -1), UnityEngine::Vector2(22, 6), [](){
+    modalUI->discord = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->discordLinkIcon, [](){
         UnityEngine::Application::OpenURL("https://discord.gg/2RG5YVqtG6");
-    });
-    ::bsml::BeatSaberUI::AddHoverHint(modalUI->discord, "Our discord server");
+    }, UnityEngine::Vector2(0, -1), UnityEngine::Vector2(22, 6));
+    ::BSML::Lite::AddHoverHint(modalUI->discord, "Our discord server");
 
-    modalUI->patreon = ::bsml::BeatSaberUI::CreateClickableImage(modalTransform, BundleLoader::bundle->patreonLinkIcon, UnityEngine::Vector2(24, -1), UnityEngine::Vector2(22, 6), [](){
+    modalUI->patreon = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->patreonLinkIcon, [](){
         UnityEngine::Application::OpenURL("https://patreon.com/BeatLeader");
-    });
-    ::bsml::BeatSaberUI::AddHoverHint(modalUI->patreon, "Patreon page");
+    }, UnityEngine::Vector2(24, -1), UnityEngine::Vector2(22, 6));
+    ::BSML::Lite::AddHoverHint(modalUI->patreon, "Patreon page");
 
     WebUtils::GetJSONAsync(WebUtils::API_URL + "mod/lastVersions", [modalUI](long status, bool error, rapidjson::Document const& result){ 
         if (status == 200 && !error && result.HasMember("quest")) {
             string version = result["quest"].GetObject()["version"].GetString();
-            bsml::MainThreadScheduler::Schedule([modalUI, version] {
+            BSML::MainThreadScheduler::Schedule([modalUI, version] {
                 if (modInfo.version == version) {
-                    modalUI->versionText->SetText("<color=#88FF88>Mod is up to date!");
+                    modalUI->versionText->SetText("<color=#88FF88>Mod is up to date!", true);
                 } else  {
-                    modalUI->versionText->SetText("<color=#FF8888>Mod is outdated!");
+                    modalUI->versionText->SetText("<color=#FF8888>Mod is outdated!", true);
                 }
             });
         }
     });
 
     CreateText(modalTransform, "<u>Install playlists. You need to sync them yourself!", UnityEngine::Vector2(-4.0, -11.0));
-    modalUI->nominated = ::bsml::BeatSaberUI::CreateUIButton(modalTransform, "Nominated", UnityEngine::Vector2(-24.0, -19.0), [modalUI]() {
+    modalUI->nominated = ::BSML::Lite::CreateUIButton(modalTransform, "Nominated", UnityEngine::Vector2(-24.0, -19.0), [modalUI]() {
        PlaylistSynchronizer::InstallPlaylist(WebUtils::API_URL + "playlist/nominated", "BL Nominated");
     });
-    ::bsml::BeatSaberUI::AddHoverHint(modalUI->nominated, "Playlist of nominated maps");
+    ::BSML::Lite::AddHoverHint(modalUI->nominated, "Playlist of nominated maps");
 
-    modalUI->qualified = ::bsml::BeatSaberUI::CreateUIButton(modalTransform, "Qualified", UnityEngine::Vector2(0, -19.0), [modalUI]() {
+    modalUI->qualified = ::BSML::Lite::CreateUIButton(modalTransform, "Qualified", UnityEngine::Vector2(0, -19.0), [modalUI]() {
         PlaylistSynchronizer::InstallPlaylist(WebUtils::API_URL + "playlist/qualified", "BL Qualified");
     });
-    ::bsml::BeatSaberUI::AddHoverHint(modalUI->nominated, "Playlist of qualified maps");
+    ::BSML::Lite::AddHoverHint(modalUI->nominated, "Playlist of qualified maps");
 
-    modalUI->ranked = ::bsml::BeatSaberUI::CreateUIButton(modalTransform, "Ranked", UnityEngine::Vector2(24.0, -19.0), [modalUI]() {
+    modalUI->ranked = ::BSML::Lite::CreateUIButton(modalTransform, "Ranked", UnityEngine::Vector2(24.0, -19.0), [modalUI]() {
         PlaylistSynchronizer::InstallPlaylist(WebUtils::API_URL + "playlist/ranked", "BL Ranked");
     });
-    ::bsml::BeatSaberUI::AddHoverHint(modalUI->nominated, "Playlist of ranked maps");
+    ::BSML::Lite::AddHoverHint(modalUI->nominated, "Playlist of ranked maps");
 
     modalUI->modal->set_name("BeatLeaderLinksModal");
     *modalUIPointer = modalUI;

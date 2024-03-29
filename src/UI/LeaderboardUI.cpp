@@ -34,19 +34,15 @@
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/filereadstream.h"
 
 #include "bsml/shared/bsml.hpp"
-#include "bsml/shared/ArrayUtil.hpp"
 #include "bsml/shared/BSML-Lite.hpp"
-#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "HMUI/TableView.hpp"
 #include "HMUI/TableCell.hpp"
 #include "HMUI/IconSegmentedControl.hpp"
-#include "HMUI/IconSegmentedControl_DataItem.hpp"
 #include "HMUI/CurvedCanvasSettings.hpp"
 #include "HMUI/Screen.hpp"
 #include "HMUI/ViewController.hpp"
-#include "HMUI/ViewController_AnimationType.hpp"
-#include "HMUI/ViewController_AnimationDirection.hpp"
 #include "HMUI/CurvedTextMeshPro.hpp"
 
 #include "System/Action.hpp"
@@ -77,10 +73,7 @@
 #include "GlobalNamespace/LocalLeaderboardViewController.hpp"
 #include "GlobalNamespace/LoadingControl.hpp"
 #include "GlobalNamespace/LeaderboardTableView.hpp"
-#include "GlobalNamespace/LeaderboardTableView_ScoreData.hpp"
-#include "GlobalNamespace/PlatformLeaderboardsModel_ScoresScope.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
-#include "GlobalNamespace/IBeatmapLevel.hpp"
 #include "GlobalNamespace/IBeatmapLevelData.hpp"
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
@@ -109,7 +102,7 @@
 
 using namespace GlobalNamespace;
 using namespace HMUI;
-using namespace bsml;
+using namespace BSML;
 using namespace BeatLeader;
 using namespace std;
 using UnityEngine::Resources;
@@ -132,9 +125,9 @@ namespace LeaderboardUI {
     UnityEngine::UI::Button* retryButton = NULL;
     BeatLeader::LogoAnimation* logoAnimation = NULL;
     
-    bsml::ClickableImage* upPageButton = NULL;
-    bsml::ClickableImage* downPageButton = NULL;
-    bsml::ClickableImage* contextsButton = NULL;
+    BSML::ClickableImage* upPageButton = NULL;
+    BSML::ClickableImage* downPageButton = NULL;
+    BSML::ClickableImage* contextsButton = NULL;
     BeatLeader::VotingButton* votingButton = NULL;
     HMUI::HoverHint* contextsButtonHover;
     UnityEngine::GameObject* parentScreen = NULL;
@@ -159,7 +152,7 @@ namespace LeaderboardUI {
 
     map<LeaderboardTableCell*, HMUI::ImageView*> avatars;
     map<LeaderboardTableCell*, HMUI::ImageView*> cellBackgrounds;
-    map<LeaderboardTableCell*, bsml::ClickableImage*> cellHighlights;
+    map<LeaderboardTableCell*, BSML::ClickableImage*> cellHighlights;
     map<LeaderboardTableCell*, Score> cellScores;
     map<string, int> imageRows;
 
@@ -221,10 +214,10 @@ namespace LeaderboardUI {
             float ppChange = player->pp - player->lastPP;
 
             // Actually set the labels
-            globalRank->SetText("#" + to_string(player->rank) + (rankChange != 0 ? getColoredChange(rankChange) + to_string(rankChange) : ""));
+            globalRank->SetText("#" + to_string(player->rank) + (rankChange != 0 ? getColoredChange(rankChange) + to_string(rankChange) : ""), true);
             auto rankText = "#" + to_string(player->countryRank) + " " + (countryRankChange != 0 ? getColoredChange(countryRankChange) + to_string(countryRankChange) : "")
                 + "  <color=#B856FF>" + to_string_wprecision(player->pp, 2) + "pp " + (ppChange != 0 ? getColoredChange(ppChange) + to_string_wprecision(ppChange, 2) + "pp" : "");
-            countryRankAndPp->SetText(rankText);
+            countryRankAndPp->SetText(rankText, true);
 
             if (rankText.length() > 60) {
                 countryRankAndPp->set_fontSize(3);
@@ -244,7 +237,7 @@ namespace LeaderboardUI {
                 updatePlayerRank();
                 
                 playerName->set_alignment(TMPro::TextAlignmentOptions::Center);
-                playerName->SetText(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value(), 25, false));
+                playerName->SetText(FormatUtils::FormatNameWithClans(PlayerController::currentPlayer.value(), 25, false), true);
 
                 auto params = GetAvatarParams(player.value(), false);
                 playerAvatar->SetPlayer(player->avatar, params.baseMaterial, params.hueShift, params.saturation);
@@ -252,31 +245,31 @@ namespace LeaderboardUI {
                 if (plvc != NULL) {
                     auto sprite = BundleLoader::bundle->GetCountryIcon(player->country);
                     if (!ssInstalled) {
-                        auto countryControl = plvc->scopeSegmentedControl->dataItems.get(3);
+                        auto countryControl = plvc->_scopeSegmentedControl->_dataItems.get(3);
                         countryControl->set_hintText("Country");
 
-                        plvc->scopeSegmentedControl->dataItems.get(3)->set_icon(sprite);
-                        plvc->scopeSegmentedControl->SetData(plvc->scopeSegmentedControl->dataItems);
+                        plvc->_scopeSegmentedControl->_dataItems.get(3)->set_icon(sprite);
+                        plvc->_scopeSegmentedControl->SetData(plvc->_scopeSegmentedControl->_dataItems);
                     }
 
                     if (countryRankIcon) {
                         countryRankIcon->set_sprite(sprite);
-                        RectTransform* rectTransform = (RectTransform*)countryRankIcon->get_transform();
+                        RectTransform* rectTransform = countryRankIcon->get_transform().cast<RectTransform>();
                         rectTransform->set_sizeDelta({3.2, sprite->get_bounds().get_size().y * 10});
                     }
                 }
 
             } else {
-                playerName->SetText(player->name + ", play something!");
+                playerName->SetText(player->name + ", play something!", true);
             }
         } else {
-            globalRank->SetText("#0");
-            countryRankAndPp->SetText("#0");
+            globalRank->SetText("#0", true);
+            countryRankAndPp->SetText("#0", true);
             playerAvatar->HideImage();
             if (countryRankIcon) {
                 countryRankIcon->set_sprite(BundleLoader::bundle->globeIcon);
             }
-            playerName->SetText("");
+            playerName->SetText("", true);
         }
     }
 
@@ -306,20 +299,20 @@ namespace LeaderboardUI {
         void, 
         SegmentedControl* self,
         ::HMUI::SelectableCell* selectableCell, 
-        ::HMUI::SelectableCell::TransitionType transitionType, 
-        ::Il2CppObject* changeOwner) {
+        ::HMUI::__SelectableCell__TransitionType transitionType, 
+        ::System::Object* changeOwner) {
         SegmentedControlHandleCellSelection(self, selectableCell, transitionType, changeOwner);
 
         if (plvc &&
             leaderboardLoaded &&
-            self == plvc->scopeSegmentedControl) {
+            self == plvc->_scopeSegmentedControl) {
             cachedSelector = -1;
         }
     }
 
     MAKE_HOOK_MATCH(LeaderboardDeactivate, &PlatformLeaderboardViewController::DidDeactivate, void, PlatformLeaderboardViewController* self, bool removedFromHierarchy, bool screenSystemDisabling) {
         if (ssInstalled && plvc) {
-            cachedSelector = plvc->scopeSegmentedControl->selectedCellNumber;
+            cachedSelector = plvc->_scopeSegmentedControl->selectedCellNumber;
             leaderboardLoaded = false;
         }
         
@@ -342,7 +335,7 @@ namespace LeaderboardUI {
             lastVotingStatusUrl = votingStatusUrl;
             WebUtils::GetAsync(votingStatusUrl, [votingStatusUrl](long status, string response) {
                 if (votingStatusUrl == lastVotingStatusUrl && status == 200) {
-                    bsml::MainThreadScheduler::Schedule([response] {
+                    BSML::MainThreadScheduler::Schedule([response] {
                         setVotingButtonsState(stoi(response));
                     });
                 }
@@ -359,19 +352,19 @@ namespace LeaderboardUI {
         }
     }
 
-    tuple<string, string, string> getLevelDetails(BeatmapLevel* levelData)
+    tuple<string, string, string> getLevelDetails(BeatmapKey* levelData)
     {
-        string hash = regex_replace((string)levelData->get_levelID(), basic_regex("custom_level_"), "");
-        string difficulty = MapEnhancer::DiffName(plvc->difficultyBeatmap->get_difficulty().value);
-        string mode = (string)plvc->difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
+        string hash = regex_replace((string)levelData->levelId, basic_regex("custom_level_"), "");
+        string difficulty = MapEnhancer::DiffName(levelData->difficutly.value__);
+        string mode = (string)levelData->beatmapCharacteristic->serializedName;
         return make_tuple(hash, difficulty, mode);
     }
 
     void refreshFromTheServerScores() {
-        auto [hash, difficulty, mode] = getLevelDetails(reinterpret_cast<BeatmapLevel*>(plvc->difficultyBeatmap->get_level()));
+        auto [hash, difficulty, mode] = getLevelDetails(plvc->beatmapKey);
         string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode + "/" + contextToUrlString[static_cast<Context>(getModConfig().Context.GetValue())];
 
-        int selectedCellNumber = cachedSelector != -1 ? cachedSelector : plvc->scopeSegmentedControl->selectedCellNumber;
+        int selectedCellNumber = cachedSelector != -1 ? cachedSelector : plvc->_scopeSegmentedControl->selectedCellNumber;
 
         switch (selectedCellNumber)
         {
@@ -402,20 +395,20 @@ namespace LeaderboardUI {
                 return;
             }
 
-            bsml::MainThreadScheduler::Schedule([status, stringResult] {
+            BSML::MainThreadScheduler::Schedule([status, stringResult] {
                 rapidjson::Document result;
                 result.Parse(stringResult.c_str());
                 if (result.HasParseError() || !result.HasMember("data")) return;
 
                 auto scores = result["data"].GetArray();
 
-                plvc->scores->Clear();
+                plvc->_scores->Clear();
                 if ((int)scores.Size() == 0) {
-                    plvc->loadingControl->Hide();
-                    plvc->hasScoresData = false;
-                    plvc->loadingControl->ShowText("No scores were found!", true);
+                    plvc->_loadingControl->Hide();
+                    plvc->_hasScoresData = false;
+                    plvc->_loadingControl->ShowText("No scores were found!", true);
                     
-                    plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
+                    plvc->_leaderboardTableView->_tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
                     return;
                 }
 
@@ -447,10 +440,10 @@ namespace LeaderboardUI {
                             FormatUtils::FormatPlayerScore(currentScore), 
                             currentScore.rank, 
                             false);
-                        plvc->scores->Add(scoreData);
+                        plvc->_scores->Add(scoreData);
                     }
                 }
-                plvc->leaderboardTableView->rowHeight = 6;
+                plvc->_leaderboardTableView->_rowHeight = 6;
                 if (selectedScore > 9 && !result["selection"].IsNull()) {
                     Score currentScore = Score(result["selection"]);
 
@@ -461,7 +454,7 @@ namespace LeaderboardUI {
                             false);
                     
                     if (currentScore.rank > topRank) {
-                        plvc->scores->Add(scoreData);
+                        plvc->_scores->Add(scoreData);
                         scoreVector[10] = currentScore;
                         selectedScore = 10;
                     } else {
@@ -469,25 +462,25 @@ namespace LeaderboardUI {
                         {
                             scoreVector[i] = scoreVector[i - 1];
                         }
-                        plvc->scores->Insert(0, scoreData);
+                        plvc->_scores->Insert(0, scoreData);
                         scoreVector[0] = currentScore;
                         selectedScore = 0;
                     }
                     if (plvc->scores->get_Count() > 10) {
-                        plvc->leaderboardTableView->rowHeight = 5.5;
+                        plvc->_leaderboardTableView->_rowHeight = 5.5;
                     }
                 }
                     
-                plvc->leaderboardTableView->scores = plvc->scores;
-                plvc->leaderboardTableView->specialScorePos = 12;
+                plvc->_leaderboardTableView->_scores = plvc->_scores;
+                plvc->_leaderboardTableView->_specialScorePos = 12;
                 if (upPageButton != NULL) {
                     upPageButton->get_gameObject()->SetActive(pageNum != 1);
                     downPageButton->get_gameObject()->SetActive(pageNum * perPage < total);
                 }
 
-                plvc->loadingControl->Hide();
-                plvc->hasScoresData = true;
-                plvc->leaderboardTableView->tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
+                plvc->_loadingControl->Hide();
+                plvc->_hasScoresData = true;
+                plvc->:leaderboardTableView->_tableView->SetDataSource((HMUI::TableView::IDataSource *)plvc->leaderboardTableView, true);
             });
         });
         
@@ -516,7 +509,7 @@ namespace LeaderboardUI {
                 return;
             }
 
-            bsml::MainThreadScheduler::Schedule([status, stringResult] {
+            BSML::MainThreadScheduler::Schedule([status, stringResult] {
                 rapidjson::Document result;
                 result.Parse(stringResult.c_str());
                 if (result.HasParseError() || !result.HasMember("data")) return;
@@ -615,7 +608,7 @@ namespace LeaderboardUI {
             WebUtils::PostJSONAsync(votingUrl + rankableString + starsString + typeString, "", [currentVotingUrl, rankable, type](long status, string response) {
                 if (votingUrl != currentVotingUrl) return;
 
-                bsml::MainThreadScheduler::Schedule([status, response, rankable, type] {
+                BSML::MainThreadScheduler::Schedule([status, response, rankable, type] {
                     if (status == 200) {
                         setVotingButtonsState(stoi(response));
                         LevelInfoUI::addVoteToCurrentLevel(rankable, type);
@@ -705,8 +698,8 @@ namespace LeaderboardUI {
             self->loadingControl->Hide();
             
             if (preferencesButton == NULL) {
-                loginPrompt = ::bsml::BeatSaberUI::CreateText(plvc->get_transform(), "Please sign up or log in to post scores!", false, UnityEngine::Vector2(4, 10));
-                preferencesButton = ::bsml::BeatSaberUI::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
+                loginPrompt = ::BSML::Lite::CreateText(plvc->get_transform(), "Please sign up or log in to post scores!", false, UnityEngine::Vector2(4, 10));
+                preferencesButton = ::BSML::Lite::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
                     UIUtils::OpenSettings();
                 });
             }
@@ -727,13 +720,13 @@ namespace LeaderboardUI {
                 ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(4);
                 for (int index = 0; index < 3; ++index)
                 {
-                    dataItems[index] = self->scopeSegmentedControl->dataItems.get(index);
+                    dataItems[index] = self->_scopeSegmentedControl->_dataItems.get(index);
                     scoreScopes[index] = self->scoreScopes.get(index);
                 }
                 dataItems[3] = HMUI::IconSegmentedControl::DataItem::New_ctor(self->friendsLeaderboardIcon, "Country");
                 scoreScopes[3] = PlatformLeaderboardsModel::ScoresScope(3);
 
-                plvc->scopeSegmentedControl->SetData(dataItems);
+                plvc->_scopeSegmentedControl->SetData(dataItems);
                 plvc->scoreScopes = scoreScopes;
             }
 
@@ -749,16 +742,16 @@ namespace LeaderboardUI {
             BeatLeader::initLinksContainerPopup(&linkContainer, self->get_transform());
             BeatLeader::initVotingPopup(&votingUI, self->get_transform(), voteCallback);
 
-            auto playerAvatarImage = ::bsml::BeatSaberUI::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(16, 16));
+            auto playerAvatarImage = ::BSML::Lite::CreateImage(parentScreen->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(180, 51), UnityEngine::Vector2(16, 16));
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            playerName = ::bsml::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
+            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
 
             EmojiSupport::AddSupport(playerName);
 
-            auto rankLayout = ::bsml::BeatSaberUI::CreateHorizontalLayoutGroup(parentScreen->get_transform());
+            auto rankLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(parentScreen->get_transform());
             rankLayout->set_spacing(3);
             EnableHorizontalFit(rankLayout);
             auto rectTransform = (RectTransform*)rankLayout->get_transform();
@@ -766,22 +759,22 @@ namespace LeaderboardUI {
             rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
             rectTransform->set_anchoredPosition({138, 45});
 
-            auto globalLayout = ::bsml::BeatSaberUI::CreateHorizontalLayoutGroup(rankLayout->get_transform());
+            auto globalLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(rankLayout->get_transform());
             globalLayout->set_spacing(1);
             EnableHorizontalFit(globalLayout);
-            globalRankIcon = ::bsml::BeatSaberUI::CreateImage(globalLayout->get_transform(), BundleLoader::bundle->globeIcon);
-            globalRank = ::bsml::BeatSaberUI::CreateText(globalLayout->get_transform(), "", false);
+            globalRankIcon = ::BSML::Lite::CreateImage(globalLayout->get_transform(), BundleLoader::bundle->globeIcon);
+            globalRank = ::BSML::Lite::CreateText(globalLayout->get_transform(), "", false);
 
-            auto countryLayout = ::bsml::BeatSaberUI::CreateHorizontalLayoutGroup(rankLayout->get_transform());
+            auto countryLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(rankLayout->get_transform());
             countryLayout->set_spacing(1);
             EnableHorizontalFit(countryLayout);
-            countryRankIcon = ::bsml::BeatSaberUI::CreateImage(countryLayout->get_transform(), BundleLoader::bundle->globeIcon);
-            countryRankAndPp = ::bsml::BeatSaberUI::CreateText(countryLayout->get_transform(), "", false);
+            countryRankIcon = ::BSML::Lite::CreateImage(countryLayout->get_transform(), BundleLoader::bundle->globeIcon);
+            countryRankAndPp = ::BSML::Lite::CreateText(countryLayout->get_transform(), "", false);
             if (PlayerController::currentPlayer != std::nullopt) {
                 updatePlayerInfoLabel();
             }
 
-            auto websiteLink = ::bsml::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(16, 16), []() {
+            auto websiteLink = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, UnityEngine::Vector2(100, 50), UnityEngine::Vector2(16, 16), []() {
                 linkContainer->modal->Show(true, true, nullptr);
             });
             
@@ -796,7 +789,7 @@ namespace LeaderboardUI {
             };
 
             if (retryButton) UnityEngine::GameObject::Destroy(retryButton);
-            retryButton = ::bsml::BeatSaberUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){
+            retryButton = ::BSML::Lite::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){
                 retryButton->get_gameObject()->SetActive(false);
                 showRetryButton = false;
                 retryCallback();
@@ -805,29 +798,29 @@ namespace LeaderboardUI {
             retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
 
             if(uploadStatus) UnityEngine::GameObject::Destroy(uploadStatus);
-            uploadStatus = ::bsml::BeatSaberUI::CreateText(parentScreen->get_transform(), "", false);
+            uploadStatus = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", false);
             move(uploadStatus, 150, 60);
             resize(uploadStatus, 10, 0);
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
-            upPageButton = ::bsml::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
+            upPageButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12), [](){
                 PageUp();
             });
-            downPageButton = ::bsml::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -20), UnityEngine::Vector2(8, 5.12), [](){
+            downPageButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), UnityEngine::Vector2(100, -20), UnityEngine::Vector2(8, 5.12), [](){
                 PageDown();
             });
 
-            contextsButton = ::bsml::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(6, 6), [](){
+            contextsButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(6, 6), [](){
                 contextsContainer->Show(true, true, nullptr);
             });
             contextsButton->set_defaultColor(SelectedColor);
             contextsButton->set_highlightColor(SelectedColor);
             // We need to add an empty hover hint, so we can set it later to the correct content depending on the selected context
-            contextsButtonHover = ::bsml::BeatSaberUI::AddHoverHint(contextsButton, "");
+            contextsButtonHover = ::BSML::Lite::AddHoverHint(contextsButton, "");
             initContextsModal(self->get_transform());
             updateModifiersButton();
 
-            auto votingButtonImage = ::bsml::BeatSaberUI::CreateClickableImage(
+            auto votingButtonImage = ::BSML::Lite::CreateClickableImage(
                 parentScreen->get_transform(), 
                 BundleLoader::bundle->modifiersIcon, 
                 UnityEngine::Vector2(100, 22), 
@@ -843,7 +836,7 @@ namespace LeaderboardUI {
 
             initSettingsModal(self->get_transform());
 
-            auto settingsButton = ::bsml::BeatSaberUI::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->settingsIcon, {180, 36}, {4.5, 4.5}, [](){
+            auto settingsButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->settingsIcon, {180, 36}, {4.5, 4.5}, [](){
                 settingsContainer->Show(true, true, nullptr);
             });
 
@@ -946,7 +939,7 @@ namespace LeaderboardUI {
 
         if (ssInstalled && showBeatLeaderButton == NULL) {
             auto headerTransform = self->get_gameObject()->get_transform()->Find("HeaderPanel")->get_transform();
-            bsml::BeatSaberUI::CreateText(headerTransform, "BeatLeader", {-12.2, 2});
+            BSML::Lite::CreateText(headerTransform, "BeatLeader", {-12.2, 2});
             showBeatLeaderButton = CreateToggle(headerTransform, showBeatLeader, UnityEngine::Vector2(-84.5, 0), [](bool changed){
                 showBeatLeader = !showBeatLeader;
                 getModConfig().ShowBeatleader.SetValue(showBeatLeader);
@@ -955,7 +948,7 @@ namespace LeaderboardUI {
             });
 
             if (!showBeatLeader) {
-                bsml::MainThreadScheduler::Schedule([] {
+                BSML::MainThreadScheduler::Schedule([] {
                     HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
                     imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
                     imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
@@ -977,7 +970,7 @@ namespace LeaderboardUI {
         if (ssInstalled && showBeatLeader && sspageUpButton == NULL) {
             std::async(std::launch::async, [] () {
                 std::this_thread::sleep_for(std::chrono::seconds{1});
-                bsml::MainThreadScheduler::Schedule([] {
+                BSML::MainThreadScheduler::Schedule([] {
                     refreshLeaderboardCall();
                 });
             });
@@ -1026,10 +1019,10 @@ namespace LeaderboardUI {
             EmojiSupport::AddSupport(result->playerNameText);
 
             if (!cellBackgrounds.count(result)) {
-                avatars[result] = ::bsml::BeatSaberUI::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
+                avatars[result] = ::BSML::Lite::CreateImage(result->get_transform(), plvc->aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
                 avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
 
-                auto scoreSelector = ::bsml::BeatSaberUI::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
+                auto scoreSelector = ::BSML::Lite::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6), [result]() {
                     auto openEvent = il2cpp_utils::MakeDelegate<System::Action *>(
                         classof(System::Action*),
                         static_cast<Il2CppObject *>(nullptr), setTheScoreAgain);
@@ -1043,12 +1036,12 @@ namespace LeaderboardUI {
                 
                 cellHighlights[result] = scoreSelector;
 
-                auto backgroundImage = ::bsml::BeatSaberUI::CreateImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
+                auto backgroundImage = ::BSML::Lite::CreateImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
                 backgroundImage->set_material(BundleLoader::bundle->scoreBackgroundMaterial);
                 backgroundImage->get_transform()->SetAsFirstSibling();
                 cellBackgrounds[result] = backgroundImage;  
 
-                // auto tagsList = bsml::BeatSaberUI::CreateHorizontalLayoutGroup(result->get_transform());
+                // auto tagsList = BSML::Lite::CreateHorizontalLayoutGroup(result->get_transform());
                 // clanGroups[result] = tagsList;         
             }
         }
@@ -1167,7 +1160,7 @@ namespace LeaderboardUI {
         
         if (visible && showBeatLeader) {
             statusWasCached = false;
-            uploadStatus->SetText(description);
+            uploadStatus->SetText(description, true);
             switch (status)
             {
                 case ReplayUploadStatus::finished:
@@ -1184,7 +1177,7 @@ namespace LeaderboardUI {
                 case ReplayUploadStatus::inProgress:
                     logoAnimation->SetAnimating(true);
                     if (progress >= 100)
-                        uploadStatus->SetText("<color=#b103fcff>Posting replay: Finishing up...");
+                        uploadStatus->SetText("<color=#b103fcff>Posting replay: Finishing up...", true);
                     break;
             }
         } else {
@@ -1197,13 +1190,13 @@ namespace LeaderboardUI {
     }
 
     void initContextsModal(UnityEngine::Transform* parent){
-        auto container = bsml::BeatSaberUI::CreateModal(parent, {40, static_cast<float>((static_cast<int>(Context::SCPM) + 2) * 10 + 5)}, nullptr, true);
+        auto container = BSML::Lite::CreateModal(parent, {40, static_cast<float>((static_cast<int>(Context::SCPM) + 2) * 10 + 5)}, nullptr, true);
 
-        bsml::BeatSaberUI::CreateText(container->get_transform(), "Scores Context", {20, 19});
+        BSML::Lite::CreateText(container->get_transform(), "Scores Context", {20, 19});
 
         for(int i = 0; i <= static_cast<int>(Context::SCPM); i++)
         {
-            bsml::BeatSaberUI::CreateUIButton(container->get_transform(), contextToDisplayString[static_cast<Context>(i)], {0.0f, static_cast<float>(21 - (i + 1) * 10)}, [i](){
+            BSML::Lite::CreateUIButton(container->get_transform(), contextToDisplayString[static_cast<Context>(i)], {0.0f, static_cast<float>(21 - (i + 1) * 10)}, [i](){
                 // Set the new value
                 getModConfig().Context.SetValue(i);
                 // Hide the modal
@@ -1216,7 +1209,7 @@ namespace LeaderboardUI {
                 refreshFromTheServerCurrent();
                 // Refresh the player rank
                 PlayerController::Refresh(0, [](auto player, auto str){
-                    bsml::MainThreadScheduler::Schedule([]{
+                    BSML::MainThreadScheduler::Schedule([]{
                         LeaderboardUI::updatePlayerRank();
                     });
                 });
@@ -1227,39 +1220,39 @@ namespace LeaderboardUI {
     }
 
     void initSettingsModal(UnityEngine::Transform* parent){
-        auto container = bsml::BeatSaberUI::CreateModal(parent, {40,60}, nullptr, true);
+        auto container = BSML::Lite::CreateModal(parent, {40,60}, nullptr, true);
         
-        bsml::BeatSaberUI::CreateText(container->get_transform(), "Leaderboard Settings", {16, 24});
+        BSML::Lite::CreateText(container->get_transform(), "Leaderboard Settings", {16, 24});
 
-        bsml::BeatSaberUI::CreateText(container->get_transform(), "Avatar", {12, 14});
+        BSML::Lite::CreateText(container->get_transform(), "Avatar", {12, 14});
 
         CreateToggle(container->get_transform(), getModConfig().AvatarsActive.GetValue(), {-3, 16}, [](bool value){
             getModConfig().AvatarsActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        bsml::BeatSaberUI::CreateText(container->get_transform(), "Clans", {12, 4});
+        BSML::Lite::CreateText(container->get_transform(), "Clans", {12, 4});
 
         CreateToggle(container->get_transform(), getModConfig().ClansActive.GetValue(), {-3, 6}, [](bool value){
             getModConfig().ClansActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        bsml::BeatSaberUI::CreateText(container->get_transform(), "Score", {12, -6});
+        BSML::Lite::CreateText(container->get_transform(), "Score", {12, -6});
 
         CreateToggle(container->get_transform(), getModConfig().ScoresActive.GetValue(), {-3, -4}, [](bool value){
             getModConfig().ScoresActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        bsml::BeatSaberUI::CreateText(container->get_transform(), "Time", {12, -16});
+        BSML::Lite::CreateText(container->get_transform(), "Time", {12, -16});
 
         CreateToggle(container->get_transform(), getModConfig().TimesetActive.GetValue(), {-3, -14}, [](bool value){
             getModConfig().TimesetActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        bsml::BeatSaberUI::CreateText(container->get_transform(), "Capture", {12, -26});
+        BSML::Lite::CreateText(container->get_transform(), "Capture", {12, -26});
 
         CreateToggle(container->get_transform(), getModConfig().CaptureActive.GetValue(), {-3, -24}, [](bool value){
             getModConfig().CaptureActive.SetValue(value);
@@ -1307,7 +1300,7 @@ namespace LeaderboardUI {
         INSTALL_HOOK(BeatLeaderLogger, SegmentedControlHandleCellSelection);
 
         PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
-            bsml::MainThreadScheduler::Schedule([] {
+            BSML::MainThreadScheduler::Schedule([] {
                 if (playerName != NULL) {
                     updatePlayerInfoLabel();
                 }

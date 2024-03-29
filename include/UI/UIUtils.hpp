@@ -14,7 +14,6 @@
 #include "HMUI/ViewController.hpp"
 
 #include "bsml/shared/bsml.hpp"
-#include "bsml/shared/ArrayUtil.hpp"
 #include "bsml/shared/BSML-Lite.hpp"
 
 inline void move(UnityEngine::Component* label, float x, float y) {
@@ -34,9 +33,9 @@ inline void resize(UnityEngine::Component* label, float x, float y) {
 }
 
 inline UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootView, UnityEngine::Vector2 screenSize, UnityEngine::Vector3 position, float curvatureRadius) {
-    auto gameObject = bsml::BeatSaberUI::CreateCanvas();
+    auto gameObject = BSML::Lite::CreateCanvas();
     auto screen = gameObject->AddComponent<HMUI::Screen*>();
-    screen->rootViewController = rootView;
+    screen->_rootViewController = rootView;
     auto curvedCanvasSettings = gameObject->AddComponent<HMUI::CurvedCanvasSettings*>();
     curvedCanvasSettings->SetRadius(curvatureRadius);
 

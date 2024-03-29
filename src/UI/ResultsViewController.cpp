@@ -8,7 +8,6 @@
 #include "GlobalNamespace/SinglePlayerLevelSelectionFlowCoordinator.hpp"
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "HMUI/ViewController.hpp"
-#include "HMUI/ViewController_AnimationDirection.hpp"
 #include "HMUI/FlowCoordinator.hpp"
 #include "UnityEngine/GameObject.hpp"
 #include "UI/LeaderboardUI.hpp"
@@ -50,7 +49,7 @@ namespace ResultsView {
         if(firstActivation){
             auto transform = self->get_transform();
             // Create voting button
-            auto votingButtonImage = ::bsml::BeatSaberUI::CreateClickableImage(transform, BundleLoader::bundle->modifiersIcon, {-67, 9}, {8, 8}, [transform]() {
+            auto votingButtonImage = ::BSML::Lite::CreateClickableImage(transform, BundleLoader::bundle->modifiersIcon, {-67, 9}, {8, 8}, [transform]() {
                 if (resultsVotingButton->state != 2) return;
                 
                 if (votingUI == NULL) {
@@ -66,10 +65,10 @@ namespace ResultsView {
 
             // If we have replay, also show the replay button
             if(ReplayInstalled()) {
-                replayButton = bsml::BeatSaberUI::CreateUIButton(transform, "", "PracticeButton", {-46, -19}, {12, 10}, []() {
+                replayButton = BSML::Lite::CreateUIButton(transform, "", "PracticeButton", {-46, -19}, {12, 10}, []() {
                     // Dont crash if file doesnt exist yet
                     if(std::filesystem::exists(ReplayManager::lastReplayFilename)) {
-                        auto flow = bsml::BeatSaberUI::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
+                        auto flow = BSML::Lite::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
                         flow->DismissViewController(flow->get_topViewController(), HMUI::ViewController::AnimationDirection::Vertical, custom_types::MakeDelegate<System::Action *>(classof(System::Action *), (std::function<void()>)[flow]() {
                             if (il2cpp_utils::try_cast<GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator>(flow)) {
                                 ((GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator *)flow)->SinglePlayerLevelSelectionFlowCoordinatorDidActivate(false, false);
@@ -86,7 +85,7 @@ namespace ResultsView {
                     }
                 });
                 // Set icon of button
-                auto *image = bsml::BeatSaberUI::CreateImage(replayButton->get_transform(), BundleLoader::bundle->replayIcon);
+                auto *image = BSML::Lite::CreateImage(replayButton->get_transform(), BundleLoader::bundle->replayIcon);
                 image->get_rectTransform()->set_localScale({0.64f, 0.8f, 1.0f});
             }
         }

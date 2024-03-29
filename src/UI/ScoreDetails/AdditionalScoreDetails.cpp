@@ -10,7 +10,7 @@
 
 #include <sstream>
 
-using namespace bsml::BeatSaberUI;
+using namespace BSML::Lite;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;

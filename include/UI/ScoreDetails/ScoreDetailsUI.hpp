@@ -34,13 +34,13 @@ namespace BeatLeader {
             ScoreStatsGrid grid;
             ScoreStatsGraph graph;
 
-            bsml::ClickableImage* generalButton;
-            bsml::ClickableImage* additionalButton;
-            bsml::ClickableImage* overviewButton;
-            bsml::ClickableImage* gridButton;
-            bsml::ClickableImage* graphButton;
+            BSML::ClickableImage* generalButton;
+            BSML::ClickableImage* additionalButton;
+            BSML::ClickableImage* overviewButton;
+            BSML::ClickableImage* gridButton;
+            BSML::ClickableImage* graphButton;
 
-            bsml::ClickableImage* replayButton;
+            BSML::ClickableImage* replayButton;
 
             TMPro::TextMeshProUGUI* loadingText;
 

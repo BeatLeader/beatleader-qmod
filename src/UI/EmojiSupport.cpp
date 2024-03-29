@@ -13,7 +13,7 @@
 #include "UnityEngine/Graphics.hpp"
 #include "UnityEngine/TextCore/GlyphMetrics.hpp"
 #include "UnityEngine/TextCore/GlyphRect.hpp"
-#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/utils/logging.hpp"
@@ -62,7 +62,7 @@ TMPro::TMP_SpriteAsset* CreateTMP_SpriteAsset() {
     texture->Apply(false, true);
 
     TMPro::TMP_SpriteAsset* spriteAsset = ScriptableObject::CreateInstance<TMPro::TMP_SpriteAsset*>();
-    spriteAsset->fallbackSpriteAssets = System::Collections::Generic::List_1<TMPro::TMP_SpriteAsset*>::New_ctor();
+    spriteAsset->fallbackSpriteAssets = System::Collections::Generic::List_1<UnityW<TMPro::TMP_SpriteAsset>>::New_ctor();
     spriteAsset->spriteInfoList = System::Collections::Generic::List_1<TMPro::TMP_Sprite*>::New_ctor();
     spriteAsset->spriteSheet = texture;
     spriteAsset->material =  UnityEngine::Material::New_ctor(BundleLoader::bundle->TMP_SpriteCurved);
@@ -129,7 +129,7 @@ TMPro::TMP_SpriteGlyph* PushSprite(int unicode) {
     return sprite;
 }
 
-MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpriteByUnicode, TMPro::TMP_SpriteAsset*, TMPro::TMP_SpriteAsset* spriteAsset, uint unicode, bool includeFallbacks, ByRef<int> spriteIndex) {
+MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpriteByUnicode, UnityW<TMPro::TMP_SpriteAsset>, TMPro::TMP_SpriteAsset* spriteAsset, uint unicode, bool includeFallbacks, ByRef<int> spriteIndex) {
     TMPro::TMP_SpriteAsset* result = SearchForSpriteByUnicode(spriteAsset, unicode, includeFallbacks, spriteIndex);
     
     if (result == NULL) {
@@ -152,7 +152,7 @@ MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpri
             loadingCount--;
             if (loadingCount == 0) {
                 for (auto const& i : textToUpdate) {
-                    i->ForceMeshUpdate();
+                    i->ForceMeshUpdate(false, false);
                 }
                 textToUpdate = {};
             }

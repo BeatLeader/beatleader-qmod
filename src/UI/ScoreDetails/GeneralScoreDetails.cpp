@@ -8,13 +8,13 @@
 #include "HMUI/ImageView.hpp"
 #include "UnityEngine/Component.hpp"
 
-#include "bsml/shared/CustomTypes/Components/Backgroundable.hpp"
+#include "bsml/shared/BSML/Components/Backgroundable.hpp"
 
 #include "main.hpp"
 
 #include <sstream>
 
-using namespace bsml::BeatSaberUI;
+using namespace BSML::Lite;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;

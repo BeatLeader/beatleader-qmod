@@ -34,7 +34,7 @@ namespace BeatLeader {
             UnityEngine::UI::Button* noButton;
 
             TMPro::TextMeshProUGUI* header2;
-            bsml::SliderSetting* starSlider;
+            BSML::SliderSetting* starSlider;
             TMPro::TextMeshProUGUI* subheader2;
 
             UnityEngine::UI::Button* accButton;

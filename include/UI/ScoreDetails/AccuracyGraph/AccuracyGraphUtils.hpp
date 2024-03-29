@@ -76,7 +76,7 @@ namespace AccuracyGraphUtils {
         float yMin = 1000000;
         float yMax = -1000000;
 
-        int length = points.Length();
+        int length = points.size();
         result.reserve(length);
 
         for (auto i = 0; i < length; i++) {

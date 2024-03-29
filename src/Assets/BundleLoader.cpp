@@ -66,7 +66,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     materials = System::Collections::Generic::Dictionary_2<StringW, Material*>::New_ctor();
     sprites = System::Collections::Generic::Dictionary_2<StringW, Sprite*>::New_ctor();
 
-    for (size_t i = 0; i < allnames.Length(); i++)
+    for (size_t i = 0; i < allnames.size(); i++)
     {
         StringW name = allnames[i];
         auto material = assetBundle->LoadAsset<Material*>(name);

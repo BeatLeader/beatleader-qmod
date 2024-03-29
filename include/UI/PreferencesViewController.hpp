@@ -1,7 +1,6 @@
 #pragma once
 
 #include "UnityEngine/MonoBehaviour.hpp"
-#include "HMUI/TableView_IDataSource.hpp"
 
 #include "custom-types/shared/macros.hpp"
 #include "HMUI/ViewController.hpp"
@@ -9,10 +8,10 @@
 #include "HMUI/TableCell.hpp"
 #include "System/Object.hpp"
 #include "TMPro/TextMeshProUGUI.hpp"
-#include "bsml/shared/CustomTypes/Components/List/bsmlTableView.hpp"
-#include "bsml/shared/CustomTypes/Components/Backgroundable.hpp"
+#include "bsml/shared/BSML/Components/TableView.hpp"
+#include "bsml/shared/BSML/Components/Backgroundable.hpp"
 
-#define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::get()
+#define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::methodInfo()
 
 
 DECLARE_CLASS_CODEGEN(BeatLeader, PreferencesViewController, HMUI::ViewController,

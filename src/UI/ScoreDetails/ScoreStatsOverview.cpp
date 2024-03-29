@@ -9,13 +9,13 @@
 #include "HMUI/ImageView.hpp"
 #include "UnityEngine/Component.hpp"
 
-#include "bsml/shared/CustomTypes/Components/Backgroundable.hpp"
+#include "bsml/shared/BSML/Components/Backgroundable.hpp"
 
 #include "main.hpp"
 
 #include <sstream>
 
-using namespace bsml::BeatSaberUI;
+using namespace BSML::Lite;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
@@ -33,12 +33,12 @@ BeatLeader::ScoreStatsOverview::ScoreStatsOverview(HMUI::ModalView *modal) noexc
     leftPostScore = CreateText(modalTransform, "", UnityEngine::Vector2(3.0, -1.0));
 
     leftScore = CreateText(modalTransform, "", UnityEngine::Vector2(-9.0, 5.8));
-    leftPieImage = ::bsml::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(-9, 6), UnityEngine::Vector2(14, 14));
+    leftPieImage = ::BSML::Lite::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(-9, 6), UnityEngine::Vector2(14, 14));
     leftPieImage->set_color(UnityEngine::Color(0.8f, 0.2f, 0.2f, 0.1f));
     leftPieImage->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->handAccIndicatorMaterial));
 
     rightScore = CreateText(modalTransform, "", UnityEngine::Vector2(9.0, 5.8));
-    rightPieImage = ::bsml::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(9, 6), UnityEngine::Vector2(14, 14));
+    rightPieImage = ::BSML::Lite::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(9, 6), UnityEngine::Vector2(14, 14));
     rightPieImage->set_color(UnityEngine::Color(0.2f, 0.2f, 0.8f, 0.1f));
     rightPieImage->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->handAccIndicatorMaterial));
 
@@ -50,15 +50,15 @@ BeatLeader::ScoreStatsOverview::ScoreStatsOverview(HMUI::ModalView *modal) noexc
 
     tdTitle = CreateText(modalTransform, "TD", UnityEngine::Vector2(0.0, -5.0));
     tdTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
-    tdBackground = ::bsml::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -9), UnityEngine::Vector2(50, 5));
+    tdBackground = ::BSML::Lite::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -9), UnityEngine::Vector2(50, 5));
     tdBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
     preTitle = CreateText(modalTransform, "Pre", UnityEngine::Vector2(0.0, -10.0));
     preTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
-    preBackground = ::bsml::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -14), UnityEngine::Vector2(50, 5));
+    preBackground = ::BSML::Lite::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -14), UnityEngine::Vector2(50, 5));
     preBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
     postTitle = CreateText(modalTransform, "Post", UnityEngine::Vector2(0.0, -15.0));
     postTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
-    postBackground = ::bsml::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -19), UnityEngine::Vector2(50, 5));
+    postBackground = ::BSML::Lite::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -19), UnityEngine::Vector2(50, 5));
     postBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
 
     leftTd = CreateText(modalTransform, "", UnityEngine::Vector2(5.0, -7.0));

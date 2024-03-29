@@ -13,6 +13,6 @@
 
 #include "paper/shared/logger.hpp"
 
-extern static modloader::ModInfo modInfo;
+inline modloader::ModInfo modInfo = {MOD_ID, VERSION, 0};
 
 constexpr auto BeatLeaderLogger = Paper::ConstLoggerContext("BeatLeader");

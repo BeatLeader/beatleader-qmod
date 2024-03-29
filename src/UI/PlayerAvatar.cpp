@@ -2,7 +2,7 @@
 
 #include "bsml/shared/bsml.hpp"
 #include "bsml/shared/BSML-Lite.hpp"
-#include "bsml/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/GUIUtility.hpp"
@@ -21,7 +21,7 @@
 
 #include "main.hpp"
 
-using namespace bsml;
+using namespace BSML;
 
 static int AvatarTexturePropertyId;
 static int FadeValuePropertyId;
@@ -113,7 +113,7 @@ void BeatLeader::PlayerAvatar::HideImage() {
 // Stolen from Nya: https://github.com/FrozenAlex/Nya-utils :lovege:
 void BeatLeader::PlayerAvatar::Update() {
   if (play) {
-    int length = animationFrames.Length();
+    int length = animationFrames.size();
     if (length > 0) {
       float deltaTime = UnityEngine::Time::get_deltaTime();
 
@@ -137,7 +137,7 @@ void BeatLeader::PlayerAvatar::Update() {
       }
 
       if (isFrameNeeded) {
-        if (animationFrames.Length() > currentFrame) {
+        if (animationFrames.size() > currentFrame) {
           auto frame = animationFrames.get(currentFrame);
 
           if (frame != nullptr) {
