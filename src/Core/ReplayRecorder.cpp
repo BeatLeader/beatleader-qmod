@@ -423,7 +423,7 @@ namespace ReplayRecorder {
         int _nextAddIndex = self->nextAddIndex;
         int _validCount = self->validCount;
 
-        int length = _data.Length();
+        int length = _data.size();
 
         int index = _nextAddIndex - 1;
         if (index < 0) index += length;
@@ -458,24 +458,24 @@ namespace ReplayRecorder {
     }
 
     MAKE_HOOK_MATCH(ProcessNewSwingData, &SaberSwingRatingCounter::ProcessNewData, void, SaberSwingRatingCounter* self, BladeMovementDataElement newData, BladeMovementDataElement prevData, bool prevDataAreValid) {
-        bool alreadyCut = self->notePlaneWasCut;
+        bool alreadyCut = self->_notePlaneWasCut;
         ProcessNewSwingData(self, newData, prevData, prevDataAreValid);
         if (replay == nullopt) return;
 
         float postSwing = _postSwingContainer[self];
-        if (!alreadyCut && !self->notePlane.SameSide(newData.topPos, prevData.topPos))
+        if (!alreadyCut && !self->_notePlane.SameSide(newData.topPos, prevData.topPos))
         {
-            float angleDiff = UnityEngine::Vector3::Angle(self->cutTopPos - self->cutBottomPos, self->afterCutTopPos - self->afterCutBottomPos);
+            float angleDiff = UnityEngine::Vector3::Angle(self->_cutTopPos - self->_cutBottomPos, self->_afterCutTopPos - self->_afterCutBottomPos);
 
-            if (self->rateAfterCut)
+            if (self->_rateAfterCut)
             {
                 postSwing = SaberSwingRating::AfterCutStepRating(angleDiff, 0.0f);
             }
         }
         else
         {
-            float normalDiff = UnityEngine::Vector3::Angle(newData.segmentNormal, self->cutPlaneNormal);
-            if (self->rateAfterCut)
+            float normalDiff = UnityEngine::Vector3::Angle(newData.segmentNormal, self->_cutPlaneNormal);
+            if (self->_rateAfterCut)
             {
                 postSwing += SaberSwingRating::AfterCutStepRating(newData.segmentAngle, normalDiff);
             }
@@ -531,7 +531,7 @@ namespace ReplayRecorder {
         }
 
         if (_currentWallEvent != nullopt) {
-            if (phoi->intersectingObstacles->get_Count() == 0)
+            if (phoi->_intersectingObstacles->get_Count() == 0)
             {
                 WallEvent& wallEvent = replay->walls[replay->walls.size() - 1];
                 wallEvent.energy = audioTimeSyncController->songTime;
