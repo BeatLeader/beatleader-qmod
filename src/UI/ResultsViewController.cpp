@@ -22,6 +22,7 @@
 #include "beatsaber-hook/shared/utils/il2cpp-functions.hpp"
 #include "custom-types/shared/delegate.hpp"
 #include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
+#include "bsml/shared/Helpers/getters.hpp"
 
 #include <filesystem>
 
@@ -49,7 +50,7 @@ namespace ResultsView {
         if(firstActivation){
             auto transform = self->get_transform();
             // Create voting button
-            auto votingButtonImage = ::BSML::Lite::CreateClickableImage(transform, BundleLoader::bundle->modifiersIcon, {-67, 9}, {8, 8}, [transform]() {
+            auto votingButtonImage = ::BSML::Lite::CreateClickableImage(transform, BundleLoader::bundle->modifiersIcon, [transform]() {
                 if (resultsVotingButton->state != 2) return;
                 
                 if (votingUI == NULL) {
@@ -59,7 +60,7 @@ namespace ResultsView {
 
                 votingUI->reset();
                 votingUI->modal->Show(true, true, nullptr);
-            });
+            }, {-67, 9}, {8, 8});
             resultsVotingButton = self->get_gameObject()->AddComponent<BeatLeader::VotingButton*>();
             resultsVotingButton->Init(votingButtonImage);
 
@@ -68,7 +69,7 @@ namespace ResultsView {
                 replayButton = BSML::Lite::CreateUIButton(transform, "", "PracticeButton", {-46, -19}, {12, 10}, []() {
                     // Dont crash if file doesnt exist yet
                     if(std::filesystem::exists(ReplayManager::lastReplayFilename)) {
-                        auto flow = BSML::Lite::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
+                        auto flow = BSML::Helpers::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
                         flow->DismissViewController(flow->get_topViewController(), HMUI::ViewController::AnimationDirection::Vertical, custom_types::MakeDelegate<System::Action *>(classof(System::Action *), (std::function<void()>)[flow]() {
                             if (il2cpp_utils::try_cast<GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator>(flow)) {
                                 ((GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator *)flow)->SinglePlayerLevelSelectionFlowCoordinatorDidActivate(false, false);
@@ -92,7 +93,7 @@ namespace ResultsView {
 
         // Ajust position based on result screen type (position is different between failure and success)
         if(replayButton) {
-            ((RectTransform*)replayButton->get_transform())->set_anchoredPosition(self->levelCompletionResults->levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared ? UnityEngine::Vector2(-46, -30) : UnityEngine::Vector2(-46, -19));
+            replayButton->get_transform().cast<RectTransform>()->set_anchoredPosition(self->_levelCompletionResults->_levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared ? UnityEngine::Vector2(-46, -30) : UnityEngine::Vector2(-46, -19));
         }
 
         // Load initial status

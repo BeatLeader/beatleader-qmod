@@ -38,14 +38,14 @@ HMUI::InputFieldView* loginField;
 HMUI::InputFieldView* passwordField;
 UnityEngine::UI::Button* loginButton;
 UnityEngine::UI::Button* signupButton;
-TMPro::TextMeshProUGUI* name;
+TMPro::TextMeshProUGUI* nameField;
 TMPro::TextMeshProUGUI* label3;
 TMPro::TextMeshProUGUI* errorDescriptionLabel;
 
-HMUI::SimpleTextDropdown* serverDropdown;
-HMUI::SimpleTextDropdown* starsDropdown;
-UnityEngine::UI::Toggle* saveToggle;
-UnityEngine::UI::Toggle* showReplaySettingsToggle;
+BSML::DropdownListSetting* serverDropdown;
+BSML::DropdownListSetting* starsDropdown;
+BSML::ToggleSetting* saveToggle;
+BSML::ToggleSetting* showReplaySettingsToggle;
 
 BeatLeader::LogoAnimation* spinner = NULL;
 
@@ -59,8 +59,8 @@ void UpdateUI(optional<Player> player) {
     spinner->SetAnimating(false);
 
     if (player != nullopt) {
-        name->SetText(player->name + ", hi!");
-        name->get_gameObject()->SetActive(true);
+        nameField->SetText(player->name + ", hi!", true);
+        nameField->get_gameObject()->SetActive(true);
         label3->get_gameObject()->SetActive(false);
         logoutButton->get_gameObject()->SetActive(true);
 
@@ -74,7 +74,7 @@ void UpdateUI(optional<Player> player) {
         if(showReplaySettingsToggle)
             showReplaySettingsToggle->get_transform()->get_parent()->get_gameObject()->SetActive(true);
     } else {
-        name->get_gameObject()->SetActive(false);
+        nameField->get_gameObject()->SetActive(false);
         label3->get_gameObject()->SetActive(true);
         logoutButton->get_gameObject()->SetActive(false);
 
@@ -94,7 +94,7 @@ void UpdateUI(optional<Player> player) {
             showReplaySettingsToggle->get_transform()->get_parent()->get_gameObject()->SetActive(false);
     }
 
-    errorDescriptionLabel->SetText(errorDescription);
+    errorDescriptionLabel->SetText(errorDescription, true);
     if (errorDescription.length() > 0) {
         errorDescriptionLabel->get_gameObject()->SetActive(true);
     } else {
@@ -116,6 +116,13 @@ void BeatLeader::PreferencesViewController::DidDeactivate(bool removedFromHierar
     errorDescription = "";
 }
 
+std::vector<std::string_view> starValueOptions = {
+    "Overall",
+    "Tech",
+    "Acc",
+    "Pass"
+};
+
 void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     if (firstActivation) {
         this->get_gameObject()->AddComponent<HMUI::Touchable*>();
@@ -128,8 +135,8 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         spinner->Init(spinnerImage);
         spinnerImage->get_gameObject()->SetActive(false);
 
-        name = ::BSML::Lite::CreateText(containerTransform, "", false);
-        EmojiSupport::AddSupport(name);
+        nameField = ::BSML::Lite::CreateText(containerTransform, "", false);
+        EmojiSupport::AddSupport(nameField);
 
         logoutButton = ::BSML::Lite::CreateUIButton(containerTransform, "Logout", [](){
             PlayerController::LogOut();
@@ -197,16 +204,11 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         });
 
         saveToggle = AddConfigValueToggle(containerTransform, getModConfig().SaveLocalReplays);
-        starsDropdown = AddConfigValueDropdownEnum(containerTransform, getModConfig().StarValueToShow, {
-            "Overall",
-            "Tech",
-            "Acc",
-            "Pass"
-        });
+        starsDropdown = AddConfigValueDropdownEnum(containerTransform, getModConfig().StarValueToShow, starValueOptions);
         // After switching the setting we need to manually call refresh, because StandardLevelDetailView::RefreshContent is not called again,
         // if the same map, that was selected before changing the setting, is selected again before selecting any other map. 
         // This results in setLabels not being called again and the stars of the old setting are displayed, which is why we call it manually here after selecting an option
-        starsDropdown->add_didSelectCellWithIdxEvent(custom_types::MakeDelegate<System::Action_2<HMUI::DropdownWithTableView*, int>*>((function<void(HMUI::DropdownWithTableView*, int)>)[](auto throwaway1, auto throwaway2){
+        starsDropdown->OnSelectIndex(custom_types::MakeDelegate<System::Action_2<HMUI::DropdownWithTableView*, int>*>((function<void(HMUI::DropdownWithTableView*, int)>)[](auto throwaway1, auto throwaway2){
             LevelInfoUI::refreshRatingLabels();
         }));
         if (ReplayInstalled()) {

@@ -68,7 +68,7 @@ float BeatLeader::AccuracyGraph::GetCanvasRadius() {
     }
 
     auto canvasSettings = curvedCanvasSettingsHelper->GetCurvedCanvasSettings(graphLine->get_canvas());
-    return canvasSettings == NULL ? 100 : canvasSettings->radius;
+    return canvasSettings ? 100 : canvasSettings->radius;
 }
 
 void BeatLeader::AccuracyGraph::Setup(ArrayW<float> points, float songDuration) {
@@ -92,17 +92,17 @@ static string FormatCursorText(float songTime, float accuracy) {
 }
 
 void BeatLeader::AccuracyGraph::Update() {
-    if (!modal->isShown || isnan(abs(targetViewTime))) return;
+    if (!modal->_isShown || isnan(abs(targetViewTime))) return;
 
     currentViewTime = AccuracyGraphUtils::Lerp(currentViewTime, targetViewTime, UnityEngine::Time::get_deltaTime() * 10.0);
     auto songTime = currentViewTime * songDuration;
     auto accuracy = GetAccuracy(currentViewTime);
     backgroundMaterial->SetFloat(CursorPositionPropertyId, currentViewTime);
-    underlineText->SetText(FormatCursorText(songTime, accuracy));
+    underlineText->SetText(FormatCursorText(songTime, accuracy), true);
 }
 
 Vector2 CalculateCursorPosition(Vector3 worldCursor, BeatLeader::AccuracyGraphLine* graphLine, float canvasRadius) {
-    UnityEngine::RectTransform* graphContainer = (UnityEngine::RectTransform*)graphLine->get_transform();
+    UnityEngine::RectTransform* graphContainer = graphLine->get_transform().cast<RectTransform>();
 
     auto nonCurved = AccuracyGraphUtils::TransformPointFrom3DToCanvas(worldCursor, canvasRadius * graphContainer->get_lossyScale().x);
 
@@ -122,7 +122,7 @@ float UpdateCursor(Vector2 normalized) {
 }
 
 void BeatLeader::AccuracyGraph::LateUpdate() {
-    if (!modal->isShown || vrPointer == NULL) return;
+    if (!modal->_isShown || vrPointer == NULL) return;
 
     auto cursorPosition3D = vrPointer->get_cursorPosition();
     if (cursorPosition3D.Equals(lastPosition3D)) return;
@@ -137,7 +137,7 @@ void BeatLeader::AccuracyGraph::LateUpdate() {
 }
 
 float BeatLeader::AccuracyGraph::GetAccuracy(float viewTime) {
-    int pointsLength = points.Length();
+    int pointsLength = points.size();
     if (pointsLength == 0) return 1.0;
 
     auto xStep = 1.0 / (float)pointsLength;

@@ -41,7 +41,8 @@ void BeatLeader::SmoothHoverController::ctor() {
 
 void BeatLeader::SmoothHoverController::OnDisable() {
     IsHovered = false;
-    Progress = _targetValue = 0.0f;
+    Progress = 0.0f;
+    _targetValue = 0.0f;
     _set = false;
 
     hoverStateChangedEvent.invoke(IsHovered, Progress);

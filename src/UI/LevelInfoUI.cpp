@@ -36,6 +36,8 @@
 #include "bsml/shared/BSML-Lite.hpp"
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
+#include "scotland2/shared/modloader.h"
+
 #include <numeric>
 #include <map>
 #include <string>
@@ -98,9 +100,9 @@ namespace LevelInfoUI {
     MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
         LevelRefreshContent(self);
 
-        if (self->_beatmapLevel == NULL || 
-            self->beatmapCharacteristicSegmentedControlController == NULL ||
-            self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic == NULL) return;
+        if (!self->_beatmapLevel || 
+            !self->_beatmapCharacteristicSegmentedControlController ||
+            !self->_beatmapCharacteristicSegmentedControlController->_selectedBeatmapCharacteristic) return;
         if (starsLabel == NULL && !bslInstalled) {
 
             ///////////////////////////
@@ -108,7 +110,7 @@ namespace LevelInfoUI {
             ///////////////////////////
 
             // Create Modal
-            skillTriangleContainer = BSML::Lite::CreateModal(self->__levelParamsPanel->get_transform(), {40,40}, nullptr, true);
+            skillTriangleContainer = BSML::Lite::CreateModal(self->_levelParamsPanel->get_transform(), {40,40}, nullptr, true);
 
             // Create Actual Triangle Image
             auto skillTriangleImage = BSML::Lite::CreateImage(skillTriangleContainer->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 0}, {35, 35});
@@ -144,7 +146,7 @@ namespace LevelInfoUI {
             starsLabel = CreateText(self->_levelParamsPanel->get_transform(), "0.00", true, UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
             starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
             starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            starsImage = CreateClickableImage(self->_levelParamsPanel->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3), openSkillTriangle);
+            starsImage = CreateClickableImage(self->_levelParamsPanel->get_transform(), Sprites::get_StarIcon(), openSkillTriangle, UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3));
             AddHoverHint(starsLabel, "Song not ranked");
 
             ppLabel = CreateText(self->_levelParamsPanel->get_transform(), "0", true, UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
@@ -187,8 +189,8 @@ namespace LevelInfoUI {
         // Why not just substr str.substr("custom_level_".size())?
         // Because not every level is a custom level.
         string hash = regex_replace((string)self->_beatmapLevel->levelID, basic_regex("custom_level_"), "");
-        string difficulty = MapEnhancer::DiffName(self->selectedDifficultyBeatmap->get_difficulty().value);
-        string mode = (string)self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName;
+        string difficulty = MapEnhancer::DiffName(self->_beatmapKey->difficulty.value__);
+        string mode = (string)self->_beatmapCharacteristicSegmentedControlController->_selectedBeatmapCharacteristic->serializedName;
 
         pair<string, string> key = {hash, difficulty + mode};
 
@@ -248,12 +250,7 @@ namespace LevelInfoUI {
         INSTALL_HOOK(BeatLeaderLogger, LevelRefreshContent);
         INSTALL_HOOK(BeatLeaderLogger, DidDeactivate);
 
-        for(auto& [key, value] : Modloader::getMods()){
-            if (key == "BetterSongList") {
-                bslInstalled = true;
-                break;
-            }
-        }
+        bslInstalled = modloader::modloader_get_mod({"BetterSongList", "", 0}, CMatchType::MatchType_IdOnly).handle;
     }
 
     void SetLevelInfoActive(bool active) {

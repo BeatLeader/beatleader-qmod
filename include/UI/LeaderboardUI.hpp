@@ -21,7 +21,7 @@ namespace LeaderboardUI {
 
     void updateStatus(ReplayUploadStatus status, string description, float progress, bool showRestart);
     void updateVotingButton();
-    tuple<string, string, string> getLevelDetails(GlobalNamespace::BeatmapLevel* levelData);
+    tuple<string, string, string> getLevelDetails(GlobalNamespace::BeatmapKey levelData);
     void setVotingButtonsState(int state);
     void initSettingsModal(UnityEngine::Transform* parent);
     void initContextsModal(UnityEngine::Transform* parent);
