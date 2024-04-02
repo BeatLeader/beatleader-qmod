@@ -65,55 +65,67 @@ void BeatLeader::PlayerButtons::Setup(HMUI::ModalView *modal, function<void(Play
     friendsButton = MiniProfileButton("Friends management", SelectedColor, true, ::BSML::Lite::CreateClickableImage(
             leftTransform, 
             BundleLoader::bundle->friendsIcon, 
+            [captureSelf](){
+                captureSelf->toggleFriend();
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->toggleFriend();
-    }));
+            {4, 4}
+    ));
     friendsButton.RegisterCallback();
 
     incognitoButton = MiniProfileButton("Hide player info", SelectedColor, true, ::BSML::Lite::CreateClickableImage(
             leftTransform, 
             BundleLoader::bundle->incognitoIcon, 
+            [captureSelf](){
+                captureSelf->toggleBlacklist();
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->toggleBlacklist();
-    }));
+            {4, 4}
+    ));
     incognitoButton.RegisterCallback();
 
     linkButton = MiniProfileButton("Open profile", SelectedColor, true, ::BSML::Lite::CreateClickableImage(
             leftTransform, 
             BundleLoader::bundle->profileIcon, 
+            [captureSelf](){
+                captureSelf->openProfile();
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->openProfile();
-    }));
+            {4, 4}
+    ));
     linkButton.RegisterCallback();
 
     twitterButton = MiniProfileButton("Twitter", TwitterColor, false, ::BSML::Lite::CreateClickableImage(
             rightTransform, 
             BundleLoader::bundle->twitterIcon, 
+            [captureSelf](){
+                captureSelf->openSocial("Twitter");
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->openSocial("Twitter");
-    }));
+            {4, 4}
+    ));
     twitterButton.RegisterCallback();
 
     twitchButton = MiniProfileButton("Twitch", TwitchColor, false, ::BSML::Lite::CreateClickableImage(
             rightTransform, 
             BundleLoader::bundle->twitchIcon, 
+            [captureSelf](){
+                captureSelf->openSocial("Twitch");
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->openSocial("Twitch");
-    }));
+            {4, 4}
+    ));
     twitchButton.RegisterCallback();
 
     youtubeButton = MiniProfileButton("YouTube", YoutubeColor, false, ::BSML::Lite::CreateClickableImage(
             rightTransform, 
             BundleLoader::bundle->youtubeIcon, 
+            [captureSelf](){
+                captureSelf->openSocial("YouTube");
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->openSocial("YouTube");
-    }));
+            {4, 4}
+    ));
     youtubeButton.RegisterCallback();
 
     UpdateLayout();

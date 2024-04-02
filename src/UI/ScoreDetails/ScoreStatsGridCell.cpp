@@ -39,7 +39,7 @@ BeatLeader::ScoreStatsGridCell::ScoreStatsGridCell(HMUI::ModalView *modal, int i
 }
 
 void BeatLeader::ScoreStatsGridCell::setScore(float score, float ratio) const {
-    scoreText->SetText(to_string_wprecision(score, 2));
+    scoreText->SetText(to_string_wprecision(score, 2), true);
     imageView->set_color(UnityEngine::Color::Lerp(BadColor, GoodColor, ratio * ratio));
 }
 

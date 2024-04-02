@@ -36,7 +36,7 @@ BeatLeader::ScoreStatsGraph::ScoreStatsGraph(HMUI::ModalView *modal) noexcept {
     auto graphLine = gameObj->AddComponent<BeatLeader::AccuracyGraphLine*>();
     graphLine->get_transform()->SetParent(graphBackground->get_transform(), false);
     
-    RectTransform* rectTransform = (RectTransform*)graphLine->get_transform();
+    RectTransform* rectTransform = graphLine->get_transform().cast<RectTransform>();
     rectTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
     rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
     rectTransform->set_anchoredPosition(UnityEngine::Vector2(0, 0));

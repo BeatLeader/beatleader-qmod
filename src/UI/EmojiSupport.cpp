@@ -13,6 +13,7 @@
 #include "UnityEngine/Graphics.hpp"
 #include "UnityEngine/TextCore/GlyphMetrics.hpp"
 #include "UnityEngine/TextCore/GlyphRect.hpp"
+#include "UnityEngine/TextureFormat.hpp"
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"

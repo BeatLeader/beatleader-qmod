@@ -46,14 +46,21 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-if ($useDebug -eq $true) {
-    $fileName = Get-ChildItem lib*.so -Path "build/debug" -Name
-} else {
-    $fileName = Get-ChildItem lib*.so -Path "build/" -Name
-}
+$modJson = Get-Content "./mod.json" -Raw | ConvertFrom-Json
 
-& adb push build/$fileName /sdcard/Android/data/com.beatgames.beatsaber/files/mods/$fileName
+$lateModFiles = $modJson.lateModFiles
+
+foreach ($fileName in $lateModFiles) {
+    if ($useDebug -eq $true) {
+        & adb push build/debug/$fileName /sdcard/ModData/com.beatgames.beatsaber/Modloader/mods/$fileName
+    } else {
+        & adb push build/$fileName /sdcard/ModData/com.beatgames.beatsaber/Modloader/mods/$fileName
+    }
+}
 
 & $PSScriptRoot/restart-game.ps1
 
-if ($log -eq $true) { & $PSScriptRoot/start-logging.ps1 -self:$self -all:$all -custom:$custom -file:$file }
+if ($log -eq $true) {
+    & adb logcat -c
+    & $PSScriptRoot/start-logging.ps1 -self:$self -all:$all -custom:$custom -file:$file
+}

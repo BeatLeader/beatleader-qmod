@@ -9,7 +9,7 @@
 #include <sstream>
 
 #define TIMEOUT 60
-#define USER_AGENT string(ID "/" VERSION " (BeatSaber/" + GameVersion + ") (Oculus)").c_str()
+#define USER_AGENT string(MOD_ID "/" VERSION " (BeatSaber/" + GameVersion + ") (Oculus)").c_str()
 #define X_BSSB "X-BSSB: ✔"
 
 namespace WebUtils {
@@ -170,7 +170,7 @@ namespace WebUtils {
         auto res = curl_easy_perform(curl);
         /* Check for errors */ 
         if (res != CURLE_OK) {
-            BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+            BeatLeaderLogger.critical("curl_easy_perform() failed: %i: %s", static_cast<int>(res), curl_easy_strerror(res));
         }
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
         curl_easy_cleanup(curl);
@@ -245,7 +245,7 @@ namespace WebUtils {
                 auto res = curl_easy_perform(curl);
                 /* Check for errors */ 
                 if (res != CURLE_OK) {
-                    BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    BeatLeaderLogger.critical("curl_easy_perform() failed: %i: %s", static_cast<int>(res), curl_easy_strerror(res));
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);
@@ -311,7 +311,7 @@ namespace WebUtils {
                 auto res = curl_easy_perform(curl);
                 /* Check for errors */ 
                 if (res != CURLE_OK) {
-                    BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    BeatLeaderLogger.critical("curl_easy_perform() failed: %i: %s", static_cast<int>(res), curl_easy_strerror(res));
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 if (val) {
@@ -378,7 +378,7 @@ namespace WebUtils {
                 CURLcode res = curl_easy_perform(curl);
                 /* Check for errors */
                 if (res != CURLE_OK) {
-                    BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    BeatLeaderLogger.critical("curl_easy_perform() failed: %i: %s", static_cast<int>(res), curl_easy_strerror(res));
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);
@@ -449,7 +449,7 @@ namespace WebUtils {
                 CURLcode res = curl_easy_perform(curl);
                 /* Check for errors */
                 if (res != CURLE_OK) {
-                    BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    BeatLeaderLogger.critical("curl_easy_perform() failed: %i: %s", static_cast<int>(res), curl_easy_strerror(res));
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);
@@ -556,7 +556,7 @@ namespace WebUtils {
                 CURLcode res = curl_easy_perform(curl);
                 /* Check for errors */
                 if (res != CURLE_OK) {
-                    BeatLeaderLogger.critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    BeatLeaderLogger.critical("curl_easy_perform() failed: %i: %s", static_cast<int>(res), curl_easy_strerror(res));
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 curl_easy_cleanup(curl);

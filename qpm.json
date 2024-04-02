@@ -1,4 +1,5 @@
 {
+  "version": "0.1.0",
   "sharedDir": "shared",
   "dependenciesDir": "extern",
   "info": {
@@ -9,6 +10,9 @@
     "additionalData": {
       "overrideSoName": "libbl.so"
     }
+  },
+  "workspace": {
+    "scripts": {}
   },
   "dependencies": [
     {
@@ -27,7 +31,7 @@
     },
     {
       "id": "bs-cordl",
-      "versionRange": "^3500.*",
+      "versionRange": "3500.*",
       "additionalData": {}
     },
     {
@@ -74,7 +78,11 @@
       "id": "bs-utils",
       "versionRange": "^0.8.0",
       "additionalData": {}
+    },
+    {
+      "id": "paper",
+      "versionRange": "^3.6.3",
+      "additionalData": {}
     }
-  ],
-  "additionalData": {}
+  ]
 }

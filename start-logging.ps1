@@ -53,7 +53,7 @@ if ($self -eq $true) {
     $command += " | Select-String -pattern `"$pattern`""
 }
 elseif ($all -eq $false) {
-    $command += " | Select-String -pattern `"(QuestHook|modloader|AndroidRuntime|CRASH)`""
+    $command += " | Select-String -pattern `"(QuestHook|scotland2|AndroidRuntime|CRASH)`""
 }
 
 if ($file -eq $true) {

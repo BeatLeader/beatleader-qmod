@@ -71,8 +71,8 @@ namespace ResultsView {
                     if(std::filesystem::exists(ReplayManager::lastReplayFilename)) {
                         auto flow = BSML::Helpers::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
                         flow->DismissViewController(flow->get_topViewController(), HMUI::ViewController::AnimationDirection::Vertical, custom_types::MakeDelegate<System::Action *>(classof(System::Action *), (std::function<void()>)[flow]() {
-                            if (il2cpp_utils::try_cast<GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator>(flow)) {
-                                ((GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator *)flow)->SinglePlayerLevelSelectionFlowCoordinatorDidActivate(false, false);
+                            if (flow.try_cast<GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator>()) {
+                                flow.cast<GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator>()->SinglePlayerLevelSelectionFlowCoordinatorDidActivate(false, false);
                             }
                             if(!lastGameWasReplay || !getModConfig().ShowReplaySettings.GetValue()){
                                 if (getModConfig().ShowReplaySettings.GetValue()) {
@@ -93,7 +93,7 @@ namespace ResultsView {
 
         // Ajust position based on result screen type (position is different between failure and success)
         if(replayButton) {
-            replayButton->get_transform().cast<RectTransform>()->set_anchoredPosition(self->_levelCompletionResults->_levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared ? UnityEngine::Vector2(-46, -30) : UnityEngine::Vector2(-46, -19));
+            replayButton->get_transform().cast<RectTransform>()->set_anchoredPosition(self->_levelCompletionResults->levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared ? UnityEngine::Vector2(-46, -30) : UnityEngine::Vector2(-46, -19));
         }
 
         // Load initial status

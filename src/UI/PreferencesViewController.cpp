@@ -208,7 +208,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         // After switching the setting we need to manually call refresh, because StandardLevelDetailView::RefreshContent is not called again,
         // if the same map, that was selected before changing the setting, is selected again before selecting any other map. 
         // This results in setLabels not being called again and the stars of the old setting are displayed, which is why we call it manually here after selecting an option
-        starsDropdown->OnSelectIndex(custom_types::MakeDelegate<System::Action_2<HMUI::DropdownWithTableView*, int>*>((function<void(HMUI::DropdownWithTableView*, int)>)[](auto throwaway1, auto throwaway2){
+        starsDropdown->dropdown->add_didSelectCellWithIdxEvent(custom_types::MakeDelegate<System::Action_2<UnityW<HMUI::DropdownWithTableView>, int>*>((function<void(UnityW<HMUI::DropdownWithTableView>, int)>)[](auto throwaway1, auto throwaway2){
             LevelInfoUI::refreshRatingLabels();
         }));
         if (ReplayInstalled()) {

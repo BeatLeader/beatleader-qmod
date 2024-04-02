@@ -46,7 +46,7 @@ UnityEngine::Vector2 BeatLeader::ScreenViewTransform::InverseTransformVector(Uni
 UnityEngine::Vector2 BeatLeader::ScreenViewTransform::FromToVector(UnityEngine::Rect const &from, UnityEngine::Rect const &to, UnityEngine::Vector2 const &vector) {
     auto scaleFn = [](auto&& r) constexpr {return Sombrero::FastVector2(r.m_Width, r.m_Height);};
     auto scale = scaleFn(to) / scaleFn(from);
-    return vector * scale;
+    return Sombrero::FastVector2(vector) * scale;
 }
 
 UnityEngine::Vector2 BeatLeader::ScreenViewTransform::TransformDirection(UnityEngine::Vector2 const &screenDirection) const {

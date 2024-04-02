@@ -143,29 +143,25 @@ namespace LevelInfoUI {
             // Init Stars, PP, Type, Status and NoSubmission Label
             ///////////////////////////
 
-            starsLabel = CreateText(self->_levelParamsPanel->get_transform(), "0.00", true, UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
+            starsLabel = CreateText(self->_levelParamsPanel->get_transform(), "0.00", UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
             starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
-            starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
             starsImage = CreateClickableImage(self->_levelParamsPanel->get_transform(), Sprites::get_StarIcon(), openSkillTriangle, UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3));
             AddHoverHint(starsLabel, "Song not ranked");
 
-            ppLabel = CreateText(self->_levelParamsPanel->get_transform(), "0", true, UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
+            ppLabel = CreateText(self->_levelParamsPanel->get_transform(), "0", UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
             ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
-            ppLabel->set_fontStyle(TMPro::FontStyles::Italic);
             AddHoverHint(ppLabel, "BeatLeader approximate pp");
             
             ppImage = CreateImage(self->_levelParamsPanel->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-15.5, 5.6), UnityEngine::Vector2(3, 3));
 
             typeLabel = CreateText(self->_levelParamsPanel->get_transform(), "-", {9, 6}, {8,4});
             typeLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
-            typeLabel->set_fontStyle(TMPro::FontStyles::Italic);
             AddHoverHint(typeLabel, "Map type\n\nunknown");
 
             typeImage = CreateImage(self->_levelParamsPanel->get_transform(), Sprites::get_ArrowIcon(), {2.5, 5.6}, {3,3});
 
             statusLabel = CreateText(self->_levelParamsPanel->get_transform(), "unr.", {27, 6}, {8,4});
             statusLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
-            statusLabel->set_fontStyle(TMPro::FontStyles::Italic);
             AddHoverHint(statusLabel, "Ranking status - unranked \nTo vote for a song to be ranked, click the message box on the leaderboard");
 
             statusImage = CreateImage(self->_levelParamsPanel->get_transform(), Sprites::get_ClipboardIcon(), {20.5, 5.6}, {3,3});
@@ -189,7 +185,7 @@ namespace LevelInfoUI {
         // Why not just substr str.substr("custom_level_".size())?
         // Because not every level is a custom level.
         string hash = regex_replace((string)self->_beatmapLevel->levelID, basic_regex("custom_level_"), "");
-        string difficulty = MapEnhancer::DiffName(self->_beatmapKey->difficulty.value__);
+        string difficulty = MapEnhancer::DiffName(self->beatmapKey.difficulty.value__);
         string mode = (string)self->_beatmapCharacteristicSegmentedControlController->_selectedBeatmapCharacteristic->serializedName;
 
         pair<string, string> key = {hash, difficulty + mode};
@@ -250,7 +246,16 @@ namespace LevelInfoUI {
         INSTALL_HOOK(BeatLeaderLogger, LevelRefreshContent);
         INSTALL_HOOK(BeatLeaderLogger, DidDeactivate);
 
-        bslInstalled = modloader::modloader_get_mod({"BetterSongList", "", 0}, CMatchType::MatchType_IdOnly).handle;
+        for(auto& modInfo : modloader::get_all())
+        {
+            if(auto loadedMod = std::get_if<modloader::ModData>(&modInfo))
+            {
+                if(loadedMod->info.id == "BetterSongList"){
+                    bslInstalled = true;
+                    break;
+                }
+            }
+        }
     }
 
     void SetLevelInfoActive(bool active) {

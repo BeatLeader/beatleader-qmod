@@ -106,14 +106,14 @@ inline string FormatPP(const Score& score) {
 }
 
 void BeatLeader::GeneralScoreDetails::setScore(const Score& score) const {
-    datePlayed->SetText(GetTimeSetString(score));
+    datePlayed->SetText(GetTimeSetString(score), true);
     datePlayed->set_alignment(TMPro::TextAlignmentOptions::Center);
 
-    modifiedScore->SetText(GetStringWithLabel(FormatScore(score), "score"));
-    accuracy->SetText(GetStringWithLabel(FormatAcc(score), "accuracy"));
-    scorePp->SetText(GetStringWithLabel(FormatPP(score), "pp"));
+    modifiedScore->SetText(GetStringWithLabel(FormatScore(score), "score"), true);
+    accuracy->SetText(GetStringWithLabel(FormatAcc(score), "accuracy"), true);
+    scorePp->SetText(GetStringWithLabel(FormatPP(score), "pp"), true);
 
-    scoreDetails->SetText(GetDetailsString(score));
+    scoreDetails->SetText(GetDetailsString(score), true);
 }
 
 void BeatLeader::GeneralScoreDetails::setSelected(bool selected) const {

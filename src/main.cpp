@@ -16,7 +16,6 @@
 #include "include/Utils/ModConfig.hpp"
 #include "include/Utils/PlaylistSynchronizer.hpp"
 #include "include/Utils/WebUtils.hpp"
-#include "include/Utils/RecorderUtils.hpp"
 #include "include/Utils/FileManager.hpp"
 
 #include "config-utils/shared/config-utils.hpp"
@@ -24,6 +23,7 @@
 
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "GlobalNamespace/AppInit.hpp"
+#include "BeatSaber/Init/BSAppInit.hpp"
 
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 #include "bsml/shared/BSML.hpp"
@@ -35,7 +35,7 @@ using namespace BSML;
 MOD_EXPORT void setup(CModInfo *info) noexcept {
     *info = modInfo.to_c();
 
-    getConfig().Load();
+    getModConfig().Init(modInfo);
 
     Paper::Logger::RegisterFileContextId(BeatLeaderLogger.tag);
 
@@ -71,8 +71,8 @@ void replayPostCallback(ReplayUploadStatus status, const string& description, fl
     }
 }
 
-MAKE_HOOK_MATCH(AppInitStart, &AppInit::Start, void,
-    AppInit *self) {
+MAKE_HOOK_MATCH(AppInitStart, &BeatSaber::Init::BSAppInit::InstallBindings, void,
+    BeatSaber::Init::BSAppInit *self) {
     self->::UnityEngine::MonoBehaviour::StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle(self->get_gameObject())));
     AppInitStart(self);
     LeaderboardUI::setup();
@@ -89,7 +89,7 @@ MAKE_HOOK_MATCH(ModalView_Show, &HMUI::ModalView::Show, void, HMUI::ModalView* s
 	ModalView_Show(self, animated, moveToCenter, finishedCallback); 
 
     if (((string)self->get_name()).find("BeatLeader") != string::npos) {
-        auto cb = self->blockerGO->get_gameObject()->GetComponent<UnityEngine::Canvas*>();
+        auto cb = self->_blockerGO->get_gameObject()->GetComponent<UnityEngine::Canvas*>();
         cb->set_overrideSorting(false);
 
         auto cm = self->get_gameObject()->GetComponent<UnityEngine::Canvas*>();
@@ -98,14 +98,14 @@ MAKE_HOOK_MATCH(ModalView_Show, &HMUI::ModalView::Show, void, HMUI::ModalView* s
 }
 
 // Called later on in the game loading - a good time to install function hooks
-MOD_EXPORT extern "C" void late_load() {
+MOD_EXPORT "C" void late_load() {
     il2cpp_functions::Init();
     custom_types::Register::AutoRegister();
     WebUtils::refresh_urls();
     FileManager::EnsureReplaysFolderExists();
 
     BSML::Init();
-    BSML::Register::RegisterModSettingsViewController<BeatLeader::PreferencesViewController*>(modInfo, "BeatLeader");
+    BSML::Register::RegisterSettingsMenu<BeatLeader::PreferencesViewController*>("BeatLeader");
     LeaderboardUI::retryCallback = []() {
         ReplayManager::RetryPosting(replayPostCallback);
     };
@@ -113,7 +113,6 @@ MOD_EXPORT extern "C" void late_load() {
     LevelInfoUI::setup();
     ModifiersUI::setup();
     ResultsView::setup();
-    RecorderUtils::StartRecorderUtils();
 
     PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {
         // if (synchronizer == nullopt) {

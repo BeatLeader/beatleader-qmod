@@ -54,10 +54,10 @@ string FormatPositions(string platform, ScoreStats scoreStats) {
 }
 
 void BeatLeader::AdditionalScoreDetails::setScore(string platform, ScoreStats score) const {
-    details->SetText(FormatDetails(platform, score));
+    details->SetText(FormatDetails(platform, score), true);
     details->set_alignment(TMPro::TextAlignmentOptions::Center);
 
-    positions->SetText(FormatPositions(platform, score));
+    positions->SetText(FormatPositions(platform, score), true);
     positions->set_alignment(TMPro::TextAlignmentOptions::Center);
 
     positionsTitle->set_alignment(TMPro::TextAlignmentOptions::Center);

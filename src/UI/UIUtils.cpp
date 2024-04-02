@@ -12,26 +12,7 @@
 #include "main.hpp"
 
 #include "UnityEngine/HideFlags.hpp"
-
-// Access into internal bsml structures
-namespace BSML::ModSettingsInfos {
-    struct ModSettingsInfo {
-        ModInfo modInfo;
-        bool showModInfo;
-        std::string title;
-        Register::Type type;
-        System::Type* il2cpp_type;
-        union {
-            HMUI::ViewController* viewController;
-            HMUI::FlowCoordinator* flowCoordinator;
-        };
-        Register::DidActivateEvent didActivateEvent;
-        Register::MenuLocation location;
-        void Present();
-    };
-
-    std::vector<ModSettingsInfo>& get();
-}
+#include "UnityEngine/Resources.hpp"
 
 namespace UIUtils {
 
@@ -39,7 +20,7 @@ namespace UIUtils {
 
     HMUI::ImageView* getRoundRectSprite() {
         if (!roundRectSprite) {
-            roundRectSprite = BSML::ArrayUtil::First(UnityEngine::Resources::FindObjectsOfTypeAll<HMUI::ImageView*>(), [](HMUI::ImageView* image){ 
+            roundRectSprite = UnityEngine::Resources::FindObjectsOfTypeAll<HMUI::ImageView*>()->First([](HMUI::ImageView* image){ 
                 auto sprite = image->get_sprite();
                 if (!sprite || sprite->get_name() != "RoundRect10") return false;
 
@@ -89,11 +70,13 @@ namespace UIUtils {
 
     void OpenSettings() {
         // Get all of the mod settings infos, and get the one that is for beatleader
-        for (auto& s : BSML::ModSettingsInfos::get()) {
-            if (s.modInfo.id == MOD_ID) {
-                s.Present();
-            }
-        }
+
+        // TODO Is this even possible anymore with BSML? This accessed internal structures of questui ...
+        // for (auto& s : BSML::ModSettingsInfos::get()) {
+        //     if (s.modInfo.id == MOD_ID) {
+        //         s.Present();
+        //     }
+        // }
     }
 
     void AddRoundRect(HMUI::ImageView* background) {
@@ -103,9 +86,9 @@ namespace UIUtils {
 		background->set_color0(bgTemplate->get_color0());
 		background->set_color1(bgTemplate->get_color1());
 		background->set_gradient(bgTemplate->get_gradient());
-		background->gradientDirection = bgTemplate->gradientDirection;
-        background->flipGradientColors = bgTemplate->flipGradientColors;
-        background->skew = bgTemplate->skew;
+		background->_gradientDirection = bgTemplate->_gradientDirection;
+        background->_flipGradientColors = bgTemplate->_flipGradientColors;
+        background->_skew = bgTemplate->_skew;
 		background->set_eventAlphaThreshold(bgTemplate->get_eventAlphaThreshold());
 		background->set_fillAmount(bgTemplate->get_fillAmount());
 		background->set_fillCenter(bgTemplate->get_fillCenter());
@@ -138,7 +121,7 @@ namespace UIUtils {
         background->get_transform()->SetParent(parent, false);
         background->set_enabled(true);
 
-        UnityEngine::RectTransform* rectTransform = (UnityEngine::RectTransform*)background->get_transform();
+        UnityEngine::RectTransform* rectTransform = background->get_transform().cast<UnityEngine::RectTransform>();
         rectTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
         rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
         rectTransform->set_anchoredPosition(anchoredPosition);

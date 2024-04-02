@@ -12,7 +12,6 @@
 #include "include/Enhancers/UserEnhancer.hpp"
 
 #include "include/Utils/ReplayManager.hpp"
-#include "include/Utils/RecorderUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
 #include "include/API/PlayerController.hpp"
 
@@ -119,7 +118,7 @@ namespace ReplayRecorder {
     chrono::steady_clock::time_point _pauseStartTime;
     System::Action_1<float>* _heightEvent;
     System::Action_1<ScoringElement*>* _scoreEvent;
-    System::Action_1<ObstacleController*>* _wallEvent;
+    System::Action_1<UnityW<ObstacleController>>* _wallEvent;
     
     void collectMapData(StandardLevelScenesTransitionSetupDataSO* self) {
 
@@ -183,9 +182,7 @@ namespace ReplayRecorder {
 
         if (replay == nullopt) return;
 
-        _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float> *>(
-                        classof(System::Action_1<float>*),
-                        static_cast<Il2CppObject *>(nullptr), OnPlayerHeightChange);
+        _heightEvent = custom_types::MakeDelegate<System::Action_1<float>*>((std::function<void(float)>)OnPlayerHeightChange);
         self->add_playerHeightDidChangeEvent(_heightEvent);
     }
 
@@ -220,6 +217,7 @@ namespace ReplayRecorder {
             switch (results->playerLevelEndReason)
             {
                 case MultiplayerLevelCompletionResults::MultiplayerPlayerLevelEndReason::Cleared:
+                {
                     auto results = levelCompletionResults->localPlayerResultData->multiplayerLevelCompletionResults->levelCompletionResults; 
                     auto playEndData = PlayEndData(results, replay->info.speed);
 
@@ -229,6 +227,7 @@ namespace ReplayRecorder {
                     mapEnhancer.Enhance(replay.value());
                     replayCallback(*replay, playEndData, false);
                     break;
+                }
                 default:
                     break;
             }
@@ -314,9 +313,9 @@ namespace ReplayRecorder {
         return real < 1 ? real : max(real, unclamped);
     }
 
-    void onObstacle(ObstacleController* obstacle) {
+    void onObstacle(UnityW<ObstacleController> obstacle) {
         if (_currentWallEvent == nullopt) {
-            WallEvent& wallEvent = _wallEventCache.at(_wallCache[obstacle]);
+            WallEvent& wallEvent = _wallEventCache.at(_wallCache[obstacle.ptr()]);
             wallEvent.time = audioTimeSyncController->songTime;
             replay->walls.emplace_back(wallEvent);
             _currentWallEvent.emplace(wallEvent);
@@ -358,7 +357,7 @@ namespace ReplayRecorder {
             noteCutInfo.beforeCutRating = ChooseSwingRating(saberSwingRatingCounter->beforeCutRating, _preSwingContainer[(SaberMovementData *)saberSwingRatingCounter->_saberMovementData]);
             noteCutInfo.afterCutRating = ChooseSwingRating(saberSwingRatingCounter->afterCutRating, _postSwingContainer[saberSwingRatingCounter]);
 
-            _preSwingContainer[(SaberMovementData *)saberSwingRatingCounter->saberMovementData] = 0;
+            _preSwingContainer[(SaberMovementData *)saberSwingRatingCounter->_saberMovementData] = 0;
             _postSwingContainer[saberSwingRatingCounter] = 0;
         }
     }
@@ -367,10 +366,10 @@ namespace ReplayRecorder {
         auto sortedScoringElementsWithoutMultiplier = self->_sortedScoringElementsWithoutMultiplier;
         auto sortedNoteTimesWithoutScoringElements = self->_sortedNoteTimesWithoutScoringElements;
 
-        if (replay != nullopt
-            && sortedScoringElementsWithoutMultiplier != NULL 
-            && sortedNoteTimesWithoutScoringElements != NULL
-            && self->_audioTimeSyncController != NULL) {
+        if (replay
+            && sortedScoringElementsWithoutMultiplier 
+            && sortedNoteTimesWithoutScoringElements
+            && self->_audioTimeSyncController) {
             auto songTime = self->_audioTimeSyncController->songTime;
 
             float nearestNotCutNoteTime = sortedNoteTimesWithoutScoringElements->get_Count() > 0 ? sortedNoteTimesWithoutScoringElements->get_Item(0) : 10000000;
@@ -401,14 +400,10 @@ namespace ReplayRecorder {
         ScoreControllerStart(self);
         if (replay == nullopt) return;
 
-        _scoreEvent = il2cpp_utils::MakeDelegate<System::Action_1<ScoringElement*> *>(
-                        classof(System::Action_1<ScoringElement*>*),
-                        static_cast<Il2CppObject *>(nullptr), scoringElementFinished);
+        _scoreEvent = custom_types::MakeDelegate<System::Action_1<ScoringElement*> *>((std::function<void(ScoringElement*)>)scoringElementFinished);
         self->add_scoringForNoteFinishedEvent(_scoreEvent);
 
-        _wallEvent = il2cpp_utils::MakeDelegate<System::Action_1<ObstacleController*> *>(
-                        classof(System::Action_1<ObstacleController*>*),
-                        static_cast<Il2CppObject *>(nullptr), onObstacle);
+        _wallEvent = custom_types::MakeDelegate<System::Action_1<UnityW<ObstacleController>> *>((std::function<void(UnityW<ObstacleController>)>)onObstacle);
         self->_playerHeadAndObstacleInteraction->add_headDidEnterObstacleEvent(_wallEvent);
 
         phoi = self->_playerHeadAndObstacleInteraction;
@@ -419,9 +414,9 @@ namespace ReplayRecorder {
     MAKE_HOOK_MATCH(ComputeSwingRating, static_cast<float (SaberMovementData::*)(bool, float)>(&SaberMovementData::ComputeSwingRating), float, SaberMovementData* self, bool overrideSegmenAngle, float overrideValue) {
         float result = ComputeSwingRating(self, overrideSegmenAngle, overrideValue);
         if (replay == nullopt) return result;
-        auto _data = self->data;
-        int _nextAddIndex = self->nextAddIndex;
-        int _validCount = self->validCount;
+        auto _data = self->_data;
+        int _nextAddIndex = self->_nextAddIndex;
+        int _validCount = self->_validCount;
 
         int length = _data.size();
 
@@ -465,7 +460,7 @@ namespace ReplayRecorder {
         float postSwing = _postSwingContainer[self];
         if (!alreadyCut && !self->_notePlane.SameSide(newData.topPos, prevData.topPos))
         {
-            float angleDiff = UnityEngine::Vector3::Angle(self->_cutTopPos - self->_cutBottomPos, self->_afterCutTopPos - self->_afterCutBottomPos);
+            float angleDiff = UnityEngine::Vector3::Angle(UnityEngine::Vector3::op_Subtraction(self->_cutTopPos, self->_cutBottomPos), UnityEngine::Vector3::op_Subtraction(self->_afterCutTopPos, self->_afterCutBottomPos));
 
             if (self->_rateAfterCut)
             {

@@ -780,11 +780,11 @@ namespace LeaderboardUI {
             
             logoAnimation = websiteLink->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
             logoAnimation->Init(websiteLink);
-            websiteLink->OnPointerEnter() += [](auto _){ 
+            websiteLink->onEnter = [](){ 
                 logoAnimation->SetGlowing(true);
             };
 
-            websiteLink->OnPointerExit() += [](auto _){ 
+            websiteLink->onExit = [](){ 
                 logoAnimation->SetGlowing(false);
             };
 
@@ -982,7 +982,7 @@ namespace LeaderboardUI {
     }
 
     LeaderboardTableCell* CellForIdxReimplement(LeaderboardTableView* self, HMUI::TableView* tableView) {
-        LeaderboardTableCell* leaderboardTableCell = tableView->DequeueReusableCellForIdentifier("Cell").cast<LeaderboardTableCell>();
+        LeaderboardTableCell* leaderboardTableCell = tableView->DequeueReusableCellForIdentifier("Cell").try_cast<LeaderboardTableCell>().value_or(UnityW<LeaderboardTableCell>());
         if (leaderboardTableCell == NULL)
         {
             leaderboardTableCell = (LeaderboardTableCell *)Object::Instantiate<LeaderboardTableCell*>(self->_cellPrefab);
@@ -999,52 +999,50 @@ namespace LeaderboardUI {
     }
 
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, UnityW<HMUI::TableCell>, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
-        LeaderboardTableCell* result = row == 10 ? CellForIdxReimplement(self, tableView) : LeaderboardCellSource(self, tableView, row).cast<LeaderboardTableCell>();
+        LeaderboardTableCell* result = row == 10 ? CellForIdxReimplement(self, tableView) : LeaderboardCellSource(self, tableView, row).cast<LeaderboardTableCell>().ptr();
 
         if (showBeatLeader && !isLocal) {
-        if (result->_playerNameText->get_fontSize() > 3 || result->_playerNameText->get_enableAutoSizing()) {
-            result->_playerNameText->set_enableAutoSizing(false);
-            result->_playerNameText->set_richText(true);
-            
-            resize(result->_playerNameText, 24, 0);
-            move(result->_rankText, -6.2, -0.1);
-            result->_rankText->set_alignment(TMPro::TextAlignmentOptions::Right);
-
-            move(result->_playerNameText, -0.5, 0);
-            move(result->_fullComboText, 0.2, 0);
-            move(result->_scoreText, 4, 0);
-            result->_playerNameText->set_fontSize(3);
-            result->_fullComboText->set_fontSize(3);
-            result->_scoreText->set_fontSize(2);
-            EmojiSupport::AddSupport(result->_playerNameText);
-
-            if (!cellBackgrounds.count(result)) {
-                avatars[result] = ::BSML::Lite::CreateImage(result->get_transform(), plvc->_aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
-                avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
-
-                auto scoreSelector = ::BSML::Lite::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), [result]() {
-                    auto openEvent = il2cpp_utils::MakeDelegate<System::Action *>(
-                        classof(System::Action*),
-                        static_cast<Il2CppObject *>(nullptr), setTheScoreAgain);
-                    detailsTextWorkaround = cellScores[result];
-
-                    scoreDetailsUI->modal->Show(true, true, openEvent);
-                    scoreDetailsUI->setScore(cellScores[result]);
-                }, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
+            if (true || result->_playerNameText->get_fontSize() > 3 || result->_playerNameText->get_enableAutoSizing()) {
+                result->_playerNameText->set_enableAutoSizing(false);
+                result->_playerNameText->set_richText(true);
                 
-                scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->scoreUnderlineMaterial));
-                
-                cellHighlights[result] = scoreSelector;
+                resize(result->_playerNameText, 24, 0);
+                move(result->_rankText, -6.2, -0.1);
+                result->_rankText->set_alignment(TMPro::TextAlignmentOptions::Right);
 
-                auto backgroundImage = ::BSML::Lite::CreateImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
-                backgroundImage->set_material(BundleLoader::bundle->scoreBackgroundMaterial);
-                backgroundImage->get_transform()->SetAsFirstSibling();
-                cellBackgrounds[result] = backgroundImage;  
+                move(result->_playerNameText, -0.5, 0);
+                move(result->_fullComboText, 0.2, 0);
+                move(result->_scoreText, 4, 0);
+                result->_playerNameText->set_fontSize(3);
+                result->_fullComboText->set_fontSize(3);
+                result->_scoreText->set_fontSize(2);
+                EmojiSupport::AddSupport(result->_playerNameText);
 
-                // auto tagsList = BSML::Lite::CreateHorizontalLayoutGroup(result->get_transform());
-                // clanGroups[result] = tagsList;         
+                if (!cellBackgrounds.count(result)) {
+                    avatars[result] = ::BSML::Lite::CreateImage(result->get_transform(), plvc->_aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
+                    avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
+
+                    auto scoreSelector = ::BSML::Lite::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), [result]() {
+                        auto openEvent = custom_types::MakeDelegate<System::Action *>((std::function<void()>)setTheScoreAgain);
+                        detailsTextWorkaround = cellScores[result];
+
+                        scoreDetailsUI->modal->Show(true, true, openEvent);
+                        scoreDetailsUI->setScore(cellScores[result]);
+                    }, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
+                    
+                    scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->scoreUnderlineMaterial));
+                    
+                    cellHighlights[result] = scoreSelector;
+
+                    auto backgroundImage = ::BSML::Lite::CreateImage(result->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
+                    backgroundImage->set_material(BundleLoader::bundle->scoreBackgroundMaterial);
+                    backgroundImage->get_transform()->SetAsFirstSibling();
+                    cellBackgrounds[result] = backgroundImage;  
+
+                    // auto tagsList = BSML::Lite::CreateHorizontalLayoutGroup(result->get_transform());
+                    // clanGroups[result] = tagsList;         
+                }
             }
-        }
         } else {
             if (result->_scoreText->get_fontSize() == 2) {
                 EmojiSupport::RemoveSupport(result->_playerNameText);
@@ -1268,7 +1266,7 @@ namespace LeaderboardUI {
         // Code adapted from: https://github.com/darknight1050/bsml/blob/master/src/BeatSaberUI.cpp#L826
         static SafePtrUnity<UnityEngine::UI::Toggle> toggleCopy;
         if(!toggleCopy){
-            toggleCopy = Resources::FindObjectsOfTypeAll<UnityEngine::UI::Toggle*>().FirstOrDefault([](auto x) {return x->get_transform()->get_parent()->get_gameObject()->get_name() == "Fullscreen"; });
+            toggleCopy = Resources::FindObjectsOfTypeAll<UnityEngine::UI::Toggle*>()->FirstOrDefault([](auto x) {return x->get_transform()->get_parent()->get_gameObject()->get_name() == "Fullscreen"; });
         }
 
         UnityEngine::UI::Toggle* newToggle = Object::Instantiate(toggleCopy.ptr(), parent, false);
@@ -1310,11 +1308,15 @@ namespace LeaderboardUI {
         ssInstalled = false;
         showBeatLeader = true;
 
-        for(auto& [key, value] : Modloader::getMods()){
-            if (key == "ScoreSaber") {
-                ssInstalled = true;
-                showBeatLeader = getModConfig().ShowBeatleader.GetValue();
-                break;
+        for(auto& modInfo : modloader::get_all())
+        {
+            if(auto loadedMod = std::get_if<modloader::ModData>(&modInfo))
+            {
+                if(loadedMod->info.id == "ScoreSaber"){
+                    ssInstalled = true;
+                    showBeatLeader = getModConfig().ShowBeatleader.GetValue();
+                    break;
+                }
             }
         }
 

@@ -12,7 +12,6 @@
 #include "UnityEngine/Component.hpp"
 #include "UnityEngine/Color.hpp"
 #include "UnityEngine/UI/ColorBlock.hpp"
-#include "UnityEngine/UI/Selectable_SelectionState.hpp"
 
 #include "bsml/shared/BSML/Components/Backgroundable.hpp"
 
@@ -28,16 +27,16 @@ using namespace GlobalNamespace;
 void setupButtonTitle(UnityEngine::UI::Button* button, float offset, int fontSize = 0) {
     UnityEngine::Object::Destroy(button->get_transform()->Find("Content")->GetComponent<UnityEngine::UI::LayoutElement*>());
 
-    auto title = button->GetComponentsInChildren<TMPro::TextMeshProUGUI*>()->get(0);
+    auto title = button->GetComponentsInChildren<TMPro::TextMeshProUGUI*>()[0];
     if (fontSize > 0) {
         title->set_fontSize(fontSize);
     }
     
-    title->set_margin(offset);
+    title->set_margin(UnityEngine::Vector4(offset,offset,offset,offset));
 }
 
 void setButtonTitleColor(UnityEngine::UI::Button* button, UnityEngine::Color32 const& color) {
-    auto title = button->GetComponentsInChildren<TMPro::TextMeshProUGUI*>()->get(0);
+    auto title = button->GetComponentsInChildren<TMPro::TextMeshProUGUI*>()[0];
     title->SetFaceColor(color);
 }
 
@@ -51,7 +50,7 @@ void BeatLeader::initVotingPopup(
     }
     if (modalUI == nullptr) modalUI = (BeatLeader::RankVotingPopup*) malloc(sizeof(BeatLeader::RankVotingPopup));
 
-    auto container = CreateModal(parent, UnityEngine::Vector2(60, 30), [](HMUI::ModalView *modal) {}, true);
+    auto container = CreateModal(parent, UnityEngine::Vector2(60, 30), nullptr, true);
     modalUI->modal = container;
 
     auto containerTransform = container->get_transform();
@@ -63,8 +62,8 @@ void BeatLeader::initVotingPopup(
         modalUI->rightButton->get_gameObject()->SetActive(true);
         modalUI->voteButton->set_interactable(true);
 
-        setButtonTitleColor(modalUI->noButton, UnityEngine::Color32(255, 255, 255, 255));
-        setButtonTitleColor(modalUI->yesButton, UnityEngine::Color32(102, 255, 102, 255));
+        setButtonTitleColor(modalUI->noButton, UnityEngine::Color32(0, 255, 255, 255, 255));
+        setButtonTitleColor(modalUI->yesButton, UnityEngine::Color32(0, 102, 255, 102, 255));
     });
 
     modalUI->noButton = ::BSML::Lite::CreateUIButton(containerTransform, "NO", UnityEngine::Vector2(14.0, 3.0), [modalUI]() {
@@ -72,8 +71,8 @@ void BeatLeader::initVotingPopup(
         modalUI->rightButton->get_gameObject()->SetActive(false);
         modalUI->voteButton->set_interactable(true);
 
-        setButtonTitleColor(modalUI->noButton, UnityEngine::Color32(255, 102, 102, 255));
-        setButtonTitleColor(modalUI->yesButton, UnityEngine::Color32(255, 255, 255, 255));
+        setButtonTitleColor(modalUI->noButton, UnityEngine::Color32(0, 255, 102, 102, 255));
+        setButtonTitleColor(modalUI->yesButton, UnityEngine::Color32(0, 255, 255, 255, 255));
     });
 
     // Page 2
@@ -144,13 +143,13 @@ void BeatLeader::RankVotingPopup::reset() {
     midspeedButton->get_gameObject()->SetActive(false);
     speedButton->get_gameObject()->SetActive(false);
     
-    setButtonTitleColor(accButton, UnityEngine::Color32(255, 255, 255, 255));
-    setButtonTitleColor(techButton, UnityEngine::Color32(255, 255, 255, 255));
-    setButtonTitleColor(midspeedButton, UnityEngine::Color32(255, 255, 255, 255));
-    setButtonTitleColor(speedButton, UnityEngine::Color32(255, 255, 255, 255));
+    setButtonTitleColor(accButton, UnityEngine::Color32(0, 255, 255, 255, 255));
+    setButtonTitleColor(techButton, UnityEngine::Color32(0, 255, 255, 255, 255));
+    setButtonTitleColor(midspeedButton, UnityEngine::Color32(0, 255, 255, 255, 255));
+    setButtonTitleColor(speedButton, UnityEngine::Color32(0, 255, 255, 255, 255));
 
-    setButtonTitleColor(noButton, UnityEngine::Color32(255, 255, 255, 255));
-    setButtonTitleColor(yesButton, UnityEngine::Color32(255, 255, 255, 255));
+    setButtonTitleColor(noButton, UnityEngine::Color32(0, 255, 255, 255, 255));
+    setButtonTitleColor(yesButton, UnityEngine::Color32(0, 255, 255, 255, 255));
 
     leftButton->get_gameObject()->SetActive(false);
     rightButton->get_gameObject()->SetActive(false);
@@ -159,7 +158,7 @@ void BeatLeader::RankVotingPopup::reset() {
     noButton->get_gameObject()->SetActive(true);
 
     starSlider->get_gameObject()->SetActive(false);
-    starSlider->set_value(0);
+    starSlider->set_Value(0);
 
     voteButton->set_interactable(false);
 
@@ -207,9 +206,9 @@ void BeatLeader::RankVotingPopup::updateType(MapType mapType, UnityEngine::UI::B
     
     if ((type & mapType) != 0) {
         type &= ~mapType;
-        setButtonTitleColor(button, UnityEngine::Color32(255, 255, 255, 255));
+        setButtonTitleColor(button, UnityEngine::Color32(0, 255, 255, 255, 255));
     } else {
         type |= mapType;
-        setButtonTitleColor(button, UnityEngine::Color32(153, 255, 255, 255));
+        setButtonTitleColor(button, UnityEngine::Color32(0, 153, 255, 255, 255));
     }
 }
