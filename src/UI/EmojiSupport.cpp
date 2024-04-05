@@ -153,7 +153,7 @@ MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpri
             loadingCount--;
             if (loadingCount == 0) {
                 for (auto const& i : textToUpdate) {
-                    i->ForceMeshUpdate(false, false);
+                    i->ForceMeshUpdate(true, true);
                 }
                 textToUpdate = {};
             }

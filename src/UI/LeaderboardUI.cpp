@@ -1002,12 +1002,12 @@ namespace LeaderboardUI {
         LeaderboardTableCell* result = row == 10 ? CellForIdxReimplement(self, tableView) : LeaderboardCellSource(self, tableView, row).cast<LeaderboardTableCell>().ptr();
 
         if (showBeatLeader && !isLocal) {
-            if (true || result->_playerNameText->get_fontSize() > 3 || result->_playerNameText->get_enableAutoSizing()) {
+            if (result->_playerNameText->get_fontSize() > 3 || result->_playerNameText->get_enableAutoSizing()) {
                 result->_playerNameText->set_enableAutoSizing(false);
                 result->_playerNameText->set_richText(true);
                 
                 resize(result->_playerNameText, 24, 0);
-                move(result->_rankText, -6.2, -0.1);
+                move(result->_rankText, 1, 0);
                 result->_rankText->set_alignment(TMPro::TextAlignmentOptions::Right);
 
                 move(result->_playerNameText, -0.5, 0);
