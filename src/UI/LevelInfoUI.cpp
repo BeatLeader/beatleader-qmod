@@ -119,9 +119,9 @@ namespace LevelInfoUI {
             int normalizedValuesPropertyId = UnityEngine::Shader::PropertyToID("_Normalized");
 
             // Create Star Value Labels for Triangle
-            auto techLabel = BSML::Lite::CreateText(skillTriangleContainer->get_transform(), "Tech - ", {12, 12});
-            auto accLabel = BSML::Lite::CreateText(skillTriangleContainer->get_transform(), "Acc - ", {34, 12});
-            auto passLabel = BSML::Lite::CreateText(skillTriangleContainer->get_transform(), "Pass - ", {23, -17});
+            auto techLabel = BSML::Lite::CreateText(skillTriangleContainer->get_transform(), "Tech - ", {-18, 16});
+            auto accLabel = BSML::Lite::CreateText(skillTriangleContainer->get_transform(), "Acc - ", {6, 16});
+            auto passLabel = BSML::Lite::CreateText(skillTriangleContainer->get_transform(), "Pass - ", {-7, -12});
 
             // OnClick Function to open the SkillTriangle
             auto openSkillTriangle = [techLabel, accLabel, passLabel, normalizedValuesPropertyId](){

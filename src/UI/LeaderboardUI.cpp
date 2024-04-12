@@ -698,7 +698,7 @@ namespace LeaderboardUI {
             self->_loadingControl->Hide();
             
             if (preferencesButton == NULL) {
-                loginPrompt = ::BSML::Lite::CreateText(plvc->get_transform(), "Please sign up or log in to post scores!", false, UnityEngine::Vector2(4, 10));
+                loginPrompt = ::BSML::Lite::CreateText(plvc->get_transform(), "Please sign up or log in to post scores!", UnityEngine::Vector2(4, 10));
                 preferencesButton = ::BSML::Lite::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
                     UIUtils::OpenSettings();
                 });
@@ -746,7 +746,7 @@ namespace LeaderboardUI {
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", false, UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
+            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
 
             EmojiSupport::AddSupport(playerName);
@@ -763,13 +763,13 @@ namespace LeaderboardUI {
             globalLayout->set_spacing(1);
             EnableHorizontalFit(globalLayout);
             globalRankIcon = ::BSML::Lite::CreateImage(globalLayout->get_transform(), BundleLoader::bundle->globeIcon);
-            globalRank = ::BSML::Lite::CreateText(globalLayout->get_transform(), "", false);
+            globalRank = ::BSML::Lite::CreateText(globalLayout->get_transform(), "");
 
             auto countryLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(rankLayout->get_transform());
             countryLayout->set_spacing(1);
             EnableHorizontalFit(countryLayout);
             countryRankIcon = ::BSML::Lite::CreateImage(countryLayout->get_transform(), BundleLoader::bundle->globeIcon);
-            countryRankAndPp = ::BSML::Lite::CreateText(countryLayout->get_transform(), "", false);
+            countryRankAndPp = ::BSML::Lite::CreateText(countryLayout->get_transform(), "");
             if (PlayerController::currentPlayer != std::nullopt) {
                 updatePlayerInfoLabel();
             }
@@ -797,10 +797,9 @@ namespace LeaderboardUI {
             retryButton->get_gameObject()->SetActive(false);
             retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
 
-            if(uploadStatus) UnityEngine::GameObject::Destroy(uploadStatus);
-            uploadStatus = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", false);
-            move(uploadStatus, 150, 60);
-            resize(uploadStatus, 10, 0);
+            if(uploadStatus) UnityEngine::GameObject::DestroyImmediate(uploadStatus);
+            uploadStatus = ::BSML::Lite::CreateText(parentScreen->get_transform(), "Lorem Ipsum was weiß ich schon irgendein langer Text", {150, 60});
+            resize(uploadStatus, 100, 3);
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
             upPageButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), [](){
@@ -1190,11 +1189,11 @@ namespace LeaderboardUI {
     void initContextsModal(UnityEngine::Transform* parent){
         auto container = BSML::Lite::CreateModal(parent, {40, static_cast<float>((static_cast<int>(Context::SCPM) + 2) * 10 + 5)}, nullptr, true);
 
-        BSML::Lite::CreateText(container->get_transform(), "Scores Context", {20, 19});
+        BSML::Lite::CreateText(container->get_transform(), "Scores Context", {-6, 25});
 
         for(int i = 0; i <= static_cast<int>(Context::SCPM); i++)
         {
-            BSML::Lite::CreateUIButton(container->get_transform(), contextToDisplayString[static_cast<Context>(i)], {0.0f, static_cast<float>(21 - (i + 1) * 10)}, [i](){
+            BSML::Lite::CreateUIButton(container->get_transform(), contextToDisplayString[static_cast<Context>(i)], {20.0f, static_cast<float>(-6 - (i + 1) * 10)}, [i](){
                 // Set the new value
                 getModConfig().Context.SetValue(i);
                 // Hide the modal
@@ -1220,37 +1219,37 @@ namespace LeaderboardUI {
     void initSettingsModal(UnityEngine::Transform* parent){
         auto container = BSML::Lite::CreateModal(parent, {40,60}, nullptr, true);
         
-        BSML::Lite::CreateText(container->get_transform(), "Leaderboard Settings", {16, 24});
+        BSML::Lite::CreateText(container->get_transform(), "Leaderboard Settings", {-14, 24});
 
-        BSML::Lite::CreateText(container->get_transform(), "Avatar", {12, 14});
+        BSML::Lite::CreateText(container->get_transform(), "Avatar", {-11, 19});
 
         CreateToggle(container->get_transform(), getModConfig().AvatarsActive.GetValue(), {-3, 16}, [](bool value){
             getModConfig().AvatarsActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Clans", {12, 4});
+        BSML::Lite::CreateText(container->get_transform(), "Clans", {-11, 5});
 
         CreateToggle(container->get_transform(), getModConfig().ClansActive.GetValue(), {-3, 6}, [](bool value){
             getModConfig().ClansActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Score", {12, -6});
+        BSML::Lite::CreateText(container->get_transform(), "Score", {-11, -5});
 
         CreateToggle(container->get_transform(), getModConfig().ScoresActive.GetValue(), {-3, -4}, [](bool value){
             getModConfig().ScoresActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Time", {12, -16});
+        BSML::Lite::CreateText(container->get_transform(), "Time", {-11, -15});
 
         CreateToggle(container->get_transform(), getModConfig().TimesetActive.GetValue(), {-3, -14}, [](bool value){
             getModConfig().TimesetActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Capture", {12, -26});
+        BSML::Lite::CreateText(container->get_transform(), "Capture", {-11, -25});
 
         CreateToggle(container->get_transform(), getModConfig().CaptureActive.GetValue(), {-3, -24}, [](bool value){
             getModConfig().CaptureActive.SetValue(value);
