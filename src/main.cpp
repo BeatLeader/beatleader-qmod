@@ -105,7 +105,7 @@ MOD_EXPORT "C" void late_load() {
     FileManager::EnsureReplaysFolderExists();
 
     BSML::Init();
-    BSML::Register::RegisterSettingsMenu<BeatLeader::PreferencesViewController*>("BeatLeader");
+    BSML::Register::RegisterSettingsMenu("BeatLeader", BeatLeader::PreferencesViewController::DidActivate, false);
     LeaderboardUI::retryCallback = []() {
         ReplayManager::RetryPosting(replayPostCallback);
     };

@@ -81,6 +81,8 @@
 #include "GlobalNamespace/LeaderboardTableCell.hpp"
 #include "GlobalNamespace/SinglePlayerLevelSelectionFlowCoordinator.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
+#include "GlobalNamespace/BoolSettingsController.hpp"
+#include "BGLib/Polyglot/LocalizedTextMeshProUGUI.hpp"
 
 #include "TMPro/TMP_Sprite.hpp"
 #include "TMPro/TMP_SpriteGlyph.hpp"
@@ -697,21 +699,21 @@ namespace LeaderboardUI {
         if (PlayerController::currentPlayer == std::nullopt) {
             self->_loadingControl->Hide();
             
-            if (preferencesButton == NULL) {
-                loginPrompt = ::BSML::Lite::CreateText(plvc->get_transform(), "Please sign up or log in to post scores!", UnityEngine::Vector2(4, 10));
-                preferencesButton = ::BSML::Lite::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
-                    UIUtils::OpenSettings();
-                });
+            if (loginPrompt == NULL) {
+                loginPrompt = ::BSML::Lite::CreateText(plvc->get_transform(), "Please log in or sign up in settings to post scores!", {24, 0}, {100, 4});
+                // preferencesButton = ::BSML::Lite::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
+                //     UIUtils::OpenSettings();
+                // });
             }
             loginPrompt->get_gameObject()->SetActive(true);
-            preferencesButton->get_gameObject()->SetActive(true);
+            // preferencesButton->get_gameObject()->SetActive(true);
 
             return;
         }
 
-        if (preferencesButton != NULL) {
+        if (loginPrompt != NULL) {
             loginPrompt->get_gameObject()->SetActive(false);
-            preferencesButton->get_gameObject()->SetActive(false);
+            // preferencesButton->get_gameObject()->SetActive(false);
         }
 
         if (uploadStatus == NULL) {
@@ -798,7 +800,7 @@ namespace LeaderboardUI {
             retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
 
             if(uploadStatus) UnityEngine::GameObject::DestroyImmediate(uploadStatus);
-            uploadStatus = ::BSML::Lite::CreateText(parentScreen->get_transform(), "Lorem Ipsum was weiß ich schon irgendein langer Text", {150, 60});
+            uploadStatus = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", {150, 60});
             resize(uploadStatus, 100, 3);
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
@@ -886,9 +888,9 @@ namespace LeaderboardUI {
     }
 
     void updateSelectedLeaderboard() {
-        if (preferencesButton && PlayerController::currentPlayer == std::nullopt) {
+        if (loginPrompt && PlayerController::currentPlayer == std::nullopt) {
             loginPrompt->get_gameObject()->SetActive(showBeatLeader);
-            preferencesButton->get_gameObject()->SetActive(showBeatLeader);
+            // preferencesButton->get_gameObject()->SetActive(showBeatLeader);
         }
 
         LevelInfoUI::SetLevelInfoActive(showBeatLeader);
@@ -1221,7 +1223,7 @@ namespace LeaderboardUI {
         
         BSML::Lite::CreateText(container->get_transform(), "Leaderboard Settings", {-14, 24});
 
-        BSML::Lite::CreateText(container->get_transform(), "Avatar", {-11, 19});
+        BSML::Lite::CreateText(container->get_transform(), "Avatar", {-11, 18});
 
         CreateToggle(container->get_transform(), getModConfig().AvatarsActive.GetValue(), {-3, 16}, [](bool value){
             getModConfig().AvatarsActive.SetValue(value);
@@ -1263,21 +1265,37 @@ namespace LeaderboardUI {
     UnityEngine::UI::Toggle* CreateToggle(UnityEngine::Transform* parent, bool currentValue, UnityEngine::Vector2 anchoredPosition, std::function<void(bool)> onValueChange)
     {
         // Code adapted from: https://github.com/darknight1050/bsml/blob/master/src/BeatSaberUI.cpp#L826
-        static SafePtrUnity<UnityEngine::UI::Toggle> toggleCopy;
-        if(!toggleCopy){
-            toggleCopy = Resources::FindObjectsOfTypeAll<UnityEngine::UI::Toggle*>()->FirstOrDefault([](auto x) {return x->get_transform()->get_parent()->get_gameObject()->get_name() == "Fullscreen"; });
+        static SafePtrUnity<GameObject> toggleCopy;
+        if (!toggleCopy) {
+            auto foundToggle = Resources::FindObjectsOfTypeAll<UnityEngine::UI::Toggle*>()->FirstOrDefault([](auto x) { return x->get_transform()->get_parent()->get_gameObject()->get_name() == "Fullscreen"; });
+            toggleCopy = foundToggle ? foundToggle->get_transform()->get_parent()->get_gameObject() : nullptr;
         }
 
-        UnityEngine::UI::Toggle* newToggle = Object::Instantiate(toggleCopy.ptr(), parent, false);
-        newToggle->set_interactable(true);
-        newToggle->set_isOn(currentValue);
-        newToggle->onValueChanged = UnityEngine::UI::Toggle::ToggleEvent::New_ctor();
+
+        GameObject* gameObject = Object::Instantiate(toggleCopy.ptr(), parent, false);
+        static ConstString nameTextName("NameText");
+        GameObject* nameText = gameObject->get_transform()->Find(nameTextName)->get_gameObject();
+        Object::Destroy(gameObject->GetComponent<GlobalNamespace::BoolSettingsController*>());
+
+        static ConstString name("QuestUICheckboxSetting");
+        gameObject->set_name(name);
+
+        gameObject->SetActive(false);
+
+        Object::Destroy(nameText->GetComponent<BGLib::Polyglot::LocalizedTextMeshProUGUI*>());
+        nameText->SetActive(false);
+        
+        UnityEngine::UI::Toggle* toggle = gameObject->GetComponentInChildren<UnityEngine::UI::Toggle*>();
+        toggle->set_interactable(true);
+        toggle->set_isOn(currentValue);
+        toggle->onValueChanged = UnityEngine::UI::Toggle::ToggleEvent::New_ctor();
         if(onValueChange)
-            newToggle->onValueChanged->AddListener(custom_types::MakeDelegate<UnityEngine::Events::UnityAction_1<bool>*>(onValueChange));
-        RectTransform* rectTransform = newToggle->GetComponent<RectTransform*>();
-        rectTransform->set_anchoredPosition(anchoredPosition);
-        newToggle->get_gameObject()->set_active(true);
-        return newToggle;
+            toggle->onValueChanged->AddListener(custom_types::MakeDelegate<UnityEngine::Events::UnityAction_1<bool>*>(onValueChange));
+        RectTransform* rectTransform = gameObject->GetComponent<RectTransform*>();
+        rectTransform->set_anchoredPosition({anchoredPosition.x, anchoredPosition.y - 27});
+
+        gameObject->SetActive(true);
+        return toggle;
     }
 
     MAKE_HOOK_MATCH(LocalLeaderboardDidActivate, &LocalLeaderboardViewController::DidActivate, void, LocalLeaderboardViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {

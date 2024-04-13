@@ -13,17 +13,17 @@
     {
       "version": "^0.4.19",
       "id": "bsml",
-      "downloadIfMissing": "https://github.com/RedBrumbler/Quest-BSML/releases/download/v0.4.22/BSML.qmod"
+      "downloadIfMissing": "https://github.com/RedBrumbler/Quest-BSML/releases/download/v0.4.24/BSML.qmod"
     },
     {
       "version": "^0.17.0",
       "id": "custom-types",
-      "downloadIfMissing": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.17.6/CustomTypes.qmod"
+      "downloadIfMissing": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.17.7/CustomTypes.qmod"
     },
     {
       "version": "^1.1.1",
       "id": "songcore",
-      "downloadIfMissing": "https://github.com/raineio/Quest-SongCore/releases/download/v1.1.6/SongCore.qmod"
+      "downloadIfMissing": "https://github.com/raineio/Quest-SongCore/releases/download/v1.1.9/SongCore.qmod"
     },
     {
       "version": "^0.8.0",
