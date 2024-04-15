@@ -21,4 +21,5 @@ namespace BeatLeader {
             UnityEngine::UI::Button* ranked;
     };
     void initLinksContainerPopup(LinksContainerPopup** modalUI, UnityEngine::Transform* parent);
+    void SetButtonSize(UnityEngine::UI::Button* button, UnityEngine::Vector2 sizeDelta);
 }
