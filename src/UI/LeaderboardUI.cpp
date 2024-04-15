@@ -701,9 +701,9 @@ namespace LeaderboardUI {
             
             if (loginPrompt == NULL) {
                 loginPrompt = ::BSML::Lite::CreateText(plvc->get_transform(), "Please log in or sign up in settings to post scores!", {24, 0}, {100, 4});
-                // preferencesButton = ::BSML::Lite::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
-                //     UIUtils::OpenSettings();
-                // });
+                preferencesButton = ::BSML::Lite::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
+                    UIUtils::OpenSettings();
+                });
             }
             loginPrompt->get_gameObject()->SetActive(true);
             // preferencesButton->get_gameObject()->SetActive(true);

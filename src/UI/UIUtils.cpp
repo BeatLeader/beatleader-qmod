@@ -11,6 +11,13 @@
 
 #include "main.hpp"
 
+#include "bsml/shared/BSML/Settings/BSMLSettings.hpp"
+#include "bsml/shared/BSML/Settings/SettingsMenu.hpp"
+#include "bsml/shared/BSML/Settings/UI/ModSettingsFlowCoordinator.hpp"
+#include "bsml/shared/BSML/Settings/UI/SettingsMenuListViewController.hpp"
+#include "bsml/shared/Helpers/delegates.hpp"
+#include "bsml/shared/Helpers/getters.hpp"
+
 #include "UnityEngine/HideFlags.hpp"
 #include "UnityEngine/Resources.hpp"
 
@@ -69,14 +76,24 @@ namespace UIUtils {
     }
 
     void OpenSettings() {
-        // Get all of the mod settings infos, and get the one that is for beatleader
+        auto modFC = BSML::BSMLSettings::get_instance()->get_modSettingsFlowCoordinator();
+        modFC->isAnimating = true;
 
-        // TODO Is this even possible anymore with BSML? This accessed internal structures of questui ...
-        // for (auto& s : BSML::ModSettingsInfos::get()) {
-        //     if (s.modInfo.id == MOD_ID) {
-        //         s.Present();
-        //     }
-        // }
+        auto fc = BSML::Helpers::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
+        fc->PresentFlowCoordinator(modFC, BSML::MakeSystemAction([modFC]{
+            int index = 0;
+            BSML::SettingsMenu* menu = NULL;
+            for (auto& s : BSML::BSMLSettings::get_instance()->get_settingsMenus()) {
+                if (s->text == "BeatLeader") {
+                    menu = reinterpret_cast<BSML::SettingsMenu*>(s);
+                    break;
+                }
+                index++;
+            }
+            modFC->settingsMenuListViewController->list->tableView->SelectCellWithIdx(index, false);
+            modFC->OpenMenu(menu);
+            modFC->isAnimating = false;
+        }), HMUI::ViewController::AnimationDirection::Horizontal, false, false);
     }
 
     void AddRoundRect(HMUI::ImageView* background) {
