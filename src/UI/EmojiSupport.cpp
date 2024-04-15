@@ -13,6 +13,7 @@
 #include "UnityEngine/Graphics.hpp"
 #include "UnityEngine/TextCore/GlyphMetrics.hpp"
 #include "UnityEngine/TextCore/GlyphRect.hpp"
+#include "UnityEngine/TextCore/Text/FontAssetUtilities.hpp"
 #include "UnityEngine/TextureFormat.hpp"
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
@@ -24,6 +25,7 @@
 #include "TMPro/TMP_TextUtilities.hpp"
 #include "TMPro/TMP_SpriteGlyph.hpp"
 #include "TMPro/TMP_SpriteCharacter.hpp"
+#include "TMPro/TMP_FontAssetUtilities.hpp"
 
 #include "main.hpp"
 
@@ -130,14 +132,11 @@ TMPro::TMP_SpriteGlyph* PushSprite(int unicode) {
     return sprite;
 }
 
-MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpriteByUnicode, UnityW<TMPro::TMP_SpriteAsset>, TMPro::TMP_SpriteAsset* spriteAsset, uint unicode, bool includeFallbacks, ByRef<int> spriteIndex) {
-    TMPro::TMP_SpriteAsset* result = SearchForSpriteByUnicode(spriteAsset, unicode, includeFallbacks, spriteIndex);
-    
+
+MAKE_HOOK_MATCH(GetSpriteCharacterFromSpriteAsset, &TMPro::TMP_FontAssetUtilities::GetSpriteCharacterFromSpriteAsset, TMPro::TMP_SpriteCharacter*, uint32_t unicode, TMPro::TMP_SpriteAsset* spriteAsset, bool includeFallbacks) {
+    auto result = GetSpriteCharacterFromSpriteAsset(unicode, spriteAsset, includeFallbacks);
     if (result == NULL) {
         auto glyph = PushSprite(unicode);
-
-        *spriteIndex = currentEmojiIndex;
-        result = currentEmojiAsset;
 
         int indexToUse = currentEmojiIndex;
         auto assetToUse = currentEmojiAsset;
@@ -161,9 +160,10 @@ MAKE_HOOK_MATCH(SearchForSpriteByUnicode, &TMPro::TMP_SpriteAsset::SearchForSpri
         }, true);
 
         currentEmojiIndex++;
+        result = GetSpriteCharacterFromSpriteAsset(unicode, spriteAsset, includeFallbacks);
     }
 
-    if (result == currentEmojiAsset && loadingCount > 0) {
+    if (spriteAsset == currentEmojiAsset && loadingCount > 0) {
         textToUpdate.push_back(lastText);
     }
 
@@ -188,13 +188,13 @@ void EmojiSupport::AddSupport(TMPro::TextMeshProUGUI* text) {
         currentEmojiIndex = 0;
     }
     if (!hooksInstalled) {
-        INSTALL_HOOK(BeatLeaderLogger, SearchForSpriteByUnicode);
+        INSTALL_HOOK(BeatLeaderLogger, GetSpriteCharacterFromSpriteAsset);
         INSTALL_HOOK(BeatLeaderLogger, SetArraySizes);
 
         hooksInstalled = true;
     }
 
-    text->set_spriteAsset(rootEmojiAsset);
+    text->m_spriteAsset = rootEmojiAsset;
 }
 
 void EmojiSupport::RemoveSupport(TMPro::TextMeshProUGUI* text) {
