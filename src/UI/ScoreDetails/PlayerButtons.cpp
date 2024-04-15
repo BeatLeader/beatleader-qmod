@@ -249,12 +249,14 @@ void BeatLeader::PlayerButtons::openSocial(string name) const {
         }
     }
 
-    UnityEngine::Application::OpenURL(social.link);
+    static auto UnityEngine_Application_OpenURL = il2cpp_utils::resolve_icall<void, StringW>("UnityEngine.Application::OpenURL");
+    UnityEngine_Application_OpenURL(social.link);
 }
 
 void BeatLeader::PlayerButtons::openProfile() const {
     string url = WebUtils::WEB_URL + "u/" + player.id;
-    UnityEngine::Application::OpenURL(url);
+    static auto UnityEngine_Application_OpenURL = il2cpp_utils::resolve_icall<void, StringW>("UnityEngine.Application::OpenURL");
+    UnityEngine_Application_OpenURL(url);
 }
 
 const float Deg2Rad = 0.017f;
