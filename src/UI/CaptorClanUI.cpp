@@ -130,7 +130,7 @@ namespace CaptorClanUI {
         clanImage = UIUtils::CreateRoundRectImage(mainPanel->get_transform(), {0, 0}, {8, 2.5});
         clanImage->set_material(BundleLoader::bundle->clanTagBackgroundMaterial);
 
-        clanTag = CreateText(clanImage->get_transform(), "", UnityEngine::Vector2(0.0, 0.0));
+        clanTag = CreateText(clanImage->get_transform(), "", {0, 0}, {30, 5});
         clanTag->set_enableAutoSizing(true);
         clanTag->set_fontSizeMin(0.1);
         clanTag->set_fontSizeMax(3.0);
