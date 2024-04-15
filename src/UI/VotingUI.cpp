@@ -1,4 +1,7 @@
 #include "include/UI/VotingUI.hpp"
+#include "UnityEngine/zzzz__Vector2_def.hpp"
+#include "bsml/shared/BSML-Lite/Creation/Buttons.hpp"
+#include "bsml/shared/BSML-Lite/Creation/Settings.hpp"
 #include "include/Utils/FormatUtils.hpp"
 #include "include/UI/UIUtils.hpp"
 #include "include/Assets/Sprites.hpp"
@@ -16,6 +19,8 @@
 #include "bsml/shared/BSML/Components/Backgroundable.hpp"
 
 #include "main.hpp"
+
+#include "UI/LinksContainer.hpp"
 
 #include <sstream>
 
@@ -56,17 +61,8 @@ void BeatLeader::initVotingPopup(
     auto containerTransform = container->get_transform();
 
     // Page 1
-    modalUI->header1 = CreateText(containerTransform, "Is this map suitable for rank?", UnityEngine::Vector2(4.0, 8.0));
-    modalUI->yesButton = ::BSML::Lite::CreateUIButton(containerTransform, "YES", UnityEngine::Vector2(-12.0, 3.0), [modalUI]() {
-        modalUI->rankable = true;
-        modalUI->rightButton->get_gameObject()->SetActive(true);
-        modalUI->voteButton->set_interactable(true);
-
-        setButtonTitleColor(modalUI->noButton, UnityEngine::Color32(0, 255, 255, 255, 255));
-        setButtonTitleColor(modalUI->yesButton, UnityEngine::Color32(0, 102, 255, 102, 255));
-    });
-
-    modalUI->noButton = ::BSML::Lite::CreateUIButton(containerTransform, "NO", UnityEngine::Vector2(14.0, 3.0), [modalUI]() {
+    modalUI->header1 = CreateText(containerTransform, "Is this map suitable for rank?", UnityEngine::Vector2(-16.0, 10));
+    modalUI->noButton = ::BSML::Lite::CreateUIButton(containerTransform, "NO", UnityEngine::Vector2(18.0, -13.0), [modalUI]() {
         modalUI->rankable = false;
         modalUI->rightButton->get_gameObject()->SetActive(false);
         modalUI->voteButton->set_interactable(true);
@@ -75,60 +71,87 @@ void BeatLeader::initVotingPopup(
         setButtonTitleColor(modalUI->yesButton, UnityEngine::Color32(0, 255, 255, 255, 255));
     });
 
+    BeatLeader::SetButtonSize(modalUI->noButton, UnityEngine::Vector2(20.0, 10.0));
+    SetButtonTextSize(modalUI->noButton, 6.0f);
+
+    modalUI->yesButton = ::BSML::Lite::CreateUIButton(containerTransform, "YES", UnityEngine::Vector2(42.0, -13.0), [modalUI]() {
+        modalUI->rankable = true;
+        modalUI->rightButton->get_gameObject()->SetActive(true);
+        modalUI->voteButton->set_interactable(true);
+
+        setButtonTitleColor(modalUI->noButton, UnityEngine::Color32(0, 255, 255, 255, 255));
+        setButtonTitleColor(modalUI->yesButton, UnityEngine::Color32(0, 102, 255, 102, 255));
+    });
+
+    BeatLeader::SetButtonSize(modalUI->yesButton, UnityEngine::Vector2(20.0, 10.0));
+    SetButtonTextSize(modalUI->yesButton, 6.0f);
+
     // Page 2
-    modalUI->header2 = CreateText(containerTransform, "Difficulty and category (optional)", UnityEngine::Vector2(4.0, 8.0));
+    modalUI->header2 = CreateText(containerTransform, "<u>Difficulty and category (optional)", UnityEngine::Vector2(-19.0, 14.0));
+    modalUI->header2->color = UnityEngine::Color(0.667f, 0.667f, 0.667f, 1.0f);
+
     modalUI->starSlider = CreateSliderSetting(
         modalUI->modal->get_transform(),
-        "Stars",
-        0.1,
+        "",
+        0.1f,
+        0.0f,
         0,
-        1,
         15,
-        UnityEngine::Vector2(4, -7),
+        0.0f,
+        true,
+        UnityEngine::Vector2(4, -10),
         [modalUI](float stars) {
        modalUI->stars = stars; 
     });
-    move(modalUI->starSlider->slider, -7, 0);
+    modalUI->starSlider->formatter = [](float value) {
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(1) << value << "*";
+        return value > 0.0f ? ss.str() : "Skip";
+    };
+    resize(modalUI->starSlider->slider, 4.5, 0);
+    move(modalUI->starSlider->slider, -4.5, 0);
 
-    modalUI->accButton = ::BSML::Lite::CreateUIButton(containerTransform, "acc", UnityEngine::Vector2(-20, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
+    float typeButtonY = -17.0;
+
+    modalUI->accButton = ::BSML::Lite::CreateUIButton(containerTransform, "acc", UnityEngine::Vector2(9, typeButtonY), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::acc, modalUI->accButton);
     });
+    BeatLeader::SetButtonSize(modalUI->accButton, UnityEngine::Vector2(12.0, 7.0));
     setupButtonTitle(modalUI->accButton, -0.5, 3);
 
-    modalUI->techButton = ::BSML::Lite::CreateUIButton(containerTransform, "tech", UnityEngine::Vector2(-6, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
+    modalUI->techButton = ::BSML::Lite::CreateUIButton(containerTransform, "tech", UnityEngine::Vector2(23, typeButtonY), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::tech, modalUI->techButton);
     });
+    BeatLeader::SetButtonSize(modalUI->techButton, UnityEngine::Vector2(12.0, 7.0));
     setupButtonTitle(modalUI->techButton, -0.5, 3);
 
-    modalUI->midspeedButton = ::BSML::Lite::CreateUIButton(containerTransform, "midspeed", UnityEngine::Vector2(8, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
+    modalUI->midspeedButton = ::BSML::Lite::CreateUIButton(containerTransform, "midspeed", UnityEngine::Vector2(37, typeButtonY), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::midspeed, modalUI->midspeedButton);
     });
+    BeatLeader::SetButtonSize(modalUI->midspeedButton, UnityEngine::Vector2(12.0, 7.0));
     setupButtonTitle(modalUI->midspeedButton, -0.5, 3);
 
-    modalUI->speedButton = ::BSML::Lite::CreateUIButton(containerTransform, "speed", UnityEngine::Vector2(22, -3), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
+    modalUI->speedButton = ::BSML::Lite::CreateUIButton(containerTransform, "speed", UnityEngine::Vector2(51, typeButtonY), UnityEngine::Vector2(12.0, 6.0), [modalUI]() {
         modalUI->updateType(MapType::speed, modalUI->speedButton);
     });
+    BeatLeader::SetButtonSize(modalUI->speedButton, UnityEngine::Vector2(12.0, 7.0));
     setupButtonTitle(modalUI->speedButton, -0.5, 3);
 
-    modalUI->voteButton = ::BSML::Lite::CreateUIButton(containerTransform, "Vote", UnityEngine::Vector2(-12.0, -10.0), UnityEngine::Vector2(15.0, 8.0), [callback, modalUI]() {
+    modalUI->voteButton = ::BSML::Lite::CreateUIButton(containerTransform, "Submit", UnityEngine::Vector2(30, -25.0), UnityEngine::Vector2(16.0, 3.0), [callback, modalUI]() {
         callback(true, modalUI->rankable, modalUI->stars, modalUI->type);
     });
+    BeatLeader::SetButtonSize(modalUI->voteButton, UnityEngine::Vector2(16.0, 8.0));
     setupButtonTitle(modalUI->voteButton, -0.5);
 
-    modalUI->cancelButton = ::BSML::Lite::CreateUIButton(containerTransform, "Cancel", UnityEngine::Vector2(12.0, -10.0), UnityEngine::Vector2(15.0, 8.0), [callback]() {
-        callback(false, false, 0, 0);
-    });
-    setupButtonTitle(modalUI->cancelButton, -0.5);
-
-    modalUI->leftButton = ::BSML::Lite::CreateUIButton(containerTransform, "<", UnityEngine::Vector2(-27.0, -10.0), UnityEngine::Vector2(5.0, 6.0), [modalUI]() {
+    modalUI->leftButton = ::BSML::Lite::CreateUIButton(containerTransform, "◄", UnityEngine::Vector2(10, -25.0), UnityEngine::Vector2(5.0, 6.0), [modalUI]() {
         modalUI->left();
     });
-    setupButtonTitle(modalUI->leftButton, -1.5, 3);
+    BeatLeader::SetButtonSize(modalUI->leftButton, UnityEngine::Vector2(11.0, 8.0));
 
-    modalUI->rightButton = ::BSML::Lite::CreateUIButton(containerTransform, ">", UnityEngine::Vector2(26.0, -10.0), UnityEngine::Vector2(5.0, 6.0), [modalUI]() {
+    modalUI->rightButton = ::BSML::Lite::CreateUIButton(containerTransform, "►", UnityEngine::Vector2(10, -25.0), UnityEngine::Vector2(5.0, 6.0), [modalUI]() {
         modalUI->right();
     });
-    setupButtonTitle(modalUI->rightButton, -1.5, 3);
+    BeatLeader::SetButtonSize(modalUI->rightButton, UnityEngine::Vector2(11.0, 8.0));
 
     modalUI->modal->set_name("BeatLeaderVotingModal");
     *modalUIPointer = modalUI;

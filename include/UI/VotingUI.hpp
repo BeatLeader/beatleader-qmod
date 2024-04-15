@@ -42,7 +42,6 @@ namespace BeatLeader {
             UnityEngine::UI::Button* midspeedButton;
             UnityEngine::UI::Button* speedButton;
             
-            UnityEngine::UI::Button* cancelButton;
             UnityEngine::UI::Button* voteButton;
             UnityEngine::UI::Button* leftButton;
             UnityEngine::UI::Button* rightButton;

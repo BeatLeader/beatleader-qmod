@@ -38,22 +38,25 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(-8, 14.0));
     CreateText(modalTransform, "<u>These buttons will open the browser!", UnityEngine::Vector2(-22.0, 10.0));
 
+    static auto UnityEngine_Application_OpenURL = il2cpp_utils::resolve_icall<void, StringW>("UnityEngine.Application::OpenURL");
+
     modalUI->profile = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->websiteLinkIcon, [](){
         string url = WebUtils::WEB_URL;
         if (PlayerController::currentPlayer != std::nullopt) {
             url += "u/" + PlayerController::currentPlayer->id;
         }
-        UnityEngine::Application::OpenURL(url);
+        UnityEngine_Application_OpenURL(url);
     }, UnityEngine::Vector2(-24, -1), UnityEngine::Vector2(22, 6));
     ::BSML::Lite::AddHoverHint(modalUI->profile, "Your web profile");
 
+
     modalUI->discord = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->discordLinkIcon, [](){
-        UnityEngine::Application::OpenURL("https://discord.gg/2RG5YVqtG6");
+        UnityEngine_Application_OpenURL("https://discord.gg/2RG5YVqtG6");
     }, UnityEngine::Vector2(0, -1), UnityEngine::Vector2(22, 6));
     ::BSML::Lite::AddHoverHint(modalUI->discord, "Our discord server");
 
     modalUI->patreon = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->patreonLinkIcon, [](){
-        UnityEngine::Application::OpenURL("https://patreon.com/BeatLeader");
+        UnityEngine_Application_OpenURL("https://patreon.com/BeatLeader");
     }, UnityEngine::Vector2(24, -1), UnityEngine::Vector2(22, 6));
     ::BSML::Lite::AddHoverHint(modalUI->patreon, "Patreon page");
 
