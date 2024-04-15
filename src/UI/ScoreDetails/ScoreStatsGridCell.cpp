@@ -4,6 +4,7 @@
 #include "include/Assets/BundleLoader.hpp"
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsGrid.hpp"
+#include "include/UI/QuestUI.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
@@ -15,7 +16,7 @@
 
 #include <sstream>
 
-using namespace BSML::Lite;
+using namespace QuestUI;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
@@ -30,9 +31,10 @@ BeatLeader::ScoreStatsGridCell::ScoreStatsGridCell(HMUI::ModalView *modal, int i
     float row = (float)(index / 4);
     float column = (float)(index % 4);
 
-    imageView = ::BSML::Lite::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2((column - 2.0f) * 11.0 + 5, (row - 1.0f) * 11.0 - 3), UnityEngine::Vector2(10, 10));
+    imageView = QuestUI::CreateImage(modal->get_transform(), Sprites::get_TransparentPixel(), UnityEngine::Vector2((column - 2.0f) * 11.0 + 5, (row - 1.0f) * 11.0 - 3), UnityEngine::Vector2(10, 10));
     imageView->set_color(EmptyColor);
-    imageView->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->accGridBackgroundMaterial));
+    auto backgroundMaterial = UnityEngine::Object::Instantiate(BundleLoader::bundle->accGridBackgroundMaterial);
+    imageView->set_material(backgroundMaterial);
 
     scoreText = CreateText(modal->get_transform(), "", UnityEngine::Vector2((column - 2.0f) * 11.0 + 32, (row - 1.0f) * 11.0 - 6));
     scoreText->set_fontSize(3);

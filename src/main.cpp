@@ -6,6 +6,7 @@
 #include "include/UI/PreferencesViewController.hpp"
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ResultsViewController.hpp"
+#include "include/UI/QuestUI.hpp"
 
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
@@ -23,7 +24,10 @@
 
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "GlobalNamespace/AppInit.hpp"
+#include "GlobalNamespace/RichPresenceManager.hpp"
 #include "BeatSaber/Init/BSAppInit.hpp"
+#include "UnityEngine/SceneManagement/SceneManager.hpp"
+#include "UnityEngine/SceneManagement/Scene.hpp"
 
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 #include "bsml/shared/BSML.hpp"
@@ -76,6 +80,41 @@ MAKE_HOOK_MATCH(AppInitStart, &BeatSaber::Init::BSAppInit::InstallBindings, void
     self->::UnityEngine::MonoBehaviour::StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle(self->get_gameObject())));
     AppInitStart(self);
     LeaderboardUI::setup();
+}
+
+static bool hasInited = false;
+static bool shouldClear = false;
+
+// do things with the scene transition stuff
+MAKE_HOOK_MATCH(RichPresenceManager_HandleGameScenesManagerTransitionDidFinish, &GlobalNamespace::RichPresenceManager::HandleGameScenesManagerTransitionDidFinish, void, GlobalNamespace::RichPresenceManager* self, GlobalNamespace::ScenesTransitionSetupDataSO* setupData, Zenject::DiContainer* container) {
+    RichPresenceManager_HandleGameScenesManagerTransitionDidFinish(self, setupData, container);
+
+    if (shouldClear) {
+        shouldClear = false;
+        QuestUI::ClearCache();
+        if (hasInited) {
+            hasInited = false;
+            QuestUI::SetupPersistentObjects();
+        }
+    }
+}
+
+// Here we just check if we should be doing things after all the scene transitions are done:
+MAKE_HOOK_MATCH(SceneManager_Internal_ActiveSceneChanged, &UnityEngine::SceneManagement::SceneManager::Internal_ActiveSceneChanged, void, UnityEngine::SceneManagement::Scene prevScene, UnityEngine::SceneManagement::Scene nextScene) {
+    SceneManager_Internal_ActiveSceneChanged(prevScene, nextScene);
+    bool prevValid = prevScene.IsValid(), nextValid = nextScene.IsValid();
+
+    if (prevValid && nextValid) {
+        std::string prevSceneName(prevScene.get_name());
+        std::string nextSceneName(nextScene.get_name());
+
+        if (prevSceneName == "QuestInit") hasInited = true;
+
+        // if we just inited, and aren't already going to clear, check the next scene name for the menu
+        if (hasInited && !shouldClear && nextSceneName.find("Menu") != std::u16string::npos) {
+            shouldClear = true;
+        }
+    }
 }
 
 #include "HMUI/ModalView.hpp"
@@ -138,6 +177,8 @@ MOD_EXPORT "C" void late_load() {
     
     INSTALL_HOOK(BeatLeaderLogger, Restart);
     INSTALL_HOOK(BeatLeaderLogger, AppInitStart);
+    INSTALL_HOOK(BeatLeaderLogger, SceneManager_Internal_ActiveSceneChanged);
+    INSTALL_HOOK(BeatLeaderLogger, RichPresenceManager_HandleGameScenesManagerTransitionDidFinish);
 
     BeatLeaderLogger.info("Installed main hooks!");
 }

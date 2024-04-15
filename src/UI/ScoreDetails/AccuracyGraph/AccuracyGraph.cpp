@@ -5,6 +5,7 @@
 
 #include "include/UI/ScoreDetails/ScoreStatsGraph.hpp"
 #include "include/UI/ScoreDetails/AccuracyGraph/AccuracyGraphUtils.hpp"
+#include "include/UI/QuestUI.hpp"
 
 #include "include/Utils/FormatUtils.hpp"
 #include "include/Utils/Range.hpp"
@@ -54,7 +55,7 @@ void BeatLeader::AccuracyGraph::Construct(
 
     graphLineObject->set_material(BundleLoader::bundle->accuracyGraphLine);
     
-    underlineText = BSML::Lite::CreateText(backgroundImage->get_transform(), "", UnityEngine::Vector2(2, -18));
+    underlineText = QuestUI::CreateText(backgroundImage->get_transform(), "", UnityEngine::Vector2(2, -18));
 
     auto vrpointers = UnityEngine::Resources::FindObjectsOfTypeAll<VRUIControls::VRPointer *>();
     if (vrpointers.size() != 0) {
@@ -68,7 +69,7 @@ float BeatLeader::AccuracyGraph::GetCanvasRadius() {
     }
 
     auto canvasSettings = curvedCanvasSettingsHelper->GetCurvedCanvasSettings(graphLine->get_canvas());
-    return canvasSettings ? 100 : canvasSettings->radius;
+    return canvasSettings ? 140 : canvasSettings->radius;
 }
 
 void BeatLeader::AccuracyGraph::Setup(ArrayW<float> points, float songDuration) {
@@ -97,6 +98,7 @@ void BeatLeader::AccuracyGraph::Update() {
     currentViewTime = AccuracyGraphUtils::Lerp(currentViewTime, targetViewTime, UnityEngine::Time::get_deltaTime() * 10.0);
     auto songTime = currentViewTime * songDuration;
     auto accuracy = GetAccuracy(currentViewTime);
+
     backgroundMaterial->SetFloat(CursorPositionPropertyId, currentViewTime);
     underlineText->SetText(FormatCursorText(songTime, accuracy), true);
 }

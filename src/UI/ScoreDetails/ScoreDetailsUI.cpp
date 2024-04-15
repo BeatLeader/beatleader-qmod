@@ -9,6 +9,7 @@
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/UIUtils.hpp"
 #include "include/UI/Themes/ThemeUtils.hpp"
+#include "include/UI/QuestUI.hpp"
 
 #include "include/Core/ReplayPlayer.hpp"
 
@@ -57,7 +58,7 @@ void BeatLeader::initScoreDetailsPopup(
         UnityEngine::GameObject::Destroy(modalUI->modal->get_gameObject());
     }
     if (modalUI == nullptr) modalUI = (BeatLeader::ScoreDetailsPopup*) malloc(sizeof(BeatLeader::ScoreDetailsPopup));
-    modalUI->modal = CreateModal(parent, UnityEngine::Vector2(60, 90), nullptr, true);
+    modalUI->modal = QuestUI::CreateModal(parent, UnityEngine::Vector2(60, 90), {}, nullptr, true);
     MakeModalTransparent(modalUI->modal);
 
     auto modalTransform = modalUI->modal->get_transform();
@@ -73,13 +74,14 @@ void BeatLeader::initScoreDetailsPopup(
         UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(-24.5, -24), UnityEngine::Vector2(7, 7));
     }
 
-    modalUI->rank = CreateText(modalTransform, "", UnityEngine::Vector2(6.0, 16.0));
-    modalUI->name = CreateText(modalTransform, "", UnityEngine::Vector2(0.0, 18.0));
-    modalUI->sponsorMessage = CreateText(modalTransform, "", UnityEngine::Vector2(0, -32));
+    modalUI->rank = QuestUI::CreateText(modalTransform, "", UnityEngine::Vector2(6.0, 16.0));
+    modalUI->name = QuestUI::CreateText(modalTransform, "", UnityEngine::Vector2(0.0, 18.0));
+    modalUI->sponsorMessage = QuestUI::CreateText(modalTransform, "", UnityEngine::Vector2(0, -32));
 
     EmojiSupport::AddSupport(modalUI->name);
+    EmojiSupport::AddSupport(modalUI->sponsorMessage);
 
-    modalUI->pp = CreateText(modalTransform, "", UnityEngine::Vector2(45.0, 16.0));
+    modalUI->pp = QuestUI::CreateText(modalTransform, "", UnityEngine::Vector2(45.0, 16.0));
 
     modalUI->playerButtons.Setup(modalUI->modal, [modalUI, incognitoCallback](Player player) {
         modalUI->updatePlayerDetails(player);
@@ -125,7 +127,7 @@ void BeatLeader::initScoreDetailsPopup(
 
     modalUI->setButtonsMaterial();
 
-    modalUI->loadingText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(0.0, 0.0));
+    modalUI->loadingText = QuestUI::CreateText(modalTransform, "Loading...", UnityEngine::Vector2(0.0, 0.0));
     modalUI->loadingText->set_alignment(TMPro::TextAlignmentOptions::Center);
     modalUI->loadingText->get_gameObject()->SetActive(false);
 
@@ -137,7 +139,7 @@ void BeatLeader::ScoreDetailsPopup::updatePlayerDetails(Player player) {
     if (!PlayerController::IsIncognito(player)) {
         name->SetText(FormatUtils::FormatNameWithClans(player, 20, true), true);
         auto params = GetAvatarParams(player, false);
-        playerAvatar->SetPlayer(player.avatar, params.baseMaterial, params.hueShift, params.saturation);
+        playerAvatar->SetPlayer(player.avatar, BundleLoader::bundle->defaultAvatarMaterial, params.hueShift, params.saturation);
     } else {
         name->SetText("[REDACTED]", true);
         playerAvatar->SetHiddenPlayer();

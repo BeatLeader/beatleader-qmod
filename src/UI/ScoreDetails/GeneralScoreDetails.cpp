@@ -3,6 +3,7 @@
 #include "include/Assets/Sprites.hpp"
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ScoreDetails/GeneralScoreDetails.hpp"
+#include "include/UI/QuestUI.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
@@ -14,7 +15,7 @@
 
 #include <sstream>
 
-using namespace BSML::Lite;
+using namespace QuestUI;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;

@@ -21,6 +21,7 @@
 #include "HMUI/CurvedCanvasSettings.hpp"
 
 #include "bsml/shared/BSML/Components/Backgroundable.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "main.hpp"
 
@@ -147,22 +148,26 @@ void BeatLeader::PlayerButtons::toggleFriend() const {
     auto captureSelf = this;
     if (!PlayerController::IsFriend(player)) {
         WebUtils::RequestAsync(WebUtils::API_URL + "user/friend?playerId=" + player.id, "POST", 60, [captureSelf](long status, string response) {
-            captureSelf->friendsButton.setHint("Remove friend");
-            captureSelf->friendsButton.setState(MiniProfileButtonState::InteractableGlowing);
-            PlayerController::currentPlayer->friends.push_back(player.id);
+            BSML::MainThreadScheduler::Schedule([captureSelf] {
+                captureSelf->friendsButton.setHint("Remove friend");
+                captureSelf->friendsButton.setState(MiniProfileButtonState::InteractableGlowing);
+                PlayerController::currentPlayer->friends.push_back(player.id);
+            });
         });
     } else {
         WebUtils::RequestAsync(WebUtils::API_URL + "user/friend?playerId=" + player.id, "DELETE", 60, [captureSelf](long status, string response) {
-            captureSelf->friendsButton.setHint("Add friend");
-            captureSelf->friendsButton.setState(MiniProfileButtonState::InteractableFaded);
-            auto iterator = PlayerController::currentPlayer->friends.begin();
+            BSML::MainThreadScheduler::Schedule([captureSelf] {
+                captureSelf->friendsButton.setHint("Add friend");
+                captureSelf->friendsButton.setState(MiniProfileButtonState::InteractableFaded);
+                auto iterator = PlayerController::currentPlayer->friends.begin();
 
-            for (auto it = PlayerController::currentPlayer->friends.begin(); it != PlayerController::currentPlayer->friends.end(); it++) {
-                if (*it == player.id) {
-                    PlayerController::currentPlayer->friends.erase(it);
-                    break;
+                for (auto it = PlayerController::currentPlayer->friends.begin(); it != PlayerController::currentPlayer->friends.end(); it++) {
+                    if (*it == player.id) {
+                        PlayerController::currentPlayer->friends.erase(it);
+                        break;
+                    }
                 }
-            }
+            });
         });
     }
 }
@@ -201,30 +206,20 @@ void BeatLeader::PlayerButtons::updateFriendButton() const {
 }
 
 void BeatLeader::PlayerButtons::updateSocialButtons() const {
-    if (!PlayerController::IsPatron(player)) {
-        twitterButton.setState(MiniProfileButtonState::Hidden);
-        twitchButton.setState(MiniProfileButtonState::Hidden);
-        youtubeButton.setState(MiniProfileButtonState::Hidden);
+    twitterButton.setState(MiniProfileButtonState::NonInteractable);
+    twitchButton.setState(MiniProfileButtonState::NonInteractable);
+    youtubeButton.setState(MiniProfileButtonState::NonInteractable);
 
-        rightBackground->get_gameObject()->SetActive(false);
-    } else {
-        twitterButton.setState(MiniProfileButtonState::NonInteractable);
-        twitchButton.setState(MiniProfileButtonState::NonInteractable);
-        youtubeButton.setState(MiniProfileButtonState::NonInteractable);
-
-        rightBackground->get_gameObject()->SetActive(false);
-
-        for (size_t i = 0; i < player.socials.size(); i++)
-        {
-            if (player.socials[i].service == "Twitter") {
-                twitterButton.setState(MiniProfileButtonState::InteractableGlowing);
-            }
-            if (player.socials[i].service == "Twitch") {
-                twitchButton.setState(MiniProfileButtonState::InteractableGlowing);
-            }
-            if (player.socials[i].service == "YouTube") {
-                youtubeButton.setState(MiniProfileButtonState::InteractableGlowing);
-            }
+    for (size_t i = 0; i < player.socials.size(); i++)
+    {
+        if (player.socials[i].service == "Twitter") {
+            twitterButton.setState(MiniProfileButtonState::InteractableGlowing);
+        }
+        if (player.socials[i].service == "Twitch") {
+            twitchButton.setState(MiniProfileButtonState::InteractableGlowing);
+        }
+        if (player.socials[i].service == "YouTube") {
+            youtubeButton.setState(MiniProfileButtonState::InteractableGlowing);
         }
     }
 }
