@@ -27,23 +27,14 @@ void UserEnhancer::Enhance(Replay& replay)
         replay.info.hmd = "Oculus Quest";
         break;
     case GlobalNamespace::OVRPlugin::SystemHeadset::Oculus_Quest_2:
-        switch (sysconf(_SC_NPROCESSORS_CONF))
-        {
-        case 4:
-            replay.info.hmd = "Oculus Quest";
-            break;
-        case 8:
-            replay.info.hmd = "Oculus Quest 2";
-            break;
-        case 6:
-            replay.info.hmd = "Meta Quest 3";
-            break;
-        default:
-            replay.info.hmd = "Unknown";
-            break;
-        }
+        replay.info.hmd = "Oculus Quest 2";
         break;
-        
+    case GlobalNamespace::OVRPlugin::SystemHeadset::Meta_Quest_Pro:
+        replay.info.hmd = "Meta Quest Pro";
+        break;  
+    case GlobalNamespace::OVRPlugin::SystemHeadset::Meta_Quest_3:
+        replay.info.hmd = "Meta Quest 3";
+        break;
     default:
         replay.info.hmd = "Unknown";
         break;
