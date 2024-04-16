@@ -2,8 +2,8 @@
 
 #include "include/Models/Clan.hpp"
 
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/QuestUI.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/BSML.hpp"
 
 #include "TMPro/TextMeshProUGUI.hpp"
 

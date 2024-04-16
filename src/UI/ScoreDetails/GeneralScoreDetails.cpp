@@ -3,18 +3,19 @@
 #include "include/Assets/Sprites.hpp"
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ScoreDetails/GeneralScoreDetails.hpp"
+#include "include/UI/QuestUI.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
 #include "UnityEngine/Component.hpp"
 
-#include "questui/shared/CustomTypes/Components/Backgroundable.hpp"
+#include "bsml/shared/BSML/Components/Backgroundable.hpp"
 
 #include "main.hpp"
 
 #include <sstream>
 
-using namespace QuestUI::BeatSaberUI;
+using namespace QuestUI;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
@@ -106,14 +107,14 @@ inline string FormatPP(const Score& score) {
 }
 
 void BeatLeader::GeneralScoreDetails::setScore(const Score& score) const {
-    datePlayed->SetText(GetTimeSetString(score));
+    datePlayed->SetText(GetTimeSetString(score), true);
     datePlayed->set_alignment(TMPro::TextAlignmentOptions::Center);
 
-    modifiedScore->SetText(GetStringWithLabel(FormatScore(score), "score"));
-    accuracy->SetText(GetStringWithLabel(FormatAcc(score), "accuracy"));
-    scorePp->SetText(GetStringWithLabel(FormatPP(score), "pp"));
+    modifiedScore->SetText(GetStringWithLabel(FormatScore(score), "score"), true);
+    accuracy->SetText(GetStringWithLabel(FormatAcc(score), "accuracy"), true);
+    scorePp->SetText(GetStringWithLabel(FormatPP(score), "pp"), true);
 
-    scoreDetails->SetText(GetDetailsString(score));
+    scoreDetails->SetText(GetDetailsString(score), true);
 }
 
 void BeatLeader::GeneralScoreDetails::setSelected(bool selected) const {

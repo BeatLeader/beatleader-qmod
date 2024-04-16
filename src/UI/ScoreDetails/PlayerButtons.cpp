@@ -20,13 +20,14 @@
 #include "HMUI/CurvedCanvasSettingsHelper.hpp"
 #include "HMUI/CurvedCanvasSettings.hpp"
 
-#include "questui/shared/CustomTypes/Components/Backgroundable.hpp"
+#include "bsml/shared/BSML/Components/Backgroundable.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "main.hpp"
 
 #include <sstream>
 
-using namespace QuestUI::BeatSaberUI;
+using namespace BSML::Lite;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
@@ -62,58 +63,70 @@ void BeatLeader::PlayerButtons::Setup(HMUI::ModalView *modal, function<void(Play
     auto leftTransform = leftBackground->get_transform();
     auto rightTransform = rightBackground->get_transform();
 
-    friendsButton = MiniProfileButton("Friends management", SelectedColor, true, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    friendsButton = MiniProfileButton("Friends management", SelectedColor, true, ::BSML::Lite::CreateClickableImage(
             leftTransform, 
             BundleLoader::bundle->friendsIcon, 
+            [captureSelf](){
+                captureSelf->toggleFriend();
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->toggleFriend();
-    }));
+            {4, 4}
+    ));
     friendsButton.RegisterCallback();
 
-    incognitoButton = MiniProfileButton("Hide player info", SelectedColor, true, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    incognitoButton = MiniProfileButton("Hide player info", SelectedColor, true, ::BSML::Lite::CreateClickableImage(
             leftTransform, 
             BundleLoader::bundle->incognitoIcon, 
+            [captureSelf](){
+                captureSelf->toggleBlacklist();
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->toggleBlacklist();
-    }));
+            {4, 4}
+    ));
     incognitoButton.RegisterCallback();
 
-    linkButton = MiniProfileButton("Open profile", SelectedColor, true, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    linkButton = MiniProfileButton("Open profile", SelectedColor, true, ::BSML::Lite::CreateClickableImage(
             leftTransform, 
             BundleLoader::bundle->profileIcon, 
+            [captureSelf](){
+                captureSelf->openProfile();
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->openProfile();
-    }));
+            {4, 4}
+    ));
     linkButton.RegisterCallback();
 
-    twitterButton = MiniProfileButton("Twitter", TwitterColor, false, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    twitterButton = MiniProfileButton("Twitter", TwitterColor, false, ::BSML::Lite::CreateClickableImage(
             rightTransform, 
             BundleLoader::bundle->twitterIcon, 
+            [captureSelf](){
+                captureSelf->openSocial("Twitter");
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->openSocial("Twitter");
-    }));
+            {4, 4}
+    ));
     twitterButton.RegisterCallback();
 
-    twitchButton = MiniProfileButton("Twitch", TwitchColor, false, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    twitchButton = MiniProfileButton("Twitch", TwitchColor, false, ::BSML::Lite::CreateClickableImage(
             rightTransform, 
             BundleLoader::bundle->twitchIcon, 
+            [captureSelf](){
+                captureSelf->openSocial("Twitch");
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->openSocial("Twitch");
-    }));
+            {4, 4}
+    ));
     twitchButton.RegisterCallback();
 
-    youtubeButton = MiniProfileButton("YouTube", YoutubeColor, false, ::QuestUI::BeatSaberUI::CreateClickableImage(
+    youtubeButton = MiniProfileButton("YouTube", YoutubeColor, false, ::BSML::Lite::CreateClickableImage(
             rightTransform, 
             BundleLoader::bundle->youtubeIcon, 
+            [captureSelf](){
+                captureSelf->openSocial("YouTube");
+            },
             {0, 0}, 
-            {4, 4}, [captureSelf](){
-        captureSelf->openSocial("YouTube");
-    }));
+            {4, 4}
+    ));
     youtubeButton.RegisterCallback();
 
     UpdateLayout();
@@ -135,22 +148,26 @@ void BeatLeader::PlayerButtons::toggleFriend() const {
     auto captureSelf = this;
     if (!PlayerController::IsFriend(player)) {
         WebUtils::RequestAsync(WebUtils::API_URL + "user/friend?playerId=" + player.id, "POST", 60, [captureSelf](long status, string response) {
-            captureSelf->friendsButton.setHint("Remove friend");
-            captureSelf->friendsButton.setState(MiniProfileButtonState::InteractableGlowing);
-            PlayerController::currentPlayer->friends.push_back(player.id);
+            BSML::MainThreadScheduler::Schedule([captureSelf] {
+                captureSelf->friendsButton.setHint("Remove friend");
+                captureSelf->friendsButton.setState(MiniProfileButtonState::InteractableGlowing);
+                PlayerController::currentPlayer->friends.push_back(player.id);
+            });
         });
     } else {
         WebUtils::RequestAsync(WebUtils::API_URL + "user/friend?playerId=" + player.id, "DELETE", 60, [captureSelf](long status, string response) {
-            captureSelf->friendsButton.setHint("Add friend");
-            captureSelf->friendsButton.setState(MiniProfileButtonState::InteractableFaded);
-            auto iterator = PlayerController::currentPlayer->friends.begin();
+            BSML::MainThreadScheduler::Schedule([captureSelf] {
+                captureSelf->friendsButton.setHint("Add friend");
+                captureSelf->friendsButton.setState(MiniProfileButtonState::InteractableFaded);
+                auto iterator = PlayerController::currentPlayer->friends.begin();
 
-            for (auto it = PlayerController::currentPlayer->friends.begin(); it != PlayerController::currentPlayer->friends.end(); it++) {
-                if (*it == player.id) {
-                    PlayerController::currentPlayer->friends.erase(it);
-                    break;
+                for (auto it = PlayerController::currentPlayer->friends.begin(); it != PlayerController::currentPlayer->friends.end(); it++) {
+                    if (*it == player.id) {
+                        PlayerController::currentPlayer->friends.erase(it);
+                        break;
+                    }
                 }
-            }
+            });
         });
     }
 }
@@ -189,30 +206,20 @@ void BeatLeader::PlayerButtons::updateFriendButton() const {
 }
 
 void BeatLeader::PlayerButtons::updateSocialButtons() const {
-    if (!PlayerController::IsPatron(player)) {
-        twitterButton.setState(MiniProfileButtonState::Hidden);
-        twitchButton.setState(MiniProfileButtonState::Hidden);
-        youtubeButton.setState(MiniProfileButtonState::Hidden);
+    twitterButton.setState(MiniProfileButtonState::NonInteractable);
+    twitchButton.setState(MiniProfileButtonState::NonInteractable);
+    youtubeButton.setState(MiniProfileButtonState::NonInteractable);
 
-        rightBackground->get_gameObject()->SetActive(false);
-    } else {
-        twitterButton.setState(MiniProfileButtonState::NonInteractable);
-        twitchButton.setState(MiniProfileButtonState::NonInteractable);
-        youtubeButton.setState(MiniProfileButtonState::NonInteractable);
-
-        rightBackground->get_gameObject()->SetActive(false);
-
-        for (size_t i = 0; i < player.socials.size(); i++)
-        {
-            if (player.socials[i].service == "Twitter") {
-                twitterButton.setState(MiniProfileButtonState::InteractableGlowing);
-            }
-            if (player.socials[i].service == "Twitch") {
-                twitchButton.setState(MiniProfileButtonState::InteractableGlowing);
-            }
-            if (player.socials[i].service == "YouTube") {
-                youtubeButton.setState(MiniProfileButtonState::InteractableGlowing);
-            }
+    for (size_t i = 0; i < player.socials.size(); i++)
+    {
+        if (player.socials[i].service == "Twitter") {
+            twitterButton.setState(MiniProfileButtonState::InteractableGlowing);
+        }
+        if (player.socials[i].service == "Twitch") {
+            twitchButton.setState(MiniProfileButtonState::InteractableGlowing);
+        }
+        if (player.socials[i].service == "YouTube") {
+            youtubeButton.setState(MiniProfileButtonState::InteractableGlowing);
         }
     }
 }
@@ -237,12 +244,14 @@ void BeatLeader::PlayerButtons::openSocial(string name) const {
         }
     }
 
-    UnityEngine::Application::OpenURL(social.link);
+    static auto UnityEngine_Application_OpenURL = il2cpp_utils::resolve_icall<void, StringW>("UnityEngine.Application::OpenURL");
+    UnityEngine_Application_OpenURL(social.link);
 }
 
 void BeatLeader::PlayerButtons::openProfile() const {
     string url = WebUtils::WEB_URL + "u/" + player.id;
-    UnityEngine::Application::OpenURL(url);
+    static auto UnityEngine_Application_OpenURL = il2cpp_utils::resolve_icall<void, StringW>("UnityEngine.Application::OpenURL");
+    UnityEngine_Application_OpenURL(url);
 }
 
 const float Deg2Rad = 0.017f;

@@ -12,9 +12,9 @@
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/filereadstream.h"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
-#include "songloader/shared/API.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "songcore/shared/SongCore.hpp"
 
 #include "zip.h"
 
@@ -33,20 +33,20 @@ void done() {
 void DownloadBeatmap(string path, string hash, int index) {
     WebUtils::GetAsync(path, 64,
         [hash, index](long httpCode, std::string data) {
-        auto targetFolder = RuntimeSongLoader::API::GetCustomLevelsPath() + hash;
+        auto targetFolder = string(SongCore::API::Loading::GetPreferredCustomLevelPath()) + hash;
         int args = 2;
         int statusCode = zip_stream_extract(data.data(), data.length(), targetFolder.c_str(), +[](const char* name, void* arg) -> int { return 0; }, &args);
 
-        getLogger().info("%s", "Map downloaded");
+        BeatLeaderLogger.info("%s", "Map downloaded");
         if (index + 1 < mapsToDownload.size()) {
             PlaylistSynchronizer::GetBeatmap(index + 1);
         } else {
             done();
 
-            QuestUI::MainThreadScheduler::Schedule([] {
-                getLogger().info("%s", "Refreshing songs");
-                RuntimeSongLoader::API::RefreshSongs(false);
-                RuntimeSongLoader::API::RefreshPacks(true);
+            BSML::MainThreadScheduler::Schedule([] {
+                BeatLeaderLogger.info("%s", "Refreshing songs");
+                SongCore::API::Loading::RefreshSongs(false);
+                SongCore::API::Loading::RefreshLevelPacks();
             });
         }
     });
@@ -54,7 +54,7 @@ void DownloadBeatmap(string path, string hash, int index) {
 
 void PlaylistSynchronizer::GetBeatmap(int index) {
     string hash = mapsToDownload[index];
-    getLogger().info("%s", ("Will download " + hash).c_str());
+    BeatLeaderLogger.info("%s", ("Will download " + hash).c_str());
     WebUtils::GetJSONAsync("https://api.beatsaver.com/maps/hash/" + hash, [hash, index] (long status, bool error, rapidjson::Document const& result){
         if (status == 200 && !error && result.HasMember("versions")) {
             DownloadBeatmap(result["versions"].GetArray()[0]["downloadURL"].GetString(), hash, index);
@@ -102,7 +102,7 @@ void ActuallySyncPlaylist() {
         {
             auto const& song = songs[index];
             string hash = toLower(song["hash"].GetString());
-            if (RuntimeSongLoader::API::GetLevelByHash(hash) == nullopt) {
+            if (!SongCore::API::Loading::GetLevelByHash(hash)) {
                 mapsToDownload.push_back(hash);
             }
         }
@@ -116,19 +116,18 @@ void ActuallySyncPlaylist() {
 }
 
 void PlaylistSynchronizer::SyncPlaylist() {
-    RuntimeSongLoader::API::AddSongsLoadedEvent(
+    SongCore::API::Loading::GetSongsLoadedEvent() +=
         [] (auto songs) {
             if (mapsSynchronized) return;
             ActuallySyncPlaylist();
-        }
-    );
+        };
 }
 
 void PlaylistSynchronizer::InstallPlaylist(string url, string filename) {
     DownloadPlaylist(url, filename, true, [](auto songs) {
-        QuestUI::MainThreadScheduler::Schedule([] {
-            RuntimeSongLoader::API::RefreshSongs(false);
-            RuntimeSongLoader::API::RefreshPacks(true);
+        BSML::MainThreadScheduler::Schedule([] {
+            SongCore::API::Loading::RefreshSongs(false);
+            SongCore::API::Loading::RefreshLevelPacks();
         });
     });
 }

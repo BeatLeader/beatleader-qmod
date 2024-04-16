@@ -4,6 +4,7 @@
 #include <locale>
 #include <fstream>
 #include <regex>
+#include <codecvt>
 
 #include "include/Utils/FileManager.hpp"
 #include "beatsaber-hook/shared/config/config-utils.hpp"

@@ -1,8 +1,8 @@
 #include "HMUI/Touchable.hpp"
 
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/GUIUtility.hpp"
@@ -22,7 +22,7 @@
 
 #include "main.hpp"
 
-using namespace QuestUI;
+using namespace BSML;
 using namespace UnityEngine;
 
 static float lerpCoefficient = 10.0f;
@@ -41,7 +41,8 @@ void BeatLeader::SmoothHoverController::ctor() {
 
 void BeatLeader::SmoothHoverController::OnDisable() {
     IsHovered = false;
-    Progress = _targetValue = 0.0f;
+    Progress = 0.0f;
+    _targetValue = 0.0f;
     _set = false;
 
     hoverStateChangedEvent.invoke(IsHovered, Progress);

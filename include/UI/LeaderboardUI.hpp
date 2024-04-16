@@ -4,7 +4,7 @@
 #include <tuple>
 #include "include/Utils/ReplayManager.hpp"
 #include "include/UI/LevelInfoUI.hpp"
-#include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
+#include "GlobalNamespace/BeatmapLevel.hpp"
 #include "UnityEngine/Transform.hpp"
 #include "UnityEngine/UI/Toggle.hpp"
 #include "UnityEngine/Vector2.hpp"
@@ -21,7 +21,7 @@ namespace LeaderboardUI {
 
     void updateStatus(ReplayUploadStatus status, string description, float progress, bool showRestart);
     void updateVotingButton();
-    tuple<string, string, string> getLevelDetails(GlobalNamespace::IPreviewBeatmapLevel* levelData);
+    tuple<string, string, string> getLevelDetails(GlobalNamespace::BeatmapKey levelData);
     void setVotingButtonsState(int state);
     void initSettingsModal(UnityEngine::Transform* parent);
     void initContextsModal(UnityEngine::Transform* parent);

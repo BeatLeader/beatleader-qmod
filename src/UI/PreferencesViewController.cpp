@@ -1,8 +1,8 @@
 #include "HMUI/Touchable.hpp"
 
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/GUIUtility.hpp"
@@ -28,24 +28,24 @@
 
 #include <string>
 
-using namespace QuestUI;
+using namespace BSML;
 using namespace std;
 
-DEFINE_TYPE(BeatLeader, PreferencesViewController);
+UnityEngine::Transform* containerTransform;
 
 UnityEngine::UI::Button* logoutButton;
 HMUI::InputFieldView* loginField;
 HMUI::InputFieldView* passwordField;
 UnityEngine::UI::Button* loginButton;
 UnityEngine::UI::Button* signupButton;
-TMPro::TextMeshProUGUI* name;
+TMPro::TextMeshProUGUI* nameField;
 TMPro::TextMeshProUGUI* label3;
 TMPro::TextMeshProUGUI* errorDescriptionLabel;
 
-HMUI::SimpleTextDropdown* serverDropdown;
-HMUI::SimpleTextDropdown* starsDropdown;
-UnityEngine::UI::Toggle* saveToggle;
-UnityEngine::UI::Toggle* showReplaySettingsToggle;
+BSML::DropdownListSetting* serverDropdown;
+BSML::DropdownListSetting* starsDropdown;
+BSML::ToggleSetting* saveToggle;
+BSML::ToggleSetting* showReplaySettingsToggle;
 
 BeatLeader::LogoAnimation* spinner = NULL;
 
@@ -59,8 +59,8 @@ void UpdateUI(optional<Player> player) {
     spinner->SetAnimating(false);
 
     if (player != nullopt) {
-        name->SetText(player->name + ", hi!");
-        name->get_gameObject()->SetActive(true);
+        nameField->SetText(player->name + ", hi!", true);
+        nameField->get_gameObject()->SetActive(true);
         label3->get_gameObject()->SetActive(false);
         logoutButton->get_gameObject()->SetActive(true);
 
@@ -69,12 +69,12 @@ void UpdateUI(optional<Player> player) {
         loginButton->get_gameObject()->SetActive(false);
         signupButton->get_gameObject()->SetActive(false);
 
-        saveToggle->get_transform()->get_parent()->get_gameObject()->SetActive(true);
+        saveToggle->get_gameObject()->SetActive(true);
         starsDropdown->get_transform()->get_parent()->get_gameObject()->SetActive(true);
         if(showReplaySettingsToggle)
-            showReplaySettingsToggle->get_transform()->get_parent()->get_gameObject()->SetActive(true);
+            showReplaySettingsToggle->get_gameObject()->SetActive(true);
     } else {
-        name->get_gameObject()->SetActive(false);
+        nameField->get_gameObject()->SetActive(false);
         label3->get_gameObject()->SetActive(true);
         logoutButton->get_gameObject()->SetActive(false);
 
@@ -88,13 +88,13 @@ void UpdateUI(optional<Player> player) {
         loginButton->set_interactable(true);
         signupButton->set_interactable(true);
 
-        saveToggle->get_transform()->get_parent()->get_gameObject()->SetActive(false);
+        saveToggle->get_gameObject()->SetActive(false);
         starsDropdown->get_transform()->get_parent()->get_gameObject()->SetActive(false);
         if(showReplaySettingsToggle)
-            showReplaySettingsToggle->get_transform()->get_parent()->get_gameObject()->SetActive(false);
+            showReplaySettingsToggle->get_gameObject()->SetActive(false);
     }
 
-    errorDescriptionLabel->SetText(errorDescription);
+    errorDescriptionLabel->SetText(errorDescription, true);
     if (errorDescription.length() > 0) {
         errorDescriptionLabel->get_gameObject()->SetActive(true);
     } else {
@@ -112,38 +112,45 @@ void showLoading() {
     signupButton->set_interactable(false);
 }
 
-void BeatLeader::PreferencesViewController::DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling) {
-    errorDescription = "";
-}
+std::vector<std::string_view> starValueOptions = {
+    "Overall",
+    "Tech",
+    "Acc",
+    "Pass"
+};
 
-void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+void BeatLeader::PreferencesViewController::DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     if (firstActivation) {
-        this->get_gameObject()->AddComponent<HMUI::Touchable*>();
-        UnityEngine::GameObject* container = BeatSaberUI::CreateScrollableSettingsContainer(this->get_transform());
+        // Make Touchable
+        self->get_gameObject()->AddComponent<HMUI::Touchable*>();
 
-        auto containerTransform = container->get_transform();
+        // Create Container
+        auto* container = BSML::Lite::CreateScrollableSettingsContainer(self->get_transform());
 
-        auto spinnerImage = ::QuestUI::BeatSaberUI::CreateImage(this->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 20}, {20, 20});
-        spinner = this->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
+        containerTransform = container->get_transform();
+
+        auto spinnerImage = ::BSML::Lite::CreateImage(self->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 20}, {20, 20});
+        spinner = self->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
         spinner->Init(spinnerImage);
         spinnerImage->get_gameObject()->SetActive(false);
 
-        name = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "", false);
-        EmojiSupport::AddSupport(name);
+        nameField = ::BSML::Lite::CreateText(containerTransform, "");
+        EmojiSupport::AddSupport(nameField);
 
-        logoutButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "Logout", [](){
+        logoutButton = ::BSML::Lite::CreateUIButton(containerTransform, "Logout", [](){
             PlayerController::LogOut();
+            UpdateUI(nullopt);
         });
 
-        loginField = ::QuestUI::BeatSaberUI::CreateStringSetting(containerTransform, "Login", "", [](StringW value) {
+        loginField = ::BSML::Lite::CreateStringSetting(containerTransform, "Login", "", [](StringW value) {
             login = (string) value;
         });
         
-        passwordField = ::QuestUI::BeatSaberUI::CreateStringSetting(containerTransform, "Password", "", [](StringW value) {
+        passwordField = ::BSML::Lite::CreateStringSetting(containerTransform, "Password", "", [](StringW value) {
             password = (string) value;
         });
 
-        loginButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "Log in", [spinnerImage]() {
+        loginButton = ::BSML::Lite::CreateUIButton(containerTransform, "Log in", []() {
             if (login.empty() || password.empty()) {
                 errorDescription = "Enter a username and/or password!";
                 UpdateUI(nullopt);
@@ -151,7 +158,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
             }
             showLoading();
             PlayerController::LogIn(login, password, [](std::optional<Player> const& player, string error) {
-                QuestUI::MainThreadScheduler::Schedule([player, error] {
+                BSML::MainThreadScheduler::Schedule([player, error] {
                 if (player == nullopt) {
                     errorDescription = error;
                 } else {
@@ -165,7 +172,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
                 });
             });
         });
-        signupButton = ::QuestUI::BeatSaberUI::CreateUIButton(containerTransform, "Sign up", []() {
+        signupButton = ::BSML::Lite::CreateUIButton(containerTransform, "Sign up", []() {
             if (login.empty() || password.empty()) {
                 errorDescription = "Enter a username and/or password!";
                 UpdateUI(nullopt);
@@ -173,7 +180,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
             }
             showLoading();
             PlayerController::SignUp((string)login, (string)password, [](std::optional<Player> const& player, string error) {
-                QuestUI::MainThreadScheduler::Schedule([player, error] {
+                BSML::MainThreadScheduler::Schedule([player, error] {
                 if (player == nullopt) {
                     errorDescription = error;
                 } else {
@@ -188,32 +195,30 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
             });
         });
 
-        auto captureSelf = this;
+        auto captureSelf = self;
         PlayerController::playerChanged.emplace_back([captureSelf](std::optional<Player> const& updated) {
             if (!captureSelf->isActivated) return;
-            QuestUI::MainThreadScheduler::Schedule([updated] {
-                UpdateUI(updated);
+            BSML::MainThreadScheduler::Schedule([updated] {
+                if (updated) {
+                    UpdateUI(updated);
+                }
             });
         });
 
         saveToggle = AddConfigValueToggle(containerTransform, getModConfig().SaveLocalReplays);
-        starsDropdown = AddConfigValueDropdownEnum(containerTransform, getModConfig().StarValueToShow, {
-            "Overall",
-            "Tech",
-            "Acc",
-            "Pass"
-        });
-        // After switching the setting we need to manually call refresh, because StandardLevelDetailView::RefreshContent is not called again,
-        // if the same map, that was selected before changing the setting, is selected again before selecting any other map. 
-        // This results in setLabels not being called again and the stars of the old setting are displayed, which is why we call it manually here after selecting an option
-        starsDropdown->add_didSelectCellWithIdxEvent(custom_types::MakeDelegate<System::Action_2<HMUI::DropdownWithTableView*, int>*>((function<void(HMUI::DropdownWithTableView*, int)>)[](auto throwaway1, auto throwaway2){
+        starsDropdown = AddConfigValueDropdownEnum(containerTransform, getModConfig().StarValueToShow, starValueOptions);
+        // // After switching the setting we need to manually call refresh, because StandardLevelDetailView::RefreshContent is not called again,
+        // // if the same map, that was selected before changing the setting, is selected again before selecting any other map. 
+        // // This results in setLabels not being called again and the stars of the old setting are displayed, which is why we call it manually here after selecting an option
+        starsDropdown->dropdown->add_didSelectCellWithIdxEvent(custom_types::MakeDelegate<System::Action_2<UnityW<HMUI::DropdownWithTableView>, int>*>((function<void(UnityW<HMUI::DropdownWithTableView>, int)>)[](auto throwaway1, auto throwaway2){
             LevelInfoUI::refreshRatingLabels();
         }));
         if (ReplayInstalled()) {
             showReplaySettingsToggle = AddConfigValueToggle(containerTransform, getModConfig().ShowReplaySettings);
         }
-        errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "", false);
-        label3 = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "Never used BeatLeader? Sign up with any new login/password.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile details on the website.", false);
+        errorDescriptionLabel = ::BSML::Lite::CreateText(containerTransform, "");
+        label3 = ::BSML::Lite::CreateText(containerTransform, "Never used BeatLeader? Sign up with any new login/password.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile details on the website.");
+        label3->set_fontSize(3.0f);
     }
 
     UpdateUI(PlayerController::currentPlayer);

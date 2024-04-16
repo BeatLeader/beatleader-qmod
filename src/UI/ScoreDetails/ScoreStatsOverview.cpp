@@ -4,18 +4,19 @@
 #include "include/Assets/BundleLoader.hpp"
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsOverview.hpp"
+#include "include/UI/QuestUI.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
 #include "UnityEngine/Component.hpp"
 
-#include "questui/shared/CustomTypes/Components/Backgroundable.hpp"
+#include "bsml/shared/BSML/Components/Backgroundable.hpp"
 
 #include "main.hpp"
 
 #include <sstream>
 
-using namespace QuestUI::BeatSaberUI;
+using namespace QuestUI;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
@@ -33,12 +34,12 @@ BeatLeader::ScoreStatsOverview::ScoreStatsOverview(HMUI::ModalView *modal) noexc
     leftPostScore = CreateText(modalTransform, "", UnityEngine::Vector2(3.0, -1.0));
 
     leftScore = CreateText(modalTransform, "", UnityEngine::Vector2(-9.0, 5.8));
-    leftPieImage = ::QuestUI::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(-9, 6), UnityEngine::Vector2(14, 14));
+    leftPieImage = ::BSML::Lite::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(-9, 6), UnityEngine::Vector2(14, 14));
     leftPieImage->set_color(UnityEngine::Color(0.8f, 0.2f, 0.2f, 0.1f));
     leftPieImage->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->handAccIndicatorMaterial));
 
     rightScore = CreateText(modalTransform, "", UnityEngine::Vector2(9.0, 5.8));
-    rightPieImage = ::QuestUI::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(9, 6), UnityEngine::Vector2(14, 14));
+    rightPieImage = ::BSML::Lite::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(9, 6), UnityEngine::Vector2(14, 14));
     rightPieImage->set_color(UnityEngine::Color(0.2f, 0.2f, 0.8f, 0.1f));
     rightPieImage->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->handAccIndicatorMaterial));
 
@@ -50,15 +51,15 @@ BeatLeader::ScoreStatsOverview::ScoreStatsOverview(HMUI::ModalView *modal) noexc
 
     tdTitle = CreateText(modalTransform, "TD", UnityEngine::Vector2(0.0, -5.0));
     tdTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
-    tdBackground = ::QuestUI::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -9), UnityEngine::Vector2(50, 5));
+    tdBackground = ::BSML::Lite::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -9), UnityEngine::Vector2(50, 5));
     tdBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
     preTitle = CreateText(modalTransform, "Pre", UnityEngine::Vector2(0.0, -10.0));
     preTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
-    preBackground = ::QuestUI::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -14), UnityEngine::Vector2(50, 5));
+    preBackground = ::BSML::Lite::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -14), UnityEngine::Vector2(50, 5));
     preBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
     postTitle = CreateText(modalTransform, "Post", UnityEngine::Vector2(0.0, -15.0));
     postTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
-    postBackground = ::QuestUI::BeatSaberUI::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -19), UnityEngine::Vector2(50, 5));
+    postBackground = ::BSML::Lite::CreateImage(modalTransform, Sprites::get_TransparentPixel(), UnityEngine::Vector2(0, -19), UnityEngine::Vector2(50, 5));
     postBackground->set_material(BundleLoader::bundle->accDetailsRowMaterial);
 
     leftTd = CreateText(modalTransform, "", UnityEngine::Vector2(5.0, -7.0));
@@ -77,34 +78,34 @@ static float CalculateFillValue(float score) {
 }
 
 void BeatLeader::ScoreStatsOverview::setScore(ScoreStats score) const {
-    leftPreScore->SetText(to_string_wprecision(score.accuracyTracker.leftAverageCut[0], 2));
-    leftAccScore->SetText(to_string_wprecision(score.accuracyTracker.leftAverageCut[1], 2));
-    leftPostScore->SetText(to_string_wprecision(score.accuracyTracker.leftAverageCut[2], 2));
+    leftPreScore->SetText(to_string_wprecision(score.accuracyTracker.leftAverageCut[0], 2), true);
+    leftAccScore->SetText(to_string_wprecision(score.accuracyTracker.leftAverageCut[1], 2), true);
+    leftPostScore->SetText(to_string_wprecision(score.accuracyTracker.leftAverageCut[2], 2), true);
 
-    leftScore->SetText(to_string_wprecision(score.accuracyTracker.accLeft, 2));
+    leftScore->SetText(to_string_wprecision(score.accuracyTracker.accLeft, 2), true);
     leftScore->set_alignment(TMPro::TextAlignmentOptions::Center);
     leftPieImage->get_material()->SetFloat(FillPropertyId, CalculateFillValue(score.accuracyTracker.accLeft));
     
-    rightScore->SetText(to_string_wprecision(score.accuracyTracker.accRight, 2));
+    rightScore->SetText(to_string_wprecision(score.accuracyTracker.accRight, 2), true);
     rightScore->set_alignment(TMPro::TextAlignmentOptions::Center);
     rightPieImage->get_material()->SetFloat(FillPropertyId, CalculateFillValue(score.accuracyTracker.accRight));
 
-    rightPreScore->SetText(to_string_wprecision(score.accuracyTracker.rightAverageCut[0], 2));
+    rightPreScore->SetText(to_string_wprecision(score.accuracyTracker.rightAverageCut[0], 2), true);
     rightPreScore->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightAccScore->SetText(to_string_wprecision(score.accuracyTracker.rightAverageCut[1], 2));
+    rightAccScore->SetText(to_string_wprecision(score.accuracyTracker.rightAverageCut[1], 2), true);
     rightAccScore->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightPostScore->SetText(to_string_wprecision(score.accuracyTracker.rightAverageCut[2], 2));
+    rightPostScore->SetText(to_string_wprecision(score.accuracyTracker.rightAverageCut[2], 2), true);
     rightPostScore->set_alignment(TMPro::TextAlignmentOptions::Right);
 
-    leftTd->SetText(to_string_wprecision(score.accuracyTracker.leftTimeDependence, 3));
-    leftPre->SetText(to_string_wprecision(score.accuracyTracker.leftPreswing * 100.0, 2) + "%");
-    leftPost->SetText(to_string_wprecision(score.accuracyTracker.leftPostswing * 100.0, 2) + "%");
+    leftTd->SetText(to_string_wprecision(score.accuracyTracker.leftTimeDependence, 3), true);
+    leftPre->SetText(to_string_wprecision(score.accuracyTracker.leftPreswing * 100.0, 2) + "%", true);
+    leftPost->SetText(to_string_wprecision(score.accuracyTracker.leftPostswing * 100.0, 2) + "%", true);
 
-    rightTd->SetText(to_string_wprecision(score.accuracyTracker.rightTimeDependence, 3));
+    rightTd->SetText(to_string_wprecision(score.accuracyTracker.rightTimeDependence, 3), true);
     rightTd->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightPre->SetText(to_string_wprecision(score.accuracyTracker.rightPreswing * 100.0, 2) + "%");
+    rightPre->SetText(to_string_wprecision(score.accuracyTracker.rightPreswing * 100.0, 2) + "%", true);
     rightPre->set_alignment(TMPro::TextAlignmentOptions::Right);
-    rightPost->SetText(to_string_wprecision(score.accuracyTracker.rightPostswing * 100.0, 2) + "%");
+    rightPost->SetText(to_string_wprecision(score.accuracyTracker.rightPostswing * 100.0, 2) + "%", true);
     rightPost->set_alignment(TMPro::TextAlignmentOptions::Right);
 }
 

@@ -1,10 +1,8 @@
 #include "include/Enhancers/MapEnhancer.hpp"
 
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
-#include "GlobalNamespace/IBeatmapLevel.hpp"
-#include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
-#include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
+#include "GlobalNamespace/BeatmapLevel.hpp"
 
 #include <regex>
 #include <sstream>
@@ -12,14 +10,13 @@
 void MapEnhancer::Enhance(Replay &replay)
 {
     ReplayInfo& info = replay.info;
-    info.hash = regex_replace((string)previewBeatmapLevel->get_levelID(), basic_regex("custom_level_"), "");
-    IPreviewBeatmapLevel* levelData = reinterpret_cast<IPreviewBeatmapLevel*>(difficultyBeatmap->get_level());
-    info.songName = (string)levelData->get_songName();
-    info.mapper = (string)levelData->get_levelAuthorName();
-    info.difficulty = DiffName(difficultyBeatmap->get_difficulty().value);
+    info.hash = regex_replace((string)beatmapLevel->levelID, basic_regex("custom_level_"), "");
+    info.songName = (string)beatmapLevel->songName;
+    info.mapper = (string)beatmapLevel->songAuthorName;
+    info.difficulty = DiffName(difficultyBeatmap.difficulty.value__);
 
-    info.mode = (string)difficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic()->serializedName;
-    info.environment = (string)environmentInfo->get_environmentName();
+    info.mode = (string)difficultyBeatmap.beatmapCharacteristic->serializedName;
+    info.environment = (string)environmentInfo->environmentName;
     info.modifiers = Join(Modifiers());
     info.leftHanded = playerSpecificSettings->leftHanded;
     info.height = playerSpecificSettings->automaticPlayerHeight ? 0 : playerSpecificSettings->playerHeight;

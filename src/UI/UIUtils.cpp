@@ -11,27 +11,15 @@
 
 #include "main.hpp"
 
+#include "bsml/shared/BSML/Settings/BSMLSettings.hpp"
+#include "bsml/shared/BSML/Settings/SettingsMenu.hpp"
+#include "bsml/shared/BSML/Settings/UI/ModSettingsFlowCoordinator.hpp"
+#include "bsml/shared/BSML/Settings/UI/SettingsMenuListViewController.hpp"
+#include "bsml/shared/Helpers/delegates.hpp"
+#include "bsml/shared/Helpers/getters.hpp"
+
 #include "UnityEngine/HideFlags.hpp"
-
-// Access into internal QuestUI structures
-namespace QuestUI::ModSettingsInfos {
-    struct ModSettingsInfo {
-        ModInfo modInfo;
-        bool showModInfo;
-        std::string title;
-        Register::Type type;
-        System::Type* il2cpp_type;
-        union {
-            HMUI::ViewController* viewController;
-            HMUI::FlowCoordinator* flowCoordinator;
-        };
-        Register::DidActivateEvent didActivateEvent;
-        Register::MenuLocation location;
-        void Present();
-    };
-
-    std::vector<ModSettingsInfo>& get();
-}
+#include "UnityEngine/Resources.hpp"
 
 namespace UIUtils {
 
@@ -39,7 +27,7 @@ namespace UIUtils {
 
     HMUI::ImageView* getRoundRectSprite() {
         if (!roundRectSprite) {
-            roundRectSprite = QuestUI::ArrayUtil::First(UnityEngine::Resources::FindObjectsOfTypeAll<HMUI::ImageView*>(), [](HMUI::ImageView* image){ 
+            roundRectSprite = UnityEngine::Resources::FindObjectsOfTypeAll<HMUI::ImageView*>()->First([](HMUI::ImageView* image){ 
                 auto sprite = image->get_sprite();
                 if (!sprite || sprite->get_name() != "RoundRect10") return false;
 
@@ -88,12 +76,24 @@ namespace UIUtils {
     }
 
     void OpenSettings() {
-        // Get all of the mod settings infos, and get the one that is for beatleader
-        for (auto& s : QuestUI::ModSettingsInfos::get()) {
-            if (s.modInfo.id == MOD_ID) {
-                s.Present();
+        auto modFC = BSML::BSMLSettings::get_instance()->get_modSettingsFlowCoordinator();
+        modFC->isAnimating = true;
+
+        auto fc = BSML::Helpers::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
+        fc->PresentFlowCoordinator(modFC, BSML::MakeSystemAction([modFC]{
+            int index = 0;
+            BSML::SettingsMenu* menu = NULL;
+            for (auto& s : BSML::BSMLSettings::get_instance()->get_settingsMenus()) {
+                if (s->text == "BeatLeader") {
+                    menu = reinterpret_cast<BSML::SettingsMenu*>(s);
+                    break;
+                }
+                index++;
             }
-        }
+            modFC->settingsMenuListViewController->list->tableView->SelectCellWithIdx(index, false);
+            modFC->OpenMenu(menu);
+            modFC->isAnimating = false;
+        }), HMUI::ViewController::AnimationDirection::Horizontal, false, false);
     }
 
     void AddRoundRect(HMUI::ImageView* background) {
@@ -103,9 +103,9 @@ namespace UIUtils {
 		background->set_color0(bgTemplate->get_color0());
 		background->set_color1(bgTemplate->get_color1());
 		background->set_gradient(bgTemplate->get_gradient());
-		background->gradientDirection = bgTemplate->gradientDirection;
-        background->flipGradientColors = bgTemplate->flipGradientColors;
-        background->skew = bgTemplate->skew;
+		background->_gradientDirection = bgTemplate->_gradientDirection;
+        background->_flipGradientColors = bgTemplate->_flipGradientColors;
+        background->_skew = bgTemplate->_skew;
 		background->set_eventAlphaThreshold(bgTemplate->get_eventAlphaThreshold());
 		background->set_fillAmount(bgTemplate->get_fillAmount());
 		background->set_fillCenter(bgTemplate->get_fillCenter());
@@ -130,7 +130,7 @@ namespace UIUtils {
 
     // Copied from BSML
     HMUI::ImageView* CreateRoundRectImage(UnityEngine::Transform* parent, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta) {
-        static ConstString name("QuestUIImage");
+        static ConstString name("bsmlImage");
         UnityEngine::GameObject* gameObj = UnityEngine::GameObject::New_ctor(name);
         HMUI::ImageView* background = gameObj->AddComponent<HMUI::ImageView*>();// GetCopyOf(, getRoundRectSprite());
         AddRoundRect(background);
@@ -138,7 +138,7 @@ namespace UIUtils {
         background->get_transform()->SetParent(parent, false);
         background->set_enabled(true);
 
-        UnityEngine::RectTransform* rectTransform = (UnityEngine::RectTransform*)background->get_transform();
+        UnityEngine::RectTransform* rectTransform = background->get_transform().cast<UnityEngine::RectTransform>();
         rectTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
         rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
         rectTransform->set_anchoredPosition(anchoredPosition);

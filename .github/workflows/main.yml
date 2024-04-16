@@ -74,10 +74,10 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}
         ./QPM/qpm qmod build
-        pwsh -Command ./build.ps1
+        pwsh -Command ./scripts/build.ps1
     - name: Create Qmod
       run: |
-        pwsh -Command ./buildQMOD.ps1 ${{env.qmodName}}
+        pwsh -Command ./scripts/createqmod.ps1 ${{env.qmodName}}
     - name: Get Library Name
       id: libname
       run: |

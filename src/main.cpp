@@ -6,6 +6,7 @@
 #include "include/UI/PreferencesViewController.hpp"
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ResultsViewController.hpp"
+#include "include/UI/QuestUI.hpp"
 
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
@@ -16,7 +17,6 @@
 #include "include/Utils/ModConfig.hpp"
 #include "include/Utils/PlaylistSynchronizer.hpp"
 #include "include/Utils/WebUtils.hpp"
-#include "include/Utils/RecorderUtils.hpp"
 #include "include/Utils/FileManager.hpp"
 
 #include "config-utils/shared/config-utils.hpp"
@@ -24,29 +24,26 @@
 
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "GlobalNamespace/AppInit.hpp"
+#include "GlobalNamespace/RichPresenceManager.hpp"
+#include "BeatSaber/Init/BSAppInit.hpp"
+#include "UnityEngine/SceneManagement/SceneManager.hpp"
+#include "UnityEngine/SceneManagement/Scene.hpp"
 
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
-#include "questui/shared/QuestUI.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML.hpp"
 
 using namespace GlobalNamespace;
-using namespace QuestUI;
-
-ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
-
-// Returns a logger, useful for printing debug messages
-Logger& getLogger() {
-    static Logger* logger = new Logger(modInfo, LoggerOptions(false, true));
-    return *logger;
-}
+using namespace BSML;
 
 // Called at the early stages of game loading
-extern "C" void setup(ModInfo& info) {
-    info.id = ID;
-    info.version = VERSION;
-    modInfo = info;
-	
-    getModConfig().Init(modInfo); // Load the config file
-    getLogger().info("Completed setup!");
+MOD_EXPORT void setup(CModInfo *info) noexcept {
+    *info = modInfo.to_c();
+
+    getModConfig().Init(modInfo);
+
+    Paper::Logger::RegisterFileContextId(BeatLeaderLogger.tag);
+
+    BeatLeaderLogger.info("Completed setup!");
 }
 
 MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransitionsHelper* self, ::System::Action_1<::Zenject::DiContainer*>* finishCallback) {
@@ -60,13 +57,13 @@ MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransiti
 
 void replayPostCallback(ReplayUploadStatus status, const string& description, float progress, int code) {
     if (!ReplayRecorder::recording) {
-        QuestUI::MainThreadScheduler::Schedule([status, description, progress, code] {
+        BSML::MainThreadScheduler::Schedule([status, description, progress, code] {
             LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
             if (status == ReplayUploadStatus::finished) {
                 std::thread t ([] {
                     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                     PlayerController::Refresh(0, [](auto player, auto str){
-                        QuestUI::MainThreadScheduler::Schedule([]{
+                        BSML::MainThreadScheduler::Schedule([]{
                             LeaderboardUI::updatePlayerRank();
                         });
                     });
@@ -78,11 +75,46 @@ void replayPostCallback(ReplayUploadStatus status, const string& description, fl
     }
 }
 
-MAKE_HOOK_MATCH(AppInitStart, &AppInit::Start, void,
-    AppInit *self) {
+MAKE_HOOK_MATCH(AppInitStart, &BeatSaber::Init::BSAppInit::InstallBindings, void,
+    BeatSaber::Init::BSAppInit *self) {
     self->::UnityEngine::MonoBehaviour::StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle(self->get_gameObject())));
     AppInitStart(self);
     LeaderboardUI::setup();
+}
+
+static bool hasInited = false;
+static bool shouldClear = false;
+
+// do things with the scene transition stuff
+MAKE_HOOK_MATCH(RichPresenceManager_HandleGameScenesManagerTransitionDidFinish, &GlobalNamespace::RichPresenceManager::HandleGameScenesManagerTransitionDidFinish, void, GlobalNamespace::RichPresenceManager* self, GlobalNamespace::ScenesTransitionSetupDataSO* setupData, Zenject::DiContainer* container) {
+    RichPresenceManager_HandleGameScenesManagerTransitionDidFinish(self, setupData, container);
+
+    if (shouldClear) {
+        shouldClear = false;
+        QuestUI::ClearCache();
+        if (hasInited) {
+            hasInited = false;
+            QuestUI::SetupPersistentObjects();
+        }
+    }
+}
+
+// Here we just check if we should be doing things after all the scene transitions are done:
+MAKE_HOOK_MATCH(SceneManager_Internal_ActiveSceneChanged, &UnityEngine::SceneManagement::SceneManager::Internal_ActiveSceneChanged, void, UnityEngine::SceneManagement::Scene prevScene, UnityEngine::SceneManagement::Scene nextScene) {
+    SceneManager_Internal_ActiveSceneChanged(prevScene, nextScene);
+    bool prevValid = prevScene.IsValid(), nextValid = nextScene.IsValid();
+
+    if (prevValid && nextValid) {
+        std::string prevSceneName(prevScene.get_name());
+        std::string nextSceneName(nextScene.get_name());
+
+        if (prevSceneName == "QuestInit") hasInited = true;
+
+        // if we just inited, and aren't already going to clear, check the next scene name for the menu
+        if (hasInited && !shouldClear && nextSceneName.find("Menu") != std::u16string::npos) {
+            shouldClear = true;
+        }
+    }
 }
 
 #include "HMUI/ModalView.hpp"
@@ -96,7 +128,7 @@ MAKE_HOOK_MATCH(ModalView_Show, &HMUI::ModalView::Show, void, HMUI::ModalView* s
 	ModalView_Show(self, animated, moveToCenter, finishedCallback); 
 
     if (((string)self->get_name()).find("BeatLeader") != string::npos) {
-        auto cb = self->blockerGO->get_gameObject()->GetComponent<UnityEngine::Canvas*>();
+        auto cb = self->_blockerGO->get_gameObject()->GetComponent<UnityEngine::Canvas*>();
         cb->set_overrideSorting(false);
 
         auto cm = self->get_gameObject()->GetComponent<UnityEngine::Canvas*>();
@@ -105,16 +137,14 @@ MAKE_HOOK_MATCH(ModalView_Show, &HMUI::ModalView::Show, void, HMUI::ModalView* s
 }
 
 // Called later on in the game loading - a good time to install function hooks
-extern "C" void load() {
+MOD_EXPORT "C" void late_load() {
     il2cpp_functions::Init();
     custom_types::Register::AutoRegister();
     WebUtils::refresh_urls();
     FileManager::EnsureReplaysFolderExists();
 
-    LoggerContextObject logger = getLogger().WithContext("load");
-
-    QuestUI::Init();
-    QuestUI::Register::RegisterModSettingsViewController<BeatLeader::PreferencesViewController*>(modInfo, "BeatLeader");
+    BSML::Init();
+    BSML::Register::RegisterSettingsMenu("BeatLeader", BeatLeader::PreferencesViewController::DidActivate, false);
     LeaderboardUI::retryCallback = []() {
         ReplayManager::RetryPosting(replayPostCallback);
     };
@@ -122,17 +152,15 @@ extern "C" void load() {
     LevelInfoUI::setup();
     ModifiersUI::setup();
     ResultsView::setup();
-    RecorderUtils::StartRecorderUtils();
 
     PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {
         // if (synchronizer == nullopt) {
         //     synchronizer.emplace();
         // }
     });
-    QuestUI::MainThreadScheduler::Schedule([] {
+    BSML::MainThreadScheduler::Schedule([] {
         PlayerController::Refresh();
-        LoggerContextObject logger = getLogger().WithContext("load");
-        INSTALL_HOOK(logger, ModalView_Show);
+        INSTALL_HOOK(BeatLeaderLogger, ModalView_Show);
     });
 
     PlaylistSynchronizer::SyncPlaylist();
@@ -145,10 +173,12 @@ extern "C" void load() {
             ReplayManager::ProcessReplay(replay, status, skipUpload, replayPostCallback); 
         });
 
-    getLogger().info("Installing main hooks...");
+    BeatLeaderLogger.info("Installing main hooks...");
     
-    INSTALL_HOOK(logger, Restart);
-    INSTALL_HOOK(logger, AppInitStart);
+    INSTALL_HOOK(BeatLeaderLogger, Restart);
+    INSTALL_HOOK(BeatLeaderLogger, AppInitStart);
+    INSTALL_HOOK(BeatLeaderLogger, SceneManager_Internal_ActiveSceneChanged);
+    INSTALL_HOOK(BeatLeaderLogger, RichPresenceManager_HandleGameScenesManagerTransitionDidFinish);
 
-    getLogger().info("Installed main hooks!");
+    BeatLeaderLogger.info("Installed main hooks!");
 }

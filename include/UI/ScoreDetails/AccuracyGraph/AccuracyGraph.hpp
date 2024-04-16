@@ -28,8 +28,8 @@
 #include "UnityEngine/Transform.hpp"
 #include "UnityEngine/Time.hpp"
 
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/QuestUI.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/BSML.hpp"
 
 #include "VRUIControls/VRPointer.hpp"
 
@@ -37,7 +37,7 @@
 
 using namespace std;
 
-#define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::get()
+#define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::methodInfo()
 
 DECLARE_CLASS_CODEGEN(BeatLeader, AccuracyGraph, UnityEngine::EventSystems::UIBehaviour,
     DECLARE_INSTANCE_FIELD(AccuracyGraphLine*, graphLine);

@@ -3,6 +3,7 @@
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
 #include "include/UI/EmojiSupport.hpp"
+#include "include/UI/QuestUI.hpp"
 
 #include "include/UI/ScoreDetails/ScoreStatsGraph.hpp"
 #include "include/UI/ScoreDetails/AccuracyGraph/AccuracyGraphUtils.hpp"
@@ -17,13 +18,13 @@
 #include "HMUI/CurvedCanvasSettingsHelper.hpp"
 #include "HMUI/CurvedCanvasSettings.hpp"
 
-#include "questui/shared/CustomTypes/Components/Backgroundable.hpp"
+#include "bsml/shared/BSML/Components/Backgroundable.hpp"
 
 #include "main.hpp"
 
 #include <sstream>
 
-using namespace QuestUI::BeatSaberUI;
+using namespace QuestUI;
 using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
@@ -36,7 +37,7 @@ BeatLeader::ScoreStatsGraph::ScoreStatsGraph(HMUI::ModalView *modal) noexcept {
     auto graphLine = gameObj->AddComponent<BeatLeader::AccuracyGraphLine*>();
     graphLine->get_transform()->SetParent(graphBackground->get_transform(), false);
     
-    RectTransform* rectTransform = (RectTransform*)graphLine->get_transform();
+    RectTransform* rectTransform = graphLine->get_transform().cast<RectTransform>();
     rectTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
     rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
     rectTransform->set_anchoredPosition(UnityEngine::Vector2(0, 0));

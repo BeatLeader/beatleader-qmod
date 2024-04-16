@@ -13,7 +13,7 @@ enum struct StructType {
 };
 
 void Replay::Encode(ofstream& s) const {
-    getLogger().info("Started encode");
+    BeatLeaderLogger.info("Started encode");
     Encode((int)0x442d3d69, s);
     Encode((char)1, s);
 
@@ -24,27 +24,27 @@ void Replay::Encode(ofstream& s) const {
         switch (type)
         {
             case StructType::info:
-            getLogger().info("Started encode info");
+            BeatLeaderLogger.info("Started encode info");
                 Encode(info, s);
                 break;
             case StructType::frames:
-            getLogger().info("Started encode frames");
+            BeatLeaderLogger.info("Started encode frames");
                 Encode(frames, s);
                 break;
             case StructType::notes:
-            getLogger().info("Started encode notes");
+            BeatLeaderLogger.info("Started encode notes");
                 Encode(notes, s);
                 break;
             case StructType::walls:
-            getLogger().info("Started encode walls");
+            BeatLeaderLogger.info("Started encode walls");
                 Encode(walls, s);
                 break;
             case StructType::heights:
-            getLogger().info("Started encode heights");
+            BeatLeaderLogger.info("Started encode heights");
                 Encode(heights, s);
                 break;
             case StructType::pauses:
-            getLogger().info("Started encode pauses");
+            BeatLeaderLogger.info("Started encode pauses");
                 Encode(pauses, s);
                 break;
         }

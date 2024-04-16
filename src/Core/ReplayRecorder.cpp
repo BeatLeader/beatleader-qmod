@@ -12,7 +12,6 @@
 #include "include/Enhancers/UserEnhancer.hpp"
 
 #include "include/Utils/ReplayManager.hpp"
-#include "include/Utils/RecorderUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
 #include "include/API/PlayerController.hpp"
 
@@ -31,7 +30,6 @@
 #include "GlobalNamespace/BeatmapData.hpp"
 #include "GlobalNamespace/GameplayModifiers.hpp"
 #include "GlobalNamespace/StandardLevelScenesTransitionSetupDataSO.hpp"
-#include "GlobalNamespace/BeatmapEnvironmentHelper.hpp"
 #include "GlobalNamespace/OverrideEnvironmentSettings.hpp"
 #include "GlobalNamespace/GameplayCoreInstaller.hpp"
 #include "GlobalNamespace/AudioTimeSyncController.hpp"
@@ -39,9 +37,7 @@
 #include "GlobalNamespace/BeatmapObjectData.hpp"
 #include "GlobalNamespace/NoteData.hpp"
 #include "GlobalNamespace/CutScoreBuffer.hpp"
-#include "GlobalNamespace/BeatmapObjectSpawnMovementData_NoteSpawnData.hpp"
 #include "GlobalNamespace/ObstacleData.hpp"
-#include "GlobalNamespace/BeatmapObjectSpawnMovementData_ObstacleSpawnData.hpp"
 #include "GlobalNamespace/NoteController.hpp"
 #include "GlobalNamespace/ObstacleController.hpp"
 #include "GlobalNamespace/BeatmapObjectManager.hpp"
@@ -57,12 +53,10 @@
 #include "GlobalNamespace/SaberSwingRatingCounter.hpp"
 #include "GlobalNamespace/PlayerHeightDetector.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
-#include "GlobalNamespace/IBeatmapLevel.hpp"
 #include "GlobalNamespace/IBeatmapLevelData.hpp"
-#include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
-#include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
+#include "GlobalNamespace/BeatmapLevel.hpp"
 #include "GlobalNamespace/SaberMovementData.hpp"
 #include "GlobalNamespace/SaberSwingRating.hpp"
 #include "GlobalNamespace/GameplayCoreSceneSetupData.hpp"
@@ -124,12 +118,12 @@ namespace ReplayRecorder {
     chrono::steady_clock::time_point _pauseStartTime;
     System::Action_1<float>* _heightEvent;
     System::Action_1<ScoringElement*>* _scoreEvent;
-    System::Action_1<ObstacleController*>* _wallEvent;
+    System::Action_1<UnityW<ObstacleController>>* _wallEvent;
     
     void collectMapData(StandardLevelScenesTransitionSetupDataSO* self) {
 
-        mapEnhancer.difficultyBeatmap = self->difficultyBeatmap;
-        mapEnhancer.previewBeatmapLevel = self->gameplayCoreSceneSetupData->previewBeatmapLevel;
+        mapEnhancer.difficultyBeatmap = self->beatmapKey;
+        mapEnhancer.beatmapLevel = self->beatmapLevel;
         mapEnhancer.gameplayModifiers = self->gameplayModifiers;
         mapEnhancer.playerSpecificSettings = self->gameplayCoreSceneSetupData->playerSpecificSettings;
         mapEnhancer.practiceSettings = self->practiceSettings;
@@ -140,14 +134,14 @@ namespace ReplayRecorder {
     }
 
     void collectMultiplayerMapData(MultiplayerLevelScenesTransitionSetupDataSO* self) {
-        GameplayCoreSceneSetupData* gameplayCoreSceneSetupData = reinterpret_cast<GameplayCoreSceneSetupData*>(self->sceneSetupDataArray->get(2));
+        GameplayCoreSceneSetupData* gameplayCoreSceneSetupData = reinterpret_cast<GameplayCoreSceneSetupData*>(self->gameplayCoreSceneSetupData);
 
-        mapEnhancer.difficultyBeatmap = self->difficultyBeatmap;
-        mapEnhancer.previewBeatmapLevel = gameplayCoreSceneSetupData->previewBeatmapLevel;
+        mapEnhancer.difficultyBeatmap = self->beatmapKey;
+        mapEnhancer.beatmapLevel = gameplayCoreSceneSetupData->beatmapLevel;
         mapEnhancer.gameplayModifiers = gameplayCoreSceneSetupData->gameplayModifiers;
         mapEnhancer.playerSpecificSettings = gameplayCoreSceneSetupData->playerSpecificSettings;
         mapEnhancer.practiceSettings = NULL;
-        mapEnhancer.environmentInfo = self->multiplayerEnvironmentInfo;
+        mapEnhancer.environmentInfo = self->_loadedMultiplayerEnvironmentInfo;
         mapEnhancer.colorScheme = self->colorScheme;
 
         automaticPlayerHeight = gameplayCoreSceneSetupData->playerSpecificSettings->automaticPlayerHeight;
@@ -188,9 +182,7 @@ namespace ReplayRecorder {
 
         if (replay == nullopt) return;
 
-        _heightEvent = il2cpp_utils::MakeDelegate<System::Action_1<float> *>(
-                        classof(System::Action_1<float>*),
-                        static_cast<Il2CppObject *>(nullptr), OnPlayerHeightChange);
+        _heightEvent = custom_types::MakeDelegate<System::Action_1<float>*>((std::function<void(float)>)OnPlayerHeightChange);
         self->add_playerHeightDidChangeEvent(_heightEvent);
     }
 
@@ -225,6 +217,7 @@ namespace ReplayRecorder {
             switch (results->playerLevelEndReason)
             {
                 case MultiplayerLevelCompletionResults::MultiplayerPlayerLevelEndReason::Cleared:
+                {
                     auto results = levelCompletionResults->localPlayerResultData->multiplayerLevelCompletionResults->levelCompletionResults; 
                     auto playEndData = PlayEndData(results, replay->info.speed);
 
@@ -233,6 +226,9 @@ namespace ReplayRecorder {
                     mapEnhancer.energy = results->energy;
                     mapEnhancer.Enhance(replay.value());
                     replayCallback(*replay, playEndData, false);
+                    break;
+                }
+                default:
                     break;
             }
         }
@@ -317,9 +313,9 @@ namespace ReplayRecorder {
         return real < 1 ? real : max(real, unclamped);
     }
 
-    void onObstacle(ObstacleController* obstacle) {
+    void onObstacle(UnityW<ObstacleController> obstacle) {
         if (_currentWallEvent == nullopt) {
-            WallEvent& wallEvent = _wallEventCache.at(_wallCache[obstacle]);
+            WallEvent& wallEvent = _wallEventCache.at(_wallCache[obstacle.ptr()]);
             wallEvent.time = audioTimeSyncController->songTime;
             replay->walls.emplace_back(wallEvent);
             _currentWallEvent.emplace(wallEvent);
@@ -352,29 +348,29 @@ namespace ReplayRecorder {
                 
         } else if (il2cpp_utils::try_cast<GoodCutScoringElement>(scoringElement) != nullopt) {
             GoodCutScoringElement* goodCut = il2cpp_utils::try_cast<GoodCutScoringElement>(scoringElement).value();
-            CutScoreBuffer* cutScoreBuffer = goodCut->cutScoreBuffer;
-            SaberSwingRatingCounter* saberSwingRatingCounter = cutScoreBuffer->saberSwingRatingCounter;
+            CutScoreBuffer* cutScoreBuffer = goodCut->_cutScoreBuffer;
+            SaberSwingRatingCounter* saberSwingRatingCounter = cutScoreBuffer->_saberSwingRatingCounter;
 
             ReplayNoteCutInfo& noteCutInfo = noteEvent.noteCutInfo;
             PopulateNoteCutInfo(noteCutInfo, cutScoreBuffer->noteCutInfo, _noteControllerCache[noteId]);
             
-            noteCutInfo.beforeCutRating = ChooseSwingRating(saberSwingRatingCounter->beforeCutRating, _preSwingContainer[(SaberMovementData *)saberSwingRatingCounter->saberMovementData]);
+            noteCutInfo.beforeCutRating = ChooseSwingRating(saberSwingRatingCounter->beforeCutRating, _preSwingContainer[(SaberMovementData *)saberSwingRatingCounter->_saberMovementData]);
             noteCutInfo.afterCutRating = ChooseSwingRating(saberSwingRatingCounter->afterCutRating, _postSwingContainer[saberSwingRatingCounter]);
 
-            _preSwingContainer[(SaberMovementData *)saberSwingRatingCounter->saberMovementData] = 0;
+            _preSwingContainer[(SaberMovementData *)saberSwingRatingCounter->_saberMovementData] = 0;
             _postSwingContainer[saberSwingRatingCounter] = 0;
         }
     }
 
     MAKE_HOOK_MATCH(ScoreControllerLateUpdate, &ScoreController::LateUpdate, void, ScoreController* self) {
-        auto sortedScoringElementsWithoutMultiplier = self->sortedScoringElementsWithoutMultiplier;
-        auto sortedNoteTimesWithoutScoringElements = self->sortedNoteTimesWithoutScoringElements;
+        auto sortedScoringElementsWithoutMultiplier = self->_sortedScoringElementsWithoutMultiplier;
+        auto sortedNoteTimesWithoutScoringElements = self->_sortedNoteTimesWithoutScoringElements;
 
-        if (replay != nullopt
-            && sortedScoringElementsWithoutMultiplier != NULL 
-            && sortedNoteTimesWithoutScoringElements != NULL
-            && self->audioTimeSyncController != NULL) {
-            auto songTime = self->audioTimeSyncController->songTime;
+        if (replay
+            && sortedScoringElementsWithoutMultiplier 
+            && sortedNoteTimesWithoutScoringElements
+            && self->_audioTimeSyncController) {
+            auto songTime = self->_audioTimeSyncController->songTime;
 
             float nearestNotCutNoteTime = sortedNoteTimesWithoutScoringElements->get_Count() > 0 ? sortedNoteTimesWithoutScoringElements->get_Item(0) : 10000000;
             float skipAfter = songTime + 0.15f;
@@ -404,29 +400,25 @@ namespace ReplayRecorder {
         ScoreControllerStart(self);
         if (replay == nullopt) return;
 
-        _scoreEvent = il2cpp_utils::MakeDelegate<System::Action_1<ScoringElement*> *>(
-                        classof(System::Action_1<ScoringElement*>*),
-                        static_cast<Il2CppObject *>(nullptr), scoringElementFinished);
+        _scoreEvent = custom_types::MakeDelegate<System::Action_1<ScoringElement*> *>((std::function<void(ScoringElement*)>)scoringElementFinished);
         self->add_scoringForNoteFinishedEvent(_scoreEvent);
 
-        _wallEvent = il2cpp_utils::MakeDelegate<System::Action_1<ObstacleController*> *>(
-                        classof(System::Action_1<ObstacleController*>*),
-                        static_cast<Il2CppObject *>(nullptr), onObstacle);
-        self->playerHeadAndObstacleInteraction->add_headDidEnterObstacleEvent(_wallEvent);
+        _wallEvent = custom_types::MakeDelegate<System::Action_1<UnityW<ObstacleController>> *>((std::function<void(UnityW<ObstacleController>)>)onObstacle);
+        self->_playerHeadAndObstacleInteraction->add_headDidEnterObstacleEvent(_wallEvent);
 
-        phoi = self->playerHeadAndObstacleInteraction;
+        phoi = self->_playerHeadAndObstacleInteraction;
 
-        audioTimeSyncController = self->audioTimeSyncController;
+        audioTimeSyncController = self->_audioTimeSyncController;
     }
 
     MAKE_HOOK_MATCH(ComputeSwingRating, static_cast<float (SaberMovementData::*)(bool, float)>(&SaberMovementData::ComputeSwingRating), float, SaberMovementData* self, bool overrideSegmenAngle, float overrideValue) {
         float result = ComputeSwingRating(self, overrideSegmenAngle, overrideValue);
         if (replay == nullopt) return result;
-        auto _data = self->data;
-        int _nextAddIndex = self->nextAddIndex;
-        int _validCount = self->validCount;
+        auto _data = self->_data;
+        int _nextAddIndex = self->_nextAddIndex;
+        int _validCount = self->_validCount;
 
-        int length = _data.Length();
+        int length = _data.size();
 
         int index = _nextAddIndex - 1;
         if (index < 0) index += length;
@@ -461,24 +453,24 @@ namespace ReplayRecorder {
     }
 
     MAKE_HOOK_MATCH(ProcessNewSwingData, &SaberSwingRatingCounter::ProcessNewData, void, SaberSwingRatingCounter* self, BladeMovementDataElement newData, BladeMovementDataElement prevData, bool prevDataAreValid) {
-        bool alreadyCut = self->notePlaneWasCut;
+        bool alreadyCut = self->_notePlaneWasCut;
         ProcessNewSwingData(self, newData, prevData, prevDataAreValid);
         if (replay == nullopt) return;
 
         float postSwing = _postSwingContainer[self];
-        if (!alreadyCut && !self->notePlane.SameSide(newData.topPos, prevData.topPos))
+        if (!alreadyCut && !self->_notePlane.SameSide(newData.topPos, prevData.topPos))
         {
-            float angleDiff = UnityEngine::Vector3::Angle(self->cutTopPos - self->cutBottomPos, self->afterCutTopPos - self->afterCutBottomPos);
+            float angleDiff = UnityEngine::Vector3::Angle(UnityEngine::Vector3::op_Subtraction(self->_cutTopPos, self->_cutBottomPos), UnityEngine::Vector3::op_Subtraction(self->_afterCutTopPos, self->_afterCutBottomPos));
 
-            if (self->rateAfterCut)
+            if (self->_rateAfterCut)
             {
                 postSwing = SaberSwingRating::AfterCutStepRating(angleDiff, 0.0f);
             }
         }
         else
         {
-            float normalDiff = UnityEngine::Vector3::Angle(newData.segmentNormal, self->cutPlaneNormal);
-            if (self->rateAfterCut)
+            float normalDiff = UnityEngine::Vector3::Angle(newData.segmentNormal, self->_cutPlaneNormal);
+            if (self->_rateAfterCut)
             {
                 postSwing += SaberSwingRating::AfterCutStepRating(newData.segmentAngle, normalDiff);
             }
@@ -534,7 +526,7 @@ namespace ReplayRecorder {
         }
 
         if (_currentWallEvent != nullopt) {
-            if (phoi->intersectingObstacles->get_Count() == 0)
+            if (phoi->_intersectingObstacles->get_Count() == 0)
             {
                 WallEvent& wallEvent = replay->walls[replay->walls.size() - 1];
                 wallEvent.energy = audioTimeSyncController->songTime;
@@ -546,27 +538,26 @@ namespace ReplayRecorder {
     void StartRecording(
         function<void(void)> const &started,
         function<void(Replay const &, PlayEndData, bool)> const &callback) {
-        LoggerContextObject logger = getLogger().WithContext("load");
 
-        getLogger().info("Installing ReplayRecorder hooks...");
+        BeatLeaderLogger.info("Installing ReplayRecorder hooks...");
 
-        INSTALL_HOOK(logger, ProcessResultsSolo);
-        INSTALL_HOOK(logger, SinglePlayerInstallBindings);
-        INSTALL_HOOK(logger, SpawnNote);
-        INSTALL_HOOK(logger, SpawnObstacle);
-        INSTALL_HOOK(logger, BeatMapStart);
-        INSTALL_HOOK(logger, LevelPause);
-        INSTALL_HOOK(logger, LevelUnpause);
-        INSTALL_HOOK(logger, Tick);
-        INSTALL_HOOK(logger, ComputeSwingRating);
-        INSTALL_HOOK(logger, ProcessNewSwingData);
-        INSTALL_HOOK(logger, PlayerHeightDetectorStart);
-        INSTALL_HOOK(logger, ScoreControllerStart);
-        INSTALL_HOOK(logger, ScoreControllerLateUpdate);
-        INSTALL_HOOK(logger, ProcessResultsMultiplayer);
-        INSTALL_HOOK(logger, HandleNoteControllerNoteWasCut);
+        INSTALL_HOOK(BeatLeaderLogger, ProcessResultsSolo);
+        INSTALL_HOOK(BeatLeaderLogger, SinglePlayerInstallBindings);
+        INSTALL_HOOK(BeatLeaderLogger, SpawnNote);
+        INSTALL_HOOK(BeatLeaderLogger, SpawnObstacle);
+        INSTALL_HOOK(BeatLeaderLogger, BeatMapStart);
+        INSTALL_HOOK(BeatLeaderLogger, LevelPause);
+        INSTALL_HOOK(BeatLeaderLogger, LevelUnpause);
+        INSTALL_HOOK(BeatLeaderLogger, Tick);
+        INSTALL_HOOK(BeatLeaderLogger, ComputeSwingRating);
+        INSTALL_HOOK(BeatLeaderLogger, ProcessNewSwingData);
+        INSTALL_HOOK(BeatLeaderLogger, PlayerHeightDetectorStart);
+        INSTALL_HOOK(BeatLeaderLogger, ScoreControllerStart);
+        INSTALL_HOOK(BeatLeaderLogger, ScoreControllerLateUpdate);
+        INSTALL_HOOK(BeatLeaderLogger, ProcessResultsMultiplayer);
+        INSTALL_HOOK(BeatLeaderLogger, HandleNoteControllerNoteWasCut);
 
-        getLogger().info("Installed all ReplayRecorder hooks!");
+        BeatLeaderLogger.info("Installed all ReplayRecorder hooks!");
 
         startedCallback = started;
         replayCallback = callback;

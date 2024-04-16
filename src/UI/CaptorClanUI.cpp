@@ -3,12 +3,10 @@
 #include "GlobalNamespace/LevelSelectionNavigationController.hpp"
 #include "GlobalNamespace/StandardLevelDetailViewController.hpp"
 #include "GlobalNamespace/StandardLevelDetailView.hpp"
-#include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
-#include "GlobalNamespace/IDifficultyBeatmap.hpp"
+#include "GlobalNamespace/BeatmapLevel.hpp"
+#include "GlobalNamespace/BeatmapKey.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
-#include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
-#include "GlobalNamespace/IBeatmapLevel.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSegmentedControlController.hpp"
 #include "GlobalNamespace/LevelParamsPanel.hpp"
 #include "GlobalNamespace/ColorExtensions.hpp"
@@ -35,10 +33,9 @@
 
 #include "TMPro/TMP_Text.hpp"
 
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/ArrayUtil.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include <numeric>
 #include <map>
@@ -47,8 +44,8 @@
 
 using namespace GlobalNamespace;
 using namespace std;
-using namespace QuestUI;
-using namespace BeatSaberUI;
+using namespace BSML;
+using namespace Lite;
 
 namespace CaptorClanUI {
     bool showClanRanking = false;
@@ -63,7 +60,7 @@ namespace CaptorClanUI {
     TMPro::TextMeshProUGUI* clanTag;
     TMPro::TextMeshProUGUI* captorClanStatus;
 
-    QuestUI::ClickableImage* backgroundImage;
+    BSML::ClickableImage* backgroundImage;
     HMUI::ImageView* clanImage;
 
     HMUI::HoverHint* clanHint;
@@ -103,29 +100,29 @@ namespace CaptorClanUI {
     void initCaptorClan(UnityEngine::GameObject* headerPanel, TMPro::TextMeshProUGUI* headerPanelText) {
         headerText = headerPanelText;
 
-        backgroundImage = CreateClickableImage(headerPanel->get_transform(), Sprites::get_TransparentPixel(), {0, 0}, {17, 6}, []() {
+        backgroundImage = CreateClickableImage(headerPanel->get_transform(), Sprites::get_TransparentPixel(), []() {
             showClanRanking = !showClanRanking;
             showClanRankingCallback();
-        });
+        }, {0, 0}, {17, 6});
         backgroundImage->set_material(BundleLoader::bundle->clanTagBackgroundMaterial);
 
         backgroundImage->set_color(BackgroundColor());
-        backgroundImage->get_onPointerEnterEvent() += [](auto _){ 
+        backgroundImage->onEnter = [](){ 
             backgroundImage->set_color(BackgroundHoverColor());
         };
 
-        backgroundImage->get_onPointerExitEvent() += [](auto _){ 
+        backgroundImage->onExit = [](){ 
             backgroundImage->set_color(BackgroundColor());
         };
 
-        mainPanel = BeatSaberUI::CreateHorizontalLayoutGroup(backgroundImage->get_transform());
+        mainPanel = Lite::CreateHorizontalLayoutGroup(backgroundImage->get_transform());
         mainPanel->set_padding(RectOffset::New_ctor(1, 1, 0, 0));
         mainPanel->set_spacing(3);
         mainPanel->GetComponentInChildren<UnityEngine::UI::ContentSizeFitter*>()->set_horizontalFit(UnityEngine::UI::ContentSizeFitter::FitMode::PreferredSize);
         mainPanel->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredHeight(5.0f);
         clanHint = AddHoverHint(mainPanel, "");
         
-        captorClanStatus = BeatSaberUI::CreateText(mainPanel->get_transform(), "");
+        captorClanStatus = Lite::CreateText(mainPanel->get_transform(), "");
         captorClanStatus->set_fontSize(3.0f);
         captorClanStatus->set_alignment(TMPro::TextAlignmentOptions::Midline);
         EmojiSupport::AddSupport(captorClanStatus);
@@ -133,7 +130,7 @@ namespace CaptorClanUI {
         clanImage = UIUtils::CreateRoundRectImage(mainPanel->get_transform(), {0, 0}, {8, 2.5});
         clanImage->set_material(BundleLoader::bundle->clanTagBackgroundMaterial);
 
-        clanTag = CreateText(clanImage->get_transform(), "", UnityEngine::Vector2(0.0, 0.0));
+        clanTag = CreateText(clanImage->get_transform(), "", {0, 0}, {30, 5});
         clanTag->set_enableAutoSizing(true);
         clanTag->set_fontSizeMin(0.1);
         clanTag->set_fontSizeMax(3.0);
@@ -185,7 +182,7 @@ namespace CaptorClanUI {
             
             string text = "👑   ";
             captorClanStatus->set_text(text);
-            captorClanStatus->set_faceColor(UnityEngine::Color32(255, 215, 0, 255));
+            captorClanStatus->set_faceColor(UnityEngine::Color32(0, 255, 215, 0, 255));
 
             clanHint->set_text("Map is captured by \r\n" + clan->name + "\r\n They have the highest weighted PP on this leaderboard");
             backgroundWidth = WidthPerCharacter * clan->tag.length() + WidthPerCharacter * text.length() / 2;
@@ -193,7 +190,7 @@ namespace CaptorClanUI {
         } else if (clanStatus.clanRankingContested) {
             string text = "⚔   Contested ";
             captorClanStatus->set_text(text);
-            captorClanStatus->set_faceColor(UnityEngine::Color32(192, 192, 192, 255));
+            captorClanStatus->set_faceColor(UnityEngine::Color32(0, 192, 192, 192, 255));
 
             clanHint->set_text("Several clans claim equal rights to capture this map! Set a score to break the tie");
             backgroundWidth = WidthPerCharacter * text.length() / 2;
@@ -201,7 +198,7 @@ namespace CaptorClanUI {
         } else {
             string text = "👑   Uncaptured ";
             captorClanStatus->set_text(text);
-            captorClanStatus->set_faceColor(UnityEngine::Color32(255, 255, 255, 255));
+            captorClanStatus->set_faceColor(UnityEngine::Color32(0, 255, 255, 255, 255));
 
             clanHint->set_text("Map is not captured! Set a score to capture it for your clan");
             backgroundWidth = WidthPerCharacter * text.length() / 2;

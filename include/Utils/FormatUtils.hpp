@@ -69,13 +69,13 @@ namespace FormatUtils {
         }
 
         inline string FormatUserName(string_view userName) {
-            return "<noparse>" + userName + "</noparse>";
+            return "<noparse>" + string(userName) + "</noparse>";
         }
 
         const string ModifiersColor = "";
 
         inline string FormatModifiers(string_view modifiers) {
-            return modifiers.length() == 0 ? "" : "<color=#999999>" + modifiers;
+            return modifiers.length() == 0 ? "" : "<color=#999999>" + string(modifiers);
         }
 
         static Color lowAccColor = UnityEngine::Color(0.93, 1, 0.62, 1);
@@ -102,7 +102,7 @@ namespace FormatUtils {
         }
 
         inline string FormatClanTag(string_view tag) {
-            return "<alpha=#00>.<alpha=#FF><b><noparse>" + tag + "</noparse></b><alpha=#00>.<alpha=#FF>";
+            return "<alpha=#00>.<alpha=#FF><b><noparse>" + string(tag) + "</noparse></b><alpha=#00>.<alpha=#FF>";
         }
 
         inline string FormatNameWithClans(Player const& player, int limit, bool withClans) {

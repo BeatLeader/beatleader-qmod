@@ -18,3 +18,4 @@ ndkpath.txt
 *.log
 log.txt
 cmake-build-debug/
+.cache

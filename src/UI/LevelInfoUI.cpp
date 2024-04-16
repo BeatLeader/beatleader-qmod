@@ -3,12 +3,10 @@
 #include "GlobalNamespace/LevelSelectionNavigationController.hpp"
 #include "GlobalNamespace/StandardLevelDetailViewController.hpp"
 #include "GlobalNamespace/StandardLevelDetailView.hpp"
-#include "GlobalNamespace/IPreviewBeatmapLevel.hpp"
-#include "GlobalNamespace/IDifficultyBeatmap.hpp"
+#include "GlobalNamespace/BeatmapLevel.hpp"
+#include "GlobalNamespace/BeatmapKey.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
-#include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
-#include "GlobalNamespace/IBeatmapLevel.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSegmentedControlController.hpp"
 #include "GlobalNamespace/LevelParamsPanel.hpp"
 
@@ -34,10 +32,11 @@
 #include "TMPro/TMP_Text.hpp"
 #include "TMPro/TextMeshProUGUI.hpp"
 
-#include "questui/shared/QuestUI.hpp"
-#include "questui/shared/ArrayUtil.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/CustomTypes/Components/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
+
+#include "scotland2/shared/modloader.h"
 
 #include <numeric>
 #include <map>
@@ -46,8 +45,8 @@
 
 using namespace GlobalNamespace;
 using namespace std;
-using namespace QuestUI;
-using namespace BeatSaberUI;
+using namespace BSML;
+using namespace Lite;
 
 namespace LevelInfoUI {
     TMPro::TextMeshProUGUI* starsLabel = NULL;
@@ -101,10 +100,9 @@ namespace LevelInfoUI {
     MAKE_HOOK_MATCH(LevelRefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self) {
         LevelRefreshContent(self);
 
-        if (self->level == NULL || 
-            self->level->get_beatmapLevelData() == NULL || 
-            self->beatmapCharacteristicSegmentedControlController == NULL ||
-            self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic == NULL) return;
+        if (!self->_beatmapLevel || 
+            !self->_beatmapCharacteristicSegmentedControlController ||
+            !self->_beatmapCharacteristicSegmentedControlController->_selectedBeatmapCharacteristic) return;
         if (starsLabel == NULL && !bslInstalled) {
 
             ///////////////////////////
@@ -112,25 +110,25 @@ namespace LevelInfoUI {
             ///////////////////////////
 
             // Create Modal
-            skillTriangleContainer = QuestUI::BeatSaberUI::CreateModal(self->levelParamsPanel->get_transform(), {40,40}, nullptr, true);
+            skillTriangleContainer = BSML::Lite::CreateModal(self->_levelParamsPanel->get_transform(), {40,40}, nullptr, true);
 
             // Create Actual Triangle Image
-            auto skillTriangleImage = QuestUI::BeatSaberUI::CreateImage(skillTriangleContainer->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 0}, {35, 35});
+            auto skillTriangleImage = BSML::Lite::CreateImage(skillTriangleContainer->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 0}, {35, 35});
             skillTriangleMat = UnityEngine::Material::Instantiate(BundleLoader::bundle->skillTriangleMaterial);
             skillTriangleImage->set_material(skillTriangleMat.ptr());
             int normalizedValuesPropertyId = UnityEngine::Shader::PropertyToID("_Normalized");
 
             // Create Star Value Labels for Triangle
-            auto techLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Tech - ", {12, 12});
-            auto accLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Acc - ", {34, 12});
-            auto passLabel = QuestUI::BeatSaberUI::CreateText(skillTriangleContainer->get_transform(), "Pass - ", {23, -17});
+            auto techLabel = BSML::Lite::CreateText(skillTriangleContainer->get_transform(), "Tech - ", {-18, 16});
+            auto accLabel = BSML::Lite::CreateText(skillTriangleContainer->get_transform(), "Acc - ", {6, 16});
+            auto passLabel = BSML::Lite::CreateText(skillTriangleContainer->get_transform(), "Pass - ", {-7, -12});
 
             // OnClick Function to open the SkillTriangle
             auto openSkillTriangle = [techLabel, accLabel, passLabel, normalizedValuesPropertyId](){
                 if(currentlySelectedRating.stars > 0) {
-                    techLabel->SetText("Tech - " + to_string_wprecision(currentlySelectedRating.techRating, 2));
-                    accLabel->SetText("Acc - " + to_string_wprecision(currentlySelectedRating.accRating, 2));
-                    passLabel->SetText("Pass - " + to_string_wprecision(currentlySelectedRating.passRating, 2));
+                    techLabel->SetText("Tech - " + to_string_wprecision(currentlySelectedRating.techRating, 2), true);
+                    accLabel->SetText("Acc - " + to_string_wprecision(currentlySelectedRating.accRating, 2), true);
+                    passLabel->SetText("Pass - " + to_string_wprecision(currentlySelectedRating.passRating, 2), true);
                     skillTriangleMat->SetVector(normalizedValuesPropertyId, {
                         clamp(currentlySelectedRating.techRating / 15.0f, 0.0f, 1.0f),
                         clamp(currentlySelectedRating.accRating / 15.0f, 0.0f, 1.0f),
@@ -145,37 +143,33 @@ namespace LevelInfoUI {
             // Init Stars, PP, Type, Status and NoSubmission Label
             ///////////////////////////
 
-            starsLabel = CreateText(self->levelParamsPanel->get_transform(), "0.00", true, UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
+            starsLabel = CreateText(self->_levelParamsPanel->get_transform(), "0.00", UnityEngine::Vector2(-27, 6), UnityEngine::Vector2(8, 4));
             starsLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
-            starsLabel->set_fontStyle(TMPro::FontStyles::Italic);
-            starsImage = CreateClickableImage(self->levelParamsPanel->get_transform(), Sprites::get_StarIcon(), UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3), openSkillTriangle);
+            starsImage = CreateClickableImage(self->_levelParamsPanel->get_transform(), Sprites::get_StarIcon(), openSkillTriangle, UnityEngine::Vector2(-33, 5.6), UnityEngine::Vector2(3, 3));
             AddHoverHint(starsLabel, "Song not ranked");
 
-            ppLabel = CreateText(self->levelParamsPanel->get_transform(), "0", true, UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
+            ppLabel = CreateText(self->_levelParamsPanel->get_transform(), "0", UnityEngine::Vector2(-9, 6),  UnityEngine::Vector2(8, 4));
             ppLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
-            ppLabel->set_fontStyle(TMPro::FontStyles::Italic);
             AddHoverHint(ppLabel, "BeatLeader approximate pp");
             
-            ppImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-15.5, 5.6), UnityEngine::Vector2(3, 3));
+            ppImage = CreateImage(self->_levelParamsPanel->get_transform(), Sprites::get_GraphIcon(), UnityEngine::Vector2(-15.5, 5.6), UnityEngine::Vector2(3, 3));
 
-            typeLabel = CreateText(self->levelParamsPanel->get_transform(), "-", {9, 6}, {8,4});
+            typeLabel = CreateText(self->_levelParamsPanel->get_transform(), "-", {9, 6}, {8,4});
             typeLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
-            typeLabel->set_fontStyle(TMPro::FontStyles::Italic);
             AddHoverHint(typeLabel, "Map type\n\nunknown");
 
-            typeImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_ArrowIcon(), {2.5, 5.6}, {3,3});
+            typeImage = CreateImage(self->_levelParamsPanel->get_transform(), Sprites::get_ArrowIcon(), {2.5, 5.6}, {3,3});
 
-            statusLabel = CreateText(self->levelParamsPanel->get_transform(), "unr.", {27, 6}, {8,4});
+            statusLabel = CreateText(self->_levelParamsPanel->get_transform(), "unr.", {27, 6}, {8,4});
             statusLabel->set_color(UnityEngine::Color(0.651,0.651,0.651, 1));
-            statusLabel->set_fontStyle(TMPro::FontStyles::Italic);
             AddHoverHint(statusLabel, "Ranking status - unranked \nTo vote for a song to be ranked, click the message box on the leaderboard");
 
-            statusImage = CreateImage(self->levelParamsPanel->get_transform(), Sprites::get_ClipboardIcon(), {20.5, 5.6}, {3,3});
+            statusImage = CreateImage(self->_levelParamsPanel->get_transform(), Sprites::get_ClipboardIcon(), {20.5, 5.6}, {3,3});
         }
 
         if (!submissionLabel) {
             submissionLabel = true;
-            noSubmissionLabel = CreateText(self->levelParamsPanel->get_transform(), "", true, UnityEngine::Vector2(-5, bslInstalled ? -24 : -20));
+            noSubmissionLabel = CreateText(self->_levelParamsPanel->get_transform(), "", true, UnityEngine::Vector2(-5, bslInstalled ? -24 : -20));
             noSubmissionLabel->set_color(UnityEngine::Color(1.0, 0.0, 0.0, 1));
             noSubmissionLabel->set_fontSize(3);
             AddHoverHint(noSubmissionLabel, "Check their settings for 'force' or 'hitbox'");
@@ -190,9 +184,9 @@ namespace LevelInfoUI {
 
         // Why not just substr str.substr("custom_level_".size())?
         // Because not every level is a custom level.
-        string hash = regex_replace((string)reinterpret_cast<IPreviewBeatmapLevel*>(self->level)->get_levelID(), basic_regex("custom_level_"), "");
-        string difficulty = MapEnhancer::DiffName(self->selectedDifficultyBeatmap->get_difficulty().value);
-        string mode = (string)self->beatmapCharacteristicSegmentedControlController->selectedBeatmapCharacteristic->serializedName;
+        string hash = regex_replace((string)self->_beatmapLevel->levelID, basic_regex("custom_level_"), "");
+        string difficulty = MapEnhancer::DiffName(self->beatmapKey.difficulty.value__);
+        string mode = (string)self->_beatmapCharacteristicSegmentedControlController->_selectedBeatmapCharacteristic->serializedName;
 
         pair<string, string> key = {hash, difficulty + mode};
 
@@ -213,7 +207,7 @@ namespace LevelInfoUI {
                 // If the map was already switched again, the response is irrelevant
                 if(lastKey != key) return;
 
-                QuestUI::MainThreadScheduler::Schedule([status, key, stringResult] () {
+                BSML::MainThreadScheduler::Schedule([status, key, stringResult] () {
                     if (status != 200) {
                         setLabels(defaultDiff);
                         return;
@@ -249,15 +243,17 @@ namespace LevelInfoUI {
     }
 
     void setup() {
-        LoggerContextObject logger = getLogger().WithContext("load");
+        INSTALL_HOOK(BeatLeaderLogger, LevelRefreshContent);
+        INSTALL_HOOK(BeatLeaderLogger, DidDeactivate);
 
-        INSTALL_HOOK(logger, LevelRefreshContent);
-        INSTALL_HOOK(logger, DidDeactivate);
-
-        for(auto& [key, value] : Modloader::getMods()){
-            if (key == "BetterSongList") {
-                bslInstalled = true;
-                break;
+        for(auto& modInfo : modloader::get_all())
+        {
+            if(auto loadedMod = std::get_if<modloader::ModData>(&modInfo))
+            {
+                if(loadedMod->info.id == "BetterSongList"){
+                    bslInstalled = true;
+                    break;
+                }
             }
         }
     }
@@ -362,7 +358,7 @@ namespace LevelInfoUI {
             typeHoverHint.pop_back();
         }
         // Actually set the labels with the prepared strings
-        typeLabel->SetText(typeToSet);
+        typeLabel->SetText(typeToSet, true);
         AddHoverHint(typeLabel, typeHoverHint);
 
         string rankingStatus = mapStatuses[selectedDifficulty.status];
@@ -385,7 +381,7 @@ namespace LevelInfoUI {
         }
 
         // Set Color according to calculated VoteRatio (0% = red, 100% = green)
-        statusLabel->SetText(rankingStatus.substr(0, shortWritingChars) + ".");
+        statusLabel->SetText(rankingStatus.substr(0, shortWritingChars) + ".", true);
         if (rating == 0) {
             statusLabel->set_color(UnityEngine::Color(0.5, 0.5, 0.5, 1));
         } else {
@@ -415,8 +411,8 @@ namespace LevelInfoUI {
             currentlySelectedRating = modifierRating;
         
         // Set the stars and pp
-        starsLabel->SetText(to_string_wprecision(UIUtils::getStarsToShow(currentlySelectedRating), 2));
-        ppLabel->SetText(to_string_wprecision(currentlySelectedRating.stars * 51.0f, 2));
+        starsLabel->SetText(to_string_wprecision(UIUtils::getStarsToShow(currentlySelectedRating), 2), true);
+        ppLabel->SetText(to_string_wprecision(currentlySelectedRating.stars * 51.0f, 2), true);
 
         // Add Hoverhint with all star ratings
         string starsHoverHint;

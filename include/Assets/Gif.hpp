@@ -118,10 +118,10 @@ struct Gif
 
                 if (frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0])
                 {
-                    pixelData[locWithinFrame] = Color32(0xff, 0xff, 0xff, 0);
+                    pixelData[locWithinFrame] = Color32(0, 0xff, 0xff, 0xff, 0);
                 } else {
                     color = &colorMap->Colors[frame->RasterBits[loc]];
-                    pixelData[locWithinFrame] = Color32(color->Red, color->Green, color->Blue, 0xff);
+                    pixelData[locWithinFrame] = Color32(0, color->Red, color->Green, color->Blue, 0xff);
                 }
                 
             }
@@ -149,9 +149,6 @@ struct Gif
         ::ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(length);
         ArrayW<float> timings = ArrayW<float> (length);
 
-        // FrameBuffer
-        TextureColor *pixelData = new TextureColor[width * height];
-
         // Persist data from the previous frame
         GifColorType* color;
         SavedImage* frame;
@@ -161,6 +158,7 @@ struct Gif
         // Graphic control ext block
         GraphicsControlBlock GCB;
         int GCBResult = GIF_ERROR;
+        ::ArrayW<Color32> pixelData = nullptr;
 
         for (int idx = 0; idx < length; idx++) {
             int x, y, j, loc;
@@ -184,9 +182,12 @@ struct Gif
             if (ext != nullptr) {
                 GCBResult = DGifExtensionToGCB(ext->ByteCount, (const GifByteType*)ext->Bytes, &GCB);
             }
+
             // gif->SWidth is not neccesarily the same as FrameInfo->Width due to a frame possibly describing a smaller block of pixels than the entire gif size
-        
             UnityEngine::Texture2D* texture = UnityEngine::Texture2D::New_ctor(width, height, UnityEngine::TextureFormat::RGBA32, false);
+            if (!pixelData) {
+                pixelData = texture->GetPixels32();
+            }
             // This is the same size as the entire size of the gif :)
             // offset into the entire image, might need to also have it's y value flipped? need to test
             long flippedFrameTop = height - frameInfo->Top - frameInfo->Height;
@@ -202,14 +203,12 @@ struct Gif
 
                     // Checks if the pixel is transparent
                     if (GCB.TransparentColor >=0 && frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0]) {
-                        pixelData[locWithinFrame] = {
-                            0xff, 0xff, 0xff, 0
-                        };
+                        if (GCB.DisposalMode == 2) {
+                            pixelData[locWithinFrame] = Color32(0, 0xff, 0xff, 0xff, 0);
+                        }
                     } else {
                         color = &colorMap->Colors[frame->RasterBits[loc]];
-                        pixelData[locWithinFrame] = {
-                            color->Red, color->Green, color->Blue, 0xff
-                        };
+                        pixelData[locWithinFrame] = Color32(0, color->Red, color->Green, color->Blue, 0xff);
                     }
                     
                 }
@@ -219,18 +218,13 @@ struct Gif
             }
 
             // Copy raw pixel data to texture
-            texture->LoadRawTextureData(pixelData,  width * height * 4);
-            // texture->set_filterMode(UnityEngine::FilterMode::Trilinear);
-            // Compress texture
-            texture->Compress(false);
+            texture->SetAllPixels32(pixelData, 0);
             // Upload to GPU
             texture->Apply();
 
             frames[idx] = texture;
             timings[idx] = static_cast<float>(GCB.DelayTime);        
         };
-        // Clear FrameBuffer to not leak things
-        delete[] pixelData;
         return {
             frames, timings
         };
@@ -258,7 +252,7 @@ private:
         }
 
         vectorwrapbuf(Array<CharT>* arr) {
-            this->std::basic_streambuf<CharT, TraitsT>::setg(arr->values, arr->values, arr->values + arr->Length());
+            this->std::basic_streambuf<CharT, TraitsT>::setg(arr->_values, arr->_values, arr->_values + arr->get_Length());
         }
     };
 
