@@ -3,7 +3,7 @@
 #include "HMUI/ModalView.hpp"
 
 #include "bsml/shared/BSML-Lite.hpp"
-#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/BSML.hpp"
 
 #include "include/Models/Score.hpp"
 #include "include/Models/Player.hpp"

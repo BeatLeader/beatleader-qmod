@@ -3,7 +3,7 @@
 #include "include/Models/Clan.hpp"
 
 #include "bsml/shared/BSML-Lite.hpp"
-#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/BSML.hpp"
 
 #include "TMPro/TextMeshProUGUI.hpp"
 

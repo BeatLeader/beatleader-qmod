@@ -4,7 +4,7 @@
 #include "custom-types/shared/register.hpp"
 #include "scotland2/shared/loader.hpp"
 #include "bsml/shared/BSML-Lite.hpp"
-#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/BSML.hpp"
 #include "HMUI/ModalView.hpp"
 #include "UnityEngine/RectOffset.hpp"
 #include "GlobalNamespace/ScoreFormatter.hpp"

@@ -33,7 +33,7 @@
 
 #include "TMPro/TMP_Text.hpp"
 
-#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/BSML.hpp"
 #include "bsml/shared/BSML-Lite.hpp"
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 

@@ -13,7 +13,7 @@
 #include "HMUI/Screen.hpp"
 #include "HMUI/ViewController.hpp"
 
-#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/BSML.hpp"
 #include "bsml/shared/BSML-Lite.hpp"
 
 inline void move(UnityEngine::Component* label, float x, float y) {

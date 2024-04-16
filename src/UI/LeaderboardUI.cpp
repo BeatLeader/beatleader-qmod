@@ -33,7 +33,7 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/filereadstream.h"
 
-#include "bsml/shared/bsml.hpp"
+#include "bsml/shared/BSML.hpp"
 #include "bsml/shared/BSML-Lite.hpp"
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
