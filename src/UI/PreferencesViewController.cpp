@@ -218,6 +218,7 @@ void BeatLeader::PreferencesViewController::DidActivate(HMUI::ViewController* se
         }
         errorDescriptionLabel = ::BSML::Lite::CreateText(containerTransform, "");
         label3 = ::BSML::Lite::CreateText(containerTransform, "Never used BeatLeader? Sign up with any new login/password.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile details on the website.");
+        label3->set_fontSize(3.0f);
     }
 
     UpdateUI(PlayerController::currentPlayer);

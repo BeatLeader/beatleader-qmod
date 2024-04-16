@@ -890,7 +890,7 @@ namespace LeaderboardUI {
     void updateSelectedLeaderboard() {
         if (loginPrompt && PlayerController::currentPlayer == std::nullopt) {
             loginPrompt->get_gameObject()->SetActive(showBeatLeader);
-            // preferencesButton->get_gameObject()->SetActive(showBeatLeader);
+            preferencesButton->get_gameObject()->SetActive(showBeatLeader);
         }
 
         LevelInfoUI::SetLevelInfoActive(showBeatLeader);
