@@ -701,19 +701,19 @@ namespace LeaderboardUI {
             
             if (loginPrompt == NULL) {
                 loginPrompt = ::BSML::Lite::CreateText(plvc->get_transform(), "Please log in or sign up in settings to post scores!", {24, 0}, {100, 4});
-                preferencesButton = ::BSML::Lite::CreateUIButton(plvc->get_transform(), "Open settings", UnityEngine::Vector2(0, 0), [](){
+                preferencesButton = ::BSML::Lite::CreateUIButton(plvc->get_transform(), "Open settings", {65, -50}, [](){
                     UIUtils::OpenSettings();
                 });
             }
             loginPrompt->get_gameObject()->SetActive(true);
-            // preferencesButton->get_gameObject()->SetActive(true);
+            preferencesButton->get_gameObject()->SetActive(true);
 
             return;
         }
 
         if (loginPrompt != NULL) {
             loginPrompt->get_gameObject()->SetActive(false);
-            // preferencesButton->get_gameObject()->SetActive(false);
+            preferencesButton->get_gameObject()->SetActive(false);
         }
 
         if (uploadStatus == NULL) {

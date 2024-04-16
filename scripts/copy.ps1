@@ -68,6 +68,8 @@ foreach ($fileName in $modJson.lateModFiles) {
     }
 }
 
+& $PSScriptRoot/restart-game.ps1
+
 if ($log -eq $true) {
     & adb logcat -c
     & $PSScriptRoot/start-logging.ps1 -self:$self -all:$all -custom:$custom -file:$file
