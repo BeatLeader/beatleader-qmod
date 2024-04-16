@@ -139,6 +139,7 @@ void BeatLeader::PreferencesViewController::DidActivate(HMUI::ViewController* se
 
         logoutButton = ::BSML::Lite::CreateUIButton(containerTransform, "Logout", [](){
             PlayerController::LogOut();
+            UpdateUI(nullopt);
         });
 
         loginField = ::BSML::Lite::CreateStringSetting(containerTransform, "Login", "", [](StringW value) {
@@ -198,7 +199,9 @@ void BeatLeader::PreferencesViewController::DidActivate(HMUI::ViewController* se
         PlayerController::playerChanged.emplace_back([captureSelf](std::optional<Player> const& updated) {
             if (!captureSelf->isActivated) return;
             BSML::MainThreadScheduler::Schedule([updated] {
-                UpdateUI(updated);
+                if (updated) {
+                    UpdateUI(updated);
+                }
             });
         });
 
