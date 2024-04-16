@@ -102,7 +102,7 @@ void ActuallySyncPlaylist() {
         {
             auto const& song = songs[index];
             string hash = toLower(song["hash"].GetString());
-            if (SongCore::API::Loading::GetLevelByHash(hash)) {
+            if (!SongCore::API::Loading::GetLevelByHash(hash)) {
                 mapsToDownload.push_back(hash);
             }
         }
