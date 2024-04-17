@@ -147,13 +147,6 @@ namespace ReplayRecorder {
         automaticPlayerHeight = gameplayCoreSceneSetupData->playerSpecificSettings->automaticPlayerHeight;
     }
 
-    void OnPlayerHeightChange(float height)
-    {
-        if (audioTimeSyncController && automaticPlayerHeight && replay != nullopt) {
-            replay->heights.emplace_back(height, audioTimeSyncController->songTime);
-        }
-    }
-
     void startReplay() {
         std::string timeStamp(std::to_string(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
 
@@ -162,7 +155,7 @@ namespace ReplayRecorder {
         replay.emplace(ReplayInfo(modInfo.version, UnityEngine::Application::get_version(), timeStamp));
 
         userEnhancer.Enhance(replay.value());
-       
+        audioTimeSyncController = nullptr;
     }
 
     MAKE_HOOK_MATCH(SinglePlayerInstallBindings, &GameplayCoreInstaller::InstallBindings, void, GameplayCoreInstaller* self) {
@@ -177,13 +170,12 @@ namespace ReplayRecorder {
         startReplay();
     }
 
-    MAKE_HOOK_MATCH(PlayerHeightDetectorStart, &PlayerHeightDetector::Start, void, PlayerHeightDetector* self) {
-        PlayerHeightDetectorStart(self);
+    MAKE_HOOK_MATCH(PlayerHeightDetectorLateUpdate, &PlayerHeightDetector::LateUpdate, void, PlayerHeightDetector* self) {
+        PlayerHeightDetectorLateUpdate(self);
 
-        if (replay == nullopt) return;
-
-        _heightEvent = custom_types::MakeDelegate<System::Action_1<float>*>((std::function<void(float)>)OnPlayerHeightChange);
-        self->add_playerHeightDidChangeEvent(_heightEvent);
+        if (audioTimeSyncController && automaticPlayerHeight && replay != nullopt) {
+            replay->heights.emplace_back(self->_lastReportedHeight, audioTimeSyncController->songTime);
+        }
     }
 
     void processResults(LevelCompletionResults* levelCompletionResults, bool skipUpload) {
@@ -551,7 +543,7 @@ namespace ReplayRecorder {
         INSTALL_HOOK(BeatLeaderLogger, Tick);
         INSTALL_HOOK(BeatLeaderLogger, ComputeSwingRating);
         INSTALL_HOOK(BeatLeaderLogger, ProcessNewSwingData);
-        INSTALL_HOOK(BeatLeaderLogger, PlayerHeightDetectorStart);
+        INSTALL_HOOK(BeatLeaderLogger, PlayerHeightDetectorLateUpdate);
         INSTALL_HOOK(BeatLeaderLogger, ScoreControllerStart);
         INSTALL_HOOK(BeatLeaderLogger, ScoreControllerLateUpdate);
         INSTALL_HOOK(BeatLeaderLogger, ProcessResultsMultiplayer);
