@@ -139,7 +139,7 @@ void BeatLeader::ScoreDetailsPopup::updatePlayerDetails(Player player) {
     if (!PlayerController::IsIncognito(player)) {
         name->SetText(FormatUtils::FormatNameWithClans(player, 20, true), true);
         auto params = GetAvatarParams(player, false);
-        playerAvatar->SetPlayer(player.avatar, BundleLoader::bundle->defaultAvatarMaterial, params.hueShift, params.saturation);
+        playerAvatar->SetPlayer(player.avatar, params.baseMaterial, params.hueShift, params.saturation);
     } else {
         name->SetText("[REDACTED]", true);
         playerAvatar->SetHiddenPlayer();
