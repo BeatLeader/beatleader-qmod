@@ -22,6 +22,7 @@
 #include "include/UI/LevelInfoUI.hpp"
 #include "include/UI/LogoAnimation.hpp"
 #include "include/UI/EmojiSupport.hpp"
+#include "include/UI/QuestUI.hpp"
 #include "include/Assets/BundleLoader.hpp"
 
 #include "main.hpp"
@@ -216,8 +217,9 @@ void BeatLeader::PreferencesViewController::DidActivate(HMUI::ViewController* se
         if (ReplayInstalled()) {
             showReplaySettingsToggle = AddConfigValueToggle(containerTransform, getModConfig().ShowReplaySettings);
         }
-        errorDescriptionLabel = ::BSML::Lite::CreateText(containerTransform, "");
-        label3 = ::BSML::Lite::CreateText(containerTransform, "Never used BeatLeader? Sign up with any new login/password.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile details on the website.");
+        errorDescriptionLabel = QuestUI::CreateText(containerTransform, "");
+        errorDescriptionLabel->set_color(UnityEngine::Color(1.0, 0.0, 0.0, 1));
+        label3 = QuestUI::CreateText(containerTransform, "Never used BeatLeader? Sign up with any new login/password.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile details on the website.");
         label3->set_fontSize(3.0f);
     }
 
