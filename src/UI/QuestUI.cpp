@@ -75,6 +75,24 @@ namespace QuestUI {
     GameObject* beatSaberUIObject = nullptr;
     GameObject* dropdownListPrefab = nullptr;
     GameObject* modalPrefab = nullptr;
+
+    static SafePtrUnity<TMP_FontAsset> mainTextFont;
+    TMP_FontAsset* GetMainTextFont() {
+        if(!mainTextFont) mainTextFont.emplace(Resources::FindObjectsOfTypeAll<TMP_FontAsset*>()->FirstOrDefault([](TMP_FontAsset* x) { return x->get_name() == "Teko-Medium SDF"; }));
+        if(!mainTextFont) {
+            return nullptr;
+        }
+        return mainTextFont.ptr();
+    }
+
+    static SafePtrUnity<Material> mainUIFontMaterial;
+    Material* GetMainUIFontMaterial() {
+        if(!mainUIFontMaterial) mainUIFontMaterial.emplace(Resources::FindObjectsOfTypeAll<Material*>()->FirstOrDefault([](Material* x) { return x->get_name() == "Teko-Medium SDF Curved Softer"; }));
+        if(!mainUIFontMaterial) {
+            return nullptr;
+        }
+        return mainUIFontMaterial.ptr();
+    }
     
     void SetupPersistentObjects() {
         if(!beatSaberUIObject) {
@@ -107,6 +125,9 @@ namespace QuestUI {
             modalPrefab->set_name(name);
             modalPrefab->SetActive(false);
         }
+
+        GetMainTextFont();
+        GetMainUIFontMaterial();
     }
 
     static PhysicsRaycasterWithCache* physicsRaycaster = nullptr;
@@ -137,24 +158,6 @@ namespace QuestUI {
         }
 
         return mat_UINoGlow.ptr();
-    }
-
-    static SafePtrUnity<TMP_FontAsset> mainTextFont;
-    TMP_FontAsset* GetMainTextFont() {
-        if(!mainTextFont) mainTextFont.emplace(Resources::FindObjectsOfTypeAll<TMP_FontAsset*>()->FirstOrDefault([](TMP_FontAsset* x) { return x->get_name() == "Teko-Medium SDF"; }));
-        if(!mainTextFont) {
-            return nullptr;
-        }
-        return mainTextFont.ptr();
-    }
-
-    static SafePtrUnity<Material> mainUIFontMaterial;
-    Material* GetMainUIFontMaterial() {
-        if(!mainUIFontMaterial) mainUIFontMaterial.emplace(Resources::FindObjectsOfTypeAll<Material*>()->FirstOrDefault([](Material* x) { return x->get_name() == "Teko-Medium SDF Curved Softer"; }));
-        if(!mainUIFontMaterial) {
-            return nullptr;
-        }
-        return mainUIFontMaterial.ptr();
     }
 
     void ClearCache() {
