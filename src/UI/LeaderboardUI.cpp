@@ -1348,6 +1348,7 @@ namespace LeaderboardUI {
         linkContainer = NULL;
         settingsContainer = NULL;
         contextsContainer = NULL;
+        loginPrompt = NULL;
         preferencesButton = NULL;
         parentScreen = NULL;
         sspageUpButton = NULL;
@@ -1357,6 +1358,7 @@ namespace LeaderboardUI {
         cellBackgrounds = {};
         showBeatLeaderButton = NULL;
         upPageButton = NULL;
+        CaptorClanUI::Reset();
         ssWasOpened = false;
         if (ssInstalled) {
             showBeatLeader = getModConfig().ShowBeatleader.GetValue();

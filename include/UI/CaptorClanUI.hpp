@@ -14,4 +14,5 @@ namespace CaptorClanUI {
     void initCaptorClan(UnityEngine::GameObject* header, TMPro::TextMeshProUGUI* headerPanelText);
     void setClan(ClanRankingStatus clanStatus);
     void setActive(bool active);
+    void Reset();
 }

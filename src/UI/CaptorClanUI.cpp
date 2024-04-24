@@ -223,4 +223,8 @@ namespace CaptorClanUI {
             setClan(lastStatus);
         }
     }
+
+    void Reset() {
+        mainPanel = NULL;
+    }
 }
