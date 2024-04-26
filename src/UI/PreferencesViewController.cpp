@@ -32,6 +32,8 @@
 using namespace BSML;
 using namespace std;
 
+DEFINE_TYPE(BeatLeader, PreferencesViewController);
+
 UnityEngine::Transform* containerTransform;
 
 UnityEngine::UI::Button* logoutButton;
@@ -120,18 +122,18 @@ std::vector<std::string_view> starValueOptions = {
     "Pass"
 };
 
-void BeatLeader::PreferencesViewController::DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bool addedToHeirarchy, bool screenSystemDisabling) {
     if (firstActivation) {
         // Make Touchable
-        self->get_gameObject()->AddComponent<HMUI::Touchable*>();
+        this->get_gameObject()->AddComponent<HMUI::Touchable*>();
 
         // Create Container
-        auto* container = BSML::Lite::CreateScrollableSettingsContainer(self->get_transform());
+        auto* container = BSML::Lite::CreateScrollableSettingsContainer(this->get_transform());
 
         containerTransform = container->get_transform();
 
-        auto spinnerImage = ::BSML::Lite::CreateImage(self->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 20}, {20, 20});
-        spinner = self->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
+        auto spinnerImage = ::BSML::Lite::CreateImage(this->get_transform(), BundleLoader::bundle->beatLeaderLogoGradient, {0, 20}, {20, 20});
+        spinner = this->get_gameObject()->AddComponent<BeatLeader::LogoAnimation*>();
         spinner->Init(spinnerImage);
         spinnerImage->get_gameObject()->SetActive(false);
 
@@ -196,9 +198,9 @@ void BeatLeader::PreferencesViewController::DidActivate(HMUI::ViewController* se
             });
         });
 
-        auto captureSelf = self;
-        PlayerController::playerChanged.emplace_back([captureSelf](std::optional<Player> const& updated) {
-            if (!captureSelf->isActivated) return;
+        auto capturethis = this;
+        PlayerController::playerChanged.emplace_back([capturethis](std::optional<Player> const& updated) {
+            if (!capturethis->isActivated) return;
             BSML::MainThreadScheduler::Schedule([updated] {
                 if (updated) {
                     UpdateUI(updated);
@@ -224,4 +226,8 @@ void BeatLeader::PreferencesViewController::DidActivate(HMUI::ViewController* se
     }
 
     UpdateUI(PlayerController::currentPlayer);
+}
+
+void BeatLeader::PreferencesViewController::DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling) {
+    errorDescription = "";
 }

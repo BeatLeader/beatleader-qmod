@@ -25,6 +25,9 @@
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "GlobalNamespace/AppInit.hpp"
 #include "GlobalNamespace/RichPresenceManager.hpp"
+#include "GlobalNamespace/MainFlowCoordinator.hpp"
+#include "GlobalNamespace/SettingsFlowCoordinator.hpp"
+
 #include "BeatSaber/Init/BSAppInit.hpp"
 #include "UnityEngine/SceneManagement/SceneManager.hpp"
 #include "UnityEngine/SceneManagement/Scene.hpp"
@@ -46,13 +49,15 @@ MOD_EXPORT void setup(CModInfo *info) noexcept {
     BeatLeaderLogger.info("Completed setup!");
 }
 
-MAKE_HOOK_MATCH(Restart, &MenuTransitionsHelper::RestartGame, void, MenuTransitionsHelper* self, ::System::Action_1<::Zenject::DiContainer*>* finishCallback) {
-    Restart(self, finishCallback);
+MAKE_HOOK_MATCH(HandleSettingsFlowCoordinatorDidFinish, &MainFlowCoordinator::HandleSettingsFlowCoordinatorDidFinish, void, MainFlowCoordinator* self, ::GlobalNamespace::SettingsFlowCoordinator* settingsFlowCoordinator, ::GlobalNamespace::__SettingsFlowCoordinator__FinishAction finishAction) {
+    HandleSettingsFlowCoordinatorDidFinish(self, settingsFlowCoordinator, finishAction);
 
-    LeaderboardUI::reset();
-    LevelInfoUI::reset();
-    EmojiSupport::Reset();
-    Sprites::ResetCache();
+    if (finishAction != ::GlobalNamespace::__SettingsFlowCoordinator__FinishAction::Cancel) {
+        LeaderboardUI::reset();
+        LevelInfoUI::reset();
+        EmojiSupport::Reset();
+        Sprites::ResetCache();
+    }
 }
 
 void replayPostCallback(ReplayUploadStatus status, const string& description, float progress, int code) {
@@ -144,7 +149,8 @@ MOD_EXPORT "C" void late_load() {
     FileManager::EnsureReplaysFolderExists();
 
     BSML::Init();
-    BSML::Register::RegisterSettingsMenu("BeatLeader", BeatLeader::PreferencesViewController::DidActivate, false);
+    BSML::Register::RegisterSettingsMenu<BeatLeader::PreferencesViewController*>("BeatLeader");
+    
     LeaderboardUI::retryCallback = []() {
         ReplayManager::RetryPosting(replayPostCallback);
     };
@@ -175,7 +181,7 @@ MOD_EXPORT "C" void late_load() {
 
     BeatLeaderLogger.info("Installing main hooks...");
     
-    INSTALL_HOOK(BeatLeaderLogger, Restart);
+    INSTALL_HOOK(BeatLeaderLogger, HandleSettingsFlowCoordinatorDidFinish);
     INSTALL_HOOK(BeatLeaderLogger, AppInitStart);
     INSTALL_HOOK(BeatLeaderLogger, SceneManager_Internal_ActiveSceneChanged);
     INSTALL_HOOK(BeatLeaderLogger, RichPresenceManager_HandleGameScenesManagerTransitionDidFinish);

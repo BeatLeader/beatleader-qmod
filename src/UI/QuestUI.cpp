@@ -163,6 +163,12 @@ namespace QuestUI {
     void ClearCache() {
         diContainer = nullptr;
         physicsRaycaster = nullptr;
+        beatSaberUIObject = nullptr;
+        dropdownListPrefab = nullptr;
+        modalPrefab = nullptr;
+
+        mainTextFont = nullptr;
+        mainUIFontMaterial = nullptr;
     }
 
     ModalView* CreateModal(Transform* parent, UnityEngine::Vector2 sizeDelta, UnityEngine::Vector2 anchoredPosition, std::function<void(ModalView*)> onBlockerClicked, bool dismissOnBlockerClicked) {

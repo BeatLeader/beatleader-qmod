@@ -23,6 +23,7 @@
 #include "include/UI/LeaderboardUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/CaptorClanUI.hpp"
+#include "include/UI/QuestUI.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -790,8 +791,7 @@ namespace LeaderboardUI {
                 logoAnimation->SetGlowing(false);
             };
 
-            if (retryButton) UnityEngine::GameObject::Destroy(retryButton);
-            retryButton = ::BSML::Lite::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(105, 63), UnityEngine::Vector2(15, 8), [](){
+            retryButton = QuestUI::CreateUIButton(parentScreen->get_transform(), "Retry", UnityEngine::Vector2(116, 59), UnityEngine::Vector2(15, 8), [](){
                 retryButton->get_gameObject()->SetActive(false);
                 showRetryButton = false;
                 retryCallback();
@@ -799,8 +799,8 @@ namespace LeaderboardUI {
             retryButton->get_gameObject()->SetActive(false);
             retryButton->GetComponentInChildren<CurvedTextMeshPro*>()->set_alignment(TMPro::TextAlignmentOptions::Left);
 
-            if(uploadStatus) UnityEngine::GameObject::DestroyImmediate(uploadStatus);
-            uploadStatus = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", {150, 60});
+            
+            uploadStatus = QuestUI::CreateText(parentScreen->get_transform(), "", {200, 60});
             resize(uploadStatus, 100, 3);
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
