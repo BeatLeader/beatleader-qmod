@@ -198,16 +198,6 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
             });
         });
 
-        auto capturethis = this;
-        PlayerController::playerChanged.emplace_back([capturethis](std::optional<Player> const& updated) {
-            if (!capturethis->isActivated) return;
-            BSML::MainThreadScheduler::Schedule([updated] {
-                if (updated) {
-                    UpdateUI(updated);
-                }
-            });
-        });
-
         saveToggle = AddConfigValueToggle(containerTransform, getModConfig().SaveLocalReplays);
         starsDropdown = AddConfigValueDropdownEnum(containerTransform, getModConfig().StarValueToShow, starValueOptions);
         // // After switching the setting we need to manually call refresh, because StandardLevelDetailView::RefreshContent is not called again,
