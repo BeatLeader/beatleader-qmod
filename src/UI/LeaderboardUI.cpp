@@ -233,8 +233,6 @@ namespace LeaderboardUI {
     }
 
     void updatePlayerInfoLabel() {
-        if (uploadStatus == NULL) return;
-        
         auto const& player = PlayerController::currentPlayer;
         if (player != std::nullopt) {
             if (!player->name.empty()) {
