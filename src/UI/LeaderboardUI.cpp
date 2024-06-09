@@ -82,7 +82,7 @@
 #include "GlobalNamespace/LeaderboardTableCell.hpp"
 #include "GlobalNamespace/SinglePlayerLevelSelectionFlowCoordinator.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
-#include "GlobalNamespace/BoolSettingsController.hpp"
+#include "GlobalNamespace/SwitchSettingsController.hpp"
 #include "BGLib/Polyglot/LocalizedTextMeshProUGUI.hpp"
 
 #include "TMPro/TMP_Sprite.hpp"
@@ -1275,7 +1275,7 @@ namespace LeaderboardUI {
         GameObject* gameObject = Object::Instantiate(toggleCopy.ptr(), parent, false);
         static ConstString nameTextName("NameText");
         GameObject* nameText = gameObject->get_transform()->Find(nameTextName)->get_gameObject();
-        Object::Destroy(gameObject->GetComponent<GlobalNamespace::BoolSettingsController*>());
+        Object::Destroy(gameObject->GetComponent<GlobalNamespace::SwitchSettingsController*>());
 
         static ConstString name("QuestUICheckboxSetting");
         gameObject->set_name(name);
