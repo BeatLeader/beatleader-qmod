@@ -1,8 +1,7 @@
 #include "UI/QuestUI.hpp"
 
 #include "GlobalNamespace/UIKeyboardManager.hpp"
-#include "GlobalNamespace/BoolSettingsController.hpp"
-#include "GlobalNamespace/FormattedFloatListSettingsValueController.hpp"
+#include "GlobalNamespace/SwitchSettingsController.hpp"
 #include "GlobalNamespace/ColorPickerButtonController.hpp"
 #include "GlobalNamespace/HSVPanelController.hpp"
 #include "GlobalNamespace/MenuShockwave.hpp"
