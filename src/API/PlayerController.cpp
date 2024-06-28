@@ -86,7 +86,7 @@ void PlayerController::SignUp(string login, string password, const function<void
             Refresh(0, finished);
         } else {
             lastErrorDescription = error;
-            BeatLeaderLogger.error("BeatLeader %s",
+            BeatLeaderLogger.error("BeatLeader {}",
                                 ("signup error" + to_string(statusCode)).c_str());
             finished(nullopt, error);
         }
@@ -102,7 +102,7 @@ void PlayerController::LogIn(string login, string password, const function<void(
             Refresh(0, finished);
         } else {
             lastErrorDescription = error;
-            BeatLeaderLogger.error("BeatLeader %s",
+            BeatLeaderLogger.error("BeatLeader {}",
                                 ("signup error" + to_string(statusCode)).c_str());
             finished(nullopt, error);
         }

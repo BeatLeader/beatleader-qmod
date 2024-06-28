@@ -146,7 +146,7 @@ MAKE_HOOK_MATCH(GetSpriteCharacterFromSpriteAsset, &TMPro::TMP_FontAssetUtilitie
             if (sprite != NULL) {
                 DrawSprite((UnityEngine::Texture*)sprite->get_texture(), indexToUse, glyph, assetToUse);
             } else {
-                BeatLeaderLogger.info("%s", (WebUtils::API_URL + "unicode/" + utf8ToHex(unicode) + ".png").c_str());
+                BeatLeaderLogger.info("{}", (WebUtils::API_URL + "unicode/" + utf8ToHex(unicode) + ".png").c_str());
             }
             
             loadingCount--;
