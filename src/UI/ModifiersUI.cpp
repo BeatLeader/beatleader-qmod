@@ -103,7 +103,7 @@ namespace ModifiersUI {
         ModifierStart(self);
 
         string key = modifierKeyFromName[self->get_gameplayModifier()->get_modifierNameLocalizationKey()];
-        BeatLeaderLogger.info("%s", key.c_str());
+        BeatLeaderLogger.info("{}", key.c_str());
         if(!multiActive)
             allModifierToggles[key] = self;
     }
