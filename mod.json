@@ -23,7 +23,7 @@
     {
       "version": "^0.8.0",
       "id": "bs-utils",
-      "downloadIfMissing": "https://github.com/RedBrumbler/QuestBS-Utils/releases/download/v0.8.2/BS-Utils.qmod"
+      "downloadIfMissing": "https://github.com/RedBrumbler/QuestBS-Utils/releases/download/v0.8.3/BS-Utils.qmod"
     },
     {
       "version": "^3.6.3",
@@ -31,7 +31,7 @@
       "downloadIfMissing": "https://github.com/Fernthedev/paperlog/releases/download/v3.6.3/paperlog.qmod"
     },
     {
-      "version": "^0.4.24",
+      "version": "=0.4.24",
       "id": "bsml",
       "downloadIfMissing": "https://github.com/RedBrumbler/Quest-BSML/releases/download/v0.4.24/BSML.qmod"
     }

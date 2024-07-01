@@ -17,7 +17,7 @@
   "dependencies": [
     {
       "id": "beatsaber-hook",
-      "versionRange": "^5.1.6",
+      "versionRange": "=5.1.6",
       "additionalData": {
         "extraFiles": [
           "src/inline-hook"
@@ -81,7 +81,7 @@
     },
     {
       "id": "bsml",
-      "versionRange": "^0.4.24",
+      "versionRange": "=0.4.24",
       "additionalData": {}
     }
   ]
