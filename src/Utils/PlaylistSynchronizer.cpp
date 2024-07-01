@@ -33,7 +33,7 @@ void done() {
 void DownloadBeatmap(string path, string hash, int index) {
     WebUtils::GetAsync(path, 64,
         [hash, index](long httpCode, std::string data) {
-        auto targetFolder = string(SongCore::API::Loading::GetPreferredCustomLevelPath()) + hash;
+        auto targetFolder = string(SongCore::API::Loading::GetPreferredCustomLevelPath()) + "/" + hash;
         int args = 2;
         int statusCode = zip_stream_extract(data.data(), data.length(), targetFolder.c_str(), +[](const char* name, void* arg) -> int { return 0; }, &args);
 
