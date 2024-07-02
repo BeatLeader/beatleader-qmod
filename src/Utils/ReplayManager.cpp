@@ -44,6 +44,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
     struct stat file_info;
     stat(name.data(), &file_info);
 
+    lastReplayStatus = status;
     bool runCallback = status.GetEndType() == LevelEndType::Clear;
     if (tryIndex == 0) {
         BeatLeaderLogger.info("{}",("Started posting " + to_string(file_info.st_size)).c_str());
