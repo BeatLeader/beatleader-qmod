@@ -45,6 +45,14 @@ public:
         return oss.str();
     }
 
+    PlayEndData& operator=(const PlayEndData& other) {
+        if (this != &other) {
+            _endType = other._endType;
+            _time = other._time;
+        }
+        return *this;
+    }
+
 private:
     const std::map<std::pair<LevelEndStateType, LevelEndAction>, LevelEndType> _types = {
         { { LevelEndStateType::Failed    , LevelEndAction::Restart }, LevelEndType::Fail    },
@@ -65,8 +73,8 @@ private:
         return it != _types.end() ? it->second : LevelEndType::Unknown;
     }
 
-    const LevelEndType _endType;
-    const float _time;
+    LevelEndType _endType;
+    float _time;
 };
 
 namespace ReplayRecorder {
