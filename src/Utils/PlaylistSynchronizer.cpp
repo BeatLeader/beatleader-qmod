@@ -97,6 +97,18 @@ void DownloadPlaylist(
 void ActuallySyncPlaylist() {
     if (PlayerController::currentPlayer == std::nullopt) return;
 
+    auto parts = split(PlayerController::currentPlayer->playlistsToInstall, ",");
+
+    for (string playlist : parts) {
+        DownloadPlaylist(WebUtils::API_URL + "playlist/" + playlist, playlist, true, [](auto songs) {
+            BSML::MainThreadScheduler::Schedule([] {
+                SongCore::API::Loading::RefreshLevelPacks();
+            });
+        });
+    }
+
+    WebUtils::RequestAsync(WebUtils::API_URL + "user/playlist/toInstall", "DELETE", 200, [](long httpCode, std::string data) {});
+
     DownloadPlaylist(WebUtils::API_URL + "user/oneclickplaylist", "BLSynced", true, [](auto songs) {
         for (int index = 0; index < (int)songs.Size(); ++index)
         {
