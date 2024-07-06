@@ -33,6 +33,7 @@ class Player
     string country;
     string avatar;
     string role;
+    string playlistsToInstall;
     int rank;
     int countryRank;
     float pp;
