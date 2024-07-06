@@ -61,7 +61,7 @@ void BeatLeader::initVotingPopup(
     auto containerTransform = container->get_transform();
 
     // Page 1
-    modalUI->header1 = CreateText(containerTransform, "Is this map suitable for rank?", UnityEngine::Vector2(-16.0, 10));
+    modalUI->header1 = CreateText(containerTransform, "Is this map suitable for rank?", UnityEngine::Vector2(-18.0, 12));
     modalUI->noButton = ::BSML::Lite::CreateUIButton(containerTransform, "NO", UnityEngine::Vector2(18.0, -13.0), [modalUI]() {
         modalUI->rankable = false;
         modalUI->rightButton->get_gameObject()->SetActive(false);
@@ -87,7 +87,7 @@ void BeatLeader::initVotingPopup(
     SetButtonTextSize(modalUI->yesButton, 6.0f);
 
     // Page 2
-    modalUI->header2 = CreateText(containerTransform, "<u>Difficulty and category (optional)", UnityEngine::Vector2(-19.0, 14.0));
+    modalUI->header2 = CreateText(containerTransform, "<u>Difficulty and category (optional)", UnityEngine::Vector2(-21.0, 14.0));
     modalUI->header2->color = UnityEngine::Color(0.667f, 0.667f, 0.667f, 1.0f);
 
     modalUI->starSlider = CreateSliderSetting(

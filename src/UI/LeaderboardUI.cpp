@@ -1191,7 +1191,7 @@ namespace LeaderboardUI {
     void initContextsModal(UnityEngine::Transform* parent){
         auto container = BSML::Lite::CreateModal(parent, {40, static_cast<float>((static_cast<int>(Context::SCPM) + 2) * 10 + 5)}, nullptr, true);
 
-        BSML::Lite::CreateText(container->get_transform(), "Scores Context", {-6, 25});
+        BSML::Lite::CreateText(container->get_transform(), "Scores Context", {-8, 27});
 
         for(int i = 0; i <= static_cast<int>(Context::SCPM); i++)
         {
@@ -1221,37 +1221,37 @@ namespace LeaderboardUI {
     void initSettingsModal(UnityEngine::Transform* parent){
         auto container = BSML::Lite::CreateModal(parent, {40,60}, nullptr, true);
         
-        BSML::Lite::CreateText(container->get_transform(), "Leaderboard Settings", {-14, 24});
+        BSML::Lite::CreateText(container->get_transform(), "Leaderboard Settings", {-13, 27});
 
-        BSML::Lite::CreateText(container->get_transform(), "Avatar", {-11, 18});
+        BSML::Lite::CreateText(container->get_transform(), "Avatar", {-14, 18});
 
         CreateToggle(container->get_transform(), getModConfig().AvatarsActive.GetValue(), {-3, 16}, [](bool value){
             getModConfig().AvatarsActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Clans", {-11, 5});
+        BSML::Lite::CreateText(container->get_transform(), "Clans", {-14, 8});
 
         CreateToggle(container->get_transform(), getModConfig().ClansActive.GetValue(), {-3, 6}, [](bool value){
             getModConfig().ClansActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Score", {-11, -5});
+        BSML::Lite::CreateText(container->get_transform(), "Score", {-14, -2});
 
         CreateToggle(container->get_transform(), getModConfig().ScoresActive.GetValue(), {-3, -4}, [](bool value){
             getModConfig().ScoresActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Time", {-11, -15});
+        BSML::Lite::CreateText(container->get_transform(), "Time", {-14, -12});
 
         CreateToggle(container->get_transform(), getModConfig().TimesetActive.GetValue(), {-3, -14}, [](bool value){
             getModConfig().TimesetActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Capture", {-11, -25});
+        BSML::Lite::CreateText(container->get_transform(), "Capture", {-14, -22});
 
         CreateToggle(container->get_transform(), getModConfig().CaptureActive.GetValue(), {-3, -24}, [](bool value){
             getModConfig().CaptureActive.SetValue(value);

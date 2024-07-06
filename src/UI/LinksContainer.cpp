@@ -35,7 +35,7 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
 
     auto modalTransform = container->get_transform();
 
-    modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(-8, 14.0));
+    modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(-11, 18.0));
     CreateText(modalTransform, "<u>These buttons will open the browser!", UnityEngine::Vector2(-22.0, 10.0));
 
     static auto UnityEngine_Application_OpenURL = il2cpp_utils::resolve_icall<void, StringW>("UnityEngine.Application::OpenURL");

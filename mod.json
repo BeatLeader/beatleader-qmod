@@ -4,7 +4,7 @@
   "id": "BeatLeader",
   "modloader": "Scotland2",
   "author": "NSGolova",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.37.0_9064817954",
   "description": "beatleader.xyz | In-game leaderboards for custom and OST maps | Score replays | Clans, events, playlists and much more",
@@ -13,17 +13,17 @@
     {
       "version": "^0.17.8",
       "id": "custom-types",
-      "downloadIfMissing": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.17.8/CustomTypes.qmod"
+      "downloadIfMissing": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.17.10/CustomTypes.qmod"
     },
     {
       "version": "^1.1.13",
       "id": "songcore",
-      "downloadIfMissing": "https://github.com/raineio/Quest-SongCore/releases/download/v1.1.13/SongCore.qmod"
+      "downloadIfMissing": "https://github.com/raineio/Quest-SongCore/releases/download/v1.1.14/SongCore.qmod"
     },
     {
       "version": "^0.8.2",
       "id": "bs-utils",
-      "downloadIfMissing": "https://github.com/RedBrumbler/QuestBS-Utils/releases/download/v0.8.2/BS-Utils.qmod"
+      "downloadIfMissing": "https://github.com/RedBrumbler/QuestBS-Utils/releases/download/v0.8.4/BS-Utils.qmod"
     },
     {
       "version": "^3.6.3",
@@ -33,7 +33,7 @@
     {
       "version": "^0.4.34",
       "id": "bsml",
-      "downloadIfMissing": "https://github.com/RedBrumbler/Quest-BSML/releases/download/v0.4.42/BSML.qmod"
+      "downloadIfMissing": "https://github.com/RedBrumbler/Quest-BSML/releases/download/v0.4.43/BSML.qmod"
     }
   ],
   "modFiles": [],
@@ -41,7 +41,7 @@
     "libbl.so"
   ],
   "libraryFiles": [
-    "libbeatsaber-hook_5_1_8.so",
+    "libbeatsaber-hook_5_1_9.so",
     "libsl2.so"
   ],
   "fileCopies": [],
