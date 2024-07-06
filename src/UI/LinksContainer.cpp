@@ -60,17 +60,14 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     }, UnityEngine::Vector2(24, -1), UnityEngine::Vector2(22, 6));
     ::BSML::Lite::AddHoverHint(modalUI->patreon, "Patreon page");
 
-    WebUtils::GetJSONAsync(WebUtils::API_URL + "mod/lastVersions", [modalUI](long status, bool error, rapidjson::Document const& result){ 
-        if (status == 200 && !error && result.HasMember("quest")) {
-            string version = result["quest"].GetObject()["version"].GetString();
-            BSML::MainThreadScheduler::Schedule([modalUI, version] {
-                if (modInfo.version == version) {
-                    modalUI->versionText->SetText("<color=#88FF88>Mod is up to date!", true);
-                } else  {
-                    modalUI->versionText->SetText("<color=#FF8888>Mod is outdated!", true);
-                }
-            });
-        }
+    WebUtils::GetAsync(WebUtils::API_URL + "mod/uptodate?platform=oculus&gameVersion=" + (string)UnityEngine::Application::get_version() + "&version=" + modInfo.version, [modalUI](long status, string const& result){ 
+        BSML::MainThreadScheduler::Schedule([modalUI, status, result] {
+            if (status == 200 && result == "true") {
+                modalUI->versionText->SetText("<color=#88FF88>Mod is up to date!", true);
+            } else {
+                modalUI->versionText->SetText("<color=#FF8888>Mod is outdated!", true);
+            }
+        });
     });
 
     CreateText(modalTransform, "<u>Install playlists. You need to sync them yourself!", UnityEngine::Vector2(-31.0, -7.0));
