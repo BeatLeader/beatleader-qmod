@@ -101,8 +101,8 @@ void ActuallySyncPlaylist() {
 
     for (string playlist : parts) {
         DownloadPlaylist(WebUtils::API_URL + "playlist/" + playlist, playlist, true, [](auto songs) {
-            BSML::MainThreadScheduler::Schedule([] {
-                SongCore::API::Loading::RefreshLevelPacks();
+            QuestUI::MainThreadScheduler::Schedule([] {
+                RuntimeSongLoader::API::RefreshPacks(true);
             });
         });
     }

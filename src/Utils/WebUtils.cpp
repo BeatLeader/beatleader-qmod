@@ -2,6 +2,8 @@
 #include "Utils/WebUtils.hpp"
 #include "Utils/ModConfig.hpp"
 
+#include "UnityEngine/Application.hpp"
+
 #include "libcurl/shared/curl.h"
 #include "libcurl/shared/easy.h"
 
@@ -9,7 +11,7 @@
 #include <sstream>
 
 #define TIMEOUT 60
-#define USER_AGENT string(ID "/" VERSION " (BeatSaber/" + GameVersion + ") (Oculus)").c_str()
+
 #define X_BSSB "X-BSSB: ✔"
 
 namespace WebUtils {
@@ -17,6 +19,7 @@ namespace WebUtils {
 
     string API_URL = "";
     string WEB_URL = "";
+    string USER_AGENT = "";
 
     void refresh_urls() {
         if (getModConfig().ServerType.GetValue() == "Test") {
@@ -26,6 +29,7 @@ namespace WebUtils {
             API_URL = "https://api.beatleader.xyz/";
             WEB_URL = "https://beatleader.xyz/";
         }
+        USER_AGENT = "BeatLeader / " + modInfo.version + " (BeatSaber/" + (string)UnityEngine::Application::get_version() + ") (Oculus)";
     }
 
     //https://stackoverflow.com/a/55660581
@@ -162,7 +166,7 @@ namespace WebUtils {
         long httpCode(0);
 
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&val));
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
         curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
@@ -237,7 +241,7 @@ namespace WebUtils {
 
                 long httpCode(0);
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, &val);
-                curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT);
+                curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
                 curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
                 curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
@@ -245,11 +249,16 @@ namespace WebUtils {
                 auto res = curl_easy_perform(curl);
                 /* Check for errors */ 
                 if (res != CURLE_OK) {
-                    getLogger().critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    long errorCode = static_cast<long>(res);
+                    string errorValue = curl_easy_strerror(res);
+                    getLogger().critical("curl_easy_perform() failed: %u: %s", errorCode, errorValue.c_str());
+                    curl_easy_cleanup(curl);
+                    finished(errorCode, errorValue);
+                } else {
+                    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+                    curl_easy_cleanup(curl);
+                    finished(httpCode, val);
                 }
-                curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-                curl_easy_cleanup(curl);
-                finished(httpCode, val);
             }
         );
         t.detach();
@@ -303,7 +312,7 @@ namespace WebUtils {
                 if (val) {
                     curl_easy_setopt(curl, CURLOPT_WRITEDATA, val);
                 }
-                curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT);
+                curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
                 curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
                 curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
@@ -311,7 +320,16 @@ namespace WebUtils {
                 auto res = curl_easy_perform(curl);
                 /* Check for errors */ 
                 if (res != CURLE_OK) {
-                    getLogger().critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    long errorCode = static_cast<long>(res);
+                    string errorValue = curl_easy_strerror(res);
+                    
+                    getLogger().critical("curl_easy_perform() failed: %u: %s", errorCode, errorValue.c_str());
+                    if (val) {
+                        fclose(val);
+                    }
+                    curl_easy_cleanup(curl);
+                    finished(errorCode);
+                    return;
                 }
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
                 if (val) {
@@ -368,7 +386,7 @@ namespace WebUtils {
 
                 long httpCode(0);
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, &val);
-                curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT);
+                curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
                 curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
                 curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
@@ -378,12 +396,16 @@ namespace WebUtils {
                 CURLcode res = curl_easy_perform(curl);
                 /* Check for errors */
                 if (res != CURLE_OK) {
-                    getLogger().critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    long errorCode = static_cast<long>(res);
+                    string errorValue = curl_easy_strerror(res);
+                    getLogger().critical("curl_easy_perform() failed: %u: %s", errorCode, errorValue.c_str());
+                    curl_easy_cleanup(curl);
+                    finished(errorCode, errorValue);
+                } else {
+                    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+                    curl_easy_cleanup(curl);
+                    finished(httpCode, val);
                 }
-                curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-                curl_easy_cleanup(curl);
-                //curl_mime_free(form);
-                finished(httpCode, val);
             }
         );
         t.detach();
@@ -441,21 +463,26 @@ namespace WebUtils {
 
                 long httpCode(0);
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, &val);
-                curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT);
+                curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
                 curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
                 curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
                 CURLcode res = curl_easy_perform(curl);
-                /* Check for errors */
                 if (res != CURLE_OK) {
-                    getLogger().critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    long errorCode = static_cast<long>(res);
+                    string errorValue = curl_easy_strerror(res);
+                    getLogger().critical("curl_easy_perform() failed: %u: %s", errorCode, errorValue.c_str());
+                    curl_easy_cleanup(curl);
+                    curl_formfree(formpost);
+                    finished(errorCode, errorValue);
+                } else {
+                    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+                    curl_easy_cleanup(curl);
+                    curl_formfree(formpost);
+                    //curl_mime_free(form);
+                    finished(httpCode, val);
                 }
-                curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-                curl_easy_cleanup(curl);
-                curl_formfree(formpost);
-                //curl_mime_free(form);
-                finished(httpCode, val);
             }
         );
         t.detach();
@@ -538,7 +565,7 @@ namespace WebUtils {
 
                 long httpCode(0);
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, &val);
-                curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT);
+                curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
                 curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
                 curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
@@ -556,12 +583,16 @@ namespace WebUtils {
                 CURLcode res = curl_easy_perform(curl);
                 /* Check for errors */
                 if (res != CURLE_OK) {
-                    getLogger().critical("curl_easy_perform() failed: %u: %s", res, curl_easy_strerror(res));
+                    long errorCode = static_cast<long>(res);
+                    string errorValue = curl_easy_strerror(res);
+                    getLogger().critical("curl_easy_perform() failed: %u: %s", errorCode, errorValue.c_str());
+                    curl_easy_cleanup(curl);
+                    finished(errorCode, errorValue, "");
+                } else {
+                    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+                    curl_easy_cleanup(curl);
+                    finished(httpCode, val, responseHeaders);
                 }
-                curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-                curl_easy_cleanup(curl);
-                //curl_mime_free(form);
-                finished(httpCode, val, responseHeaders);
             }
         );
         t.detach();

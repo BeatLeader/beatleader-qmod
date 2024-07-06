@@ -57,7 +57,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
     
     WebUtils::PostFileAsync(WebUtils::API_URL + "replayoculus" + status.ToQueryString(), replayFile, (long)file_info.st_size, [name, tryIndex, finished, replayFile, replayPostStart, runCallback, status](long statusCode, string result, string headers) {
         fclose(replayFile);
-        if (statusCode >= 450 && tryIndex < 2) {
+        if ((statusCode >= 450 || statusCode < 200) && tryIndex < 2) {
             getLogger().info("%s", ("Retrying posting replay after " + to_string(statusCode) + " #" + to_string(tryIndex) + " " + std::string(result)).c_str());
             if (statusCode == 100) {
                 result = "Timed out";
