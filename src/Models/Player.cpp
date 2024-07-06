@@ -41,6 +41,12 @@ Player::Player(rapidjson::Value const& userModInterface) {
         }
     }
 
+    if (userModInterface.HasMember("playlistsToInstall") && !userModInterface["playlistsToInstall"].IsNull()) {
+        playlistsToInstall = userModInterface["playlistsToInstall"].GetString();
+    } else {
+        playlistsToInstall = "";
+    }
+
     if (userModInterface.HasMember("socials") && !userModInterface["socials"].IsNull()) {
         auto socialsList = userModInterface["socials"].GetArray();
         for (int index = 0; index < (int)socialsList.Size(); ++index) {
