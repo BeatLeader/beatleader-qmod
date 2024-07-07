@@ -118,7 +118,9 @@ namespace LeaderboardUI {
 
     TMPro::TextMeshProUGUI* playerName = NULL;
     BeatLeader::PlayerAvatar* playerAvatar = NULL;
+
     UnityEngine::UI::Toggle* showBeatLeaderButton = NULL;
+    HMUI::CurvedTextMeshPro* showBeatleaderText = NULL;
 
     TMPro::TextMeshProUGUI* globalRank = NULL;
     HMUI::ImageView* globalRankIcon = NULL;
@@ -723,10 +725,10 @@ namespace LeaderboardUI {
                 ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(4);
                 for (int index = 0; index < 3; ++index)
                 {
-                    dataItems[index] = self->_scopeSegmentedControl->_dataItems.get(index);
-                    scoreScopes[index] = self->_scoreScopes.get(index);
+                    dataItems[index] = plvc->_scopeSegmentedControl->_dataItems.get(index);
+                    scoreScopes[index] = plvc->_scoreScopes.get(index);
                 }
-                dataItems[3] = HMUI::IconSegmentedControl::DataItem::New_ctor(self->_friendsLeaderboardIcon, "Country");
+                dataItems[3] = HMUI::IconSegmentedControl::DataItem::New_ctor(plvc->_friendsLeaderboardIcon, "Country");
                 scoreScopes[3] = PlatformLeaderboardsModel::ScoresScope(3);
 
                 plvc->_scopeSegmentedControl->SetData(dataItems);
@@ -924,6 +926,30 @@ namespace LeaderboardUI {
             imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
         }
 
+        if (!ssInstalled) {
+            ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(!showBeatLeader ? 3 : 4);
+            ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(!showBeatLeader ? 3 : 4);
+            for (int index = 0; index < 3; ++index)
+            {
+                dataItems[index] = plvc->_scopeSegmentedControl->_dataItems.get(index);
+                scoreScopes[index] = plvc->_scoreScopes.get(index);
+            }
+
+            if (showBeatLeader) {
+                auto countryControl =  HMUI::IconSegmentedControl::DataItem::New_ctor(plvc->_friendsLeaderboardIcon, "Country");
+                dataItems[3] = countryControl;
+                scoreScopes[3] = PlatformLeaderboardsModel::ScoresScope(3);
+
+                countryControl->set_hintText("Country");
+                if (PlayerController::currentPlayer) {
+                    countryControl->set_icon(BundleLoader::bundle->GetCountryIcon(PlayerController::currentPlayer->country));
+                }
+            }
+
+            plvc->_scopeSegmentedControl->SetData(dataItems);
+            plvc->_scoreScopes = scoreScopes;
+        }
+
         if (parentScreen != NULL) {
             parentScreen->get_gameObject()->SetActive(showBeatLeader);
             retryButton->get_gameObject()->SetActive(showBeatLeader && showRetryButton);
@@ -938,12 +964,14 @@ namespace LeaderboardUI {
             updateLeaderboard(self);
         }
 
-        if (ssInstalled && showBeatLeaderButton == NULL) {
+        if (showBeatLeaderButton == NULL) {
             auto headerTransform = self->get_gameObject()->get_transform()->Find("HeaderPanel")->get_transform();
-            BSML::Lite::CreateText(headerTransform, "BeatLeader", {-12.2, 2});
-            showBeatLeaderButton = CreateToggle(headerTransform, showBeatLeader, UnityEngine::Vector2(-84.5, 0), [](bool changed){
+            showBeatleaderText = BSML::Lite::CreateText(headerTransform, "BeatLeader", {-34.5, 7}, {16, 1});
+            showBeatLeaderButton = CreateToggle(headerTransform, showBeatLeader, {-84.5, 26.5}, [](bool changed){
                 showBeatLeader = !showBeatLeader;
-                getModConfig().ShowBeatleader.SetValue(showBeatLeader);
+                if (ssInstalled) {
+                    getModConfig().ShowBeatleader.SetValue(showBeatLeader);
+                }
                 plvc->Refresh(true, true);
                 updateSelectedLeaderboard();
             });
@@ -957,13 +985,15 @@ namespace LeaderboardUI {
                 });
             }
             
-            updateSelectedLeaderboard();
+            if (ssInstalled) {
+                updateSelectedLeaderboard();
+            }
         }
     }
 
     MAKE_HOOK_MATCH(RefreshLeaderboard, &PlatformLeaderboardViewController::Refresh, void, PlatformLeaderboardViewController* self, bool showLoadingIndicator, bool clear) {
         plvc = self;
-        if (!showBeatLeader) {
+        if (!showBeatLeader && (!plvc->_beatmapKey.levelId.starts_with("custom_level") || ssInstalled)) {
             RefreshLeaderboard(self, showLoadingIndicator, clear);
             ssWasOpened = true;
         }
@@ -977,6 +1007,24 @@ namespace LeaderboardUI {
             });
         } else {
             refreshLeaderboardCall();
+        }
+
+        if (!plvc->_beatmapKey.levelId.starts_with("custom_level")) {
+            if (showBeatLeaderButton) {
+                showBeatLeaderButton->get_gameObject()->set_active(true);
+                showBeatleaderText->get_gameObject()->set_active(true);
+            }
+        } else if (!ssInstalled) {
+            if (!showBeatLeader) {
+                showBeatLeader = true;
+                updateSelectedLeaderboard();
+                updateLeaderboard(plvc);
+            }
+            if (showBeatLeaderButton) {
+                showBeatLeaderButton->set_isOn(true);
+                showBeatLeaderButton->get_gameObject()->set_active(false);
+                showBeatleaderText->get_gameObject()->set_active(false);
+            }
         }
 
         leaderboardLoaded = true;
@@ -1008,8 +1056,8 @@ namespace LeaderboardUI {
                 result->_playerNameText->set_richText(true);
                 
                 resize(result->_playerNameText, 24, 0);
+
                 move(result->_rankText, 1, 0);
-                result->_rankText->set_alignment(TMPro::TextAlignmentOptions::Right);
 
                 move(result->_playerNameText, -0.5, 0);
                 move(result->_fullComboText, 0.2, 0);
@@ -1020,7 +1068,7 @@ namespace LeaderboardUI {
                 EmojiSupport::AddSupport(result->_playerNameText);
 
                 if (!cellBackgrounds.count(result)) {
-                    avatars[result] = ::BSML::Lite::CreateImage(result->get_transform(), plvc->_aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30, 0), UnityEngine::Vector2(4, 4));
+                    avatars[result] = ::BSML::Lite::CreateImage(result->get_transform(), plvc->_aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-31, 0), UnityEngine::Vector2(4, 4));
                     avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
 
                     auto scoreSelector = ::BSML::Lite::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), [result]() {
@@ -1049,14 +1097,16 @@ namespace LeaderboardUI {
                 EmojiSupport::RemoveSupport(result->_playerNameText);
                 result->_playerNameText->set_enableAutoSizing(true);
                 resize(result->_playerNameText, -24, 0);
-                move(result->_rankText, 6.2, 0.1);
-                result->_rankText->set_alignment(TMPro::TextAlignmentOptions::Left);
+                
+                move(result->_rankText, -1, 0);
+                
                 move(result->_playerNameText, 0.5, 0);
                 move(result->_fullComboText, -0.2, 0);
                 move(result->_scoreText, -4, 0);
                 result->_playerNameText->set_fontSize(4);
                 result->_fullComboText->set_fontSize(4);
                 result->_scoreText->set_fontSize(4);
+                result->_rankText->set_fontSize(4);
             }
         }
         
