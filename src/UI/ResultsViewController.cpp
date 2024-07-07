@@ -19,6 +19,7 @@
 #include "Core/ReplayPlayer.hpp"
 #include "Utils/ReplayManager.hpp"
 #include "UI/LeaderboardUI.hpp"
+#include "UI/QuestUI.hpp"
 #include "beatsaber-hook/shared/utils/il2cpp-functions.hpp"
 #include "custom-types/shared/delegate.hpp"
 #include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
@@ -66,7 +67,7 @@ namespace ResultsView {
 
             // If we have replay, also show the replay button
             if(ReplayInstalled()) {
-                replayButton = BSML::Lite::CreateUIButton(transform, "", "PracticeButton", {-46, -19}, {12, 10}, []() {
+                replayButton = QuestUI::CreateUIButton(transform, "", "PracticeButton", {-46, -19}, {12, 10}, []() {
                     // Dont crash if file doesnt exist yet
                     if(std::filesystem::exists(ReplayManager::lastReplayFilename)) {
                         auto flow = BSML::Helpers::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
@@ -86,7 +87,7 @@ namespace ResultsView {
                     }
                 });
                 // Set icon of button
-                auto *image = BSML::Lite::CreateImage(replayButton->get_transform(), BundleLoader::bundle->replayIcon);
+                auto *image = QuestUI::CreateImage(replayButton->get_transform(), BundleLoader::bundle->replayIcon);
                 image->get_rectTransform()->set_localScale({0.64f, 0.8f, 1.0f});
             }
         }
