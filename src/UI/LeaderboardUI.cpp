@@ -236,6 +236,7 @@ namespace LeaderboardUI {
 
     void updatePlayerInfoLabel() {
         auto const& player = PlayerController::currentPlayer;
+        if (!playerName) return;
         if (player != std::nullopt) {
             if (!player->name.empty()) {
 
@@ -249,7 +250,7 @@ namespace LeaderboardUI {
                 
                 if (plvc != NULL) {
                     auto sprite = BundleLoader::bundle->GetCountryIcon(player->country);
-                    if (!ssInstalled) {
+                    if (!ssInstalled && showBeatLeader) {
                         auto countryControl = plvc->_scopeSegmentedControl->_dataItems.get(3);
                         countryControl->set_hintText("Country");
 
@@ -1057,7 +1058,7 @@ namespace LeaderboardUI {
                 
                 resize(result->_playerNameText, 24, 0);
 
-                move(result->_rankText, 1, 0);
+                move(result->_rankText, 0.7, 0);
 
                 move(result->_playerNameText, -0.5, 0);
                 move(result->_fullComboText, 0.2, 0);
@@ -1068,7 +1069,7 @@ namespace LeaderboardUI {
                 EmojiSupport::AddSupport(result->_playerNameText);
 
                 if (!cellBackgrounds.count(result)) {
-                    avatars[result] = ::BSML::Lite::CreateImage(result->get_transform(), plvc->_aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-31, 0), UnityEngine::Vector2(4, 4));
+                    avatars[result] = ::BSML::Lite::CreateImage(result->get_transform(), plvc->_aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30.5, 0), UnityEngine::Vector2(4, 4));
                     avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
 
                     auto scoreSelector = ::BSML::Lite::CreateClickableImage(result->get_transform(), Sprites::get_TransparentPixel(), [result]() {
@@ -1098,7 +1099,7 @@ namespace LeaderboardUI {
                 result->_playerNameText->set_enableAutoSizing(true);
                 resize(result->_playerNameText, -24, 0);
                 
-                move(result->_rankText, -1, 0);
+                move(result->_rankText, -0.7, 0);
                 
                 move(result->_playerNameText, 0.5, 0);
                 move(result->_fullComboText, -0.2, 0);
@@ -1114,7 +1115,8 @@ namespace LeaderboardUI {
         if (!isLocal && showBeatLeader) {
             if (cellBackgrounds.count(result)) {
                 if (!CaptorClanUI::showClanRanking) {
-                    auto player = scoreVector[row].player;
+                    auto currentScore = scoreVector[row];
+                    auto player = currentScore.player;
                     cellBackgrounds[result]->get_gameObject()->set_active(true);
 
                     result->_playerNameText->GetComponent<UnityEngine::RectTransform*>()->set_anchoredPosition({
@@ -1129,7 +1131,15 @@ namespace LeaderboardUI {
                     } else {
                         cellBackgrounds[result]->set_color(someoneElseScoreColor);
                     }
-                    cellScores[result] = scoreVector[row];
+                    cellScores[result] = currentScore;
+
+                    if (currentScore.rank >= 1000) {
+                        result->_rankText->set_fontSize(2);
+                    } if (currentScore.rank >= 100) {
+                        result->_rankText->set_fontSize(3);
+                    } else {
+                        result->_rankText->set_fontSize(4);
+                    }
 
                     if (getModConfig().AvatarsActive.GetValue()){
                         avatars[result]->set_sprite(plvc->_aroundPlayerLeaderboardIcon);
@@ -1166,6 +1176,14 @@ namespace LeaderboardUI {
                         cellBackgrounds[result]->set_color(ownScoreColor);
                     } else {
                         cellBackgrounds[result]->set_color(someoneElseScoreColor);
+                    }
+
+                    if (clan.rank >= 1000) {
+                        result->_rankText->set_fontSize(2);
+                    } if (clan.rank >= 100) {
+                        result->_rankText->set_fontSize(3);
+                    } else {
+                        result->_rankText->set_fontSize(4);
                     }
 
                     if (getModConfig().AvatarsActive.GetValue()){
