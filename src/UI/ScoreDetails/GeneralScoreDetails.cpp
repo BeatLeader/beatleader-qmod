@@ -100,8 +100,8 @@ inline string FormatAcc(const Score& score) {
 
 inline string FormatPP(const Score& score) {
     string result = FormatUtils::FormatPP(score.pp);
-    if (score.scoreImprovement.score > 0) {
-       result += "\n<color=#008800><size=55%>+" + to_string_wprecision(score.scoreImprovement.pp, 2) + "</size></color>";
+    if (score.scoreImprovement.score != 0) {
+       result += "\n<color=#008800><size=55%>+" + to_string_wprecision(score.scoreImprovement.pp, 2) + "pp</size></color>";
     }
     return result;
 }
