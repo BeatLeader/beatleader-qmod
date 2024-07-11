@@ -53,7 +53,7 @@ string FormatInt(int score) {
 string FormatScore(Score const& score) {
     string result = FormatInt(score.modifiedScore);
 
-    if (score.scoreImprovement.score > 0) {
+    if (score.scoreImprovement.score != 0) {
         result += "\n<color=#008800><size=55%>" + to_string_wprecision((score.scoreImprovement.score > 0) ? "+" : "") + FormatInt(score.scoreImprovement.score) + "</size></color>";
     }
     return result;
@@ -91,7 +91,7 @@ string GetDetailsString(const Score& score) {
 inline string FormatAcc(const Score& score) {
     string result = FormatUtils::formatAcc(score.accuracy);
 
-    if (score.scoreImprovement.score > 0) {
+    if (score.scoreImprovement.score != 0) {
        result += "\n<color=#008800><size=55%>" + to_string_wprecision((score.scoreImprovement.accuracy > 0) ? "+" : "") + to_string_wprecision(score.scoreImprovement.accuracy * 100, 2) + "%</size></color>";
     }
 
