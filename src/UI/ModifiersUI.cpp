@@ -108,6 +108,14 @@ namespace ModifiersUI {
             allModifierToggles[key] = self;
     }
 
+    bool ModifiersAvailable() {
+        if (modifiersPanel) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     TriangleRating refreshAllModifiers(){
         // Set the map dependant modifier values on the toggles (with colors)
         for(auto& [key, value] : allModifierToggles){
