@@ -60,6 +60,8 @@
 #include "GlobalNamespace/SaberMovementData.hpp"
 #include "GlobalNamespace/SaberSwingRating.hpp"
 #include "GlobalNamespace/GameplayCoreSceneSetupData.hpp"
+#include "GlobalNamespace/SaberManager.hpp"
+#include "GlobalNamespace/Saber.hpp"
 
 #include "GlobalNamespace/ScoringElement.hpp"
 #include "GlobalNamespace/BadCutScoringElement.hpp"
@@ -72,6 +74,10 @@
 #include "GlobalNamespace/MultiplayerLevelCompletionResults.hpp"
 #include "GlobalNamespace/PlayersSpecificSettingsAtGameStartModel.hpp"
 #include "GlobalNamespace/PlayerSpecificSettingsNetSerializable.hpp"
+
+#include "sombrero/shared/FastQuaternion.hpp"
+#include "sombrero/shared/Vector3Utils.hpp"
+#include "sombrero/shared/QuaternionUtils.hpp"
 
 #include "main.hpp"
 
@@ -501,18 +507,44 @@ namespace ReplayRecorder {
         }
     }
 
+    SaberManager* saberManager;
+
+    MAKE_HOOK_MATCH(SaberManagerStart, &SaberManager::Start, void, SaberManager* manager) {
+        SaberManagerStart(manager);
+        saberManager = manager;
+    }
+
+    Sombrero::FastQuaternion Inverse(Sombrero::FastQuaternion rotation) {
+        float lengthSq = rotation.x * rotation.x + rotation.y * rotation.y + rotation.z * rotation.z + rotation.w * rotation.w;
+        if (lengthSq != 0.0)
+        {
+            float i = 1.0f / lengthSq;
+            return Sombrero::FastQuaternion(rotation.x * -i, rotation.y * -i, rotation.z * -i, rotation.w * i);
+        }
+        return rotation;
+    }
+
+    Sombrero::FastQuaternion InverseTransformRotation(Sombrero::FastQuaternion rotation, Sombrero::FastQuaternion worldRotation) {
+        return Inverse(rotation) * worldRotation;
+    }
+
     MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
         Tick(trans);
-        if (replay == nullopt) return;
+        if (replay == nullopt || !saberManager) return;
 
         if (audioTimeSyncController != nullptr && _currentPause == nullopt) {
             
             auto time = audioTimeSyncController->songTime;
             auto fps = 1.0f / UnityEngine::Time::get_deltaTime();
+
+            auto origin = trans->_originParentTransform;
+            auto headTransform = trans->_headTransform;
+            auto leftSaber = saberManager->leftSaber->get_transform();
+            auto rightSaber = saberManager->rightSaber->get_transform();
             
-            auto head = ReplayTransform(trans->get_headPseudoLocalPos(), trans->get_headPseudoLocalRot());
-            auto leftHand = ReplayTransform(trans->get_leftHandPseudoLocalPos(), trans->get_leftHandPseudoLocalRot());
-            auto rightHand = ReplayTransform(trans->get_rightHandPseudoLocalPos(), trans->get_rightHandPseudoLocalRot());
+            auto head = ReplayTransform(origin->InverseTransformPoint(headTransform->position), InverseTransformRotation(origin->rotation, headTransform->rotation));
+            auto leftHand = ReplayTransform(origin->InverseTransformPoint(leftSaber->position), InverseTransformRotation(origin->rotation, leftSaber->rotation));
+            auto rightHand = ReplayTransform(origin->InverseTransformPoint(rightSaber->position), InverseTransformRotation(origin->rotation, rightSaber->rotation));
             
             replay->frames.emplace_back(time, fps, head, leftHand, rightHand);
         }
@@ -540,6 +572,7 @@ namespace ReplayRecorder {
         INSTALL_HOOK(BeatLeaderLogger, BeatMapStart);
         INSTALL_HOOK(BeatLeaderLogger, LevelPause);
         INSTALL_HOOK(BeatLeaderLogger, LevelUnpause);
+        INSTALL_HOOK(BeatLeaderLogger, SaberManagerStart);
         INSTALL_HOOK(BeatLeaderLogger, Tick);
         INSTALL_HOOK(BeatLeaderLogger, ComputeSwingRating);
         INSTALL_HOOK(BeatLeaderLogger, ProcessNewSwingData);
