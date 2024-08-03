@@ -407,7 +407,7 @@ namespace LevelInfoUI {
         TriangleRating modifierRating = ModifiersUI::refreshAllModifiers();
 
         // if a modifier rating is selected we want to show that one
-        if(modifierRating.stars > 0)
+        if(ModifiersUI::ModifiersAvailable() && modifierRating.stars > 0)
             currentlySelectedRating = modifierRating;
         
         // Set the stars and pp
