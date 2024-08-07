@@ -53,8 +53,8 @@ string FormatInt(int score) {
 string FormatScore(Score const& score) {
     string result = FormatInt(score.modifiedScore);
 
-    if (score.scoreImprovement.score > 0) {
-        result += "\n<color=#008800><size=55%>+" + FormatInt(score.scoreImprovement.score) + "</size></color>";
+    if (score.scoreImprovement.score != 0) {
+        result += (score.scoreImprovement.score > 0) ? ("\n<color=#20BB20><size=55%>+" + (FormatInt(score.scoreImprovement.score)) + "</size></color>") : "\n<color=#BB2020><size=55%>" + FormatInt(score.scoreImprovement.score) + "</size></color>";
     }
     return result;
 }
@@ -91,8 +91,8 @@ string GetDetailsString(const Score& score) {
 inline string FormatAcc(const Score& score) {
     string result = FormatUtils::formatAcc(score.accuracy);
 
-    if (score.scoreImprovement.score > 0) {
-       result += "\n<color=#008800><size=55%>+" + to_string_wprecision(score.scoreImprovement.accuracy * 100, 2) + "</size></color>";
+    if (score.scoreImprovement.accuracy != 0) {
+       result += (score.scoreImprovement.accuracy > 0) ? ("\n<color=#20BB20><size=55%>+" + (to_string_wprecision(score.scoreImprovement.accuracy * 100, 2)) + "%</size></color>") : "\n<color=#BB2020><size=55%>" + to_string_wprecision(score.scoreImprovement.accuracy * 100, 2) + "%</size></color>";
     }
 
     return result;
@@ -100,8 +100,8 @@ inline string FormatAcc(const Score& score) {
 
 inline string FormatPP(const Score& score) {
     string result = FormatUtils::FormatPP(score.pp);
-    if (score.scoreImprovement.score > 0) {
-       result += "\n<color=#008800><size=55%>+" + to_string_wprecision(score.scoreImprovement.pp, 2) + "</size></color>";
+    if (score.scoreImprovement.pp != 0) {
+       result += "\n<color=#20BB20><size=55%>+" + to_string_wprecision(score.scoreImprovement.pp, 2) + "pp</size></color>";
     }
     return result;
 }
