@@ -68,7 +68,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
             TryPostReplay(name, status, tryIndex + 1, finished);
         } else if (statusCode == 200) {
             auto duration = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now() - replayPostStart).count();
-            BeatLeaderLogger.info("{}", ("Replay was posted! It took: " + to_string((int)duration) + "msec. \n Headers:\n" + headers).c_str());
+            BeatLeaderLogger.info("{}", ("Replay was posted! It took: " + to_string((int)duration) + "msec. \n").c_str());
             if (runCallback) {
                 finished(ReplayUploadStatus::finished, "<color=#008000ff>Replay was posted!</color>", 100, statusCode);
             }

@@ -168,8 +168,6 @@ namespace WebUtils {
         curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
-        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-
         auto res = curl_easy_perform(curl);
         /* Check for errors */ 
         if (res != CURLE_OK) {
@@ -242,8 +240,6 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, &val);
                 curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
                 curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
-
-                curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
             
                 auto res = curl_easy_perform(curl);
                 /* Check for errors */ 
@@ -313,8 +309,6 @@ namespace WebUtils {
                 }
                 curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
                 curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
-
-                curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
             
                 auto res = curl_easy_perform(curl);
                 /* Check for errors */ 
@@ -387,8 +381,6 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, &val);
                 curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
                 curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
-
-                curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDS, &data);
 
@@ -464,8 +456,6 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, &val);
                 curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
                 curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
-
-                curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
                 CURLcode res = curl_easy_perform(curl);
                 if (res != CURLE_OK) {
@@ -566,8 +556,6 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, &val);
                 curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
                 curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
-
-                curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
                 curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
                 /* size of the POST data */
