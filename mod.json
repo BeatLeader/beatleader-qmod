@@ -4,7 +4,7 @@
   "id": "BeatLeader",
   "modloader": "Scotland2",
   "author": "NSGolova",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.35.0_8016709773",
   "description": "beatleader.xyz | In-game leaderboards for custom and OST maps | Score replays | Clans, events, playlists and much more",
@@ -41,8 +41,7 @@
     "libbl.so"
   ],
   "libraryFiles": [
-    "libbeatsaber-hook_5_1_6.so",
-    "libsl2.so"
+    "libbeatsaber-hook_5_1_6.so"
   ],
   "fileCopies": [],
   "copyExtensions": []
