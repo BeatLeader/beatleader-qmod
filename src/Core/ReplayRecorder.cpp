@@ -75,6 +75,8 @@
 #include "GlobalNamespace/PlayersSpecificSettingsAtGameStartModel.hpp"
 #include "GlobalNamespace/PlayerSpecificSettingsNetSerializable.hpp"
 
+#include "Zenject/DiContainer.hpp"
+
 #include "sombrero/shared/FastQuaternion.hpp"
 #include "sombrero/shared/Vector3Utils.hpp"
 #include "sombrero/shared/QuaternionUtils.hpp"
@@ -100,6 +102,8 @@ namespace ReplayRecorder {
     UserEnhancer userEnhancer;
 
     AudioTimeSyncController* audioTimeSyncController;
+    PlayerTransforms* playerTransforms;
+    SaberManager* saberManager;
     bool automaticPlayerHeight = false;
     PlayerHeadAndObstacleInteraction* phoi;
 
@@ -507,11 +511,13 @@ namespace ReplayRecorder {
         }
     }
 
-    SaberManager* saberManager;
+    MAKE_HOOK_MATCH(GameplayCoreInstallerInstall, &GameplayCoreInstaller::InstallBindings, void, GameplayCoreInstaller* installer) {
+        GameplayCoreInstallerInstall(installer);
 
-    MAKE_HOOK_MATCH(SaberManagerStart, &SaberManager::Start, void, SaberManager* manager) {
-        SaberManagerStart(manager);
-        saberManager = manager;
+        auto container = installer->get_Container();
+        
+        playerTransforms = reinterpret_cast<PlayerTransforms*>(container->Resolve(csTypeOf(PlayerTransforms*)));
+        saberManager = reinterpret_cast<SaberManager*>(container->Resolve(csTypeOf(SaberManager*)));
     }
 
     Sombrero::FastQuaternion Inverse(Sombrero::FastQuaternion rotation) {
@@ -530,7 +536,7 @@ namespace ReplayRecorder {
 
     MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
         Tick(trans);
-        if (replay == nullopt || !saberManager) return;
+        if (replay == nullopt || !saberManager || trans != playerTransforms) return;
 
         if (audioTimeSyncController != nullptr && _currentPause == nullopt) {
             
@@ -572,7 +578,7 @@ namespace ReplayRecorder {
         INSTALL_HOOK(BeatLeaderLogger, BeatMapStart);
         INSTALL_HOOK(BeatLeaderLogger, LevelPause);
         INSTALL_HOOK(BeatLeaderLogger, LevelUnpause);
-        INSTALL_HOOK(BeatLeaderLogger, SaberManagerStart);
+        INSTALL_HOOK(BeatLeaderLogger, GameplayCoreInstallerInstall);
         INSTALL_HOOK(BeatLeaderLogger, Tick);
         INSTALL_HOOK(BeatLeaderLogger, ComputeSwingRating);
         INSTALL_HOOK(BeatLeaderLogger, ProcessNewSwingData);
