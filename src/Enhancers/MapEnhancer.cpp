@@ -4,6 +4,8 @@
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 #include "GlobalNamespace/BeatmapLevel.hpp"
 
+#include "conditional-dependencies/shared/main.hpp"
+
 #include <regex>
 #include <sstream>
 
@@ -46,6 +48,42 @@ vector<string> MapEnhancer::Modifiers() const {
     if (gameplayModifiers->failOnSaberClash) { result.emplace_back("CS"); }
     if (gameplayModifiers->instaFail) { result.emplace_back("IF"); }
     if (gameplayModifiers->energyType == GameplayModifiers::EnergyType::Battery) { result.emplace_back("BE"); }
+
+    // ReBeat Modifier Support
+
+    static auto enabledFunc = CondDeps::Find<bool>("rebeat", "GetEnabled");
+    if (enabledFunc.has_value() && enabledFunc.value()()) {
+
+        // Remove Battery Energy modifier (custom energy system)
+        auto itr = std::find(result.begin(), result.end(), "BE");
+        if (itr != result.end()) result.erase(itr);
+
+        // Use Hidden instead of Ghost Notes
+        static auto hiddenFunc = CondDeps::Find<bool>("rebeat", "GetHidden");
+        if (hiddenFunc.has_value() && hiddenFunc.value()()) {
+            auto itr = std::find(result.begin(), result.end(), "GN");
+            if (itr != result.end()) result.erase(itr);
+            result.emplace_back("HD");
+        }
+
+        // SameColor(SC)
+        static auto sameColorFunc = CondDeps::Find<bool>("rebeat", "GetSameColor");
+        if (sameColorFunc.has_value() && sameColorFunc.value()()) {
+            result.emplace_back("SC");
+        }
+
+        // Easy mode (EZ)
+        static auto easyFunc = CondDeps::Find<bool>("rebeat", "GetEasyMode");
+        if (easyFunc.has_value() && easyFunc.value()()) {
+            result.emplace_back("EZ");
+        }
+
+        // One HP (OHP)
+        static auto oneHpFunc = CondDeps::Find<bool>("rebeat", "GetOneHp");
+        if (oneHpFunc.has_value() && oneHpFunc.value()) {
+            result.emplace_back("OHP");
+        }
+    }
 
     return result;
 }
