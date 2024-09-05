@@ -33,11 +33,28 @@ void MapEnhancer::Enhance(Replay &replay)
 vector<string> MapEnhancer::Modifiers() const {
     vector<string> result;
 
+    static auto reBeatEnabledFunc = CondDeps::Find<bool>("rebeat", "GetEnabled");
+    static auto reBeatSameColorFunc = CondDeps::Find<bool>("rebeat", "GetSameColor");
+    static auto reBeatEasyFunc = CondDeps::Find<bool>("rebeat", "GetEasyMode");
+    static auto reBeatOneHpFunc = CondDeps::Find<bool>("rebeat", "GetOneHP");
+
+    bool reBeatEnabled = reBeatEnabledFunc.has_value() && reBeatEnabledFunc.value()();
+    bool reBeatSameColor = reBeatSameColorFunc.has_value() && reBeatSameColorFunc.value()();
+    bool reBeatEasy = reBeatEasyFunc.has_value() && reBeatEasyFunc.value()();
+    bool reBeatOneHp = reBeatOneHpFunc.has_value() && reBeatOneHpFunc.value();
+
     if (gameplayModifiers->disappearingArrows) { result.emplace_back("DA"); }
     if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Faster) { result.emplace_back("FS"); }
     if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Slower) { result.emplace_back("SS"); }
     if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::SuperFast) { result.emplace_back("SF"); }
-    if (gameplayModifiers->ghostNotes) { result.emplace_back("GN"); }
+    if (reBeatEnabled) {
+        static auto reBeatHiddenFunc = CondDeps::Find<bool>("rebeat", "GetHidden");
+        if (reBeatHiddenFunc.has_value() && reBeatHiddenFunc.value()()) {
+            result.emplace_back("HD");
+        }
+    } else if (gameplayModifiers->ghostNotes) {
+        result.emplace_back("GN");
+    }
     if (gameplayModifiers->noArrows) { result.emplace_back("NA"); }
     if (gameplayModifiers->noBombs) { result.emplace_back("NB"); }
     if (gameplayModifiers->noFailOn0Energy && energy == 0) { result.emplace_back("NF"); }
@@ -47,43 +64,13 @@ vector<string> MapEnhancer::Modifiers() const {
     if (gameplayModifiers->smallCubes) { result.emplace_back("SC"); }
     if (gameplayModifiers->failOnSaberClash) { result.emplace_back("CS"); }
     if (gameplayModifiers->instaFail) { result.emplace_back("IF"); }
-    if (gameplayModifiers->energyType == GameplayModifiers::EnergyType::Battery) { result.emplace_back("BE"); }
+    if (gameplayModifiers->energyType == GameplayModifiers::EnergyType::Battery && !reBeatEnabled) { result.emplace_back("BE"); }
 
     // ReBeat Modifier Support
 
-    static auto enabledFunc = CondDeps::Find<bool>("rebeat", "GetEnabled");
-    if (enabledFunc.has_value() && enabledFunc.value()()) {
-
-        // Remove Battery Energy modifier (custom energy system)
-        auto itr = std::find(result.begin(), result.end(), "BE");
-        if (itr != result.end()) result.erase(itr);
-
-        // Use Hidden instead of Ghost Notes
-        static auto hiddenFunc = CondDeps::Find<bool>("rebeat", "GetHidden");
-        if (hiddenFunc.has_value() && hiddenFunc.value()()) {
-            auto itr = std::find(result.begin(), result.end(), "GN");
-            if (itr != result.end()) result.erase(itr);
-            result.emplace_back("HD");
-        }
-
-        // SameColor(SC)
-        static auto sameColorFunc = CondDeps::Find<bool>("rebeat", "GetSameColor");
-        if (sameColorFunc.has_value() && sameColorFunc.value()()) {
-            result.emplace_back("SC");
-        }
-
-        // Easy mode (EZ)
-        static auto easyFunc = CondDeps::Find<bool>("rebeat", "GetEasyMode");
-        if (easyFunc.has_value() && easyFunc.value()()) {
-            result.emplace_back("EZ");
-        }
-
-        // One HP (OHP)
-        static auto oneHpFunc = CondDeps::Find<bool>("rebeat", "GetOneHp");
-        if (oneHpFunc.has_value() && oneHpFunc.value()) {
-            result.emplace_back("OHP");
-        }
-    }
+    if (reBeatEnabled && reBeatSameColor) { result.emplace_back("SMC"); }
+    if (reBeatEnabled && reBeatEasy) { result.emplace_back("EZ"); }
+    if (reBeatEnabled && reBeatOneHp) { result.emplace_back("OHP"); }
 
     return result;
 }
