@@ -14,6 +14,10 @@
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/utils/logging.hpp"
 
+#include "ModifiersCoreQuest/shared/Utils/ModifierUtils.hpp"
+#include "ModifiersCoreQuest/shared/Core/ModifiersManager.hpp"
+#include "System/Collections/Generic/Dictionary_2.hpp"
+
 #include "main.hpp"
 
 #include "TMPro/TMP_Text.hpp"
@@ -35,26 +39,6 @@ namespace ModifiersUI {
     unordered_map<string, TriangleRating> songModifierRatings;
     bool ssActive = false;
     bool multiActive = false;
-
-    static unordered_map<string, string> modifierKeyFromName = {
-        {"MODIFIER_PRO_MODE", "PM"},
-        {"MODIFIER_NO_BOMBS", "NB"},
-        {"MODIFIER_DISAPPEARING_ARROWS", "DA"},
-        {"MODIFIER_GHOST_NOTES", "GN"},
-        {"MODIFIER_ONE_LIFE", "OL"},
-        {"MODIFIER_NO_OBSTACLES", "NO"},
-        {"MODIFIER_FASTER_SONG", "FS"},
-        {"MODIFIER_SUPER_FAST_SONG", "SF"},
-        {"MODIFIER_SMALL_CUBES", "SC"},
-        {"MODIFIER_STRICT_ANGLES", "SA"},
-        {"MODIFIER_NO_ARROWS", "NA"},
-        {"MODIFIER_FOUR_LIVES", "FL"},
-        {"MODIFIER_SLOWER_SONG", "SS"},
-        {"MODIFIER_ZEN_MODE", "ZM"},
-        {"MODIFIER_NO_FAIL_ON_0_ENERGY", "NF"},
-    };
-
-    static vector<GameplayModifierToggle*> modifiers;
 
     string_view getRankForMultiplier(float modifier) {
         if (modifier > 0.9) {
@@ -102,10 +86,12 @@ namespace ModifiersUI {
     MAKE_HOOK_MATCH(ModifierStart, &GameplayModifierToggle::Start, void, GameplayModifierToggle* self) {
         ModifierStart(self);
 
-        string key = modifierKeyFromName[self->get_gameplayModifier()->get_modifierNameLocalizationKey()];
-        BeatLeaderLogger.info("{}", key.c_str());
-        if(!multiActive)
+        string key;
+        // TODO WONT WORK FOR CUSTOMS
+        if(!multiActive && ModifiersCoreQuest::ModifierUtils::TryGetBaseModifierIdBySerializedName(self->get_gameplayModifier()->get_modifierNameLocalizationKey(), key)) {
+            BeatLeaderLogger.info("Added Modifier {}", key.c_str());
             allModifierToggles[key] = self;
+        }
     }
 
     bool ModifiersAvailable() {
@@ -128,7 +114,7 @@ namespace ModifiersUI {
                 modifierSubText = (modifierValue > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(modifierValue * 100.0f, 1) + "%";
             }
             else {
-                float modifierValue = value->gameplayModifier->multiplier;
+                float modifierValue = ModifiersCoreQuest::ModifiersManager::GetModifierWithId(key).value().Multiplier;
                 modifierSubText = (modifierValue > 0 ? "+" : "") + to_string_wprecision(modifierValue * 100.0f, 1) + "%";
             }
 
@@ -142,30 +128,44 @@ namespace ModifiersUI {
     {
         TriangleRating ratingSelected;
         // If we dont have a panel reference we cant do anything
-        if (modifiersPanel) {
+        if (modifiersPanel || songModifiers.empty()) {
 
             // Now we iterate all modifiers to set the totalMultiplier (% value on top) and the max achievable rank
-            auto modifierParams = modifiersPanel->_gameplayModifiersModel->CreateModifierParamsList(modifiersPanel->gameplayModifiers);
 
             float totalMultiplier = 1;
 
-            for (size_t i = 0; i < modifierParams->get_Count(); i++)
+            for (ModifiersCoreQuest::Modifier param : ModifiersCoreQuest::ModifiersManager::get_Modifiers())
             {
-                auto param = modifierParams->get_Item(i);
-                
-                // If parameter is not nofail, we have a received any modifiers from the server and we have a short form of this modifier
-                if (!param->multiplierConditionallyValid && !songModifiers.empty() && modifierKeyFromName.contains(param->get_modifierNameLocalizationKey())) {
-                    string key = modifierKeyFromName[param->get_modifierNameLocalizationKey()];
-                    if (songModifierRatings.contains(key)) {
-                        // ModifierRatings apply to star value and have no effect on max rank.
-                        // But we need to return it so that it can be shown in the respective labels
-                        ratingSelected = songModifierRatings[key];
-                    }
-                    else if (songModifiers.contains(key)) {
-                        totalMultiplier += songModifiers[key];
-                    }
-                    else {
-                        totalMultiplier += param->multiplier;
+                // Base game
+                // auto it = ModifiersCoreQuest::ModifiersManager::GameplayModifierParams.find(param.Id);
+                // if (it != ModifiersCoreQuest::ModifiersManager::GameplayModifierParams.end()) {
+                // BeatLeaderLogger.info("BaseGame Multiplier {}", param.Id);
+                //     GlobalNamespace::__GameplayModifiersModelSO__GameplayModifierBoolGetter* getter = NULL;
+                //     modifiersPanel->_gameplayModifiersModel->_gameplayModifierGetters->TryGetValue(it->second, getter);
+                //     //adding if enabled
+                //     if(getter && getter->Invoke(modifiersPanel->_gameplayModifiers)) {
+                // BeatLeaderLogger.info("Enabled Multiplier {}", param.Id);
+                //     if (songModifierRatings.contains(param.Id)) {
+                //         // ModifierRatings apply to star value and have no effect on
+                //         // max rank. But we need to return it so that it can be shown
+                //         // in the respective labels
+                //         ratingSelected = songModifierRatings[param.Id];
+                //     } else if (songModifiers.contains(param.Id)) {
+                //         totalMultiplier += songModifiers[param.Id];
+                //     } else {
+                //         totalMultiplier += param.Multiplier;
+                //     }
+                //     }
+                if (ModifiersCoreQuest::ModifiersManager::GetModifierState(param.Id)) {
+                    if (songModifierRatings.contains(param.Id)) {
+                        // ModifierRatings apply to star value and have no effect on
+                        // max rank. But we need to return it so that it can be shown
+                        // in the respective labels
+                        ratingSelected = songModifierRatings[param.Id];
+                    } else if (songModifiers.contains(param.Id)) {
+                        totalMultiplier += songModifiers[param.Id];
+                    } else {
+                        totalMultiplier += param.Multiplier;
                     }
                 }
             }

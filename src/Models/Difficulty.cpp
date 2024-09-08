@@ -28,9 +28,10 @@ Difficulty::Difficulty(rapidjson::Value const& document) {
             continue;
         }
 
-        // Extract aspect (tech, acc, pass, stars) and shorten key (to fs/sf/ss)
-        string aspect = key.substr(2);
-        key = key.substr(0, 2);
+        // Extract aspect (tech, acc, pass, stars) and shorten key (to fs/sf/ss/bfs/bsf)
+        int shortKeyLength = key[0] == 'b' ? 3 : 2;
+        string aspect = key.substr(shortKeyLength);
+        key = key.substr(0, shortKeyLength);
 
         // Normalize key
         std::transform(key.begin(), key.end(), key.begin(), ::toupper);

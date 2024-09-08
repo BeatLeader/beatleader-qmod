@@ -12,7 +12,10 @@
     }
   },
   "workspace": {
-    "scripts": {}
+    "scripts": {},
+    "qmodIncludeDirs": [],
+    "qmodIncludeFiles": [],
+    "qmodOutput": null
   },
   "dependencies": [
     {
@@ -82,6 +85,11 @@
     {
       "id": "bsml",
       "versionRange": "^0.4.34",
+      "additionalData": {}
+    },
+    {
+      "id": "ModifiersCoreQuest",
+      "versionRange": "^0.1.0",
       "additionalData": {}
     }
   ]

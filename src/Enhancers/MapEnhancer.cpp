@@ -4,6 +4,9 @@
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 #include "GlobalNamespace/BeatmapLevel.hpp"
 
+#include "ModifiersCoreQuest/shared/Core/ModifiersManager.hpp"
+#include "ModifiersCoreQuest/shared/Utils/ModifierUtils.hpp"
+
 #include "conditional-dependencies/shared/main.hpp"
 
 #include <regex>
@@ -43,28 +46,18 @@ vector<string> MapEnhancer::Modifiers() const {
     bool reBeatEasy = reBeatEasyFunc.has_value() && reBeatEasyFunc.value()();
     bool reBeatOneHp = reBeatOneHpFunc.has_value() && reBeatOneHpFunc.value();
 
-    if (gameplayModifiers->disappearingArrows) { result.emplace_back("DA"); }
-    if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Faster) { result.emplace_back("FS"); }
-    if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::Slower) { result.emplace_back("SS"); }
-    if (gameplayModifiers->songSpeed == GameplayModifiers::SongSpeed::SuperFast) { result.emplace_back("SF"); }
     if (reBeatEnabled) {
         static auto reBeatHiddenFunc = CondDeps::Find<bool>("rebeat", "GetHidden");
         if (reBeatHiddenFunc.has_value() && reBeatHiddenFunc.value()()) {
             result.emplace_back("HD");
         }
-    } else if (gameplayModifiers->ghostNotes) {
-        result.emplace_back("GN");
     }
-    if (gameplayModifiers->noArrows) { result.emplace_back("NA"); }
-    if (gameplayModifiers->noBombs) { result.emplace_back("NB"); }
-    if (gameplayModifiers->noFailOn0Energy && energy == 0) { result.emplace_back("NF"); }
-    if (gameplayModifiers->enabledObstacleType == GameplayModifiers::EnabledObstacleType::NoObstacles) { result.emplace_back("NO"); }
-    if (gameplayModifiers->strictAngles) { result.emplace_back("SA"); }
-    if (gameplayModifiers->proMode) { result.emplace_back("PM"); }
-    if (gameplayModifiers->smallCubes) { result.emplace_back("SC"); }
-    if (gameplayModifiers->failOnSaberClash) { result.emplace_back("CS"); }
-    if (gameplayModifiers->instaFail) { result.emplace_back("IF"); }
-    if (gameplayModifiers->energyType == GameplayModifiers::EnergyType::Battery && !reBeatEnabled) { result.emplace_back("BE"); }
+
+    for(auto m : ModifiersCoreQuest::ModifiersManager::get_Modifiers()) {
+        if(ModifiersCoreQuest::ModifiersManager::GetModifierState(m.Id)) {
+            result.emplace_back(m.Id);
+        }
+    }
 
     // ReBeat Modifier Support
 
