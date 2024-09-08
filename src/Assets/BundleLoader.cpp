@@ -129,5 +129,8 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     golfIcon = GetSprite("BL_ContextGolf");
     scpmIcon = GetSprite("BL_ContextSCPM");
 
+    BFSIcon = GetSprite("BL_BFSIcon");
+    BSFIcon = GetSprite("BL_BSFIcon");
+
     TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
 }
