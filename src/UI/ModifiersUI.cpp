@@ -14,6 +14,10 @@
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/utils/logging.hpp"
 
+#include "ModifiersCoreQuest/shared/Utils/ModifierUtils.hpp"
+#include "ModifiersCoreQuest/shared/Core/ModifiersManager.hpp"
+#include "System/Collections/Generic/Dictionary_2.hpp"
+
 #include "main.hpp"
 
 #include "TMPro/TMP_Text.hpp"
@@ -36,26 +40,6 @@ namespace ModifiersUI {
     bool ssActive = false;
     bool multiActive = false;
 
-    static unordered_map<string, string> modifierKeyFromName = {
-        {"MODIFIER_PRO_MODE", "PM"},
-        {"MODIFIER_NO_BOMBS", "NB"},
-        {"MODIFIER_DISAPPEARING_ARROWS", "DA"},
-        {"MODIFIER_GHOST_NOTES", "GN"},
-        {"MODIFIER_ONE_LIFE", "OL"},
-        {"MODIFIER_NO_OBSTACLES", "NO"},
-        {"MODIFIER_FASTER_SONG", "FS"},
-        {"MODIFIER_SUPER_FAST_SONG", "SF"},
-        {"MODIFIER_SMALL_CUBES", "SC"},
-        {"MODIFIER_STRICT_ANGLES", "SA"},
-        {"MODIFIER_NO_ARROWS", "NA"},
-        {"MODIFIER_FOUR_LIVES", "FL"},
-        {"MODIFIER_SLOWER_SONG", "SS"},
-        {"MODIFIER_ZEN_MODE", "ZM"},
-        {"MODIFIER_NO_FAIL_ON_0_ENERGY", "NF"},
-    };
-
-    static vector<GameplayModifierToggle*> modifiers;
-
     struct ModifierEffects {
         float totalMultiplier = 1.0f;
         TriangleRating ratingSelected {};
@@ -67,32 +51,25 @@ namespace ModifiersUI {
             return effects;
         }
 
-        auto modifierParams = modifiersPanel->_gameplayModifiersModel->CreateModifierParamsList(modifiersPanel->gameplayModifiers);
-        auto hasSongSpecificModifiers = !songModifiers.empty() || !songModifierRatings.empty();
-
-        for (size_t i = 0; i < modifierParams->get_Count(); i++) {
-            auto param = modifierParams->get_Item(i);
-            if (param->multiplierConditionallyValid || !hasSongSpecificModifiers) {
+        for (ModifiersCoreQuest::Modifier param : ModifiersCoreQuest::ModifiersManager::get_Modifiers()) {
+            if (!ModifiersCoreQuest::ModifiersManager::GetModifierState(param.Id)) {
                 continue;
             }
 
-            string modifierName = param->get_modifierNameLocalizationKey();
-            if (!modifierKeyFromName.contains(modifierName)) {
-                continue;
-            }
-
-            auto const& key = modifierKeyFromName[modifierName];
-            if (songModifierRatings.contains(key)) {
-                effects.ratingSelected = songModifierRatings[key];
-            } else if (songModifiers.contains(key)) {
-                effects.totalMultiplier += songModifiers[key];
+            if (songModifierRatings.contains(param.Id)) {
+                // ModifierRatings apply to star value and have no effect on
+                // max rank. But we need to return it so that it can be shown
+                // in the respective labels
+                effects.ratingSelected = songModifierRatings[param.Id];
+            } else if (songModifiers.contains(param.Id)) {
+                effects.totalMultiplier += songModifiers[param.Id];
             } else {
-                effects.totalMultiplier += param->multiplier;
+                effects.totalMultiplier += param.Multiplier;
             }
         }
 
         if (effects.totalMultiplier < 0.0f) {
-            effects.totalMultiplier = 0.0f;
+            effects.totalMultiplier = 0.0f; // thanks Beat Games for Zen mode -1000%
         }
 
         return effects;
@@ -145,10 +122,12 @@ namespace ModifiersUI {
     MAKE_HOOK_MATCH(ModifierStart, &GameplayModifierToggle::Start, void, GameplayModifierToggle* self) {
         ModifierStart(self);
 
-        string key = modifierKeyFromName[self->get_gameplayModifier()->get_modifierNameLocalizationKey()];
-        BeatLeaderLogger.info("{}", key.c_str());
-        if(!multiActive)
+        string key;
+        // TODO WONT WORK FOR CUSTOMS
+        if(!multiActive && ModifiersCoreQuest::ModifierUtils::TryGetBaseModifierIdBySerializedName(self->get_gameplayModifier()->get_modifierNameLocalizationKey(), key)) {
+            BeatLeaderLogger.info("Added Modifier {}", key.c_str());
             allModifierToggles[key] = self;
+        }
     }
 
     bool ModifiersAvailable() {
@@ -183,7 +162,7 @@ namespace ModifiersUI {
                 modifierSubText = (modifierValue > 0 ? "<color=#00FF77>+" : "<color=#00FFFF>") + to_string_wprecision(modifierValue * 100.0f, 1) + "%";
             }
             else {
-                float modifierValue = value->gameplayModifier->multiplier;
+                float modifierValue = ModifiersCoreQuest::ModifiersManager::GetModifierWithId(key).value().Multiplier;
                 modifierSubText = (modifierValue > 0 ? "+" : "") + to_string_wprecision(modifierValue * 100.0f, 1) + "%";
             }
 

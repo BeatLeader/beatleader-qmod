@@ -4,6 +4,9 @@
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 #include "GlobalNamespace/BeatmapLevel.hpp"
 
+#include "ModifiersCoreQuest/shared/Core/ModifiersManager.hpp"
+#include "ModifiersCoreQuest/shared/Utils/ModifierUtils.hpp"
+
 #include "conditional-dependencies/shared/main.hpp"
 
 #include <regex>
@@ -60,6 +63,12 @@ vector<string> MapEnhancer::Modifiers() const {
     if (gameplayModifiers->failOnSaberClash) { result.emplace_back("CS"); }
     if (gameplayModifiers->instaFail) { result.emplace_back("IF"); }
     if (gameplayModifiers->energyType == GameplayModifiers::EnergyType::Battery && !reBeatEnabled) { result.emplace_back("BE"); }
+
+    for (auto const& m : ModifiersCoreQuest::ModifiersManager::get_CustomModifiers()) {
+        if (ModifiersCoreQuest::ModifiersManager::GetModifierState(m.Id)) {
+            result.emplace_back(m.Id);
+        }
+    }
 
     // ReBeat Modifier Support
 
