@@ -80,6 +80,10 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour) {
 
     DECLARE_INSTANCE_FIELD(Sprite*, generalContextIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, unknownIcon);
+
+    DECLARE_INSTANCE_FIELD(Sprite*, BFSIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, BSFIcon);
+
     DECLARE_INSTANCE_FIELD(Shader*, TMP_SpriteCurved);
 
     DECLARE_INSTANCE_FIELD(Sprite*, BlackTransparentBG);

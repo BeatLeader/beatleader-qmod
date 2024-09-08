@@ -130,6 +130,9 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     unknownIcon = GetSprite("BL_UnknownIcon");
     generalContextIcon = GetSprite("BL_ContextGeneral");
 
+    BFSIcon = GetSprite("BL_BFSIcon");
+    BSFIcon = GetSprite("BL_BSFIcon");
+
     TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
 
     BlackTransparentBG = GetSprite("BL_BlackTransparentBG");
