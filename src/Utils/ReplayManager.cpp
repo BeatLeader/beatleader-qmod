@@ -26,12 +26,12 @@ void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool
     BeatLeaderLogger.info("{}",("Replay saved " + filename).c_str());
 
     if(!UploadEnabled()) {
-        finished(ReplayUploadStatus::finished, "<color=#800000ff>Upload disabled. But replay was saved.</color>", 0, -1);
+        finished(ReplayUploadStatus::finished, "<color=#BB2020ff>Upload disabled. But replay was saved.</color>", 0, -1);
         return;
     }    
     
     if (replay.info.failTime > 0.001 || replay.info.speed > 0.001) {
-        finished(ReplayUploadStatus::finished, "<color=#800000ff>Failed attempt was saved!</color>", 0, -1);
+        finished(ReplayUploadStatus::finished, "<color=#BB2020ff>Failed attempt was saved!</color>", 0, -1);
     }
     if(skipUpload)
         return;
@@ -70,7 +70,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
             auto duration = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now() - replayPostStart).count();
             BeatLeaderLogger.info("{}", ("Replay was posted! It took: " + to_string((int)duration) + "msec. \n").c_str());
             if (runCallback) {
-                finished(ReplayUploadStatus::finished, "<color=#008000ff>Replay was posted!</color>", 100, statusCode);
+                finished(ReplayUploadStatus::finished, "<color=#20BB20ff>Replay was posted!</color>", 100, statusCode);
             }
             if (!getModConfig().SaveLocalReplays.GetValue()) {
                 remove(name.data());
@@ -82,7 +82,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
             }
             BeatLeaderLogger.error("{}", ("Replay was not posted! " + to_string(statusCode) + result).c_str());
             if (runCallback) {
-                finished(ReplayUploadStatus::error, std::string("<color=#008000ff>Replay was not posted. " + result), 0, statusCode);
+                finished(ReplayUploadStatus::error, std::string("<color=#BB2020ff>Replay was not posted. " + result), 0, statusCode);
             }
         }
     }, [finished, runCallback](float percent) {
