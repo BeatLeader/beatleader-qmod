@@ -1432,7 +1432,6 @@ namespace LeaderboardUI {
             showBeatLeader = getModConfig().ShowBeatleader.GetValue();
         }
         ssElements = {};
-        ModifiersUI::ResetModifiersUI();
     }    
 
     void hidePopups() {

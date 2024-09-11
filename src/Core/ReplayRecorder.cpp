@@ -8,6 +8,8 @@
 
 #include "include/Models/Replay.hpp"
 
+#include "Core/SpeedModifiers.hpp"
+
 #include "include/Enhancers/MapEnhancer.hpp"
 #include "include/Enhancers/UserEnhancer.hpp"
 
@@ -23,6 +25,7 @@
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/Resources.hpp"
 #include "UnityEngine/Time.hpp"
+#include "System/Nullable_1.hpp"
 
 #include "GlobalNamespace/NoteController.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
@@ -62,6 +65,7 @@
 #include "GlobalNamespace/GameplayCoreSceneSetupData.hpp"
 #include "GlobalNamespace/SaberManager.hpp"
 #include "GlobalNamespace/Saber.hpp"
+#include "GlobalNamespace/GameplayModifiers.hpp"
 
 #include "GlobalNamespace/ScoringElement.hpp"
 #include "GlobalNamespace/BadCutScoringElement.hpp"
@@ -210,6 +214,7 @@ namespace ReplayRecorder {
             collectMapData(self);
             processResults(levelCompletionResults, self->gameMode == "Party");
         }
+        bs_utils::Submission::enable(modInfo);
     }
 
     void processMultiplayerResults(MultiplayerResultsData* levelCompletionResults) {
@@ -512,6 +517,13 @@ namespace ReplayRecorder {
     }
 
     MAKE_HOOK_MATCH(GameplayCoreInstallerInstall, &GameplayCoreInstaller::InstallBindings, void, GameplayCoreInstaller* installer) {
+        auto speed = SpeedModifiers::GetSongSpeed();
+        if (speed != GlobalNamespace::GameplayModifiers::SongSpeed::Normal) {
+            auto modifiers = installer->_sceneSetupData->gameplayModifiers->CopyWith({}, {}, {}, {}, {}, {}, {}, {}, {}, { true, speed }, {}, {}, {}, {}, {});
+            installer->_sceneSetupData->gameplayModifiers = modifiers;
+            bs_utils::Submission::disable(modInfo);
+        }
+        
         GameplayCoreInstallerInstall(installer);
 
         auto container = installer->get_Container();
