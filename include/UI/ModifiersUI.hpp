@@ -18,6 +18,5 @@ namespace ModifiersUI {
     TriangleRating refreshAllModifiers();
     TriangleRating ApplyCurrentModifiers(TriangleRating rating);
     void SetModifiersActive(bool active);
-    void ResetModifiersUI();
     bool ModifiersAvailable();
 }

@@ -1,6 +1,8 @@
 #include "Assets/BundleLoader.hpp"
 
 #include "include/Utils/StringUtils.hpp"
+#include "ModifiersCoreQuest/shared/Core/ModifiersManager.hpp"
+#include "/Core/SpeedModifiers.hpp"
 
 #include <utility>
 #include "main.hpp"
@@ -28,6 +30,10 @@ custom_types::Helpers::Coroutine BundleLoader::LoadBundle(UnityEngine::GameObjec
 
     bundle = container->AddComponent<BeatLeader::Bundle*>();
     bundle->Init(assetBundle);
+
+    // TODO make this a callback
+    ModifiersCoreQuest::ModifiersManager::AddModifier(SpeedModifiers::get_BFS());
+    ModifiersCoreQuest::ModifiersManager::AddModifier(SpeedModifiers::get_BSF());
     
     co_return;
 }

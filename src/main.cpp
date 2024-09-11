@@ -12,6 +12,7 @@
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
 #include "include/Core/Events.hpp"
+#include "Core/SpeedModifiers.hpp"
 
 #include "include/Assets/BundleLoader.hpp"
 #include "include/Assets/Sprites.hpp"
@@ -233,6 +234,7 @@ MOD_EXPORT "C" void late_load() {
 
     ModifiersUI::setup();
     ResultsView::setup();
+    SpeedModifiers::setup();
 
     PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {
         // if (synchronizer == nullopt) {
