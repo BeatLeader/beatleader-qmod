@@ -1,5 +1,6 @@
 #include "include/Models/Difficulty.hpp"
 #include "include/Models/TriangleRating.hpp"
+#include "main.hpp"
 
 Difficulty::Difficulty(rapidjson::Value const& document) {
     status = document["status"].GetInt();
@@ -29,7 +30,7 @@ Difficulty::Difficulty(rapidjson::Value const& document) {
         }
 
         // Extract aspect (tech, acc, pass, stars) and shorten key (to fs/sf/ss/bfs/bsf)
-        int shortKeyLength = key[0] == 'b' ? 3 : 2;
+        int shortKeyLength = key.starts_with('b') ? 3 : 2;
         string aspect = key.substr(shortKeyLength);
         key = key.substr(0, shortKeyLength);
 

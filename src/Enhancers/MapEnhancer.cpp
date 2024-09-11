@@ -8,6 +8,7 @@
 #include "ModifiersCoreQuest/shared/Utils/ModifierUtils.hpp"
 
 #include "conditional-dependencies/shared/main.hpp"
+#include "main.hpp"
 
 #include <regex>
 #include <sstream>
