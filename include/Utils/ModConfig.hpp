@@ -5,6 +5,7 @@
 
 DECLARE_CONFIG(ModConfig,
     CONFIG_VALUE(ServerType, std::string, "ServerType", "Main", "");
+    CONFIG_VALUE(DomainType, int, "Domain Type", 0);
     CONFIG_VALUE(SaveLocalReplays, bool, "Keep local replays", true, "Save replays on this device");
     CONFIG_VALUE(AvatarsActive, bool, "Show Avatars", false);
     CONFIG_VALUE(ClansActive, bool, "Show Clans", true);
