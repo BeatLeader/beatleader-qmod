@@ -51,8 +51,12 @@ namespace ModifiersUI {
             return effects;
         }
 
-        for (ModifiersCoreQuest::Modifier param : ModifiersCoreQuest::ModifiersManager::get_Modifiers()) {
-            if (!ModifiersCoreQuest::ModifiersManager::GetModifierState(param.Id)) {
+        if (songModifiers.empty() && songModifierRatings.empty()) {
+            return effects;
+        }
+
+        for (ModifiersCoreQuest::Modifier& param : ModifiersCoreQuest::ModifiersManager::get_Modifiers()) {
+            if (param.Id == "NF" || !ModifiersCoreQuest::ModifiersManager::GetModifierState(param.Id)) {
                 continue;
             }
 
@@ -174,7 +178,7 @@ namespace ModifiersUI {
 
     TriangleRating refreshMultiplierAndMaxRank()
     {
-        TriangleRating ratingSelected;
+        TriangleRating ratingSelected = {};
         // If we dont have a panel reference we cant do anything
         if (modifiersPanel) {
             auto effects = GetModifierEffects();
