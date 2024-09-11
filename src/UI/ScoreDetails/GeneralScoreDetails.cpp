@@ -78,11 +78,11 @@ string GetDetailsString(const Score& score) {
     }
 
     result << "<size=70%>";
-    if (score.fullCombo) result << "<color=#88FF88>Full Combo</color>    ";
-    if (score.missedNotes > 0) result << "<color=#888888>Misses: <color=#FF8888>" << to_string(score.missedNotes) + "</color>    ";
-    if (score.badCuts > 0) result << "<color=#888888>Bad cuts: <color=#FF8888>" << to_string(score.badCuts) + "</color>    ";
-    if (score.bombCuts > 0) result << "<color=#888888>Bomb cuts: <color=#FF8888>" << to_string(score.bombCuts) + "</color>    ";
-    if (score.wallsHit > 0) result << "<color=#888888>Walls hit: <color=#FF8888>" << to_string(score.wallsHit) + "</color>    ";
+    if (score.fullCombo) result << "<color=#20BB20>Full Combo</color>    ";
+    if (score.missedNotes > 0) result << "<color=#888888>Misses: <color=#BB2020>" << to_string(score.missedNotes) + "</color>    ";
+    if (score.badCuts > 0) result << "<color=#888888>Bad cuts: <color=#BB2020>" << to_string(score.badCuts) + "</color>    ";
+    if (score.bombCuts > 0) result << "<color=#888888>Bomb cuts: <color=#BB2020>" << to_string(score.bombCuts) + "</color>    ";
+    if (score.wallsHit > 0) result << "<color=#888888>Walls hit: <color=#BB2020>" << to_string(score.wallsHit) + "</color>    ";
     result << "</size>";
 
     return result.str();
