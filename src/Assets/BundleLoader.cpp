@@ -32,8 +32,12 @@ custom_types::Helpers::Coroutine BundleLoader::LoadBundle(UnityEngine::GameObjec
     bundle->Init(assetBundle);
 
     // TODO make this a callback
-    ModifiersCoreQuest::ModifiersManager::AddModifier(SpeedModifiers::get_BFS());
-    ModifiersCoreQuest::ModifiersManager::AddModifier(SpeedModifiers::get_BSF());
+    if (!ModifiersCoreQuest::ModifiersManager::HasModifierWithId(SpeedModifiers::get_BFS().Id)) {
+        ModifiersCoreQuest::ModifiersManager::AddModifier(SpeedModifiers::get_BFS());
+    }
+    if (!ModifiersCoreQuest::ModifiersManager::HasModifierWithId(SpeedModifiers::get_BSF().Id)) {
+        ModifiersCoreQuest::ModifiersManager::AddModifier(SpeedModifiers::get_BSF());
+    }
     
     co_return;
 }
