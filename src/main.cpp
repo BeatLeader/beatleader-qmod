@@ -46,6 +46,9 @@ MOD_EXPORT void setup(CModInfo *info) noexcept {
     getModConfig().Init(modInfo);
 
     Paper::Logger::RegisterFileContextId(BeatLeaderLogger.tag);
+    
+    // Hook as early as possible so we get our hook before JDFixer
+    SpeedModifiers::setup();
 
     BeatLeaderLogger.info("Completed setup!");
 }
@@ -159,7 +162,6 @@ MOD_EXPORT "C" void late_load() {
     LevelInfoUI::setup();
     ModifiersUI::setup();
     ResultsView::setup();
-    SpeedModifiers::setup();
 
     PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {
         // if (synchronizer == nullopt) {
