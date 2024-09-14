@@ -139,6 +139,7 @@ namespace LeaderboardUI {
 
     TMPro::TextMeshProUGUI* loginPrompt = NULL;
     UnityEngine::UI::Button* preferencesButton = NULL;
+    QuestUI::CustomTextSegmentedControlData* groupsSelector = NULL;
 
     BeatLeader::ScoreDetailsPopup* scoreDetailsUI = NULL;
     BeatLeader::RankVotingPopup* votingUI = NULL;
@@ -168,6 +169,8 @@ namespace LeaderboardUI {
 
     static UnityEngine::Color SelectedColor = UnityEngine::Color(0.0, 0.4, 1.0, 1.0);
     static UnityEngine::Color FadedColor = UnityEngine::Color(0.8, 0.8, 0.8, 0.2);
+
+    static UnityEngine::Color ContextsColor = UnityEngine::Color(0.0, 0.4, 0.8, 0.6);
 
     static string lastUrl = "";
     static string lastVotingStatusUrl = "";
@@ -234,6 +237,19 @@ namespace LeaderboardUI {
         }
     }
 
+    void refreshGroupsSelector() {
+        bool shouldShow = showBeatLeader && plvc && plvc->_scopeSegmentedControl->selectedCellNumber == 2;
+        if (groupsSelector) {
+            groupsSelector->get_gameObject()->SetActive(shouldShow);
+        }
+        // if (PlayerController::currentPlayer) {
+        //     countryControl->set_icon(BundleLoader::bundle->GetCountryIcon(PlayerController::currentPlayer->country));
+        // }
+        if (plvc) {
+            plvc->_levelStatsView->get_gameObject()->SetActive(!shouldShow);
+        }
+    }
+
     void updatePlayerInfoLabel() {
         auto const& player = PlayerController::currentPlayer;
         if (!playerName) return;
@@ -247,17 +263,8 @@ namespace LeaderboardUI {
 
                 auto params = GetAvatarParams(player.value(), false);
                 playerAvatar->SetPlayer(player->avatar, params.baseMaterial, params.hueShift, params.saturation);
-                
+                auto sprite = BundleLoader::bundle->GetCountryIcon(player->country);
                 if (plvc != NULL) {
-                    auto sprite = BundleLoader::bundle->GetCountryIcon(player->country);
-                    if (!ssInstalled && showBeatLeader) {
-                        auto countryControl = plvc->_scopeSegmentedControl->_dataItems.get(3);
-                        countryControl->set_hintText("Country");
-
-                        plvc->_scopeSegmentedControl->_dataItems.get(3)->set_icon(sprite);
-                        plvc->_scopeSegmentedControl->SetData(plvc->_scopeSegmentedControl->_dataItems);
-                    }
-
                     if (countryRankIcon) {
                         countryRankIcon->set_sprite(sprite);
                         RectTransform* rectTransform = countryRankIcon->get_transform().cast<RectTransform>();
@@ -265,6 +272,17 @@ namespace LeaderboardUI {
                     }
                 }
 
+                if (groupsSelector) {
+                    ArrayW<StringW> values(player->clans.size() + 2);
+                    values[0] = u" Friends";
+                    values[1] = u" Country";
+                    
+                    for (size_t i = 0; i < player->clans.size(); ++i) {
+                        values[i + 2] = StringW(" " + player->clans[i].tag);
+                    }
+                    
+                    groupsSelector->set_texts(values);
+                }
             } else {
                 playerName->SetText(player->name + ", play something!", true);
             }
@@ -276,6 +294,12 @@ namespace LeaderboardUI {
                 countryRankIcon->set_sprite(BundleLoader::bundle->globeIcon);
             }
             playerName->SetText("", true);
+            if (groupsSelector) {
+                ArrayW<StringW> values(2);
+                values[0] = u" Friends";
+                values[1] = u" Country";
+                groupsSelector->set_texts(values);
+            }
         }
     }
 
@@ -313,6 +337,7 @@ namespace LeaderboardUI {
             leaderboardLoaded &&
             self == plvc->_scopeSegmentedControl.ptr()) {
             cachedSelector = -1;
+            refreshGroupsSelector();
         }
     }
 
@@ -371,6 +396,7 @@ namespace LeaderboardUI {
         string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode + "/" + contextToUrlString[static_cast<Context>(getModConfig().Context.GetValue())];
 
         int selectedCellNumber = cachedSelector != -1 ? cachedSelector : plvc->_scopeSegmentedControl->selectedCellNumber;
+        int selectedGroup = groupsSelector->segmentedControl->selectedCellNumber;
 
         switch (selectedCellNumber)
         {
@@ -378,10 +404,13 @@ namespace LeaderboardUI {
             url += "/global/around";
             break;
         case 2:
-            url += "/friends/page";
-            break;
-        case 3:
-            url += "/country/page";
+            if (selectedGroup == 0) {
+                url += "/friends/page";
+            } else if (selectedGroup == 1) {
+                url += "/country/page";
+            } else {
+                url += "/clan_" + PlayerController::currentPlayer->clans[selectedGroup - 2].tag + "/page";
+            }
             break;
         
         default:
@@ -721,20 +750,18 @@ namespace LeaderboardUI {
         }
 
         if (uploadStatus == NULL) {
-            if (!ssInstalled) {
-                ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(4);
-                ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(4);
-                for (int index = 0; index < 3; ++index)
-                {
-                    dataItems[index] = plvc->_scopeSegmentedControl->_dataItems.get(index);
-                    scoreScopes[index] = plvc->_scoreScopes.get(index);
-                }
-                dataItems[3] = HMUI::IconSegmentedControl::DataItem::New_ctor(plvc->_friendsLeaderboardIcon, "Country");
-                scoreScopes[3] = PlatformLeaderboardsModel::ScoresScope(3);
-
-                plvc->_scopeSegmentedControl->SetData(dataItems);
-                plvc->_scoreScopes = scoreScopes;
+            auto dataItem = plvc->_scopeSegmentedControl->_dataItems.get(2);
+            int selectedCell = plvc->_scopeSegmentedControl->selectedCellNumber;
+            auto controlRectTransform = plvc->_scopeSegmentedControl->get_transform().cast<RectTransform>();
+            if (showBeatLeader) {
+                dataItem->set_hintText("Groups");
+                controlRectTransform->set_sizeDelta({10, 20});
+            } else {
+                dataItem->set_hintText("Friends");
+                controlRectTransform->set_sizeDelta({10, 30});
             }
+            plvc->_scopeSegmentedControl->ReloadData();
+            plvc->_scopeSegmentedControl->SelectCellWithNumber(selectedCell);
 
             parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(480, 160), self->screen->get_transform()->get_position(), 140);
             visible = true;
@@ -807,23 +834,24 @@ namespace LeaderboardUI {
             resize(uploadStatus, 100, 3);
             uploadStatus->set_fontSize(3);
             uploadStatus->set_richText(true);
-            upPageButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), Sprites::get_UpIcon(), [](){
+            upPageButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->upIcon, [](){
                 PageUp();
-            }, UnityEngine::Vector2(100, 17), UnityEngine::Vector2(8, 5.12));
-            downPageButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), Sprites::get_DownIcon(), [](){
+            }, UnityEngine::Vector2(100, 11), UnityEngine::Vector2(5, 5));
+            downPageButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->downIcon, [](){
                 PageDown();
-            }, UnityEngine::Vector2(100, -20), UnityEngine::Vector2(8, 5.12));
+            }, UnityEngine::Vector2(100, -13), UnityEngine::Vector2(5, 5));
 
+            UIUtils::CreateRoundRectImage(parentScreen->get_transform(), UnityEngine::Vector2(100, -22), UnityEngine::Vector2(7, 7));
             contextsButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, [](){
                 contextsContainer->Show(true, true, nullptr);
-            }, UnityEngine::Vector2(100, 28), UnityEngine::Vector2(6, 6));
-            contextsButton->set_defaultColor(SelectedColor);
+            }, UnityEngine::Vector2(100, -22), UnityEngine::Vector2(5, 5));
+            contextsButton->set_defaultColor(ContextsColor);
             contextsButton->set_highlightColor(SelectedColor);
             // We need to add an empty hover hint, so we can set it later to the correct content depending on the selected context
             contextsButtonHover = ::BSML::Lite::AddHoverHint(contextsButton, "");
             initContextsModal(self->get_transform());
             updateModifiersButton();
-
+            UIUtils::CreateRoundRectImage(parentScreen->get_transform(), UnityEngine::Vector2(100, 20), UnityEngine::Vector2(7, 7));
             auto votingButtonImage = ::BSML::Lite::CreateClickableImage(
                 parentScreen->get_transform(), 
                 BundleLoader::bundle->modifiersIcon, 
@@ -833,7 +861,7 @@ namespace LeaderboardUI {
                     votingUI->reset();
                     votingUI->modal->Show(true, true, nullptr);
                 },
-                UnityEngine::Vector2(100, 22), 
+                UnityEngine::Vector2(100, 20), 
                 UnityEngine::Vector2(4, 4)
             );
             votingButton = websiteLink->get_gameObject()->AddComponent<BeatLeader::VotingButton*>();
@@ -854,6 +882,21 @@ namespace LeaderboardUI {
                 clearTable();
                 refreshFromTheServerCurrent();
             };
+
+            bool hasClans = PlayerController::currentPlayer && !PlayerController::currentPlayer->clans.empty();
+            ArrayW<StringW> values(hasClans ? PlayerController::currentPlayer->clans.size() + 2 : 2);
+            values[0] = u" Friends";
+            values[1] = u" Country";
+            if (hasClans) {
+                for (size_t i = 0; i < PlayerController::currentPlayer->clans.size(); ++i) {
+                    values[i + 2] = StringW(" " + PlayerController::currentPlayer->clans[i].tag);
+                }
+            }
+            groupsSelector = QuestUI::CreateTextSegmentedControl(parentScreen->get_transform(), {347, -36}, {20, 6}, values, [](int index) {
+                clearTable();
+                refreshFromTheServerCurrent();
+            });
+            groupsSelector->get_gameObject()->SetActive(false);
         }
 
         if (ssInstalled && !sspageUpButton) {
@@ -875,6 +918,7 @@ namespace LeaderboardUI {
                 }
             }
         }
+        refreshGroupsSelector();
 
         if (upPageButton != NULL) {
             upPageButton->get_gameObject()->SetActive(false);
@@ -927,29 +971,18 @@ namespace LeaderboardUI {
             imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
         }
 
-        if (!ssInstalled) {
-            ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(!showBeatLeader ? 3 : 4);
-            ArrayW<PlatformLeaderboardsModel::ScoresScope> scoreScopes = ArrayW<PlatformLeaderboardsModel::ScoresScope>(!showBeatLeader ? 3 : 4);
-            for (int index = 0; index < 3; ++index)
-            {
-                dataItems[index] = plvc->_scopeSegmentedControl->_dataItems.get(index);
-                scoreScopes[index] = plvc->_scoreScopes.get(index);
-            }
-
-            if (showBeatLeader) {
-                auto countryControl =  HMUI::IconSegmentedControl::DataItem::New_ctor(plvc->_friendsLeaderboardIcon, "Country");
-                dataItems[3] = countryControl;
-                scoreScopes[3] = PlatformLeaderboardsModel::ScoresScope(3);
-
-                countryControl->set_hintText("Country");
-                if (PlayerController::currentPlayer) {
-                    countryControl->set_icon(BundleLoader::bundle->GetCountryIcon(PlayerController::currentPlayer->country));
-                }
-            }
-
-            plvc->_scopeSegmentedControl->SetData(dataItems);
-            plvc->_scoreScopes = scoreScopes;
+        auto dataItem = plvc->_scopeSegmentedControl->_dataItems.get(2);
+        int selectedCell = plvc->_scopeSegmentedControl->selectedCellNumber;
+        auto rectTransform = plvc->_scopeSegmentedControl->get_transform().cast<RectTransform>();
+        if (showBeatLeader) {
+            dataItem->set_hintText("Groups");
+            rectTransform->set_sizeDelta({10, 20});
+        } else {
+            dataItem->set_hintText("Friends");
+            rectTransform->set_sizeDelta({10, 30});
         }
+        plvc->_scopeSegmentedControl->ReloadData();
+        plvc->_scopeSegmentedControl->SelectCellWithNumber(selectedCell);
 
         if (parentScreen != NULL) {
             parentScreen->get_gameObject()->SetActive(showBeatLeader);

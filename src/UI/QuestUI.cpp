@@ -53,6 +53,7 @@
 
 #include "Libraries/HM/HMLib/VR/HapticPresetSO.hpp"
 #include "UI/Components/ExternalComponents.hpp"
+#include "UI/Components/CustomTextSegmentedControlData.hpp"
 
 #include "Zenject/DiContainer.hpp"
 
@@ -364,5 +365,71 @@ namespace QuestUI {
         
         gameObj->AddComponent<LayoutElement*>();
         return image;
+    }
+
+    CustomTextSegmentedControlData* CreateTextSegmentedControl(UnityEngine::Transform* parent, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta, ArrayW<StringW> values, std::function<void(int)> onCellWithIdxClicked)
+    {
+        static SafePtrUnity<TextSegmentedControl> segmentedControlTemplate;
+        if (!segmentedControlTemplate)
+            segmentedControlTemplate = Resources::FindObjectsOfTypeAll<HMUI::TextSegmentedControl*>()->FirstOrDefault([](auto x){
+                return x->get_name() == "TextSegmentedControl";
+        });
+
+        auto segmentedControlObj = Object::Instantiate(segmentedControlTemplate->get_gameObject(), parent, false);
+        segmentedControlObj->SetActive(false);
+        static ConstString QuestUITextSegmentedControl("QuestUITextSegmentedControl");
+        segmentedControlObj->set_name(QuestUITextSegmentedControl);
+
+        auto rectTransform = segmentedControlObj->get_transform().cast<RectTransform>();
+        rectTransform->set_anchorMin(UnityEngine::Vector2(0.0f, 0.5f));
+        rectTransform->set_anchorMax(UnityEngine::Vector2(0.0f, 0.5f));
+        rectTransform->set_pivot(UnityEngine::Vector2(0.0f, 0.5f));
+        rectTransform->set_sizeDelta(sizeDelta);
+        rectTransform->set_anchoredPosition(anchoredPosition);
+
+        Object::DestroyImmediate(segmentedControlObj->GetComponent<HMUI::TextSegmentedControl*>());
+        auto control = segmentedControlObj->AddComponent<HMUI::SegmentedControl*>();
+        auto result = segmentedControlObj->AddComponent<QuestUI::CustomTextSegmentedControlData*>();
+        
+        result->firstCellPrefab = segmentedControlTemplate->_firstCellPrefab;
+        result->lastCellPrefab = segmentedControlTemplate->_lastCellPrefab;
+        result->middleCellPrefab = segmentedControlTemplate->_middleCellPrefab;
+        result->singleCellPrefab = segmentedControlTemplate->_singleCellPrefab;
+
+        result->segmentedControl = control;
+        control->dataSource = reinterpret_cast<HMUI::SegmentedControl::IDataSource*>(result);
+        
+        if (onCellWithIdxClicked)
+        {
+            std::function<void(HMUI::SegmentedControl*, int)> fun = [onCellWithIdxClicked](UnityW<HMUI::SegmentedControl> cell, int idx){ onCellWithIdxClicked(idx); };
+            auto delegate = custom_types::MakeDelegate<System::Action_2<UnityW<HMUI::SegmentedControl>, int>*>(fun);
+            control->add_didSelectCellEvent(delegate);
+        }
+
+        int childCount = result->get_transform()->get_childCount();
+        for (int i = 0; i < childCount; i++) 
+        {
+            Object::DestroyImmediate(result->get_transform()->GetChild(0)->get_gameObject());
+        }
+        
+        result->set_texts(values);
+
+        segmentedControlObj->SetActive(true);
+        return result;
+    }
+
+    CustomTextSegmentedControlData* CreateTextSegmentedControl(UnityEngine::Transform* parent, UnityEngine::Vector2 sizeDelta, ArrayW<StringW> values, std::function<void(int)> onCellWithIdxClicked)
+    {
+        return CreateTextSegmentedControl(parent, {0, 0}, sizeDelta, values, onCellWithIdxClicked);
+    }
+
+    CustomTextSegmentedControlData* CreateTextSegmentedControl(UnityEngine::Transform* parent, ArrayW<StringW> values, std::function<void(int)> onCellWithIdxClicked)
+    {
+        return CreateTextSegmentedControl(parent, {0, 0}, {80, 10}, values, onCellWithIdxClicked);
+    }
+
+    CustomTextSegmentedControlData* CreateTextSegmentedControl(UnityEngine::Transform* parent, std::function<void(int)> onCellWithIdxClicked)
+    {
+        return CreateTextSegmentedControl(parent, {0, 0}, {80, 10}, ArrayW<StringW>(static_cast<il2cpp_array_size_t>(0)), onCellWithIdxClicked);
     }
 }

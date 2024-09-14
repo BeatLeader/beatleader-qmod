@@ -101,6 +101,8 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     fileError = GetSprite("FileError");
     modifiersIcon = GetSprite("ModifiersIcon");
     settingsIcon = GetSprite("BL_SettingsIcon");
+    upIcon = GetSprite("BL_UpIcon");
+    downIcon = GetSprite("BL_DownIcon");
 
     overview1Icon = GetSprite("BL_Overview1Icon");
     overview2Icon = GetSprite("BL_Overview2Icon");

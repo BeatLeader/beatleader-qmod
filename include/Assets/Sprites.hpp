@@ -14,8 +14,6 @@ using namespace std;
 class Sprites {
     static const string StarB64;
     static const string GraphB64;
-    static const string DownB64;
-    static const string UpB64;
     static const string CellBGB64;
     static const string ModifiersIconB64;
     static const string PixelB64;
@@ -26,8 +24,6 @@ class Sprites {
 public:
     static UnityEngine::Sprite* get_StarIcon();
     static UnityEngine::Sprite* get_GraphIcon();
-    static UnityEngine::Sprite* get_DownIcon();
-    static UnityEngine::Sprite* get_UpIcon();
     static UnityEngine::Sprite* get_CellBG();
     static UnityEngine::Sprite* get_ModifiersIcon();
     static UnityEngine::Sprite* get_TransparentPixel();

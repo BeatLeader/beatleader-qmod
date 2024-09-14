@@ -31,6 +31,8 @@
 #include "TMPro/TextMeshProUGUI.hpp"
 #include "TMPro/TMP_FontAsset.hpp"
 
+#include "UI/Components/CustomTextSegmentedControlData.hpp"
+
 #include <concepts>
 #include <type_traits>
 
@@ -132,4 +134,34 @@ namespace QuestUI {
     /// @param anchoredPosition the position of the image
     /// @param sizeDelta the size of the image
     HMUI::ImageView* CreateImage(UnityEngine::Transform* parent, UnityEngine::Sprite* sprite, UnityEngine::Vector2 anchoredPosition = {}, UnityEngine::Vector2 sizeDelta = {});
+
+    /// @brief creates a text segmented control like the one on the gameplay setup view controller
+    /// @param parent what to parent it to
+    /// @param anchoredPosition the position
+    /// @param sizeDelta the sizeDelta
+    /// @param values list of text values to give to the controller
+    /// @param onCellWithIdxClicked callback called when a cell is clicked
+    /// @return the created text segmented control
+    QuestUI::CustomTextSegmentedControlData* CreateTextSegmentedControl(UnityEngine::Transform* parent, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta, ArrayW<StringW> values, std::function<void(int)> onCellWithIdxClicked = nullptr);
+    
+    /// @brief creates a text segmented control like the one on the gameplay setup view controller
+    /// @param parent what to parent it to
+    /// @param sizeDelta the sizeDelta
+    /// @param values list of text values to give to the controller
+    /// @param onCellWithIdxClicked callback called when a cell is clicked
+    /// @return the created text segmented control
+    QuestUI::CustomTextSegmentedControlData* CreateTextSegmentedControl(UnityEngine::Transform* parent, UnityEngine::Vector2 sizeDelta, ArrayW<StringW> values, std::function<void(int)> onCellWithIdxClicked = nullptr);
+    
+    /// @brief creates a text segmented control like the one on the gameplay setup view controller
+    /// @param parent what to parent it to
+    /// @param values list of text values to give to the controller
+    /// @param onCellWithIdxClicked callback called when a cell is clicked
+    /// @return the created text segmented control
+    QuestUI::CustomTextSegmentedControlData* CreateTextSegmentedControl(UnityEngine::Transform* parent, ArrayW<StringW> values, std::function<void(int)> onCellWithIdxClicked);
+
+    /// @brief creates a text segmented control like the one on the gameplay setup view controller
+    /// @param parent what to parent it to
+    /// @param onCellWithIdxClicked callback called when a cell is clicked
+    /// @return the created text segmented control
+    QuestUI::CustomTextSegmentedControlData* CreateTextSegmentedControl(UnityEngine::Transform* parent, std::function<void(int)> onCellWithIdxClicked);
 }

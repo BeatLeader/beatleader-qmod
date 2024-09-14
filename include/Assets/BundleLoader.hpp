@@ -49,6 +49,8 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Sprite*, transparentPixel);
     DECLARE_INSTANCE_FIELD(Sprite*, fileError);
     DECLARE_INSTANCE_FIELD(Sprite*, modifiersIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, upIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, downIcon);
 
     DECLARE_INSTANCE_FIELD(Sprite*, overview1Icon);
     DECLARE_INSTANCE_FIELD(Sprite*, overview2Icon);
