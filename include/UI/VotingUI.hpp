@@ -13,7 +13,7 @@
 #include "GlobalNamespace/BeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 
-#include "include/Models/Score.hpp"
+#include "shared/Models/Score.hpp"
 #include "include/UI/PlayerAvatar.hpp"
 
 enum MapType {

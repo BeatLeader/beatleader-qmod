@@ -10,10 +10,10 @@
 
 #include "include/Utils/StringUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
-#include "include/Models/Player.hpp"
-#include "include/Models/Clan.hpp"
-#include "include/Models/Score.hpp"
-#include "include/Models/ClanScore.hpp"
+#include "shared/Models/Player.hpp"
+#include "shared/Models/Clan.hpp"
+#include "shared/Models/Score.hpp"
+#include "shared/Models/ClanScore.hpp"
 #include "include/API/PlayerController.hpp"
 #include <regex>
 using namespace std;

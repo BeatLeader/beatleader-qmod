@@ -1,7 +1,7 @@
 #pragma once
 
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
-#include "include/Models/Difficulty.hpp"
+#include "shared/Models/Difficulty.hpp"
 
 #include <string>
 #include <map>

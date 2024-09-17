@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Models/Player.hpp"
+#include "shared/Models/Player.hpp"
 
 #include <string>
 using namespace std;

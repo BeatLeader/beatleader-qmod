@@ -4,7 +4,7 @@
 #include "include/Utils/ReplayManager.hpp"
 #include "Utils/StringUtils.hpp"
 #include "include/API/PlayerController.hpp"
-#include "include/Models/Replay.hpp"
+#include "shared/Models/Replay.hpp"
 
 #include "main.hpp"
 

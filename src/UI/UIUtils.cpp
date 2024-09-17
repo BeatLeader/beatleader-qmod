@@ -6,7 +6,7 @@
 
 #include "UI/UIUtils.hpp"
 
-#include "include/Models/TriangleRating.hpp"
+#include "shared/Models/TriangleRating.hpp"
 #include "include/Utils/ModConfig.hpp"
 
 #include "main.hpp"

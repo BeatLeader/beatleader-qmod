@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/Models/Replay.hpp"
+#include "shared/Models/Replay.hpp"
 
 using namespace std;
 

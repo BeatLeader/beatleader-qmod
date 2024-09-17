@@ -6,7 +6,7 @@
 #include "System/Threading/Tasks/Task_1.hpp"
 #include "System/Collections/Generic/HashSet_1.hpp"
 
-#include "include/Models/Replay.hpp"
+#include "shared/Models/Replay.hpp"
 
 #include "include/Enhancers/MapEnhancer.hpp"
 #include "include/Enhancers/UserEnhancer.hpp"

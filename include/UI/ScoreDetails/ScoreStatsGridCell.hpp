@@ -5,7 +5,7 @@
 #include "bsml/shared/BSML-Lite.hpp"
 #include "bsml/shared/BSML.hpp"
 
-#include "include/Models/Score.hpp"
+#include "shared/Models/Score.hpp"
 #include "include/UI/PlayerAvatar.hpp"
 
 namespace BeatLeader {

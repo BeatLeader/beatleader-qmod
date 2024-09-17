@@ -1,4 +1,4 @@
-#include "include/Models/Clan.hpp"
+#include "shared/Models/Clan.hpp"
 
 Clan::Clan(rapidjson::Value const& document) {
     tag = document["tag"].GetString();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/Models/Clan.hpp"
+#include "shared/Models/Clan.hpp"
 
 #include "bsml/shared/BSML-Lite.hpp"
 #include "bsml/shared/BSML.hpp"

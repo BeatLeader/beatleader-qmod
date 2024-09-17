@@ -4,7 +4,7 @@
 #include "include/Utils/ReplayManager.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
-#include "include/Models/ScoreStats.hpp"
+#include "shared/Models/ScoreStats.hpp"
 
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/UIUtils.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/Models/Replay.hpp"
+#include "shared/Models/Replay.hpp"
 #include "GlobalNamespace/LevelCompletionResults.hpp"
 
 #include <string>

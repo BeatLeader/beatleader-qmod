@@ -3,7 +3,7 @@
 #include "UnityEngine/Material.hpp"
 
 #include "include/Assets/BundleLoader.hpp"
-#include "include/Models/Player.hpp"
+#include "shared/Models/Player.hpp"
 
 using namespace std;
 using namespace UnityEngine;

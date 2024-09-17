@@ -1,4 +1,4 @@
-#include "include/Models/ClanScore.hpp"
+#include "shared/Models/ClanScore.hpp"
 
 ClanScore::ClanScore() {}
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
-#include "include/Models/TriangleRating.hpp"
-#include "include/Models/Clan.hpp"
+#include "shared/Models/TriangleRating.hpp"
+#include "shared/Models/Clan.hpp"
 
 #include <vector>
 #include <string>

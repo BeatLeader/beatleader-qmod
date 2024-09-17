@@ -1,8 +1,8 @@
 #include "include/UI/LeaderboardUI.hpp"
 
-#include "include/Models/Replay.hpp"
-#include "include/Models/Score.hpp"
-#include "include/Models/ClanScore.hpp"
+#include "shared/Models/Replay.hpp"
+#include "shared/Models/Score.hpp"
+#include "shared/Models/ClanScore.hpp"
 #include "include/API/PlayerController.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"

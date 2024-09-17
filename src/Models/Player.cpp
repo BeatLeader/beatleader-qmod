@@ -1,4 +1,4 @@
-#include "include/Models/Player.hpp"
+#include "shared/Models/Player.hpp"
 
 #include "include/Utils/ModConfig.hpp"
 #include "include/main.hpp"
@@ -10,6 +10,12 @@ Player::Player(rapidjson::Value const& userModInterface) {
     country = userModInterface["country"].GetString();
     avatar = userModInterface["avatar"].GetString();
     role = userModInterface["role"].GetString();
+
+    if (userModInterface.HasMember("questId") && !userModInterface["questId"].IsNull()) {
+        questId = userModInterface["questId"].GetString();
+    } else {
+        questId = nullopt;
+    }
 
     // For standard context and players from v3/scores (where contextExtension is null cause we request for one context) we use the main player
     int currentContext = getModConfig().Context.GetValue();

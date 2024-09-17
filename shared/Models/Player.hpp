@@ -1,7 +1,7 @@
 #pragma once
 
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
-#include "include/Models/Clan.hpp"
+#include "shared/Models/Clan.hpp"
 
 #include <string>
 using namespace std;
@@ -34,13 +34,14 @@ class Player
     string avatar;
     string role;
     string playlistsToInstall;
+    optional<string> questId;
     int rank;
     int countryRank;
     float pp;
     int lastRank;
     int lastCountryRank;
     float lastPP;
-    std::optional<ProfileSettings> profileSettings;
+    optional<ProfileSettings> profileSettings;
     
     vector<string> friends;
     vector<Social> socials;

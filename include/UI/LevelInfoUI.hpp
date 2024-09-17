@@ -1,7 +1,7 @@
 #pragma once
 
-#include "include/Models/Difficulty.hpp"
-#include "include/Models/TriangleRating.hpp"
+#include "shared/Models/Difficulty.hpp"
+#include "shared/Models/TriangleRating.hpp"
 
 namespace LevelInfoUI {
     void setup();

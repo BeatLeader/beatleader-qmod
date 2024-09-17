@@ -17,9 +17,9 @@
 
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
-#include "include/Models/Song.hpp"
-#include "include/Models/Difficulty.hpp"
-#include "include/Models/TriangleRating.hpp"
+#include "shared/Models/Song.hpp"
+#include "shared/Models/Difficulty.hpp"
+#include "shared/Models/TriangleRating.hpp"
 #include "include/UI/CaptorClanUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/UIUtils.hpp"

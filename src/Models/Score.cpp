@@ -1,4 +1,4 @@
-#include "include/Models/Score.hpp"
+#include "shared/Models/Score.hpp"
 
 Score::Score() {}
 

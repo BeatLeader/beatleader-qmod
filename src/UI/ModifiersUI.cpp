@@ -2,7 +2,7 @@
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/UIUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
-#include "include/Models/TriangleRating.hpp"
+#include "shared/Models/TriangleRating.hpp"
 
 #include "GlobalNamespace/GameplayModifierToggle.hpp"
 #include "GlobalNamespace/GameplayModifierParamsSO.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
-#include "include/Models/Clan.hpp"
+#include "shared/Models/Clan.hpp"
 
 #include <string>
 using namespace std;

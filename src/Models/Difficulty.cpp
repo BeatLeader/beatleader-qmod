@@ -1,5 +1,5 @@
-#include "include/Models/Difficulty.hpp"
-#include "include/Models/TriangleRating.hpp"
+#include "shared/Models/Difficulty.hpp"
+#include "shared/Models/TriangleRating.hpp"
 
 Difficulty::Difficulty(rapidjson::Value const& document) {
     status = document["status"].GetInt();

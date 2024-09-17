@@ -1,4 +1,4 @@
-#include "include/Models/Song.hpp"
+#include "shared/Models/Song.hpp"
 
 Song::Song(rapidjson::Value const& document){
     // Sometimes when selecting songs really fast we get something that is not an array (maybe too many requests but with status 200?)

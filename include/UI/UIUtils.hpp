@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/Models/TriangleRating.hpp"
+#include "shared/Models/TriangleRating.hpp"
 
 #include "UnityEngine/RectTransform.hpp"
 #include "UnityEngine/Component.hpp"

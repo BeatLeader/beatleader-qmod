@@ -5,7 +5,7 @@
 #include "bsml/shared/BSML-Lite.hpp"
 #include "bsml/shared/BSML.hpp"
 
-#include "include/Models/ScoreStats.hpp"
+#include "shared/Models/ScoreStats.hpp"
 
 namespace BeatLeader {
     class AdditionalScoreDetails {

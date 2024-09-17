@@ -8,7 +8,7 @@
 #include "GlobalNamespace/EnvironmentInfoSO.hpp"
 #include "GlobalNamespace/ColorScheme.hpp"
 
-#include "include/Models/Replay.hpp"
+#include "shared/Models/Replay.hpp"
 
 using namespace GlobalNamespace;
 
