@@ -24,6 +24,7 @@
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/CaptorClanUI.hpp"
 #include "include/UI/QuestUI.hpp"
+#include "include/UI/MultiplayerLeaderboard.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -83,6 +84,8 @@
 #include "GlobalNamespace/SinglePlayerLevelSelectionFlowCoordinator.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
 #include "GlobalNamespace/SwitchSettingsController.hpp"
+#include "GlobalNamespace/MainSettingsMenuViewControllersInstaller.hpp"
+#include "GlobalNamespace/MultiplayerLobbyController.hpp"
 #include "BGLib/Polyglot/LocalizedTextMeshProUGUI.hpp"
 
 #include "TMPro/TMP_Sprite.hpp"
@@ -763,7 +766,7 @@ namespace LeaderboardUI {
             plvc->_scopeSegmentedControl->ReloadData();
             plvc->_scopeSegmentedControl->SelectCellWithNumber(selectedCell);
 
-            parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(480, 160), self->screen->get_transform()->get_position(), 140);
+            parentScreen = CreateCustomScreen(self, UnityEngine::Vector2(480, 160));
             visible = true;
 
             BeatLeader::initScoreDetailsPopup(
@@ -897,6 +900,10 @@ namespace LeaderboardUI {
                 refreshFromTheServerCurrent();
             });
             groupsSelector->get_gameObject()->SetActive(false);
+        }
+
+        if (parentScreen != NULL) {
+            parentScreen->GetComponent<HMUI::Screen*>()->_rootViewController = self;
         }
 
         if (ssInstalled && !sspageUpButton) {
@@ -1405,15 +1412,25 @@ namespace LeaderboardUI {
         LocalLeaderboardDidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
     }
 
+    Zenject::DiContainer* mpcontainer;
+
+    MAKE_HOOK_MATCH(MultiplayerLobbyControllerActivateMultiplayerLobby, &MultiplayerLobbyController::ActivateMultiplayerLobby, void, MultiplayerLobbyController* self) {
+        MultiplayerLobbyControllerActivateMultiplayerLobby(self);
+
+        MultiplayerLeaderboardManager::Initialize(mpcontainer);
+    }
+    MAKE_HOOK_MATCH(MultiplayerLobbyControllerDeactivateMultiplayerLobby, &MultiplayerLobbyController::DeactivateMultiplayerLobby, void, MultiplayerLobbyController* self) {
+        MultiplayerLobbyControllerDeactivateMultiplayerLobby(self);
+        MultiplayerLeaderboardManager::Dispose();
+    }
+
+    MAKE_HOOK_MATCH(MainSettingsMenuViewControllersInstallerInstall, &MainSettingsMenuViewControllersInstaller::InstallBindings, void, MainSettingsMenuViewControllersInstaller* installer) {
+        MainSettingsMenuViewControllersInstallerInstall(installer);
+        mpcontainer = installer->get_Container();
+    }
+
     void setup() {
         if (hooksInstalled) return;
-
-        INSTALL_HOOK(BeatLeaderLogger, LeaderboardActivate);
-        INSTALL_HOOK(BeatLeaderLogger, LeaderboardDeactivate);
-        INSTALL_HOOK(BeatLeaderLogger, LocalLeaderboardDidActivate);
-        INSTALL_HOOK(BeatLeaderLogger, RefreshLeaderboard);
-        INSTALL_HOOK(BeatLeaderLogger, LeaderboardCellSource);
-        INSTALL_HOOK(BeatLeaderLogger, SegmentedControlHandleCellSelection);
 
         PlayerController::playerChanged.emplace_back([](std::optional<Player> const& updated) {
             BSML::MainThreadScheduler::Schedule([] {
@@ -1436,6 +1453,19 @@ namespace LeaderboardUI {
                     break;
                 }
             }
+        }
+
+        INSTALL_HOOK(BeatLeaderLogger, LeaderboardActivate);
+        INSTALL_HOOK(BeatLeaderLogger, LeaderboardDeactivate);
+        INSTALL_HOOK(BeatLeaderLogger, LocalLeaderboardDidActivate);
+        INSTALL_HOOK(BeatLeaderLogger, RefreshLeaderboard);
+        INSTALL_HOOK(BeatLeaderLogger, LeaderboardCellSource);
+        INSTALL_HOOK(BeatLeaderLogger, SegmentedControlHandleCellSelection);
+
+        if (!ssInstalled) {
+            INSTALL_HOOK(BeatLeaderLogger, MultiplayerLobbyControllerActivateMultiplayerLobby);
+            INSTALL_HOOK(BeatLeaderLogger, MultiplayerLobbyControllerDeactivateMultiplayerLobby);
+            INSTALL_HOOK(BeatLeaderLogger, MainSettingsMenuViewControllersInstallerInstall);
         }
 
         hooksInstalled = true;

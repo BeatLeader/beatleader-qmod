@@ -32,14 +32,14 @@ inline void resize(UnityEngine::Component* label, float x, float y) {
     transform->set_sizeDelta(sizeDelta);
 }
 
-inline UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootView, UnityEngine::Vector2 screenSize, UnityEngine::Vector3 position, float curvatureRadius) {
+inline UnityEngine::GameObject* CreateCustomScreen(HMUI::ViewController* rootView, UnityEngine::Vector2 screenSize) {
     auto gameObject = BSML::Lite::CreateCanvas();
     auto screen = gameObject->AddComponent<HMUI::Screen*>();
     screen->_rootViewController = rootView;
-    auto curvedCanvasSettings = gameObject->AddComponent<HMUI::CurvedCanvasSettings*>();
-    curvedCanvasSettings->SetRadius(curvatureRadius);
 
     auto transform = gameObject->get_transform();
+    transform->SetParent(rootView->get_transform(), false);
+    transform->set_localScale(UnityEngine::Vector3(1, 1, 1));
     UnityEngine::GameObject* screenSystem = UnityEngine::GameObject::Find("ScreenContainer");
     if(screenSystem) {
         transform->set_position(screenSystem->get_transform()->get_position());
