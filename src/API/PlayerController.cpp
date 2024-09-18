@@ -132,6 +132,12 @@ bool PlayerController::InClan(string tag) {
     return it != currentPlayer->clans.end();
 }
 
+bool PlayerController::IsMainClan(string tag) {
+    if (currentPlayer == nullopt || currentPlayer->clans.size() == 0) return false;
+
+    return toLower(currentPlayer->clans[0].tag) == toLower(tag);
+}
+
 bool PlayerController::IsIncognito(Player anotherPlayer) {
     Document incognitoList;
     incognitoList.Parse(getModConfig().IncognitoList.GetValue().c_str());

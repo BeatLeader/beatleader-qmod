@@ -925,7 +925,6 @@ namespace LeaderboardUI {
                 }
             }
         }
-        refreshGroupsSelector();
 
         if (upPageButton != NULL) {
             upPageButton->get_gameObject()->SetActive(false);
@@ -1071,6 +1070,12 @@ namespace LeaderboardUI {
         leaderboardLoaded = true;
     }
 
+    MAKE_HOOK_MATCH(RefreshLevelStats, &PlatformLeaderboardViewController::RefreshLevelStats, void, PlatformLeaderboardViewController* self) {
+        RefreshLevelStats(self);
+
+        refreshGroupsSelector();
+    }
+
     LeaderboardTableCell* CellForIdxReimplement(LeaderboardTableView* self, HMUI::TableView* tableView) {
         LeaderboardTableCell* leaderboardTableCell = tableView->DequeueReusableCellForIdentifier("Cell").try_cast<LeaderboardTableCell>().value_or(UnityW<LeaderboardTableCell>());
         if (leaderboardTableCell == NULL)
@@ -1212,7 +1217,7 @@ namespace LeaderboardUI {
                     avatars[result]->get_gameObject()->set_active(getModConfig().AvatarsActive.GetValue());
                     result->_scoreText->get_gameObject()->set_active(getModConfig().ScoresActive.GetValue());
                     
-                    if (PlayerController::InClan(clan.tag)) {
+                    if (PlayerController::IsMainClan(clan.tag)) {
                         cellBackgrounds[result]->set_color(ownScoreColor);
                     } else {
                         cellBackgrounds[result]->set_color(someoneElseScoreColor);
@@ -1459,6 +1464,7 @@ namespace LeaderboardUI {
         INSTALL_HOOK(BeatLeaderLogger, LeaderboardDeactivate);
         INSTALL_HOOK(BeatLeaderLogger, LocalLeaderboardDidActivate);
         INSTALL_HOOK(BeatLeaderLogger, RefreshLeaderboard);
+        INSTALL_HOOK(BeatLeaderLogger, RefreshLevelStats);
         INSTALL_HOOK(BeatLeaderLogger, LeaderboardCellSource);
         INSTALL_HOOK(BeatLeaderLogger, SegmentedControlHandleCellSelection);
 
@@ -1489,6 +1495,7 @@ namespace LeaderboardUI {
         cellBackgrounds = {};
         showBeatLeaderButton = NULL;
         upPageButton = NULL;
+        groupsSelector = NULL;
         CaptorClanUI::Reset();
         ssWasOpened = false;
         if (ssInstalled) {
