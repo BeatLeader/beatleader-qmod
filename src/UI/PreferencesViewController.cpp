@@ -116,7 +116,14 @@ void BeatLeader::PreferencesViewController::DidDeactivate(bool removedFromHierar
     errorDescription = "";
 }
 
+std::vector<std::string_view> serverOptions = {
+    ".xyz",
+    ".net",
+    ".org"
+};
+
 void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+
     if (firstActivation) {
         this->get_gameObject()->AddComponent<HMUI::Touchable*>();
         UnityEngine::GameObject* container = BeatSaberUI::CreateScrollableSettingsContainer(this->get_transform());
@@ -209,11 +216,18 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         starsDropdown->add_didSelectCellWithIdxEvent(custom_types::MakeDelegate<System::Action_2<HMUI::DropdownWithTableView*, int>*>((function<void(HMUI::DropdownWithTableView*, int)>)[](auto throwaway1, auto throwaway2){
             LevelInfoUI::refreshRatingLabels();
         }));
+
+        serverDropdown = AddConfigValueDropdownEnum(containerTransform, getModConfig().DomainType, serverOptions);
+        serverDropdown->dropdown->add_didSelectCellWithIdxEvent(custom_types::MakeDelegate<System::Action_2<UnityW<HMUI::DropdownWithTableView>, int>*>((function<void(UnityW<HMUI::DropdownWithTableView>, int)>)[](auto throwaway1, auto throwaway2){
+            WebUtils::refresh_urls();
+        }));
         if (ReplayInstalled()) {
             showReplaySettingsToggle = AddConfigValueToggle(containerTransform, getModConfig().ShowReplaySettings);
         }
         errorDescriptionLabel = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "", false);
-        label3 = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "Never used BeatLeader? Sign up with any new login/password.\nTo log in, enter your existing account's login information.\nYour account is temporary until at least one score has been posted!\nYou can change your profile details on the website.", false);
+        errorDescriptionLabel->set_color(UnityEngine::Color(1.0, 0.0, 0.0, 1));
+        label3 = ::QuestUI::BeatSaberUI::CreateText(containerTransform, "Don't have BeatLeader Quest profile? Sign up with any new login/password.\nYou can change details or merge with the Steam profile on the website.");
+        label3->set_fontSize(3.0f);
     }
 
     UpdateUI(PlayerController::currentPlayer);

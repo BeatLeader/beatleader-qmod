@@ -9,7 +9,7 @@ env:
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ master, 1280support ]
     tags: v*
   pull_request:
     branches: [ master ]
@@ -87,21 +87,21 @@ jobs:
         echo ::set-output name=NAME::"${files[0]}"
     
     - name: Upload so artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.libname.outputs.NAME }}
         path: ./build/${{ steps.libname.outputs.NAME }}
         if-no-files-found: error
 
     - name: Upload debug artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: debug_${{ steps.libname.outputs.NAME }}
         path: ./build/debug/${{ steps.libname.outputs.NAME }}
         if-no-files-found: error
 
     - name: Upload qmod artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{env.qmodName}}.qmod
         path: ./${{ env.qmodName }}.qmod

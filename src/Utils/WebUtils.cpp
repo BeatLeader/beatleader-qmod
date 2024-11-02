@@ -22,12 +22,21 @@ namespace WebUtils {
     string USER_AGENT = "";
 
     void refresh_urls() {
-        if (getModConfig().ServerType.GetValue() == "Test") {
-            API_URL = "https://blstage.azurewebsites.net/";
-            WEB_URL = "https://agitated-ptolemy-7d772c.netlify.app/";
-        } else {
+        switch (getModConfig().DomainType.GetValue())
+        {
+        case 1:
+            API_URL = "https://api.beatleader.net/";
+            WEB_URL = "https://beatleader.net/";
+            break;
+        case 2:
+            API_URL = "https://api.beatleader.org/";
+            WEB_URL = "https://beatleader.org/";
+            break;
+        
+        default:
             API_URL = "https://api.beatleader.xyz/";
             WEB_URL = "https://beatleader.xyz/";
+            break;
         }
         USER_AGENT = "BeatLeader / " + modInfo.version + " (BeatSaber/" + (string)UnityEngine::Application::get_version() + ") (Oculus)";
     }
