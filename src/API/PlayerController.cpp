@@ -70,6 +70,9 @@ void PlayerController::Refresh(int retry, const function<void(optional<Player> c
                     handleError();
                 }
             });
+
+            // Refresh the cookie to keep player logged in
+            WebUtils::PostJSONAsync(WebUtils::API_URL + "cookieRefresh", "{}", [](long status, string error){ });
         }
         else{
             handleError();
