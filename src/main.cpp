@@ -49,15 +49,25 @@ MOD_EXPORT void setup(CModInfo *info) noexcept {
     BeatLeaderLogger.info("Completed setup!");
 }
 
+void resetUI() {
+    LeaderboardUI::reset();
+    LevelInfoUI::reset();
+    EmojiSupport::Reset();
+    Sprites::ResetCache();
+}
+
 MAKE_HOOK_MATCH(HandleSettingsFlowCoordinatorDidFinish, &MainFlowCoordinator::HandleSettingsFlowCoordinatorDidFinish, void, MainFlowCoordinator* self, ::GlobalNamespace::SettingsFlowCoordinator* settingsFlowCoordinator, ::GlobalNamespace::__SettingsFlowCoordinator__FinishAction finishAction) {
     HandleSettingsFlowCoordinatorDidFinish(self, settingsFlowCoordinator, finishAction);
 
     if (finishAction != ::GlobalNamespace::__SettingsFlowCoordinator__FinishAction::Cancel) {
-        LeaderboardUI::reset();
-        LevelInfoUI::reset();
-        EmojiSupport::Reset();
-        Sprites::ResetCache();
+        resetUI();
     }
+}
+
+MAKE_HOOK_MATCH(MenuTransitionsHelperRestartGame, &MenuTransitionsHelper::RestartGame, void, MenuTransitionsHelper* self, ::System::Action_1<::Zenject::DiContainer*>* finishCallback) {
+    MenuTransitionsHelperRestartGame(self, finishCallback);
+
+    resetUI();
 }
 
 void replayPostCallback(ReplayUploadStatus status, const string& description, float progress, int code) {
@@ -182,6 +192,7 @@ MOD_EXPORT "C" void late_load() {
     BeatLeaderLogger.info("Installing main hooks...");
     
     INSTALL_HOOK(BeatLeaderLogger, HandleSettingsFlowCoordinatorDidFinish);
+    INSTALL_HOOK(BeatLeaderLogger, MenuTransitionsHelperRestartGame);
     INSTALL_HOOK(BeatLeaderLogger, AppInitStart);
     INSTALL_HOOK(BeatLeaderLogger, SceneManager_Internal_ActiveSceneChanged);
     INSTALL_HOOK(BeatLeaderLogger, RichPresenceManager_HandleGameScenesManagerTransitionDidFinish);
