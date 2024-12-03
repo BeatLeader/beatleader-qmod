@@ -16,18 +16,7 @@ namespace BeatLeader {
             std::vector<ScoresContext*> newContexts = {};
             
             for (const auto& contextJson : doc.GetArray()) {
-                auto context = new ScoresContext(contextJson);
-
-                if (contextJson.HasMember("icon") && !contextJson["icon"].IsNull()) {
-                    Sprites::get_Icon(contextJson["icon"].GetString(), [context](UnityEngine::Sprite* sprite) {
-                        if (sprite) {
-                            context->icon = sprite;
-                            if (context->iconCallback) context->iconCallback();
-                        }
-                    });
-                }
-
-                newContexts.push_back(context);
+                newContexts.push_back(new ScoresContext(contextJson));
             }
 
             BSML::MainThreadScheduler::Schedule([newContexts, completion]() {

@@ -49,7 +49,7 @@ BSML::DropdownListSetting* serverDropdown;
 BSML::DropdownListSetting* starsDropdown;
 BSML::ToggleSetting* saveToggle;
 BSML::ToggleSetting* showReplaySettingsToggle;
-
+BSML::ToggleSetting* noticeboardToggle;
 BeatLeader::LogoAnimation* spinner = NULL;
 
 string login;
@@ -224,6 +224,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         errorDescriptionLabel->set_color(UnityEngine::Color(1.0, 0.0, 0.0, 1));
         label3 = QuestUI::CreateText(containerTransform, "Don't have BeatLeader Quest profile? Sign up with any new login/password.\nYou can change details or merge with the Steam profile on the website.");
         label3->set_fontSize(3.0f);
+        noticeboardToggle = AddConfigValueToggle(containerTransform, getModConfig().NoticeboardEnabled);
     }
 
     UpdateUI(PlayerController::currentPlayer);

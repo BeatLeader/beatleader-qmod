@@ -55,8 +55,8 @@ namespace BeatLeader {
         for (int i = 0; i < items.size(); i++) {
             auto item = items[i];
             auto previewPanel = FeaturedPreviewPanel::Instantiate<FeaturedPreviewPanel>(LocalComponent()->get_transform());
-            previewPanel->LocalComponent()->ManualInit(LocalComponent()->_mainContainer);
             auto panelComponent = previewPanel->LocalComponent();
+            panelComponent->ManualInit(LocalComponent()->_mainContainer);
             
             auto buttonAction = custom_types::MakeDelegate<System::Action*>(
                 (std::function<void()>)[item, this] {
@@ -81,7 +81,9 @@ namespace BeatLeader {
     void MapNewsPanel::DisposeList() {
         for (int i = 0; i < _list->get_Count(); i++) {
             auto post = _list->get_Item(i);
-            UnityEngine::Object::Destroy(post->get_gameObject());
+            if (post != nullptr) {
+                UnityEngine::Object::Destroy(post->get_gameObject());
+            }
         }
 
         _list->Clear();

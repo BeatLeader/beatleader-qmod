@@ -28,7 +28,7 @@ namespace BeatLeader {
 class ReeModalSystem : public ReeUIComponentV2<BeatLeader::ReeModalSystemComponent*> {
 private:
     static std::unordered_map<int, ReeModalSystem*> activeModals;
-    static System::Action* interruptAllEvent;
+    static void (*interruptAllEvent)();
     
     std::unordered_map<std::string, IReeModal*> pool;
     std::stack<std::pair<IReeModal*, Il2CppObject*>> modalStack;
@@ -55,16 +55,16 @@ public:
     StringW GetContent() override;
 
     template<typename T> 
-    static void OpenModal(UnityEngine::Transform* screenChild, Il2CppObject* state) 
+    static BeatLeader::IReeModal* OpenModal(UnityEngine::Transform* screenChild, Il2CppObject* state) 
         requires std::is_base_of_v<IReeModal, T> && 
                  std::is_base_of_v<ReeUIComponentV2<typename T::ComponentType>, T>
     {
         auto screen = screenChild->GetComponentInParent<HMUI::Screen*>();
-        OpenModal<T>(screen, state);
+        return OpenModal<T>(screen, state);
     }
 
     template<typename T>
-    static void OpenModal(HMUI::Screen* screen, Il2CppObject* state, bool interruptActiveModals = true)
+    static BeatLeader::IReeModal* OpenModal(HMUI::Screen* screen, Il2CppObject* state, bool interruptActiveModals = true)
         requires std::is_base_of_v<IReeModal, T> && 
                  std::is_base_of_v<ReeUIComponentV2<typename T::ComponentType>, T>
     {
@@ -82,10 +82,10 @@ public:
         }
 
         if (interruptActiveModals) {
-            if (interruptAllEvent) interruptAllEvent->Invoke();
+            if (interruptAllEvent) (*interruptAllEvent)();
         }
 
-        controller->OpenModalInternal<T>(state);
+        return controller->OpenModalInternal<T>(state);
     }
 
     template<typename T>
@@ -105,12 +105,13 @@ public:
     }
 
     template<typename T>
-    void OpenModalInternal(Il2CppObject* state)
+    BeatLeader::IReeModal* OpenModalInternal(Il2CppObject* state)
         requires std::is_base_of_v<IReeModal, T> && 
                  std::is_base_of_v<ReeUIComponentV2<typename T::ComponentType>, T>
     {
         auto modal = GetOrInstantiateModal<T>();
         PopOpen(modal, state);
+        return modal;
     }
 
     static void ForceUpdateAll();

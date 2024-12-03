@@ -10,7 +10,7 @@
 #include "main.hpp"
 
 std::unordered_map<int, BeatLeader::ReeModalSystem*> BeatLeader::ReeModalSystem::activeModals;
-System::Action* BeatLeader::ReeModalSystem::interruptAllEvent = nullptr;
+void (*BeatLeader::ReeModalSystem::interruptAllEvent)() = nullptr;
 
 DEFINE_TYPE(BeatLeader, ReeModalSystemComponent);
 
@@ -152,13 +152,11 @@ void BeatLeader::ReeModalSystem::OnInitialize() {
     ReeUIComponentV2::OnInitialize();
 
     if (!interruptAllEvent) {
-        interruptAllEvent = custom_types::MakeDelegate<System::Action*>(
-            std::function<void()>([]() {
-                for (auto& [_, modal] : activeModals) {
-                    modal->InterruptAll();
-                }
-            })
-        );
+        interruptAllEvent = []() {
+            for (auto& [_, modal] : activeModals) {
+                modal->InterruptAll();
+            }
+        };
     }
 
     InitializeModal();

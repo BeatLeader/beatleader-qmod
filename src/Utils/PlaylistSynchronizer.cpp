@@ -47,17 +47,12 @@ void PlaylistSynchronizer::DownloadBeatmap(string path, string hash, int index, 
             PlaylistSynchronizer::GetBeatmap(index + 1);
         } else {
             BeatLeaderLogger.info("{}", "Refreshing songs");
-            auto future = SongCore::API::Loading::RefreshSongs(false);
+            SongCore::API::Loading::RefreshSongs(false);
             SongCore::API::Loading::RefreshLevelPacks();
-            std::thread([future, completion, httpCode, statusCode] {
-                future.wait();
                 
-                // wait for 3 more seconds for songs to reload
-                std::this_thread::sleep_for(std::chrono::seconds(3));
-                if (completion) {
-                    completion(httpCode == 200 && statusCode == 0);
-                }
-            }).detach();
+            if (completion) {
+                completion(httpCode == 200 && statusCode == 0);
+            }
 
             if (!completion) {
                 done();

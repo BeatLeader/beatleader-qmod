@@ -598,13 +598,13 @@ namespace LeaderboardUI {
     void updateModifiersButton() {
         auto currentContext = ScoresContexts::getContextForId(getModConfig().Context.GetValue());
         contextsButtonHover->set_text("Currently selected leaderboard - " + currentContext->name);
-        if (currentContext->icon) {
-            contextsButton->set_sprite(currentContext->icon);
-        } else {
-            contextsButton->set_sprite(BundleLoader::bundle->generalContextIcon);
-            currentContext->iconCallback = []() {
-                updateModifiersButton();
-            };
+        contextsButton->set_sprite(BundleLoader::bundle->generalContextIcon);
+        if (currentContext->icon != "") {
+            Sprites::get_Icon(currentContext->icon, [](UnityEngine::Sprite* sprite) {
+                if (sprite) {
+                    contextsButton->set_sprite(sprite);
+                }
+            });
         }
     }
 

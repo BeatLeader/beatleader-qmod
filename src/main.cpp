@@ -181,22 +181,12 @@ MAKE_HOOK_MATCH(MainFlowCoordinator_TopViewControllerWillChange, &GlobalNamespac
     
     mainCoordinator = self;
     changingToMain = newViewController == self->_mainMenuViewController.ptr();
-}
 
-MAKE_HOOK_MATCH(FlowCoordinator_SetRightScreenViewController, &HMUI::FlowCoordinator::SetRightScreenViewController, void,
-    HMUI::FlowCoordinator* self, ::HMUI::ViewController* viewController, ::HMUI::__ViewController__AnimationType animationType) {
-    
-    if (mainCoordinator && 
-        self == mainCoordinator.ptr() && 
-        changingToMain && 
-        getModConfig().NoticeboardEnabled.GetValue() &&
-        viewController == nullptr &&
-        newsViewController) {
-        viewController = newsViewController.ptr();
-        BeatLeaderLogger.error("Setting news view controller");
+    if ((changingToMain && !getModConfig().NoticeboardEnabled.GetValue()) || (!changingToMain && self->_rightScreenViewController == newsViewController.ptr())) {
+        self->SetRightScreenViewController(nullptr, animationType);
+    } else if (changingToMain && getModConfig().NoticeboardEnabled.GetValue() && newsViewController) {
+        self->SetRightScreenViewController(newsViewController.ptr(), animationType);
     }
-
-    FlowCoordinator_SetRightScreenViewController(self, viewController, animationType);
 }
 
 MAKE_HOOK_MATCH(Image_get_pixelsPerUnit, &UnityEngine::UI::Image::get_pixelsPerUnit, float, UnityEngine::UI::Image* self) {
@@ -258,7 +248,6 @@ MOD_EXPORT "C" void late_load() {
     INSTALL_HOOK(BeatLeaderLogger, RichPresenceManager_HandleGameScenesManagerTransitionDidFinish);
     INSTALL_HOOK(BeatLeaderLogger, MainFlowCoordinator_DidActivate);
     INSTALL_HOOK(BeatLeaderLogger, MainFlowCoordinator_TopViewControllerWillChange);
-    INSTALL_HOOK(BeatLeaderLogger, FlowCoordinator_SetRightScreenViewController);
     INSTALL_HOOK(BeatLeaderLogger, Image_get_pixelsPerUnit);
 
     BeatLeaderLogger.info("Installed main hooks!");

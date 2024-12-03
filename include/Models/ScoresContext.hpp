@@ -11,12 +11,11 @@ namespace BeatLeader {
             std::string name;
             std::string description; 
             std::string key;
-            std::function<void()> iconCallback;
-            UnityEngine::Sprite* icon;
+            std::string icon;
 
             ScoresContext() : id(0) {}
-            ScoresContext(int id, std::string name, std::string description, std::string key) 
-                : id(id), name(name), description(description), key(key) {}
+            ScoresContext(int id, std::string name, std::string icon, std::string description, std::string key) 
+                : id(id), name(name), icon(icon), description(description), key(key) {}
             ScoresContext(rapidjson::Value const& document);
     };
 

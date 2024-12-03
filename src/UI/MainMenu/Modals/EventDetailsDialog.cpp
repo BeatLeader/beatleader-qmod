@@ -12,6 +12,7 @@
 #include "playlistcore/shared/PlaylistCore.hpp"
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 #include "HMUI/NoTransitionsButton.hpp"
+#include "main.hpp"
 
 using namespace UnityEngine;
 using namespace GlobalNamespace;
@@ -64,20 +65,31 @@ namespace BeatLeader {
         }
     }
 
+    PlaylistCore::Playlist* GetPlaylistByName(std::string filename) {
+        auto loadedPlaylists = PlaylistCore::GetLoadedPlaylists();
+        for (auto& loadedPlaylist : loadedPlaylists) {
+            if (loadedPlaylist->path.ends_with(filename)) {
+                return loadedPlaylist;
+            }
+        }
+        return nullptr;
+    }
+
     void EventDetailsDialog::HandleDownloadButtonClicked() {
         std::string filename = context->name;
         std::replace(filename.begin(), filename.end(), ' ', '_');
-        auto playlist = PlaylistCore::GetPlaylist(PlaylistSynchronizer::INSTALL_PATH + filename + ".bplist");
+        auto playlist = GetPlaylistByName(filename + ".bplist");
         
         if (playlist == nullptr) {
+            
             LocalComponent()->_eventContainer->SetActive(false);
             LocalComponent()->_loadingContainer->SetActive(true);
             offClickCloses = false;
 
-            PlaylistSynchronizer::InstallPlaylist(WebUtils::API_URL + "playlist/" + std::to_string(context->playlistId), filename + ".bplist", [this, filename](bool success) {
+            PlaylistSynchronizer::InstallPlaylist(WebUtils::API_URL + "playlist/" + std::to_string(context->playlistId), filename, [this, filename](bool success) {
                 if (success) {
-                    BSML::MainThreadScheduler::Schedule([this, filename] {
-                        auto playlist = PlaylistCore::GetPlaylist(PlaylistSynchronizer::INSTALL_PATH + filename + ".bplist");
+                    BSML::MainThreadScheduler::ScheduleAfterTime(5, [this, filename] {
+                        auto playlist = GetPlaylistByName(filename + ".bplist");
                         if (playlist) {
                             OpenPlaylist(playlist);
                         } else {

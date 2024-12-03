@@ -26,8 +26,14 @@ Player::Player(rapidjson::Value const& userModInterface) {
     // If we are Standard Context or we have no contexts or our selected context is not in contextextensions we use the normal rank. Else we use the correct context extension rank
     rapidjson::Value const& contextRank = 
         currentContext == 0 || 
-        !contextExtensions || 
-        currentContext - 1 >= contextExtensions.value().Size() ? userModInterface : contextExtensions.value()[currentContext - 1];
+        !contextExtensions ? userModInterface : [&]() -> const rapidjson::Value& {
+            for (auto& ext : contextExtensions.value()) {
+                if (ext["context"].GetInt() == currentContext) {
+                    return ext;
+                }
+            }
+            return userModInterface;
+        }();
 
     rank = contextRank["rank"].GetInt();
         countryRank = contextRank["countryRank"].GetInt();

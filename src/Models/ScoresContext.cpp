@@ -11,18 +11,18 @@ namespace BeatLeader {
         name = document["name"].GetString();
         description = document["description"].GetString();
         key = document["key"].GetString();
-        icon = nullptr;
-        iconCallback = nullptr;
+        icon = document["icon"].GetString();
     }
 
     void ScoresContexts::initializeGeneral() {
-        general = new ScoresContext(0, "General", "General", "modifiers");
+        general = new ScoresContext(0, "General", "", "General", "modifiers");
         allContexts = {general};
     }
 
     ScoresContext* ScoresContexts::getContextForId(int id) {
-        auto it = std::find_if(allContexts.begin(), allContexts.end(), 
-            [id](const ScoresContext* context) { return context->id == id; });
-        return it != allContexts.end() ? *it : general;
+        for (auto context : allContexts) {
+            if (context->id == id) return context;
+        }
+        return general;
     }
 }  

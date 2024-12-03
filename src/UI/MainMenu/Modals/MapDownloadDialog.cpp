@@ -37,30 +37,10 @@ namespace BeatLeader {
         LocalComponent()->_loadingContainer->SetActive(true);
         LocalComponent()->_finishedContainer->SetActive(false);
         offClickCloses = false;
-        Download();
     }
 
     void MapDownloadDialog::HandleOkButtonClicked() {
         Close();
-    }
-
-    void MapDownloadDialog::Download() {
-        PlaylistSynchronizer::DownloadBeatmap(context->downloadUrl, context->hash, 0, [this](bool success) {
-            BSML::MainThreadScheduler::Schedule([this, success] {
-                auto map = FetchMap(*context);
-
-                LocalComponent()->_finishedText->set_text(success ? "Download has finished" : "Download has failed!");
-                LocalComponent()->_loadingContainer->SetActive(false);
-                LocalComponent()->_finishedContainer->SetActive(true);
-
-                if (map != nullptr) {
-                    Close();
-                    OpenMap(map);
-                } else {
-                    LocalComponent()->_okButton->get_gameObject()->SetActive(true);
-                }
-            });
-        });
     }
 
     void MapDownloadDialog::OpenSongOrDownloadDialog(MapDetail mapDetail, Transform* screenChild) {
@@ -68,7 +48,21 @@ namespace BeatLeader {
         if (map != nullptr) {
             OpenMap(map);
         } else {
-            ReeModalSystem::OpenModal<MapDownloadDialog>(screenChild, (Il2CppObject*)&mapDetail);
+            MapDownloadDialog* modal = static_cast<MapDownloadDialog*>(ReeModalSystem::OpenModal<MapDownloadDialog>(screenChild, (Il2CppObject*)&mapDetail));
+            PlaylistSynchronizer::DownloadBeatmap(mapDetail.downloadUrl, mapDetail.hash, 0, [modal, mapDetail](bool success) {
+                BSML::MainThreadScheduler::ScheduleAfterTime(5, [modal, success, mapDetail] {
+                    auto map = FetchMap(mapDetail);
+                    if (map != nullptr) {
+                        // modal->Close();
+                        OpenMap(map);
+                    } else {
+                        modal->LocalComponent()->_finishedText->set_text(success ? "Download has finished" : "Download has failed!");
+                        modal->LocalComponent()->_loadingContainer->SetActive(false);
+                        modal->LocalComponent()->_finishedContainer->SetActive(true);
+                        modal->LocalComponent()->_okButton->get_gameObject()->SetActive(true);
+                    }
+                });
+            });
         }
     }
 

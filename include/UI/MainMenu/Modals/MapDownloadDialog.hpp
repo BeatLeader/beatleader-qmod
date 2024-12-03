@@ -32,7 +32,6 @@ public:
         OnContextChanged();
     }
     void HandleOkButtonClicked();
-    void Download();
 
     // Override from AbstractReeModal
     void OnInitialize() override;
