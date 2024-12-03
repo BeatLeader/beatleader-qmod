@@ -83,6 +83,11 @@
       "id": "bsml",
       "versionRange": "^0.4.34",
       "additionalData": {}
+    },
+    {
+      "id": "playlistcore",
+      "versionRange": "^1.4.0",
+      "additionalData": {}
     }
   ]
 }

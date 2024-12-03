@@ -152,4 +152,25 @@ namespace FormatUtils {
                 return "Steam";
             }
         }
+
+        inline float ParseFloat(string_view value) {
+            return std::stof(value.data());
+        }
+
+        inline int ParseInt(string_view value) {
+            return std::stoi(value.data());
+        }
+
+        inline bool ParseBool(string_view value) {
+            return std::string(value) == "true";
+        }
+
+        template<typename T>
+        inline T ParseEnum(string_view value) {
+            return static_cast<T>(std::stoi(value.data()));
+        }
+
+        inline ::UnityEngine::Color ParseColor(string_view value) {
+            return UnityEngine::Color(ParseFloat(value.substr(0, 2)), ParseFloat(value.substr(2, 4)), ParseFloat(value.substr(4, 6)), ParseFloat(value.substr(6, 8)));
+        }
     }

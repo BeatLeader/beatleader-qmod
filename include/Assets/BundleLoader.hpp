@@ -42,6 +42,8 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Material*, miniProfileBackgroundMaterial);
     DECLARE_INSTANCE_FIELD(Material*, skillTriangleMaterial);
     DECLARE_INSTANCE_FIELD(Material*, clanTagBackgroundMaterial);
+    DECLARE_INSTANCE_FIELD(Material*, roundTexture10Material);
+    DECLARE_INSTANCE_FIELD(Material*, roundTexture2Material);
 
     DECLARE_INSTANCE_FIELD(Sprite*, locationIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, rowSeparatorIcon);
@@ -75,7 +77,29 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Sprite*, settingsIcon);
 
     DECLARE_INSTANCE_FIELD(Sprite*, generalContextIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, unknownIcon);
     DECLARE_INSTANCE_FIELD(Shader*, TMP_SpriteCurved);
+
+    DECLARE_INSTANCE_FIELD(Sprite*, BlackTransparentBG);
+    DECLARE_INSTANCE_FIELD(Sprite*, BlackTransparentBGOutline);
+    DECLARE_INSTANCE_FIELD(Sprite*, CyanBGOutline);
+    DECLARE_INSTANCE_FIELD(Sprite*, WhiteBG);
+    DECLARE_INSTANCE_FIELD(Sprite*, ClosedDoorIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, OpenedDoorIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, EditLayoutIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, ReplayerSettingsIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, LeftArrowIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, RightArrowIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, PlayIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, PauseIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, LockIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, WarningIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, CrossIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, PinIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, AlignIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, AnchorIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, ProgressRingIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, RotateRightIcon);
 
     DECLARE_INSTANCE_METHOD(void, Init, AssetBundle* bundle);
     DECLARE_INSTANCE_METHOD(Material*, GetAvatarMaterial, StringW effectName);

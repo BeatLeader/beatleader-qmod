@@ -17,6 +17,7 @@ DECLARE_CONFIG(ModConfig,
     CONFIG_VALUE(StarValueToShow, int, "Display Stars", 0);
     CONFIG_VALUE(Context, int, "Selected Context", static_cast<int>(LeaderboardUI::Context::Standard));
     CONFIG_VALUE(CaptureActive, bool, "Show Leaderboard clan capture status", true);
+    CONFIG_VALUE(NoticeboardEnabled, bool, "Show Noticeboard in main menu", true);
 )
 
 inline bool UploadEnabled() {

@@ -93,6 +93,8 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     miniProfileBackgroundMaterial = GetMaterial("UIMiniProfileBackgroundMaterial");
     skillTriangleMaterial = GetMaterial("UISkillTriangleMaterial");
     clanTagBackgroundMaterial = GetMaterial("ClanTagBackgroundMaterial");
+    roundTexture10Material = GetMaterial("UIRoundTexture10Material");
+    roundTexture2Material = GetMaterial("UIRoundTexture2Material");
 
     locationIcon = GetSprite("LocationIcon");
     rowSeparatorIcon = GetSprite("RowSeparatorIcon");
@@ -124,7 +126,29 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
 
     friendsSelectorIcon = GetSprite("BL_FriendsSelectorIcon");
     globeIcon = GetSprite("BL_GlobeIcon");
+    unknownIcon = GetSprite("BL_UnknownIcon");
     generalContextIcon = GetSprite("BL_ContextGeneral");
 
     TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
+
+    BlackTransparentBG = GetSprite("BL_BlackTransparentBG");
+    BlackTransparentBGOutline = GetSprite("BL_BlackTransparentBGOutline");
+    CyanBGOutline = GetSprite("BL_CyanBGOutline");
+    WhiteBG = GetSprite("BL_WhiteBG");
+    ClosedDoorIcon = GetSprite("BL_ClosedDoorIcon");
+    OpenedDoorIcon = GetSprite("BL_OpenedDoorIcon");
+    EditLayoutIcon = GetSprite("BL_EditLayoutIcon");
+    ReplayerSettingsIcon = GetSprite("BL_ReplayerSettingsIcon");
+    LeftArrowIcon = GetSprite("BL_LeftArrowIcon");
+    RightArrowIcon = GetSprite("BL_RightArrowIcon");
+    PlayIcon = GetSprite("BL_PlayIcon");
+    PauseIcon = GetSprite("BL_PauseIcon");
+    LockIcon = GetSprite("BL_LockIcon");
+    WarningIcon = GetSprite("BL_WarningIcon");
+    CrossIcon = GetSprite("BL_CrossIcon");
+    PinIcon = GetSprite("BL_PinIcon");
+    AlignIcon = GetSprite("BL_AlignIcon");
+    AnchorIcon = GetSprite("BL_AnchorIcon");
+    ProgressRingIcon = GetSprite("BL_ProgressRingIcon");
+    RotateRightIcon = GetSprite("BL_RotateRightIcon");
 }

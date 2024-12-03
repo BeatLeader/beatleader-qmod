@@ -7,6 +7,7 @@
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ResultsViewController.hpp"
 #include "include/UI/QuestUI.hpp"
+#include "include/UI/MainMenu/BeatLeaderNewsViewController.hpp"
 
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
@@ -27,6 +28,7 @@
 #include "GlobalNamespace/RichPresenceManager.hpp"
 #include "GlobalNamespace/MainFlowCoordinator.hpp"
 #include "GlobalNamespace/SettingsFlowCoordinator.hpp"
+#include "HMUI/FlowCoordinator.hpp"
 
 #include "BeatSaber/Init/BSAppInit.hpp"
 #include "UnityEngine/SceneManagement/SceneManager.hpp"
@@ -34,6 +36,10 @@
 
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 #include "bsml/shared/BSML.hpp"
+#include "bsml/shared/Helpers/creation.hpp"
+
+#include "UI/BSML_Addons/Components/FixedImageView.hpp"
+#include "UnityEngine/UI/Image.hpp"
 
 using namespace GlobalNamespace;
 using namespace BSML;
@@ -99,6 +105,7 @@ MAKE_HOOK_MATCH(AppInitStart, &BeatSaber::Init::BSAppInit::InstallBindings, void
 
 static bool hasInited = false;
 static bool shouldClear = false;
+static SafePtrUnity<BeatLeader::BeatLeaderNewsViewController> newsViewController;
 
 // do things with the scene transition stuff
 MAKE_HOOK_MATCH(RichPresenceManager_HandleGameScenesManagerTransitionDidFinish, &GlobalNamespace::RichPresenceManager::HandleGameScenesManagerTransitionDidFinish, void, GlobalNamespace::RichPresenceManager* self, GlobalNamespace::ScenesTransitionSetupDataSO* setupData, Zenject::DiContainer* container) {
@@ -151,6 +158,59 @@ MAKE_HOOK_MATCH(ModalView_Show, &HMUI::ModalView::Show, void, HMUI::ModalView* s
     }
 }
 
+static bool changingToMain = false;
+static SafePtrUnity<GlobalNamespace::MainFlowCoordinator> mainCoordinator;
+
+MAKE_HOOK_MATCH(MainFlowCoordinator_DidActivate, &GlobalNamespace::MainFlowCoordinator::DidActivate, void, 
+    GlobalNamespace::MainFlowCoordinator* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+    MainFlowCoordinator_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
+
+    if (!addedToHierarchy || !getModConfig().NoticeboardEnabled.GetValue()) return;
+
+    if (!newsViewController) {
+        newsViewController = BSML::Helpers::CreateViewController<BeatLeader::BeatLeaderNewsViewController*>();
+    }
+    
+    self->_providedRightScreenViewController = newsViewController.ptr();
+}
+
+MAKE_HOOK_MATCH(MainFlowCoordinator_TopViewControllerWillChange, &GlobalNamespace::MainFlowCoordinator::TopViewControllerWillChange, void,
+    GlobalNamespace::MainFlowCoordinator* self, ::HMUI::ViewController* oldViewController, ::HMUI::ViewController* newViewController,
+                                                                              ::HMUI::__ViewController__AnimationType animationType) {
+    MainFlowCoordinator_TopViewControllerWillChange(self, oldViewController, newViewController, animationType);
+    
+    mainCoordinator = self;
+    changingToMain = newViewController == self->_mainMenuViewController.ptr();
+}
+
+MAKE_HOOK_MATCH(FlowCoordinator_SetRightScreenViewController, &HMUI::FlowCoordinator::SetRightScreenViewController, void,
+    HMUI::FlowCoordinator* self, ::HMUI::ViewController* viewController, ::HMUI::__ViewController__AnimationType animationType) {
+    
+    if (mainCoordinator && 
+        self == mainCoordinator.ptr() && 
+        changingToMain && 
+        getModConfig().NoticeboardEnabled.GetValue() &&
+        viewController == nullptr &&
+        newsViewController) {
+        viewController = newsViewController.ptr();
+        BeatLeaderLogger.error("Setting news view controller");
+    }
+
+    FlowCoordinator_SetRightScreenViewController(self, viewController, animationType);
+}
+
+MAKE_HOOK_MATCH(Image_get_pixelsPerUnit, &UnityEngine::UI::Image::get_pixelsPerUnit, float, UnityEngine::UI::Image* self) {
+    float result = Image_get_pixelsPerUnit(self);
+    
+    // Check if the instance is a FixedImageView
+    auto fixedView = il2cpp_utils::try_cast<BeatLeader::UI::BSML_Addons::FixedImageView>(self);
+    if (fixedView != nullopt) {
+        result *= self->pixelsPerUnitMultiplier;
+    }
+    
+    return result;
+}
+
 // Called later on in the game loading - a good time to install function hooks
 MOD_EXPORT "C" void late_load() {
     il2cpp_functions::Init();
@@ -196,6 +256,10 @@ MOD_EXPORT "C" void late_load() {
     INSTALL_HOOK(BeatLeaderLogger, AppInitStart);
     INSTALL_HOOK(BeatLeaderLogger, SceneManager_Internal_ActiveSceneChanged);
     INSTALL_HOOK(BeatLeaderLogger, RichPresenceManager_HandleGameScenesManagerTransitionDidFinish);
+    INSTALL_HOOK(BeatLeaderLogger, MainFlowCoordinator_DidActivate);
+    INSTALL_HOOK(BeatLeaderLogger, MainFlowCoordinator_TopViewControllerWillChange);
+    INSTALL_HOOK(BeatLeaderLogger, FlowCoordinator_SetRightScreenViewController);
+    INSTALL_HOOK(BeatLeaderLogger, Image_get_pixelsPerUnit);
 
     BeatLeaderLogger.info("Installed main hooks!");
 }
