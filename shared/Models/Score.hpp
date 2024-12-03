@@ -39,7 +39,7 @@ struct Score
     int wallsHit;
     int pauses;
     bool fullCombo;
-    int hmd;
+    string headsetName;
     string timeset;
     string platform;
 

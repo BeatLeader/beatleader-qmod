@@ -63,7 +63,7 @@ string GetTimeSetString(Score const& score) {
     stringstream result;
     result << "<color=#FFFFFF>" << FormatUtils::GetRelativeTimeString(score.timeset);
     result << "<color=#888888><size=70%>   on   </size>";
-    result << "<color=#FFFFFF>" << FormatUtils::GetHeadsetNameById(score.hmd);
+    result << "<color=#FFFFFF>" << score.headsetName;
     return result.str();
 }
 

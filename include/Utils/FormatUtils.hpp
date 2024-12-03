@@ -21,23 +21,6 @@ using namespace UnityEngine;
 
 namespace FormatUtils {
 
-        inline string_view GetHeadsetNameById(int id) {
-            switch (id) {
-                case 1: return "Rift";
-                case 2: return "Vive";
-                case 4: return "Vive Pro";
-                case 8: return "WMR";
-                case 16: return "Rift S";
-                case 32: return "Quest";
-                case 64: return "Index";
-                case 128: return "Vive Cosmos";
-                case 256: return "Quest 2";
-                case 512: return "Quest 3";
-            }
-
-            return "Unknown HMD";
-        }
-
         const int Second = 1;
         const int Minute = 60 * Second;
         const int Hour = 60 * Minute;

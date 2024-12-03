@@ -22,7 +22,7 @@ Score::Score(rapidjson::Value const& document) {
     wallsHit = document["wallsHit"].GetInt();
     pauses = document["pauses"].GetInt();
 
-    hmd = document["hmd"].GetInt();
+    headsetName = document["headsetName"].GetString();
     timeset = document["timeset"].GetString();
     platform = document["platform"].GetString();
 
