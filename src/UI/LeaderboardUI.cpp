@@ -3,6 +3,8 @@
 #include "shared/Models/Replay.hpp"
 #include "shared/Models/Score.hpp"
 #include "shared/Models/ClanScore.hpp"
+#include "include/Models/ScoresContext.hpp"
+
 #include "include/API/PlayerController.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
@@ -30,6 +32,8 @@
 #include "include/Utils/StringUtils.hpp"
 #include "include/Utils/FormatUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
+
+#include "include/Managers/LeaderboardContextsManager.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
@@ -192,22 +196,6 @@ namespace LeaderboardUI {
 
     UnityEngine::UI::Button* sspageUpButton;
     UnityEngine::UI::Button* sspageDownButton;
-
-    static map<Context, string> contextToUrlString = {
-        {Context::Standard, "modifiers"},
-        {Context::NoMods, "standard"},
-        {Context::NoPause, "nopause"},
-        {Context::Golf, "golf"},
-        {Context::SCPM, "scpm"},
-    };
-
-    static map<Context, string> contextToDisplayString = {
-        {Context::Standard, "General"},
-        {Context::NoMods, "No Mods"},
-        {Context::NoPause, "No Pauses"},
-        {Context::Golf, "Golf"},
-        {Context::SCPM, "SCPM"},
-    };
 
     void updatePlayerRank() {
         // Function to calculate the coloring and add the + sign if positive 
@@ -396,7 +384,7 @@ namespace LeaderboardUI {
 
     void refreshFromTheServerScores() {
         auto [hash, difficulty, mode] = getLevelDetails(plvc->_beatmapKey);
-        string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode + "/" + contextToUrlString[static_cast<Context>(getModConfig().Context.GetValue())];
+        string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode + "/" + ScoresContexts::getContextForId(getModConfig().Context.GetValue())->key;
 
         int selectedCellNumber = cachedSelector != -1 ? cachedSelector : plvc->_scopeSegmentedControl->selectedCellNumber;
         int selectedGroup = groupsSelector->segmentedControl->selectedCellNumber;
@@ -608,31 +596,15 @@ namespace LeaderboardUI {
     }
 
     void updateModifiersButton() {
-        contextsButtonHover->set_text("Currently selected leaderboard - " + contextToDisplayString[static_cast<Context>(getModConfig().Context.GetValue())]);
-
-        Sprite* modifiersIcon = NULL;
-        switch(static_cast<Context>(getModConfig().Context.GetValue()))
-        {
-            case Context::Standard:
-                modifiersIcon = BundleLoader::bundle->generalContextIcon;
-                break;
-            case Context::NoMods:
-                modifiersIcon = BundleLoader::bundle->noModifiersIcon;
-                break;
-            case Context::NoPause:
-                modifiersIcon = BundleLoader::bundle->noPauseIcon;
-                break;
-            case Context::Golf:
-                modifiersIcon = BundleLoader::bundle->golfIcon;
-                break;
-            case Context::SCPM:
-                modifiersIcon = BundleLoader::bundle->scpmIcon;
-                break;
-        }
-
-        if(modifiersIcon != NULL)
-        {
-            contextsButton->set_sprite(modifiersIcon);
+        auto currentContext = ScoresContexts::getContextForId(getModConfig().Context.GetValue());
+        contextsButtonHover->set_text("Currently selected leaderboard - " + currentContext->name);
+        if (currentContext->icon) {
+            contextsButton->set_sprite(currentContext->icon);
+        } else {
+            contextsButton->set_sprite(BundleLoader::bundle->generalContextIcon);
+            currentContext->iconCallback = []() {
+                updateModifiersButton();
+            };
         }
     }
 
@@ -845,7 +817,7 @@ namespace LeaderboardUI {
             }, UnityEngine::Vector2(100, -13), UnityEngine::Vector2(5, 5));
 
             UIUtils::CreateRoundRectImage(parentScreen->get_transform(), UnityEngine::Vector2(100, -22), UnityEngine::Vector2(7, 7));
-            contextsButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->modifiersIcon, [](){
+            contextsButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->generalContextIcon, [](){
                 contextsContainer->Show(true, true, nullptr);
             }, UnityEngine::Vector2(100, -22), UnityEngine::Vector2(5, 5));
             contextsButton->set_defaultColor(ContextsColor);
@@ -1301,16 +1273,18 @@ namespace LeaderboardUI {
         }
     }
 
-    void initContextsModal(UnityEngine::Transform* parent){
-        auto container = BSML::Lite::CreateModal(parent, {40, static_cast<float>((static_cast<int>(Context::SCPM) + 2) * 10 + 5)}, nullptr, true);
+    void initContextsModal(UnityEngine::Transform* parent) {
+        // Calculate modal height based on number of contexts
+        float modalHeight = static_cast<float>((ScoresContexts::allContexts.size() + 1) * 10 + 5);
+        auto container = BSML::Lite::CreateModal(parent, {40, modalHeight}, nullptr, true);
 
         BSML::Lite::CreateText(container->get_transform(), "Scores Context", {-8, 27});
 
-        for(int i = 0; i <= static_cast<int>(Context::SCPM); i++)
-        {
-            BSML::Lite::CreateUIButton(container->get_transform(), contextToDisplayString[static_cast<Context>(i)], {20.0f, static_cast<float>(-6 - (i + 1) * 10)}, [i](){
+        int i = 0;
+        for (const auto& context : ScoresContexts::allContexts) {
+            BSML::Lite::CreateUIButton(container->get_transform(), context->name, {20.0f, static_cast<float>(-6 - (i + 1) * 10)}, [context](){
                 // Set the new value
-                getModConfig().Context.SetValue(i);
+                getModConfig().Context.SetValue(context->id);
                 // Hide the modal
                 contextsContainer->Hide(true, nullptr);
                 // Clear the leaderboard
@@ -1326,6 +1300,7 @@ namespace LeaderboardUI {
                     });
                 });
             });
+            i++;
         }
 
         contextsContainer = container;
@@ -1473,6 +1448,14 @@ namespace LeaderboardUI {
             INSTALL_HOOK(BeatLeaderLogger, MultiplayerLobbyControllerDeactivateMultiplayerLobby);
             INSTALL_HOOK(BeatLeaderLogger, MainSettingsMenuViewControllersInstallerInstall);
         }
+
+        ScoresContexts::initializeGeneral();
+        LeaderboardContextsManager::UpdateContexts([] {
+            if (contextsContainer) {
+                initContextsModal(plvc->get_transform());
+                updateModifiersButton();
+            }
+        });
 
         hooksInstalled = true;
     }

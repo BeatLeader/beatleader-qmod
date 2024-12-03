@@ -71,7 +71,7 @@ namespace ResultsView {
                     // Dont crash if file doesnt exist yet
                     if(std::filesystem::exists(ReplayManager::lastReplayFilename)) {
                         auto flow = BSML::Helpers::GetMainFlowCoordinator()->YoungestChildFlowCoordinatorOrSelf();
-                        flow->DismissViewController(flow->get_topViewController(), HMUI::ViewController::AnimationDirection::Vertical, custom_types::MakeDelegate<System::Action *>(classof(System::Action *), (std::function<void()>)[flow]() {
+                        flow->DismissViewController(flow->get_topViewController(), HMUI::ViewController::AnimationDirection::Vertical, custom_types::MakeDelegate<System::Action *>((std::function<void()>)[flow]() {
                             if (flow.try_cast<GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator>()) {
                                 flow.cast<GlobalNamespace::SinglePlayerLevelSelectionFlowCoordinator>()->SinglePlayerLevelSelectionFlowCoordinatorDidActivate(false, false);
                             }

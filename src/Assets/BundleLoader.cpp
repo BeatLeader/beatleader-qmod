@@ -124,12 +124,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
 
     friendsSelectorIcon = GetSprite("BL_FriendsSelectorIcon");
     globeIcon = GetSprite("BL_GlobeIcon");
-
     generalContextIcon = GetSprite("BL_ContextGeneral");
-    noModifiersIcon = GetSprite("BL_ContextNoModifiers");
-    noPauseIcon = GetSprite("BL_ContextNoPause");
-    golfIcon = GetSprite("BL_ContextGolf");
-    scpmIcon = GetSprite("BL_ContextSCPM");
 
     TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
 }

@@ -22,7 +22,12 @@ Score::Score(rapidjson::Value const& document) {
     wallsHit = document["wallsHit"].GetInt();
     pauses = document["pauses"].GetInt();
 
-    headsetName = document["headsetName"].GetString();
+    if (document.HasMember("headsetName") && !document["headsetName"].IsNull()) {
+        headsetName = document["headsetName"].GetString();
+    } else {
+        headsetName = "Unknown";
+    }
+
     timeset = document["timeset"].GetString();
     platform = document["platform"].GetString();
 

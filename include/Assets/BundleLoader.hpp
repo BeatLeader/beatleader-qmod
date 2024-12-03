@@ -75,11 +75,6 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Sprite*, settingsIcon);
 
     DECLARE_INSTANCE_FIELD(Sprite*, generalContextIcon);
-    DECLARE_INSTANCE_FIELD(Sprite*, noModifiersIcon);
-    DECLARE_INSTANCE_FIELD(Sprite*, noPauseIcon);
-    DECLARE_INSTANCE_FIELD(Sprite*, golfIcon);
-    DECLARE_INSTANCE_FIELD(Sprite*, scpmIcon);
-
     DECLARE_INSTANCE_FIELD(Shader*, TMP_SpriteCurved);
 
     DECLARE_INSTANCE_METHOD(void, Init, AssetBundle* bundle);
