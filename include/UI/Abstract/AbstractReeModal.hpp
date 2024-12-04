@@ -42,7 +42,6 @@ public:
     }
 
     virtual void OnOffClick() {
-        BeatLeaderLogger.error("OnOffClick");
         if (offClickCloses) {
             Close();
         }

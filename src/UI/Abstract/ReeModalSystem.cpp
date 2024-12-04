@@ -81,7 +81,6 @@ void BeatLeader::ReeModalSystem::OnDisable() {
 }
 
 void BeatLeader::ReeModalSystem::OnBlockerClicked() {
-    BeatLeaderLogger.error("OnBlockerClicked");
     if (!hasActiveModal) return;
     activeModal->HandleOffClick();
 }

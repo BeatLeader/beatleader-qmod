@@ -69,21 +69,13 @@ class ReeUIComponentV2 {
         return component;
     }
     
-    virtual void OnInitialize() {
-        BeatLeaderLogger.error("OnInitialize ReeUIComponentV2");
-    }
+    virtual void OnInitialize() {}
 
-    virtual void OnInstantiate() {
-        BeatLeaderLogger.error("OnInstantiate ReeUIComponentV2");
-    }
+    virtual void OnInstantiate() {}
 
-    virtual void OnDispose() {
-        BeatLeaderLogger.error("OnDispose ReeUIComponentV2");
-    }
+    virtual void OnDispose() {}
 
-    virtual void OnRootStateChange(bool active) {
-        BeatLeaderLogger.error("OnRootStateChange ReeUIComponentV2");
-    }
+    virtual void OnRootStateChange(bool active) {}
     
     virtual StringW GetContent() { return StringW(""); }
 
