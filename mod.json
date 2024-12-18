@@ -34,6 +34,11 @@
       "version": "^0.4.34",
       "id": "bsml",
       "downloadIfMissing": "https://github.com/RedBrumbler/Quest-BSML/releases/download/v0.4.43/BSML.qmod"
+    },
+    {
+      "version": "^1.4.0",
+      "id": "playlistcore",
+      "downloadIfMissing": "https://github.com/Metalit/PlaylistCore/releases/download/v1.4.2/PlaylistCore.qmod"
     }
   ],
   "modFiles": [],
