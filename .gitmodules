@@ -1,0 +1,3 @@
+[submodule "beatleader-mod"]
+	path = beatleader-mod
+	url = git@github.com:BeatLeader/beatleader-mod.git
