@@ -18,6 +18,10 @@ DECLARE_CONFIG(ModConfig,
     CONFIG_VALUE(Context, int, "Selected Context", static_cast<int>(LeaderboardUI::Context::Standard));
     CONFIG_VALUE(CaptureActive, bool, "Show Leaderboard clan capture status", true);
     CONFIG_VALUE(NoticeboardEnabled, bool, "Show Noticeboard in main menu", true);
+
+    CONFIG_VALUE(SnowEnabled, bool, "Show Snow", true);
+    CONFIG_VALUE(TreeEnabled, bool, "Show Tree", true);
+    CONFIG_VALUE(OthersTreeEnabled, bool, "Show Others Tree", true);
 )
 
 inline bool UploadEnabled() {

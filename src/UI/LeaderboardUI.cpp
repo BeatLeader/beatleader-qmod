@@ -27,6 +27,7 @@
 #include "include/UI/CaptorClanUI.hpp"
 #include "include/UI/QuestUI.hpp"
 #include "include/UI/MultiplayerLeaderboard.hpp"
+#include "include/UI/Christmas/ChristmasTreeManager.hpp"
 
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -746,6 +747,11 @@ namespace LeaderboardUI {
                 self->get_transform(),
                 []() {
                     plvc->Refresh(true, true);
+                },
+                [](bool active) {
+                    if (!active) {
+                        ChristmasTreeManager::HandleScoreInfoPanelVisibility(false, nullptr);
+                    }
                 });
             BeatLeader::initLinksContainerPopup(&linkContainer, self->get_transform());
             BeatLeader::initVotingPopup(&votingUI, self->get_transform(), voteCallback);
@@ -851,6 +857,14 @@ namespace LeaderboardUI {
             settingsButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
             settingsButton->set_defaultColor(FadedColor);
             settingsButton->set_highlightColor(SelectedColor);
+
+            auto treeButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->TreeIcon, [](){
+                ChristmasTreeManager::HandleTreeButtonClicked();
+            }, {174, 36}, {4.5, 4.5});
+
+            treeButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
+            treeButton->set_defaultColor(FadedColor);
+            treeButton->set_highlightColor(SelectedColor);
             
             CaptorClanUI::initCaptorClan(plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject(), plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<TMPro::TextMeshProUGUI*>());
             CaptorClanUI::showClanRankingCallback = []() {
@@ -1095,6 +1109,8 @@ namespace LeaderboardUI {
 
                         scoreDetailsUI->modal->Show(true, true, openEvent);
                         scoreDetailsUI->setScore(cellScores[result]);
+
+                        ChristmasTreeManager::HandleScoreInfoPanelVisibility(true, &cellScores[result]);
                     }, UnityEngine::Vector2(0, 0), UnityEngine::Vector2(80, 6));
                     
                     scoreSelector->set_material(UnityEngine::Object::Instantiate(BundleLoader::bundle->scoreUnderlineMaterial));
@@ -1407,6 +1423,8 @@ namespace LeaderboardUI {
     MAKE_HOOK_MATCH(MainSettingsMenuViewControllersInstallerInstall, &MainSettingsMenuViewControllersInstaller::InstallBindings, void, MainSettingsMenuViewControllersInstaller* installer) {
         MainSettingsMenuViewControllersInstallerInstall(installer);
         mpcontainer = installer->get_Container();
+
+        ChristmasTreeManager::Initialize();
     }
 
     void setup() {

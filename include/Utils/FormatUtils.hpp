@@ -47,6 +47,25 @@ namespace FormatUtils {
             return years <= 1 ? "one year ago" : to_string(years) + " years ago";
         }
 
+        inline string GetRelativeFutureTimeString(string_view timeSet) {
+            int timeSetSeconds = std::stoi(timeSet.data());
+            int nowSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            int delta = -(nowSeconds - timeSetSeconds);
+            if (delta < 1 * Minute) return delta == 1 ? "one second left" : to_string(delta) + " seconds left";
+            if (delta < 2 * Minute) return "a minute left";
+            if (delta < 45 * Minute) return to_string(delta / Minute) + " minutes left";
+            if (delta < 90 * Minute) return "an hour left";
+            if (delta < 24 * Hour) return to_string(delta / Hour) + " hours left";
+            if (delta < 48 * Hour) return "tomorrow";
+            if (delta < 30 * Day) return to_string(delta / Day) + " days left";
+            if (delta < 12 * Month) {
+                int months = delta / Month;
+                return months <= 1 ? "one month left" : to_string(months) + " months left";
+            }
+            int years = delta / Year;
+            return years <= 1 ? "one year left" : to_string(years) + " years left";
+        }
+
         inline string FormatRank(int rank, bool withPrefix) {
             return (withPrefix ? "<size=70%>#</size>" : "") + to_string(rank);
         }

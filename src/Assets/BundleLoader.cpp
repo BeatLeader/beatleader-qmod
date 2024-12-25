@@ -79,6 +79,11 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
         }
     }
 
+    monkeyPrefab = assetBundle->LoadAsset<GameObject*>("MonkeyPrefab");
+    present = assetBundle->LoadAsset<GameObject*>("ChristmasPresent");
+    snowContainer = assetBundle->LoadAsset<GameObject*>("Snow");
+    treeContainer = assetBundle->LoadAsset<GameObject*>("ChristmasTree");
+
     logoMaterial = GetMaterial("LogoMaterial");
     defaultAvatarMaterial = GetMaterial("DefaultAvatar");
     UIAdditiveGlowMaterial = GetMaterial("UIAdditiveGlow");
@@ -151,4 +156,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     AnchorIcon = GetSprite("BL_AnchorIcon");
     ProgressRingIcon = GetSprite("BL_ProgressRingIcon");
     RotateRightIcon = GetSprite("BL_RotateRightIcon");
+    TreeIcon = GetSprite("BL_TreeIcon");
+
+    OrnamentCellBG = GetSprite("BL_OrnamentCellBackground");
 }

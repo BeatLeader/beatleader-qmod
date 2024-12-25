@@ -1,4 +1,5 @@
 #include "include/UI/ScoreDetails/ScoreDetailsUI.hpp"
+#include "include/UI/ReeUIComponentV2.hpp"
 #include "include/Utils/FormatUtils.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/ReplayManager.hpp"
@@ -52,7 +53,8 @@ static void MakeModalTransparent(HMUI::ModalView *modal) {
 void BeatLeader::initScoreDetailsPopup(
         BeatLeader::ScoreDetailsPopup** modalUIPointer, 
         UnityEngine::Transform* parent,
-        function<void()> const &incognitoCallback){
+        function<void()> const &incognitoCallback,
+        function<void(bool)> const &onStateChange){
     auto modalUI = *modalUIPointer;
     if (modalUI != nullptr){
         UnityEngine::GameObject::Destroy(modalUI->modal->get_gameObject());
@@ -60,6 +62,11 @@ void BeatLeader::initScoreDetailsPopup(
     if (modalUI == nullptr) modalUI = (BeatLeader::ScoreDetailsPopup*) malloc(sizeof(BeatLeader::ScoreDetailsPopup));
     modalUI->modal = QuestUI::CreateModal(parent, UnityEngine::Vector2(60, 90), {}, nullptr, true);
     MakeModalTransparent(modalUI->modal);
+
+    auto listener = modalUI->modal->get_gameObject()->AddComponent<ContentStateListener*>();
+    listener->StateChangedEvent = custom_types::MakeDelegate<System::Action_1<bool>*>(std::function<void(bool)>([onStateChange](bool active) {
+        onStateChange(active);
+    }));
 
     auto modalTransform = modalUI->modal->get_transform();
 

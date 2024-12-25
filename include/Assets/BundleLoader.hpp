@@ -28,6 +28,12 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
 
     DECLARE_INSTANCE_FIELD(MaterialsDictionary*, materials);
     DECLARE_INSTANCE_FIELD(SpritesDictionary*, sprites);
+
+    DECLARE_INSTANCE_FIELD(GameObject*, monkeyPrefab);
+    DECLARE_INSTANCE_FIELD(GameObject*, present);
+    DECLARE_INSTANCE_FIELD(GameObject*, snowContainer);
+    DECLARE_INSTANCE_FIELD(GameObject*, treeContainer);
+
     DECLARE_INSTANCE_FIELD(Material*, logoMaterial);
     DECLARE_INSTANCE_FIELD(Material*, defaultAvatarMaterial);
     DECLARE_INSTANCE_FIELD(Material*, UIAdditiveGlowMaterial);
@@ -100,6 +106,9 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Sprite*, AnchorIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, ProgressRingIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, RotateRightIcon);
+    DECLARE_INSTANCE_FIELD(Sprite*, TreeIcon);
+
+    DECLARE_INSTANCE_FIELD(Sprite*, OrnamentCellBG);
 
     DECLARE_INSTANCE_METHOD(void, Init, AssetBundle* bundle);
     DECLARE_INSTANCE_METHOD(Material*, GetAvatarMaterial, StringW effectName);

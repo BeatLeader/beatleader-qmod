@@ -54,5 +54,5 @@ namespace BeatLeader {
 
             void setButtonsMaterial() const;
     };
-    void initScoreDetailsPopup(ScoreDetailsPopup** modalUI, UnityEngine::Transform* parent, function<void()> const &incognitoCallback);
+    void initScoreDetailsPopup(ScoreDetailsPopup** modalUI, UnityEngine::Transform* parent, function<void()> const &incognitoCallback, function<void(bool)> const &onStateChange);
 }

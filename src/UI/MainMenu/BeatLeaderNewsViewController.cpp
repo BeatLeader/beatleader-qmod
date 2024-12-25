@@ -22,6 +22,17 @@ namespace BeatLeader {
         textNewsPanel = TextNewsPanel::Instantiate<TextNewsPanel>(transform, false)->LocalComponent();
         mapNewsPanel = MapNewsPanel::Instantiate<MapNewsPanel>(transform, false)->LocalComponent();
         eventNewsPanel = EventNewsPanel::Instantiate<EventNewsPanel>(transform, false)->LocalComponent();
+        auto treeNews = TreeMapsPanel::Instantiate<TreeMapsPanel>(transform, false);
+        treeNewsPanel = treeNews->LocalComponent();
+        treeNews->shouldShowOtherMapsEvent = [this](bool show) {
+            if (show) {
+                normalMapsContainer->get_gameObject()->SetActive(true);
+                treeMapsContainer->get_gameObject()->SetActive(false);
+            } else {
+                normalMapsContainer->get_gameObject()->SetActive(false);
+                treeMapsContainer->get_gameObject()->SetActive(true);
+            }
+        };
     }
 
     void BeatLeaderNewsViewController::DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
@@ -37,6 +48,7 @@ namespace BeatLeader {
 
     void BeatLeaderNewsViewController::PostParse() {
         UpdateScreen();
+        normalMapsContainer->get_gameObject()->SetActive(false);
     }
 
     void BeatLeaderNewsViewController::OnEnable() {

@@ -102,7 +102,7 @@ namespace BeatLeader {
 
         SafePtrUnity<UnityEngine::GameObject> songSelectButton = UnityEngine::GameObject::Find("SoloButton").unsafePtr();
         if (!songSelectButton) {
-            songSelectButton = UnityEngine::GameObject::Find("Wrapper/BeatmapWithModifiers/BeatmapSelection/EditButton");
+            songSelectButton = UnityEngine::GameObject::Find("Wrapper/BeatmapWithModifiers/BeatmapSelection/EditButton").unsafePtr();
         }
         if (!songSelectButton) {
             return;

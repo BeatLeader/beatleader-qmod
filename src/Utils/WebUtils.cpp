@@ -413,6 +413,64 @@ namespace WebUtils {
         return t;
     }
 
+    std::thread PostJSONInBodyAsync(const string& url, string data, long timeout, function<void(long, string)> const& finished) {
+        std::thread t(
+            [url, timeout, data, finished] {
+                string cookieFile = getCookieFile();
+                string val;
+                // Init curl
+                auto* curl = curl_easy_init();
+                struct curl_slist* headers = NULL;
+                headers = curl_slist_append(headers, "Accept: */*");
+                headers = curl_slist_append(headers, X_BSSB);
+                headers = curl_slist_append(headers, "Content-Type: application/json");
+                // Set headers
+                curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+                curl_easy_setopt(curl, CURLOPT_URL, query_encode(url).c_str());
+
+                curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str());
+                curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFile.c_str());
+
+                // Don't wait forever, time out after TIMEOUT seconds.
+                curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
+
+                // Follow HTTP redirects if necessary.
+                curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
+                curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWrite_CallbackFunc_StdString);
+
+                long httpCode(0);
+                curl_easy_setopt(curl, CURLOPT_WRITEDATA, &val);
+                curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
+                curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
+
+                // Set POST method
+                curl_easy_setopt(curl, CURLOPT_POST, 1L);
+                // Set POST data
+                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+                // Set content length
+                curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data.length());
+
+                CURLcode res = curl_easy_perform(curl);
+                /* Check for errors */
+                if (res != CURLE_OK) {
+                    long errorCode = static_cast<long>(res);
+                    string errorValue = curl_easy_strerror(res);
+                    BeatLeaderLogger.critical("curl_easy_perform() failed: {}: {}", errorCode, errorValue);
+                    curl_easy_cleanup(curl);
+                    finished(errorCode, errorValue);
+                } else {
+                    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+                    curl_easy_cleanup(curl);
+                    finished(httpCode, val);
+                }
+            }
+        );
+        t.detach();
+        return t;
+    }
+
     std::thread PostFormAsync(const string& url, const string& password, const string& login, const string& action,
                        function<void(long, string)> const &finished) {
         std::thread t(

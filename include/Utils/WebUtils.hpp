@@ -32,6 +32,7 @@ namespace WebUtils {
     std::thread PostJSONAsync(string url, string data, function<void(long, string)> const& finished);
 
     std::thread PostJSONAsync(const string& url, string data, long timeout, function<void(long, string)> const& finished);
+    std::thread PostJSONInBodyAsync(const string& url, string data, long timeout, function<void(long, string)> const& finished);
 
     std::thread PostFormAsync(const string& url, const string& password, const string& login, const string& action,
                        function<void(long, string)> const &finished);

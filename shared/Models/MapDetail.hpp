@@ -13,4 +13,5 @@ public:
     std::string downloadUrl;
 
     MapDetail(rapidjson::Value const& document);
+    MapDetail() = default;
 }; 
