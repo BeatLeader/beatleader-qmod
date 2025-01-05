@@ -22,6 +22,7 @@
 
 #include "config-utils/shared/config-utils.hpp"
 #include "custom-types/shared/register.hpp"
+#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "GlobalNamespace/AppInit.hpp"
@@ -82,21 +83,17 @@ MAKE_HOOK_MATCH(MenuTransitionsHelperRestartGame, &MenuTransitionsHelper::Restar
     resetUI();
 }
 
-void replayPostCallback(ReplayUploadStatus status, const string& description, float progress, int code) {
+void replayPostCallback(ReplayUploadStatus status, std::optional<string> score, const string& description, float progress, int code) {
     if (!ReplayRecorder::recording) {
-        BSML::MainThreadScheduler::Schedule([status, description, progress, code] {
+        BSML::MainThreadScheduler::Schedule([status, score, description, progress, code] {
             LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
             if (status == ReplayUploadStatus::finished) {
-                std::thread t ([] {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                    PlayerController::Refresh(0, [](auto player, auto str){
-                        BSML::MainThreadScheduler::Schedule([]{
-                            LeaderboardUI::updatePlayerRank();
-                        });
-                    });
-                    }
-                );
-                t.detach();
+                if (score != std::nullopt) {
+                    rapidjson::Document document;
+                    document.Parse(score->data());
+                    PlayerController::currentPlayer->SetFromScore(document.GetObject());
+                }
+                LeaderboardUI::updatePlayerRank();
             }
         });
     }
@@ -169,13 +166,15 @@ MAKE_HOOK_MATCH(MainFlowCoordinator_DidActivate, &GlobalNamespace::MainFlowCoord
     GlobalNamespace::MainFlowCoordinator* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     MainFlowCoordinator_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
-    if (!addedToHierarchy || !getModConfig().NoticeboardEnabled.GetValue()) return;
+    if (!addedToHierarchy) return;
 
     if (!newsViewController) {
         newsViewController = BSML::Helpers::CreateViewController<BeatLeader::BeatLeaderNewsViewController*>();
     }
     
-    self->_providedRightScreenViewController = newsViewController;
+    if (getModConfig().NoticeboardEnabled.GetValue()) {
+        self->_providedRightScreenViewController = newsViewController;
+    }
 }
 
 MAKE_HOOK_MATCH(MainFlowCoordinator_TopViewControllerWillChange, &GlobalNamespace::MainFlowCoordinator::TopViewControllerWillChange, void,

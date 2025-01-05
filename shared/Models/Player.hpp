@@ -49,5 +49,6 @@ class Player
 
     Player(rapidjson::Value const& userModInterface);
     void SetHistory(rapidjson::Value const& history);
+    void SetFromScore(rapidjson::Value const& score);
     Player() = default;
 };
