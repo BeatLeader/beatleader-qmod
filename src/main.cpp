@@ -55,11 +55,17 @@ MOD_EXPORT void setup(CModInfo *info) noexcept {
     BeatLeaderLogger.info("Completed setup!");
 }
 
+static BeatLeader::BeatLeaderNewsViewController* newsViewController;
+static GlobalNamespace::MainFlowCoordinator* mainCoordinator;
+
 void resetUI() {
     LeaderboardUI::reset();
     LevelInfoUI::reset();
     EmojiSupport::Reset();
     Sprites::ResetCache();
+
+    newsViewController = nullptr;
+    mainCoordinator = nullptr;
 }
 
 MAKE_HOOK_MATCH(HandleSettingsFlowCoordinatorDidFinish, &MainFlowCoordinator::HandleSettingsFlowCoordinatorDidFinish, void, MainFlowCoordinator* self, ::GlobalNamespace::SettingsFlowCoordinator* settingsFlowCoordinator, ::GlobalNamespace::__SettingsFlowCoordinator__FinishAction finishAction) {
@@ -105,7 +111,6 @@ MAKE_HOOK_MATCH(AppInitStart, &BeatSaber::Init::BSAppInit::InstallBindings, void
 
 static bool hasInited = false;
 static bool shouldClear = false;
-static SafePtrUnity<BeatLeader::BeatLeaderNewsViewController> newsViewController;
 
 // do things with the scene transition stuff
 MAKE_HOOK_MATCH(RichPresenceManager_HandleGameScenesManagerTransitionDidFinish, &GlobalNamespace::RichPresenceManager::HandleGameScenesManagerTransitionDidFinish, void, GlobalNamespace::RichPresenceManager* self, GlobalNamespace::ScenesTransitionSetupDataSO* setupData, Zenject::DiContainer* container) {
@@ -159,7 +164,6 @@ MAKE_HOOK_MATCH(ModalView_Show, &HMUI::ModalView::Show, void, HMUI::ModalView* s
 }
 
 static bool changingToMain = false;
-static SafePtrUnity<GlobalNamespace::MainFlowCoordinator> mainCoordinator;
 
 MAKE_HOOK_MATCH(MainFlowCoordinator_DidActivate, &GlobalNamespace::MainFlowCoordinator::DidActivate, void, 
     GlobalNamespace::MainFlowCoordinator* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
@@ -171,7 +175,7 @@ MAKE_HOOK_MATCH(MainFlowCoordinator_DidActivate, &GlobalNamespace::MainFlowCoord
         newsViewController = BSML::Helpers::CreateViewController<BeatLeader::BeatLeaderNewsViewController*>();
     }
     
-    self->_providedRightScreenViewController = newsViewController.ptr();
+    self->_providedRightScreenViewController = newsViewController;
 }
 
 MAKE_HOOK_MATCH(MainFlowCoordinator_TopViewControllerWillChange, &GlobalNamespace::MainFlowCoordinator::TopViewControllerWillChange, void,
@@ -182,10 +186,10 @@ MAKE_HOOK_MATCH(MainFlowCoordinator_TopViewControllerWillChange, &GlobalNamespac
     mainCoordinator = self;
     changingToMain = newViewController == self->_mainMenuViewController.ptr();
 
-    if ((changingToMain && !getModConfig().NoticeboardEnabled.GetValue()) || (!changingToMain && self->_rightScreenViewController == newsViewController.ptr())) {
+    if ((changingToMain && !getModConfig().NoticeboardEnabled.GetValue()) || (!changingToMain && newsViewController && self->_rightScreenViewController == newsViewController)) {
         self->SetRightScreenViewController(nullptr, animationType);
     } else if (changingToMain && getModConfig().NoticeboardEnabled.GetValue() && newsViewController) {
-        self->SetRightScreenViewController(newsViewController.ptr(), animationType);
+        self->SetRightScreenViewController(newsViewController, animationType);
     }
 }
 
