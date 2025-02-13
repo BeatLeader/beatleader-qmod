@@ -71,6 +71,9 @@ namespace BeatLeader {
                 "Play",
                 buttonAction
             );
+            if (!_list) {
+                _list = System::Collections::Generic::List_1<UnityEngine::MonoBehaviour*>::New_ctor();
+            }
 
             _list->Add(panelComponent);
         }
