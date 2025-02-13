@@ -590,6 +590,8 @@ namespace ReplayRecorder {
 
         BeatLeaderLogger.info("Installed all ReplayRecorder hooks!");
 
+        UserEnhancer::FetchHMD();
+
         startedCallback = started;
         replayCallback = callback;
     }

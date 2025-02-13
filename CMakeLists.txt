@@ -1,6 +1,9 @@
 # include some defines automatically made by qpm
 include(qpm_defines.cmake)
 
+# Bump Android sdk version
+set(ANDROID_PLATFORM 29)
+
 # override mod id
 set(MOD_ID "bl")
 

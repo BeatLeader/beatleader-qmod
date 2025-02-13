@@ -3,6 +3,19 @@
 
 #include "GlobalNamespace/OVRPlugin.hpp"
 
+#include <sys/system_properties.h>
+
+std::string UserEnhancer::hmd = "Unknown";
+void UserEnhancer::FetchHMD() {
+    auto prop = __system_property_find("ro.product.model");
+    if (prop) {
+        __system_property_read_callback(prop, [](void* cookie, const char* name, const char* value, uint32_t serial) {
+            std::string brand(value);
+            UserEnhancer::hmd = brand;
+        }, nullptr);
+    }
+}
+
 void UserEnhancer::Enhance(Replay& replay)
 {
     // pointer because easier than optional with reference
@@ -21,23 +34,27 @@ void UserEnhancer::Enhance(Replay& replay)
 
     replay.info.platform = "oculus";
     
-    switch (GlobalNamespace::OVRPlugin::GetSystemHeadsetType())
-    {
-    case GlobalNamespace::OVRPlugin::SystemHeadset::Oculus_Quest:
-        replay.info.hmd = "Oculus Quest";
-        break;
-    case GlobalNamespace::OVRPlugin::SystemHeadset::Oculus_Quest_2:
-        replay.info.hmd = "Oculus Quest 2";
-        break;
-    case GlobalNamespace::OVRPlugin::SystemHeadset::Meta_Quest_Pro:
-        replay.info.hmd = "Meta Quest Pro";
-        break;  
-    case GlobalNamespace::OVRPlugin::SystemHeadset::Meta_Quest_3:
-        replay.info.hmd = "Meta Quest 3";
-        break;
-    default:
-        replay.info.hmd = "Unknown";
-        break;
+    if (UserEnhancer::hmd != "Unknown") {
+        replay.info.hmd = UserEnhancer::hmd;
+    } else {
+        switch (GlobalNamespace::OVRPlugin::GetSystemHeadsetType())
+        {
+        case GlobalNamespace::OVRPlugin::SystemHeadset::Oculus_Quest:
+            replay.info.hmd = "Oculus Quest";
+            break;
+        case GlobalNamespace::OVRPlugin::SystemHeadset::Oculus_Quest_2:
+            replay.info.hmd = "Oculus Quest 2";
+            break;
+        case GlobalNamespace::OVRPlugin::SystemHeadset::Meta_Quest_Pro:
+            replay.info.hmd = "Meta Quest Pro";
+            break;  
+        case GlobalNamespace::OVRPlugin::SystemHeadset::Meta_Quest_3:
+            replay.info.hmd = "Meta Quest 3";
+            break;
+        default:
+            replay.info.hmd = "Unknown";
+            break;
+        }
     }
     switch (GlobalNamespace::OVRPlugin::GetActiveController())
     {
