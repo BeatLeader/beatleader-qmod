@@ -13,6 +13,7 @@
 
 #include "include/Utils/ReplayManager.hpp"
 #include "include/Utils/ModConfig.hpp"
+#include "include/Utils/ReeTransform.hpp"
 #include "include/API/PlayerController.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
@@ -62,6 +63,8 @@
 #include "GlobalNamespace/GameplayCoreSceneSetupData.hpp"
 #include "GlobalNamespace/SaberManager.hpp"
 #include "GlobalNamespace/Saber.hpp"
+#include "GlobalNamespace/IVRPlatformHelper.hpp"
+#include "GlobalNamespace/VRController.hpp"
 
 #include "GlobalNamespace/ScoringElement.hpp"
 #include "GlobalNamespace/BadCutScoringElement.hpp"
@@ -157,6 +160,9 @@ namespace ReplayRecorder {
         automaticPlayerHeight = gameplayCoreSceneSetupData->playerSpecificSettings->automaticPlayerHeight;
     }
 
+    int framesSkipped = 0;
+    bool offsetsRecorded = false;
+
     void startReplay() {
         std::string timeStamp(std::to_string(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
 
@@ -166,6 +172,9 @@ namespace ReplayRecorder {
 
         userEnhancer.Enhance(replay.value());
         audioTimeSyncController = nullptr;
+
+        framesSkipped = 0;
+        offsetsRecorded = false;
     }
 
     MAKE_HOOK_MATCH(SinglePlayerInstallBindings, &GameplayCoreInstaller::InstallBindings, void, GameplayCoreInstaller* self) {
@@ -520,18 +529,39 @@ namespace ReplayRecorder {
         saberManager = reinterpret_cast<SaberManager*>(container->Resolve(csTypeOf(SaberManager*)));
     }
 
-    Sombrero::FastQuaternion Inverse(Sombrero::FastQuaternion rotation) {
-        float lengthSq = rotation.x * rotation.x + rotation.y * rotation.y + rotation.z * rotation.z + rotation.w * rotation.w;
-        if (lengthSq != 0.0)
-        {
-            float i = 1.0f / lengthSq;
-            return Sombrero::FastQuaternion(rotation.x * -i, rotation.y * -i, rotation.z * -i, rotation.w * i);
-        }
-        return rotation;
+    void TryGetSaberOffsets(Saber* saber, Sombrero::FastVector3& localPosition, Sombrero::FastQuaternion& localRotation) {
+        localPosition = Sombrero::FastVector3(0.0f, 0.0f, 0.0f);
+        localRotation = Sombrero::FastQuaternion(0.0f, 0.0f, 0.0f, 1.0f);
+
+        auto vrController = saber->get_gameObject()->GetComponentInParent<VRController*>();
+        if (!vrController) return;
+
+        auto xrRigOrigin = vrController->get_transform()->get_parent();
+        if (!xrRigOrigin) return;
+
+        BeatLeader::ReeTransform xrRigTransform(xrRigOrigin->get_position(), xrRigOrigin->get_rotation());
+
+        UnityEngine::Vector3 controllerPos;
+        UnityEngine::Quaternion controllerRot;
+
+        ByRef<UnityEngine::Vector3> controllerPosRef = ByRef<UnityEngine::Vector3>(&controllerPos);
+        ByRef<UnityEngine::Quaternion> controllerRotRef = ByRef<UnityEngine::Quaternion>(&controllerRot);
+        vrController->_vrPlatformHelper->GetNodePose(vrController->_node, vrController->_nodeIdx, controllerPosRef, controllerRotRef);
+        
+        BeatLeader::ReeTransform controllerTransform(xrRigTransform.LocalToWorldPosition(controllerPos), xrRigTransform.LocalToWorldRotation(controllerRot));
+
+        localPosition = controllerTransform.WorldToLocalPosition(saber->_handleTransform->get_position());
+        localRotation = controllerTransform.WorldToLocalRotation(saber->_handleTransform->get_rotation());
     }
 
-    Sombrero::FastQuaternion InverseTransformRotation(Sombrero::FastQuaternion rotation, Sombrero::FastQuaternion worldRotation) {
-        return Inverse(rotation) * worldRotation;
+    void RecordOffsets() {
+        Sombrero::FastVector3 leftLocalPos, rightLocalPos;
+        Sombrero::FastQuaternion leftLocalRot, rightLocalRot;
+
+        TryGetSaberOffsets(saberManager->leftSaber, leftLocalPos, leftLocalRot);
+        TryGetSaberOffsets(saberManager->rightSaber, rightLocalPos, rightLocalRot);
+
+        replay->saberOffsets = SaberOffsets(leftLocalPos, leftLocalRot, rightLocalPos, rightLocalRot);
     }
 
     MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
@@ -548,9 +578,9 @@ namespace ReplayRecorder {
             auto leftSaber = saberManager->leftSaber->get_transform();
             auto rightSaber = saberManager->rightSaber->get_transform();
             
-            auto head = ReplayTransform(origin->InverseTransformPoint(headTransform->position), InverseTransformRotation(origin->rotation, headTransform->rotation));
-            auto leftHand = ReplayTransform(origin->InverseTransformPoint(leftSaber->position), InverseTransformRotation(origin->rotation, leftSaber->rotation));
-            auto rightHand = ReplayTransform(origin->InverseTransformPoint(rightSaber->position), InverseTransformRotation(origin->rotation, rightSaber->rotation));
+            auto head = ReplayTransform(origin->InverseTransformPoint(headTransform->position), BeatLeader::ReeTransform::InverseTransformRotation(origin->rotation, headTransform->rotation));
+            auto leftHand = ReplayTransform(origin->InverseTransformPoint(leftSaber->position), BeatLeader::ReeTransform::InverseTransformRotation(origin->rotation, leftSaber->rotation));
+            auto rightHand = ReplayTransform(origin->InverseTransformPoint(rightSaber->position), BeatLeader::ReeTransform::InverseTransformRotation(origin->rotation, rightSaber->rotation));
             
             replay->frames.emplace_back(time, fps, head, leftHand, rightHand);
         }
@@ -563,6 +593,12 @@ namespace ReplayRecorder {
                 _currentWallEvent = nullopt;
             }
         }
+
+        if (framesSkipped > 10 && !offsetsRecorded) {
+            RecordOffsets();
+            offsetsRecorded = true;
+        }
+        framesSkipped++;
     }
 
     void StartRecording(

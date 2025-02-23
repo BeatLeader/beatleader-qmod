@@ -9,15 +9,19 @@ enum struct StructType {
     notes = 2,
     walls = 3,
     heights = 4,
-    pauses = 5
+    pauses = 5,
+    saberOffsets = 6,
+    customData = 7
 };
+
+std::map<std::string, CustomDataCallback> Replay::customDataProviders;
 
 void Replay::Encode(ofstream& s) const {
     BeatLeaderLogger.info("Started encode");
     Encode((int)0x442d3d69, s);
     Encode((char)1, s);
 
-    for (char a = 0; a < ((char)StructType::pauses) + 1; a++)
+    for (char a = 0; a < ((char)StructType::customData) + 1; a++)
     {
         Encode(a, s);
         StructType type = (StructType)a;
@@ -46,6 +50,14 @@ void Replay::Encode(ofstream& s) const {
             case StructType::pauses:
             BeatLeaderLogger.info("Started encode pauses");
                 Encode(pauses, s);
+                break;
+            case StructType::saberOffsets:
+            BeatLeaderLogger.info("Started encode saberOffsets");
+                Encode(saberOffsets, s);
+                break;
+            case StructType::customData:
+            BeatLeaderLogger.info("Started encode customData");
+                EncodeCustomData(s);
                 break;
         }
     }
@@ -179,6 +191,26 @@ void Replay::Encode(Pause const &pause, ofstream& stream) {
     Encode(pause.time, stream);
 }
 
+void Replay::Encode(SaberOffsets const &saberOffsets, ofstream& stream) {
+    Encode(saberOffsets.LeftSaberLocalPosition, stream);
+    Encode(saberOffsets.LeftSaberLocalRotation, stream);
+    Encode(saberOffsets.RightSaberLocalPosition, stream);
+    Encode(saberOffsets.RightSaberLocalRotation, stream);
+}
+
+void Replay::EncodeCustomData(ofstream& stream) {
+    Encode((int)customDataProviders.size(), stream);
+    for (auto const& [key, value] : customDataProviders) {
+        Encode(key, stream);
+
+        int count = 0;
+        void* data = nullptr;
+        value(key, &count, &data);
+        Encode(count, stream);
+
+        stream.write(reinterpret_cast<const char *>(data), count);
+    }
+}
 
 char Replay::DecodeChar(ifstream& stream) {
     char value;

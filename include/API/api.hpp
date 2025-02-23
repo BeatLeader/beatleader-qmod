@@ -30,4 +30,10 @@ namespace BeatLeader {
             return func.value()();
         return std::nullopt;
     }
+
+    inline void AddReplayCustomDataProvider(std::string name, function<void(std::string, int*, void**)> callback) {
+        static auto func = CondDeps::Find<void, std::string, function<void(std::string, int*, void**)>>("bl", "AddReplayCustomDataProvider");
+        if(func)
+            func.value()(name, callback);
+    }
 }

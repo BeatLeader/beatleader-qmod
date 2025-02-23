@@ -1,6 +1,7 @@
 #include "main.hpp"
 
 #include "include/API/PlayerController.hpp"
+#include "shared/Models/Replay.hpp"
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "conditional-dependencies/shared/main.hpp"
@@ -37,4 +38,8 @@ EXPOSE_API(LoggedInPlayerId, optional<string>) {
 EXPOSE_API(LoggedInPlayerQuestId, optional<string>) {
     auto const& player = PlayerController::currentPlayer;
     return player ? player->questId : nullopt;
+}
+
+EXPOSE_API(AddReplayCustomDataProvider, void, std::string name, function<void(std::string, int*, void**)> callback) {
+    Replay::customDataProviders[name] = callback;
 }

@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <map>
 
 #include "sombrero/shared/FastVector3.hpp"
 #include "sombrero/shared/FastQuaternion.hpp"
@@ -124,11 +125,25 @@ struct Pause {
     float time;
 };
 
+struct SaberOffsets {
+    Sombrero::FastVector3 LeftSaberLocalPosition;
+    Sombrero::FastQuaternion LeftSaberLocalRotation;
+    Sombrero::FastVector3 RightSaberLocalPosition;
+    Sombrero::FastQuaternion RightSaberLocalRotation;
+
+    SaberOffsets() : LeftSaberLocalPosition(Sombrero::FastVector3(0, 0, 0)), LeftSaberLocalRotation(Sombrero::FastQuaternion(0, 0, 0, 1)), RightSaberLocalPosition(Sombrero::FastVector3(0, 0, 0)), RightSaberLocalRotation(Sombrero::FastQuaternion(0, 0, 0, 1)) {}
+    constexpr SaberOffsets(Sombrero::FastVector3 const &leftSaberLocalPosition, Sombrero::FastQuaternion const &leftSaberLocalRotation, Sombrero::FastVector3 const &rightSaberLocalPosition, Sombrero::FastQuaternion const &rightSaberLocalRotation) : LeftSaberLocalPosition(leftSaberLocalPosition), LeftSaberLocalRotation(leftSaberLocalRotation), RightSaberLocalPosition(rightSaberLocalPosition), RightSaberLocalRotation(rightSaberLocalRotation) {}
+};
+
+using CustomDataCallback = std::function<void(std::string, int*, void**)>;
+
 class Replay
 {
 public:
     void Encode(ofstream& stream) const;
     static std::optional<ReplayInfo> DecodeInfo(ifstream& stream);
+
+    static std::map<std::string, CustomDataCallback> customDataProviders;
 
     explicit Replay(ReplayInfo info) : info(std::move(info)) {}
     Replay(Replay&&) = default; // make move default, avoid copying
@@ -140,6 +155,7 @@ public:
     vector<WallEvent> walls;
     vector<AutomaticHeight> heights;
     vector<Pause> pauses;
+    SaberOffsets saberOffsets;
 private:
     static void Encode(char value, ofstream& stream);
     static void Encode(int value, ofstream& stream);
@@ -167,6 +183,8 @@ private:
     static void Encode(WallEvent const &wall, ofstream& stream);
     static void Encode(AutomaticHeight const &height, ofstream& stream);
     static void Encode(Pause const &pause, ofstream& stream);
+    static void Encode(SaberOffsets const &saberOffsets, ofstream& stream);
+    static void EncodeCustomData(ofstream& stream);
 
     static char DecodeChar(ifstream& stream);
     static int DecodeInt(ifstream& stream);
