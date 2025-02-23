@@ -27,6 +27,7 @@ struct Score
     int modifiedScore;
     float accuracy;
     string playerId;
+    string leaderboardId;
     float pp;
     // float Weight;
     int rank;

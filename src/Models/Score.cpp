@@ -28,6 +28,12 @@ Score::Score(rapidjson::Value const& document) {
         headsetName = "Unknown";
     }
 
+    if (document.HasMember("leaderboardId") && !document["leaderboardId"].IsNull()) {
+        leaderboardId = document["leaderboardId"].GetString();
+    } else {
+        leaderboardId = "";
+    }
+
     timeset = document["timeset"].GetString();
     platform = document["platform"].GetString();
 

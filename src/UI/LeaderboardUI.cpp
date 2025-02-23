@@ -382,6 +382,8 @@ namespace LeaderboardUI {
         return make_tuple(hash, difficulty, mode);
     }
 
+    string lastLeaderboardId = "";
+
     void refreshFromTheServerScores() {
         auto [hash, difficulty, mode] = getLevelDetails(plvc->_beatmapKey);
         string url = WebUtils::API_URL + "v3/scores/" + hash + "/" + difficulty + "/" + mode + "/" + ScoresContexts::getContextForId(getModConfig().Context.GetValue())->key;
@@ -412,6 +414,7 @@ namespace LeaderboardUI {
         url += "?page=" + to_string(page) + "&player=" + PlayerController::currentPlayer->id;
 
         lastUrl = url;
+        lastLeaderboardId = "";
 
         WebUtils::GetAsync(url, [url](long status, string stringResult){
             if (url != lastUrl) return;
@@ -455,6 +458,7 @@ namespace LeaderboardUI {
 
                         if (index == 0) {
                             topRank = currentScore.rank;
+                            lastLeaderboardId = currentScore.leaderboardId;
                         }
                         
                         if (currentScore.playerId.compare(PlayerController::currentPlayer->id) == 0) {
@@ -851,6 +855,16 @@ namespace LeaderboardUI {
             settingsButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
             settingsButton->set_defaultColor(FadedColor);
             settingsButton->set_highlightColor(SelectedColor);
+
+            auto leaderboardLinkButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->profileIcon, [](){
+                string url = WebUtils::WEB_URL + "leaderboard/global/" + lastLeaderboardId;
+                static auto UnityEngine_Application_OpenURL = il2cpp_utils::resolve_icall<void, StringW>("UnityEngine.Application::OpenURL");
+                UnityEngine_Application_OpenURL(url);
+            }, {174, 36}, {4.5, 4.5});
+
+            leaderboardLinkButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
+            leaderboardLinkButton->set_defaultColor(FadedColor);
+            leaderboardLinkButton->set_highlightColor(SelectedColor);
             
             CaptorClanUI::initCaptorClan(plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject(), plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<TMPro::TextMeshProUGUI*>());
             CaptorClanUI::showClanRankingCallback = []() {
