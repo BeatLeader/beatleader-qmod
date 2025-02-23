@@ -11,7 +11,7 @@ Beat Saber custom songs leaderboard service. It records your plays and sends the
 Download .qmod file from the [Releases](/releases) tab and install it using BMBF. Use the appropriate version for your Beat Saber version!
 In order to see leaderboards and post scores, you need to login in preferences. Sign up with any login and password if your are using mod in the first time. You can migrate to Steam profile on the website.
 
-Go to the https://beatleader.xyz/ to see your scores on the web.
+Go to the https://beatleader.com/ to see your scores on the web.
 
 ## Roadmap
 

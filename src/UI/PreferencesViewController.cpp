@@ -123,7 +123,7 @@ std::vector<std::string_view> starValueOptions = {
 };
 
 std::vector<std::string_view> serverOptions = {
-    ".xyz",
+    ".com",
     ".net",
     ".org"
 };

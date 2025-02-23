@@ -42,6 +42,36 @@ void PlayerController::Refresh(int retry, const function<void(optional<Player> c
         }
     };
 
+    // Replace beatleader.xyz in cookie file with beatleader.com if it exists
+    string cookieFile = WebUtils::getCookieFile();
+    if (std::filesystem::exists(cookieFile)) {
+        FILE* file = fopen(cookieFile.c_str(), "r");
+        if (file) {
+            string contents;
+            char buffer[1024];
+            while (fgets(buffer, sizeof(buffer), file)) {
+                contents += buffer;
+            }
+            fclose(file);
+
+            // Replace all instances of beatleader.xyz with beatleader.com
+            size_t pos = 0;
+            string from = "beatleader.xyz";
+            string to = "beatleader.com";
+            while ((pos = contents.find(from, pos)) != string::npos) {
+                contents.replace(pos, from.length(), to);
+                pos += to.length();
+            }
+
+            // Write back to file
+            file = fopen(cookieFile.c_str(), "w");
+            if (file) {
+                fputs(contents.c_str(), file);
+                fclose(file);
+            }
+        }
+    }
+
     // Get new userdata and refresh the interface with it
     WebUtils::GetJSONAsync(WebUtils::API_URL + "user/modinterface", [retry, finished, handleError](long status, bool error, rapidjson::Document const& result){
         if (status == 200 && !error) {

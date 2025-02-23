@@ -33,8 +33,8 @@ namespace WebUtils {
             break;
         
         default:
-            API_URL = "https://api.beatleader.xyz/";
-            WEB_URL = "https://beatleader.xyz/";
+            API_URL = "https://api.beatleader.com/";
+            WEB_URL = "https://beatleader.com/";
             break;
         }
         USER_AGENT = "BeatLeader / " + modInfo.version + " (BeatSaber/" + (string)UnityEngine::Application::get_version() + ") (Oculus)";
@@ -450,12 +450,12 @@ namespace WebUtils {
                     CURLFORM_COPYNAME, "action",
                     CURLFORM_COPYCONTENTS, action.data(),
                     CURLFORM_END);
-                    curl_formadd(&formpost,
+                curl_formadd(&formpost,
                     &lastptr,
                     CURLFORM_COPYNAME, "login",
                     CURLFORM_COPYCONTENTS, login.data(),
                     CURLFORM_END);
-                    curl_formadd(&formpost,
+                curl_formadd(&formpost,
                     &lastptr,
                     CURLFORM_COPYNAME, "password",
                     CURLFORM_COPYCONTENTS, password.data(),
