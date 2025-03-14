@@ -105,4 +105,10 @@ namespace ResultsView {
         INSTALL_HOOK(BeatLeaderLogger, GetLastReplayStateHook);
         INSTALL_HOOK(BeatLeaderLogger, ResultsViewDidActivate);
     }
+
+    void reset() {
+        resultsVotingButton = NULL;
+        replayButton = NULL;
+        votingUI = NULL;
+    }
 }

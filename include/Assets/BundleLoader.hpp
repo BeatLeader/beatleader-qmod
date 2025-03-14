@@ -7,6 +7,7 @@
 #include "UnityEngine/Sprite.hpp"
 #include "UnityEngine/Shader.hpp"
 #include "UnityEngine/AssetBundleCreateRequest.hpp"
+#include "HMUI/IconSegmentedControl.hpp"
 
 #include "custom-types/shared/macros.hpp"
 #include "custom-types/shared/coroutine.hpp"
@@ -100,6 +101,8 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Sprite*, AnchorIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, ProgressRingIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, RotateRightIcon);
+
+    DECLARE_INSTANCE_FIELD(::HMUI::IconSegmentedControl::DataItem*, IconSegmentedControl);
 
     DECLARE_INSTANCE_METHOD(void, Init, AssetBundle* bundle);
     DECLARE_INSTANCE_METHOD(Material*, GetAvatarMaterial, StringW effectName);

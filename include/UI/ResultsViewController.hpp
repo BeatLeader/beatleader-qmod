@@ -9,4 +9,5 @@ namespace ResultsView {
     extern SafePtrUnity<BeatLeader::VotingButton> resultsVotingButton;
     extern BeatLeader::RankVotingPopup* votingUI;
     void setup();
+    void reset();
 }

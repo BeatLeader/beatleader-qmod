@@ -52,6 +52,7 @@
 #include "HMUI/CurvedTextMeshPro.hpp"
 
 #include "System/Action.hpp"
+#include "System/Collections/Generic/List_1.hpp"
 #include "UnityEngine/Resources.hpp"
 #include "UnityEngine/Application.hpp"
 #include "UnityEngine/Time.hpp"
@@ -189,13 +190,11 @@ namespace LeaderboardUI {
     static bool cachedShowRestart;
     static bool statusWasCached;
     static vector<UnityEngine::Transform*> ssElements;
+    static UnityEngine::GameObject* ssLoadingIndicator;
     bool ssInstalled = true;
     bool ssWasOpened = false;
     bool showBeatLeader = false;
     bool restoredFromPreferences = false;
-
-    UnityEngine::UI::Button* sspageUpButton;
-    UnityEngine::UI::Button* sspageDownButton;
 
     void updatePlayerRank() {
         // Function to calculate the coloring and add the + sign if positive 
@@ -294,6 +293,33 @@ namespace LeaderboardUI {
         }
     }
 
+    void toggleGroupsSelector(bool show) {
+        if (!show) {
+            if (BundleLoader::bundle->IconSegmentedControl == nullptr) return;
+            ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(4);
+            for (int index = 0; index < 3; ++index)
+            {
+                dataItems[index] = plvc->_scopeSegmentedControl->_dataItems.get(index);
+            }
+            dataItems[3] = BundleLoader::bundle->IconSegmentedControl;
+
+            plvc->_scopeSegmentedControl->SetData(dataItems);
+
+            BundleLoader::bundle->IconSegmentedControl = nullptr;
+        } else {
+            if (plvc->_scopeSegmentedControl->_dataItems.size() != 4) return;
+            BundleLoader::bundle->IconSegmentedControl = plvc->_scopeSegmentedControl->_dataItems.get(3);
+            
+            ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(3);
+            for (int index = 0; index < 3; ++index)
+            {
+                dataItems[index] = plvc->_scopeSegmentedControl->_dataItems.get(index);
+            }
+
+            plvc->_scopeSegmentedControl->SetData(dataItems);
+        }
+    }
+
     MAKE_HOOK_MATCH(LeaderboardActivate, &PlatformLeaderboardViewController::DidActivate, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHeirarchy, bool screenSystemEnabling) {
         LeaderboardActivate(self, firstActivation, addedToHeirarchy, screenSystemEnabling);
         if (showBeatLeader && firstActivation) {
@@ -311,6 +337,7 @@ namespace LeaderboardUI {
             if (statusWasCached && showBeatLeader) {
                 updateStatus(cachedStatus, cachedDescription, cachedProgress, cachedShowRestart);
             }
+            toggleGroupsSelector(showBeatLeader);
         }
     }
 
@@ -698,14 +725,16 @@ namespace LeaderboardUI {
                 auto name =  transform->get_name();
 
                 bool infoIcon = name == "ScoreSaberClickableImage";
-                bool header = (name == "bsmlHorizontalLayoutGroup" || name == "bsmlVerticalLayoutGroup") &&
-                            transform->get_parent() && transform->get_parent()->get_parent() &&
-                            transform->get_parent()->get_parent()->get_name() == "PlatformLeaderboardViewController";
+                bool header = (name == "BSMLHorizontalLayoutGroup" || name == "BSMLVerticalLayoutGroup" || name == "SettingsButton") &&
+                            transform->get_parent() && (transform->get_parent()->get_name() == "PlatformLeaderboardViewController" || (transform->get_parent()->get_parent() &&
+                            transform->get_parent()->get_parent()->get_name() == "PlatformLeaderboardViewController"));
                 if (infoIcon || header) {
                     transform->get_gameObject()->SetActive(false);
                     ssElements.push_back(transform);
                 }
             }
+
+            ssLoadingIndicator = Resources::FindObjectsOfTypeAll<UnityEngine::GameObject*>()->FirstOrDefault([](auto x) { return x->get_name() == "ScoreSaberLoadingIndicator" && x->get_transform()->get_parent()->get_name() != "BSMLStackLayoutGroup"; });
         }
 
         if (PlayerController::currentPlayer == std::nullopt) {
@@ -739,6 +768,7 @@ namespace LeaderboardUI {
                 dataItem->set_hintText("Friends");
                 controlRectTransform->set_sizeDelta({10, 30});
             }
+            toggleGroupsSelector(showBeatLeader);
             plvc->_scopeSegmentedControl->ReloadData();
             plvc->_scopeSegmentedControl->SelectCellWithNumber(selectedCell);
 
@@ -892,32 +922,16 @@ namespace LeaderboardUI {
             parentScreen->GetComponent<HMUI::Screen*>()->_rootViewController = self;
         }
 
-        if (ssInstalled && !sspageUpButton) {
-            ArrayW<UnityEngine::UI::Button*> buttons = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::UI::Button*>();
-            for (size_t i = 0; i < buttons.size(); i++)
-            {
-                auto button = buttons[i];
-
-                TMPro::TextMeshProUGUI* textMesh = button->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
-                if (textMesh && textMesh->get_text() && textMesh->get_text() == "") {
-                    auto position = button->GetComponent<UnityEngine::RectTransform *>()->get_anchoredPosition();
-                    if (position.x == -40 && position.y == 20) {
-                        sspageDownButton = button;
-                        sspageDownButton->get_gameObject()->SetActive(false);
-                    } else if (position.x == -40 && position.y == -20) {
-                        sspageUpButton = button;
-                        sspageUpButton->get_gameObject()->SetActive(false);
-                    }
-                }
-            }
-        }
-
         if (upPageButton != NULL) {
             upPageButton->get_gameObject()->SetActive(false);
             downPageButton->get_gameObject()->SetActive(false);
         }
 
         refreshFromTheServerCurrent();
+
+        if (ssLoadingIndicator != nullptr && showBeatLeader) {
+            ssLoadingIndicator->SetActive(false);
+        }
     }
 
     Score detailsTextWorkaround;
@@ -939,11 +953,6 @@ namespace LeaderboardUI {
         for (size_t i = 0; i < ssElements.size(); i++)
         {
             ssElements[i]->get_gameObject()->SetActive(!showBeatLeader);
-        }
-
-        if (sspageUpButton != NULL) {
-            sspageDownButton->get_gameObject()->SetActive(!showBeatLeader);
-            sspageUpButton->get_gameObject()->SetActive(!showBeatLeader);
         }
 
         if (upPageButton != NULL) {
@@ -973,6 +982,7 @@ namespace LeaderboardUI {
             dataItem->set_hintText("Friends");
             rectTransform->set_sizeDelta({10, 30});
         }
+        toggleGroupsSelector(showBeatLeader);
         plvc->_scopeSegmentedControl->ReloadData();
         plvc->_scopeSegmentedControl->SelectCellWithNumber(selectedCell);
 
@@ -1024,7 +1034,7 @@ namespace LeaderboardUI {
             ssWasOpened = true;
         }
 
-        if (ssInstalled && showBeatLeader && sspageUpButton == NULL) {
+        if (ssInstalled && showBeatLeader && ssElements.size() == 0) {
             std::async(std::launch::async, [] () {
                 std::this_thread::sleep_for(std::chrono::seconds{1});
                 BSML::MainThreadScheduler::Schedule([] {
@@ -1485,15 +1495,16 @@ namespace LeaderboardUI {
         loginPrompt = NULL;
         preferencesButton = NULL;
         parentScreen = NULL;
-        sspageUpButton = NULL;
         cellScores.clear();
         avatars = {};
         cellHighlights = {};
         cellBackgrounds = {};
         showBeatLeaderButton = NULL;
+        ResultsView::reset();
         upPageButton = NULL;
         groupsSelector = NULL;
         CaptorClanUI::Reset();
+        CaptorClanUI::showClanRanking = false;
         ssWasOpened = false;
         if (ssInstalled) {
             showBeatLeader = getModConfig().ShowBeatleader.GetValue();
