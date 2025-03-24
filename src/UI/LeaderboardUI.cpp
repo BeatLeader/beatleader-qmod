@@ -1072,25 +1072,25 @@ namespace LeaderboardUI {
         refreshGroupsSelector();
     }
 
-    LeaderboardTableCell* CellForIdxReimplement(LeaderboardTableView* self, HMUI::TableView* tableView) {
+    LeaderboardTableCell* CellForIdxReimplement(LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
         LeaderboardTableCell* leaderboardTableCell = tableView->DequeueReusableCellForIdentifier("Cell").try_cast<LeaderboardTableCell>().value_or(UnityW<LeaderboardTableCell>());
         if (leaderboardTableCell == NULL)
         {
             leaderboardTableCell = (LeaderboardTableCell *)Object::Instantiate<LeaderboardTableCell*>(self->_cellPrefab);
             ((TableCell *)leaderboardTableCell)->set_reuseIdentifier("Cell");
         }
-        auto score = self->_scores->get_Item(10);
+        auto score = self->_scores->get_Item(row);
         leaderboardTableCell->set_rank(score->rank);
         leaderboardTableCell->set_playerName(score->playerName);
         leaderboardTableCell->set_score(score->score);
         leaderboardTableCell->set_showFullCombo(score->fullCombo);
         leaderboardTableCell->set_showSeparator(false);
-        leaderboardTableCell->set_specialScore(self->_specialScorePos == 10);
+        leaderboardTableCell->set_specialScore(self->_specialScorePos == row);
         return leaderboardTableCell;
     }
 
     MAKE_HOOK_MATCH(LeaderboardCellSource, &LeaderboardTableView::CellForIdx, UnityW<HMUI::TableCell>, LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
-        LeaderboardTableCell* result = row == 10 ? CellForIdxReimplement(self, tableView) : LeaderboardCellSource(self, tableView, row).cast<LeaderboardTableCell>().ptr();
+        LeaderboardTableCell* result = showBeatLeader && !isLocal ? CellForIdxReimplement(self, tableView, row) : LeaderboardCellSource(self, tableView, row).cast<LeaderboardTableCell>().ptr();
 
         if (showBeatLeader && !isLocal) {
             if (result->_playerNameText->get_fontSize() > 3 || result->_playerNameText->get_enableAutoSizing()) {
