@@ -5,7 +5,7 @@
   "info": {
     "name": "BeatLeader",
     "id": "BeatLeader",
-    "version": "0.8.63",
+    "version": "0.8.64",
     "url": null,
     "additionalData": {
       "overrideSoName": "libbl.so"
