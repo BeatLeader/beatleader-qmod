@@ -18,7 +18,7 @@ void MapEnhancer::Enhance(Replay &replay)
     info.difficulty = DiffName(difficultyBeatmap.difficulty.value__);
 
     info.mode = (string)difficultyBeatmap.beatmapCharacteristic->serializedName;
-    info.environment = (string)environmentInfo->environmentName;
+    info.environment = (string)environmentName._environmentName;
     info.modifiers = Join(Modifiers());
     info.leftHanded = playerSpecificSettings->leftHanded;
     info.height = playerSpecificSettings->automaticPlayerHeight ? 0 : playerSpecificSettings->playerHeight;

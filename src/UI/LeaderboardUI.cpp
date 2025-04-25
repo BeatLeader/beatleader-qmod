@@ -347,7 +347,7 @@ namespace LeaderboardUI {
         void, 
         SegmentedControl* self,
         ::HMUI::SelectableCell* selectableCell, 
-        ::HMUI::__SelectableCell__TransitionType transitionType, 
+        ::HMUI::SelectableCell_TransitionType transitionType, 
         ::System::Object* changeOwner) {
         SegmentedControlHandleCellSelection(self, selectableCell, transitionType, changeOwner);
 

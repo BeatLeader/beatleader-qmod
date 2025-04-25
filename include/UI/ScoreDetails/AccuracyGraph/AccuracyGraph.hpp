@@ -39,7 +39,7 @@ using namespace std;
 
 #define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::methodInfo()
 
-DECLARE_CLASS_CODEGEN(BeatLeader, AccuracyGraph, UnityEngine::EventSystems::UIBehaviour,
+DECLARE_CLASS_CODEGEN(BeatLeader, AccuracyGraph, UnityEngine::EventSystems::UIBehaviour) {
     DECLARE_INSTANCE_FIELD(AccuracyGraphLine*, graphLine);
     DECLARE_INSTANCE_FIELD(UnityEngine::Material*, backgroundMaterial);
     DECLARE_INSTANCE_FIELD(HMUI::ModalView*, modal);
@@ -66,4 +66,4 @@ DECLARE_CLASS_CODEGEN(BeatLeader, AccuracyGraph, UnityEngine::EventSystems::UIBe
 
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, underlineText);
     DECLARE_INSTANCE_FIELD(HMUI::CurvedCanvasSettingsHelper*, curvedCanvasSettingsHelper);
-)
+    };

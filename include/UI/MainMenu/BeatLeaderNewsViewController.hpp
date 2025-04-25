@@ -10,7 +10,7 @@
 #include "UI/MainMenu/OtherNews/MapNewsPanel.hpp"
 #include "UI/MainMenu/OtherNews/EventNewsPanel.hpp"
 
-DECLARE_CLASS_CODEGEN(BeatLeader, BeatLeaderNewsViewController, HMUI::ViewController,
+DECLARE_CLASS_CODEGEN(BeatLeader, BeatLeaderNewsViewController, HMUI::ViewController) {
     DECLARE_INSTANCE_FIELD(BeatLeader::AbstractNewsPanelComponent*, textNewsPanel);
     DECLARE_INSTANCE_FIELD(BeatLeader::AbstractNewsPanelComponent*, mapNewsPanel);
     DECLARE_INSTANCE_FIELD(BeatLeader::AbstractNewsPanelComponent*, eventNewsPanel);
@@ -59,5 +59,4 @@ DECLARE_CLASS_CODEGEN(BeatLeader, BeatLeaderNewsViewController, HMUI::ViewContro
             )";
         }
         
-) 
-
+    };

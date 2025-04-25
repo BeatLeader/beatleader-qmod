@@ -6,12 +6,12 @@
 #include "TMPro/TextMeshProUGUI.hpp"
 #include "UI/ReeUIComponentV2.hpp"
 
-DECLARE_CLASS_CUSTOM(BeatLeader, NewsHeaderComponent, BeatLeader::ReeComponent,
+DECLARE_CLASS_CUSTOM(BeatLeader, NewsHeaderComponent, BeatLeader::ReeComponent) {
     DECLARE_INSTANCE_FIELD(HMUI::ImageView*, _image);
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _text);
 
     DECLARE_INSTANCE_METHOD(void, SetupData, StringW text);
-)
+};
 
 namespace BeatLeader {
 

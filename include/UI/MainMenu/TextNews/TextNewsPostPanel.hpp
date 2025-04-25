@@ -6,13 +6,13 @@
 #include "Models/NewsPost.hpp"
 #include "UI/MainMenu/TextNews/TextNewsPostHeaderPanel.hpp"
 
-DECLARE_CLASS_CUSTOM(BeatLeader, TextNewsPostPanelComponent, BeatLeader::ReeComponent,
+DECLARE_CLASS_CUSTOM(BeatLeader, TextNewsPostPanelComponent, BeatLeader::ReeComponent) {
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _bodyText);
     DECLARE_INSTANCE_FIELD(HMUI::ImageView*, _image);
     DECLARE_INSTANCE_FIELD(TextNewsPostHeaderPanelComponent*, header);
 
     DECLARE_INSTANCE_METHOD(void, Awake);
-)
+};
 
 namespace BeatLeader {
 

@@ -77,6 +77,8 @@
 #include "GlobalNamespace/MultiplayerLevelCompletionResults.hpp"
 #include "GlobalNamespace/PlayersSpecificSettingsAtGameStartModel.hpp"
 #include "GlobalNamespace/PlayerSpecificSettingsNetSerializable.hpp"
+#include "GlobalNamespace/IVariableMovementDataProvider.hpp"
+#include "GlobalNamespace/EnvironmentInfoSO.hpp"
 
 #include "Zenject/DiContainer.hpp"
 
@@ -140,7 +142,7 @@ namespace ReplayRecorder {
         mapEnhancer.gameplayModifiers = self->gameplayModifiers;
         mapEnhancer.playerSpecificSettings = self->gameplayCoreSceneSetupData->playerSpecificSettings;
         mapEnhancer.practiceSettings = self->practiceSettings;
-        mapEnhancer.environmentInfo = self->environmentInfo;
+        mapEnhancer.environmentName = self->beatmapLevel->GetEnvironmentName(self->beatmapKey.beatmapCharacteristic, self->beatmapKey.difficulty);;
         mapEnhancer.colorScheme = self->colorScheme;
 
         automaticPlayerHeight = self->gameplayCoreSceneSetupData->playerSpecificSettings->automaticPlayerHeight;
@@ -154,7 +156,7 @@ namespace ReplayRecorder {
         mapEnhancer.gameplayModifiers = gameplayCoreSceneSetupData->gameplayModifiers;
         mapEnhancer.playerSpecificSettings = gameplayCoreSceneSetupData->playerSpecificSettings;
         mapEnhancer.practiceSettings = NULL;
-        mapEnhancer.environmentInfo = self->_loadedMultiplayerEnvironmentInfo;
+        mapEnhancer.environmentName = self->_loadedMultiplayerEnvironmentInfo->_environmentName;
         mapEnhancer.colorScheme = self->colorScheme;
 
         automaticPlayerHeight = gameplayCoreSceneSetupData->playerSpecificSettings->automaticPlayerHeight;
@@ -269,13 +271,13 @@ namespace ReplayRecorder {
         _noteEventCache.emplace(_noteId, NoteEvent(noteID, spawnTime));
     }
 
-    MAKE_HOOK_MATCH(SpawnNote, &BeatmapObjectManager::AddSpawnedNoteController, void, BeatmapObjectManager* self, NoteController* noteController, BeatmapObjectSpawnMovementData::NoteSpawnData noteSpawnData, float rotation) {
-        SpawnNote(self, noteController, noteSpawnData, rotation);
+    MAKE_HOOK_MATCH(SpawnNote, &BeatmapObjectManager::AddSpawnedNoteController, void, BeatmapObjectManager* self, NoteController* noteController, NoteSpawnData noteSpawnData) {
+        SpawnNote(self, noteController, noteSpawnData);
         NoteSpawned(noteController, noteController->noteData);
     }
 
-    MAKE_HOOK_MATCH(SpawnObstacle, &BeatmapObjectManager::AddSpawnedObstacleController, void, BeatmapObjectManager* self, ObstacleController* obstacleController, BeatmapObjectSpawnMovementData::ObstacleSpawnData obstacleSpawnData, float rotation) {
-        SpawnObstacle(self, obstacleController, obstacleSpawnData, rotation);
+    MAKE_HOOK_MATCH(SpawnObstacle, &BeatmapObjectManager::AddSpawnedObstacleController, void, BeatmapObjectManager* self, ObstacleController* obstacleController, GlobalNamespace::ObstacleSpawnData obstacleSpawnData) {
+        SpawnObstacle(self, obstacleController, obstacleSpawnData);
 
         if (replay != nullopt && audioTimeSyncController != NULL && obstacleController->obstacleData != NULL) {
             int wallId = _wallId++;
@@ -494,7 +496,7 @@ namespace ReplayRecorder {
         BeatMapStart(self);
 
         if(replay != nullopt) {
-            replay->info.jumpDistance = self->get_jumpDistance();
+            replay->info.jumpDistance = self->_variableMovementDataProvider->get_jumpDistance();
             _currentPause = nullopt;
             _currentWallEvent = nullopt;
         }

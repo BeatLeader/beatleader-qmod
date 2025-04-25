@@ -6,12 +6,12 @@
 #include "Models/PlatformEvent.hpp"
 #include "UI/Abstract/AbstractReeModal.hpp"
 
-DECLARE_CLASS_CUSTOM(BeatLeader, EventDetailsDialogComponent, BeatLeader::ReeComponent,
+DECLARE_CLASS_CUSTOM(BeatLeader, EventDetailsDialogComponent, BeatLeader::ReeComponent) {
     DECLARE_INSTANCE_FIELD(UnityEngine::GameObject*, _loadingContainer);
     DECLARE_INSTANCE_FIELD(UnityEngine::GameObject*, _eventContainer);
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _eventDescription);
     DECLARE_INSTANCE_FIELD(UnityEngine::UI::Button*, _downloadButton);
-)
+};
 
 namespace BeatLeader {
 

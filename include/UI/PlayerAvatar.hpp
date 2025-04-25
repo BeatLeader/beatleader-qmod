@@ -13,7 +13,7 @@ using namespace std;
 
 #define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::methodInfo()
 
-DECLARE_CLASS_CODEGEN(BeatLeader, PlayerAvatar, UnityEngine::MonoBehaviour,
+DECLARE_CLASS_CODEGEN(BeatLeader, PlayerAvatar, UnityEngine::MonoBehaviour) {
     DECLARE_INSTANCE_FIELD(HMUI::ImageView*, imageView);
     DECLARE_INSTANCE_FIELD(UnityEngine::Material*, materialInstance);
     DECLARE_INSTANCE_FIELD(StringW, materialName);
@@ -30,4 +30,4 @@ DECLARE_CLASS_CODEGEN(BeatLeader, PlayerAvatar, UnityEngine::MonoBehaviour,
     DECLARE_INSTANCE_METHOD(void, SetHiddenPlayer);
     DECLARE_INSTANCE_METHOD(void, HideImage);
     DECLARE_INSTANCE_METHOD(void, Update);
-)
+};

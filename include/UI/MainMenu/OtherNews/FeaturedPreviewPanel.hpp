@@ -5,7 +5,7 @@
 #include "UnityEngine/UI/Button.hpp"
 #include "UI/ReeUIComponentV2.hpp"
 
-DECLARE_CLASS_CUSTOM(BeatLeader, FeaturedPreviewComponent, BeatLeader::ReeComponent,
+DECLARE_CLASS_CUSTOM(BeatLeader, FeaturedPreviewComponent, BeatLeader::ReeComponent) {
     DECLARE_INSTANCE_FIELD(HMUI::ImageView*, _background);
     DECLARE_INSTANCE_FIELD(HMUI::ImageView*, _image);
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _topText);
@@ -14,7 +14,7 @@ DECLARE_CLASS_CUSTOM(BeatLeader, FeaturedPreviewComponent, BeatLeader::ReeCompon
     DECLARE_INSTANCE_FIELD(System::Action*, _buttonAction);
 
     DECLARE_INSTANCE_METHOD(void, SetupData, StringW previewUrl, StringW topText, StringW bottomText, StringW buttonText, System::Action* buttonAction);
-)
+};
 
 namespace BeatLeader {
 

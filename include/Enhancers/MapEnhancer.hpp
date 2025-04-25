@@ -5,7 +5,7 @@
 #include "GlobalNamespace/PlayerSpecificSettings.hpp"
 #include "GlobalNamespace/GameplayModifiers.hpp"
 #include "GlobalNamespace/PracticeSettings.hpp"
-#include "GlobalNamespace/EnvironmentInfoSO.hpp"
+#include "GlobalNamespace/EnvironmentName.hpp"
 #include "GlobalNamespace/ColorScheme.hpp"
 
 #include "shared/Models/Replay.hpp"
@@ -21,7 +21,7 @@ public:
     PlayerSpecificSettings* playerSpecificSettings;
     PracticeSettings* practiceSettings;
     bool useTestNoteCutSoundEffects;
-    EnvironmentInfoSO* environmentInfo;
+    GlobalNamespace::EnvironmentName environmentName;
     ColorScheme* colorScheme;
     float energy;
 

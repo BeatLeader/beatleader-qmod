@@ -10,7 +10,7 @@
 
 #define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::methodInfo()
 
-DECLARE_CLASS_CODEGEN(BeatLeader, VotingButton, UnityEngine::MonoBehaviour,
+DECLARE_CLASS_CODEGEN(BeatLeader, VotingButton, UnityEngine::MonoBehaviour) {
     DECLARE_INSTANCE_FIELD(BSML::ClickableImage*, imageView);
     DECLARE_INSTANCE_FIELD(UnityEngine::Material*, materialInstance);
     DECLARE_INSTANCE_FIELD(HMUI::HoverHint*, hoverHint);
@@ -18,4 +18,4 @@ DECLARE_CLASS_CODEGEN(BeatLeader, VotingButton, UnityEngine::MonoBehaviour,
 
     DECLARE_INSTANCE_METHOD(void, Init, BSML::ClickableImage* imageView);
     DECLARE_INSTANCE_METHOD(void, SetState, int state);
-)
+};

@@ -79,7 +79,7 @@ namespace BeatLeader {
         if (customLevelsPack == nullptr) {
             return;
         }
-        if (customLevelsPack->___beatmapLevels->get_Length() == 0) {
+        if (customLevelsPack->_beatmapLevels->get_Length() == 0) {
             return;
         }
 

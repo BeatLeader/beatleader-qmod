@@ -17,11 +17,11 @@
 #include <unordered_map>
 #include <stack>
 
-DECLARE_CLASS_CUSTOM(BeatLeader, ReeModalSystemComponent, BeatLeader::ReeComponent,
+DECLARE_CLASS_CUSTOM(BeatLeader, ReeModalSystemComponent, BeatLeader::ReeComponent) {
     DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, _container);
     DECLARE_INSTANCE_FIELD(HMUI::ModalView*, _modalView);
     DECLARE_INSTANCE_FIELD(HMUI::Screen*, _screen);
-)
+};
 
 namespace BeatLeader {
 

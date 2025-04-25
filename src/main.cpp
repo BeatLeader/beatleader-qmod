@@ -69,10 +69,10 @@ void resetUI() {
     mainCoordinator = nullptr;
 }
 
-MAKE_HOOK_MATCH(HandleSettingsFlowCoordinatorDidFinish, &MainFlowCoordinator::HandleSettingsFlowCoordinatorDidFinish, void, MainFlowCoordinator* self, ::GlobalNamespace::SettingsFlowCoordinator* settingsFlowCoordinator, ::GlobalNamespace::__SettingsFlowCoordinator__FinishAction finishAction) {
+MAKE_HOOK_MATCH(HandleSettingsFlowCoordinatorDidFinish, &MainFlowCoordinator::HandleSettingsFlowCoordinatorDidFinish, void, MainFlowCoordinator* self, ::GlobalNamespace::SettingsFlowCoordinator* settingsFlowCoordinator, ::GlobalNamespace::SettingsFlowCoordinator_FinishAction finishAction) {
     HandleSettingsFlowCoordinatorDidFinish(self, settingsFlowCoordinator, finishAction);
 
-    if (finishAction != ::GlobalNamespace::__SettingsFlowCoordinator__FinishAction::Cancel) {
+    if (finishAction != ::GlobalNamespace::SettingsFlowCoordinator_FinishAction::Cancel) {
         resetUI();
     }
 }
@@ -110,8 +110,8 @@ static bool hasInited = false;
 static bool shouldClear = false;
 
 // do things with the scene transition stuff
-MAKE_HOOK_MATCH(RichPresenceManager_HandleGameScenesManagerTransitionDidFinish, &GlobalNamespace::RichPresenceManager::HandleGameScenesManagerTransitionDidFinish, void, GlobalNamespace::RichPresenceManager* self, GlobalNamespace::ScenesTransitionSetupDataSO* setupData, Zenject::DiContainer* container) {
-    RichPresenceManager_HandleGameScenesManagerTransitionDidFinish(self, setupData, container);
+MAKE_HOOK_MATCH(RichPresenceManager_HandleGameScenesManagerTransitionDidFinish, &GlobalNamespace::RichPresenceManager::HandleGameScenesManagerTransitionDidFinish, void, GlobalNamespace::RichPresenceManager* self, GlobalNamespace::GameScenesManager_SceneTransitionType sceneTransitionType, GlobalNamespace::ScenesTransitionSetupDataSO* setupData, Zenject::DiContainer* container) {
+    RichPresenceManager_HandleGameScenesManagerTransitionDidFinish(self, sceneTransitionType, setupData, container);
 
     if (shouldClear) {
         shouldClear = false;
@@ -179,7 +179,7 @@ MAKE_HOOK_MATCH(MainFlowCoordinator_DidActivate, &GlobalNamespace::MainFlowCoord
 
 MAKE_HOOK_MATCH(MainFlowCoordinator_TopViewControllerWillChange, &GlobalNamespace::MainFlowCoordinator::TopViewControllerWillChange, void,
     GlobalNamespace::MainFlowCoordinator* self, ::HMUI::ViewController* oldViewController, ::HMUI::ViewController* newViewController,
-                                                                              ::HMUI::__ViewController__AnimationType animationType) {
+                                                                              ::HMUI::ViewController_AnimationType animationType) {
     MainFlowCoordinator_TopViewControllerWillChange(self, oldViewController, newViewController, animationType);
     
     mainCoordinator = self;

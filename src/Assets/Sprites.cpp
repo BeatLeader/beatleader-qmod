@@ -23,7 +23,7 @@ bool Sprites::has_Icon(string url) {
 void Sprites::get_Icon(string url, const std::function<void(UnityEngine::Sprite*)>& completion, bool nullable) {
     if (iconCache.contains(url)) {
         std::vector<uint8_t> bytes = iconCache[url];
-        Array<uint8_t>* spriteArray = il2cpp_utils::vectorToArray(bytes);
+        ArrayW<uint8_t> spriteArray{bytes};
         UnityEngine::Sprite* sprite;
         Gif gif = Gif(spriteArray);
         if (gif.Parse() == 0 && gif.Slurp() == 1) {
@@ -63,7 +63,7 @@ void Sprites::get_Icon(string url, const std::function<void(UnityEngine::Sprite*
 void Sprites::get_AnimatedIcon(string url, const std::function<void(AllFramesResult)>& completion) {
     if (iconCache.contains(url)) {
         std::vector<uint8_t> bytes = iconCache[url];
-        Array<uint8_t>* spriteArray = il2cpp_utils::vectorToArray(bytes);
+        ArrayW<uint8_t> spriteArray{bytes};
         AllFramesResult result;
         Gif gif = Gif(spriteArray);
         bool isOK = false;

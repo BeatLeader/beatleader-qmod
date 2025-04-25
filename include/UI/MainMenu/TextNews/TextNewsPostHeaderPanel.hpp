@@ -5,14 +5,14 @@
 #include "TMPro/TextMeshProUGUI.hpp"
 #include <string_view>
 
-DECLARE_CLASS_CUSTOM(BeatLeader, TextNewsPostHeaderPanelComponent, BeatLeader::ReeComponent,
+DECLARE_CLASS_CUSTOM(BeatLeader, TextNewsPostHeaderPanelComponent, BeatLeader::ReeComponent) {
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _nameText);
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _dateText);
     DECLARE_INSTANCE_FIELD(HMUI::ImageView*, _avatarImage);
     DECLARE_INSTANCE_FIELD(HMUI::ImageView*, _image);
 
     DECLARE_INSTANCE_METHOD(void, SetupData, StringW avatarUrl, StringW name, int timestamp);
-)
+};
 
 namespace BeatLeader {
 
