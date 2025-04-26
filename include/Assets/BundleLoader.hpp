@@ -25,7 +25,7 @@ DECLARE_FILE(bl_bundle,)
 typedef System::Collections::Generic::Dictionary_2<StringW, Material *> MaterialsDictionary;
 typedef System::Collections::Generic::Dictionary_2<StringW, Sprite *> SpritesDictionary;
 
-DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
+DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour) {
 
     DECLARE_INSTANCE_FIELD(MaterialsDictionary*, materials);
     DECLARE_INSTANCE_FIELD(SpritesDictionary*, sprites);
@@ -110,7 +110,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
 
     DECLARE_INSTANCE_METHOD(Material*, GetMaterial, StringW name);
     DECLARE_INSTANCE_METHOD(Sprite*, GetSprite, StringW name);
-)
+};
 
 class BundleLoader {
 public:

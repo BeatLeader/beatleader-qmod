@@ -17,10 +17,9 @@ DECLARE_CLASS_CODEGEN_INTERFACES(
         BeatLeader, 
         SmoothHoverController, 
         UnityEngine::MonoBehaviour, 
-        (vector<Il2CppClass*> { 
-            classof(UnityEngine::EventSystems::IPointerEnterHandler*), 
-            classof(UnityEngine::EventSystems::IPointerExitHandler*) 
-        }),
+        UnityEngine::EventSystems::IPointerEnterHandler*, 
+        UnityEngine::EventSystems::IPointerExitHandler*
+        ) {
     DECLARE_INSTANCE_FIELD(bool, IsHovered);
     DECLARE_INSTANCE_FIELD(float, Progress);
     DECLARE_INSTANCE_FIELD(bool, _set);
@@ -39,4 +38,4 @@ DECLARE_CLASS_CODEGEN_INTERFACES(
 
     DECLARE_INSTANCE_METHOD(void, OnDisable);
     DECLARE_INSTANCE_METHOD(void, Update);
-)
+        };

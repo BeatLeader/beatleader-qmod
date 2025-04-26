@@ -1,6 +1,6 @@
 #pragma once
-#include "Sombrero/shared/FastVector3.hpp"
-#include "Sombrero/shared/FastQuaternion.hpp"
+#include "sombrero/shared/FastVector3.hpp"
+#include "sombrero/shared/FastQuaternion.hpp"
 
 namespace BeatLeader {
     class ReeTransform {

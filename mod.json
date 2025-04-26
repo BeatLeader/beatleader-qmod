@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/Lauriethefish/QuestPatcher.QMod/refs/heads/main/QuestPatcher.QMod/Resources/qmod.schema.json",
   "_QPVersion": "0.1.1",
   "name": "BeatLeader",
   "id": "BeatLeader",
@@ -6,48 +7,51 @@
   "author": "NSGolova",
   "version": "0.8.64",
   "packageId": "com.beatgames.beatsaber",
-  "packageVersion": "1.37.0_9064817954",
+  "packageVersion": "1.40.4_5283",
   "description": "beatleader.com | In-game leaderboards for custom and OST maps | Score replays | Clans, events, playlists and much more",
   "coverImage": "cover.png",
   "dependencies": [
     {
-      "version": "^0.17.8",
-      "id": "custom-types",
-      "downloadIfMissing": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.17.10/CustomTypes.qmod"
+      "version": "^6.4.1",
+      "id": "beatsaber-hook",
+      "downloadIfMissing": "https://github.com/QuestPackageManager/beatsaber-hook/releases/download/v6.4.1/beatsaber-hook.qmod"
     },
     {
-      "version": "^1.1.13",
-      "id": "songcore",
-      "downloadIfMissing": "https://github.com/raineio/Quest-SongCore/releases/download/v1.1.15/SongCore.qmod"
+      "version": "^0.18.2",
+      "id": "custom-types",
+      "downloadIfMissing": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.18.2/CustomTypes.qmod"
     },
     {
       "version": "^0.8.2",
       "id": "bs-utils",
-      "downloadIfMissing": "https://github.com/RedBrumbler/QuestBS-Utils/releases/download/v0.8.4/BS-Utils.qmod"
+      "downloadIfMissing": "https://github.com/bsq-ports/QuestBS-Utils/releases/download/v0.8.6/BS-Utils.qmod"
     },
     {
-      "version": "^3.6.3",
-      "id": "paper",
-      "downloadIfMissing": "https://github.com/Fernthedev/paperlog/releases/download/v3.6.4/paperlog.qmod"
+      "version": "^4.6.1",
+      "id": "paper2_scotland2",
+      "downloadIfMissing": "https://github.com/Fernthedev/paperlog/releases/download/v4.6.1/paper2_scotland2.qmod"
     },
     {
-      "version": "^0.4.34",
+      "version": "^0.4.51",
       "id": "bsml",
-      "downloadIfMissing": "https://github.com/RedBrumbler/Quest-BSML/releases/download/v0.4.43/BSML.qmod"
+      "downloadIfMissing": "https://github.com/bsq-ports/Quest-BSML/releases/download/v0.4.51/BSML.qmod"
     },
     {
-      "version": "^1.4.0",
+      "version": "^1.1.20",
+      "id": "songcore",
+      "downloadIfMissing": "https://github.com/raineaeternal/Quest-SongCore/releases/download/v1.1.20/SongCore.qmod"
+    },
+    {
+      "version": "^1.5.0",
       "id": "playlistcore",
-      "downloadIfMissing": "https://github.com/Metalit/PlaylistCore/releases/download/v1.4.2/PlaylistCore.qmod"
+      "downloadIfMissing": "https://github.com/Metalit/PlaylistCore/releases/download/v1.5.0/PlaylistCore.qmod"
     }
   ],
   "modFiles": [],
   "lateModFiles": [
     "libbl.so"
   ],
-  "libraryFiles": [
-    "libbeatsaber-hook_5_1_9.so"
-  ],
+  "libraryFiles": [],
   "fileCopies": [],
   "copyExtensions": []
 }

@@ -1,121 +1,147 @@
-# Credit to darknight1050 https://github.com/darknight1050/CrashReporter/blob/master/.github/workflows/build-ndk.yml
-
-name: NDK build
-
-env:
-    module_id: bl
-    qmodName: BeatLeader
+name: QPM build
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version"
+        required: false
+
   push:
-    branches: [ master ]
-    tags: v*
+    tags:
+      - "v*"
+    branches:
+      - "*"
   pull_request:
-    branches: [ master ]
+    branches:
+      - "*"
 
 jobs:
+  qpm_info:
+    runs-on: ubuntu-latest
+
+    outputs:
+      name: ${{ steps.read_qpm_info.outputs.name }}
+      id: ${{ steps.read_qpm_info.outputs.id }}
+      override_so_name: ${{ steps.read_qpm_info.outputs.override_so_name }}
+      qmod_output_path: ${{ steps.read_qpm_info.outputs.qmod_output_path }}
+      ndk: ${{ steps.read_qpm_info.outputs.ndk }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: true
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Read info from qpm.json
+        id: read_qpm_info
+        run: |
+          NAME="$(jq -r '.info.name' qpm.json)"
+          ID="$(jq -r '.info.id' qpm.json)"
+          OVERRIDE_SO_NAME="$(jq -r '.info.additionalData.overrideSoName' qpm.json)"
+          QMOD_OUTPUT_PATH="$(jq -r '.workspace.qmodOutput' qpm.json)"
+          NDK="$(jq -r '.workspace.ndk' qpm.json)"
+
+          echo "name=${NAME}" | tee -a "$GITHUB_OUTPUT"
+          echo "id=${ID}" | tee -a "$GITHUB_OUTPUT"
+          echo "override_so_name=${OVERRIDE_SO_NAME}" | tee -a "$GITHUB_OUTPUT"
+          echo "qmod_output_path=${QMOD_OUTPUT_PATH}" | tee -a "$GITHUB_OUTPUT"
+          echo "ndk=${NDK}" | tee -a "$GITHUB_OUTPUT"
+
   build:
     runs-on: ubuntu-latest
-    
+    needs: qpm_info
+
     steps:
-    - uses: actions/checkout@v2
-      name: Checkout
-      with:
-        submodules: true
-        lfs: true
-    
-    - uses: seanmiddleditch/gha-setup-ninja@v3
+      - uses: actions/checkout@v4
+        name: Checkout
+        with:
+          submodules: true
+          lfs: true
+          fetch-depth: 0
+          fetch-tags: true
 
-    - name: Create ndkpath.txt
-      run: |
-        echo "$ANDROID_NDK_LATEST_HOME" > ${GITHUB_WORKSPACE}/ndkpath.txt
-        cat ${GITHUB_WORKSPACE}/ndkpath.txt
-    - name: Get QPM
-      if: steps.cache-qpm.outputs.cache-hit != 'true'
-      uses: dawidd6/action-download-artifact@v2
-      with:
-        github_token: ${{secrets.GITHUB_TOKEN}}
-        workflow: cargo-build.yml
-        name: linux-qpm
-        path: QPM
-        repo: QuestPackageManager/QPM.CLI
-        
-    - name: QPM Collapse
-      run: |
-        chmod +x ./QPM/qpm
-        ./QPM/qpm collapse
-    
-    - name: QPM Dependencies Cache
-      id: cache-qpm-deps
-      uses: actions/cache@v2
-      env:
-        cache-name: cache-qpm-deps
-      with:
-        path: /home/runner/.local/share/QPM-RS/cache
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('qpm.json') }}
-        restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-build-
-          ${{ runner.os }}-
-    - name: QPM Restore
-      run: |
-        ./QPM/qpm restore
-    - name: List Post Restore
-      run: |
-        echo includes:
-        ls -la ${GITHUB_WORKSPACE}/extern/includes
-        echo libs:
-        ls -la ${GITHUB_WORKSPACE}/extern/libs
-        echo cache:
-        ls -la $HOME/.local/share/QPM-RS/cache
-        
-    - name: Build
-      run: |
-        cd ${GITHUB_WORKSPACE}
-        ./QPM/qpm qmod build
-        pwsh -Command ./scripts/build.ps1
-    - name: Create Qmod
-      run: |
-        pwsh -Command ./scripts/createqmod.ps1 ${{env.qmodName}}
-    - name: Get Library Name
-      id: libname
-      run: |
-        cd ./build/
-        pattern="lib${module_id}*.so"
-        files=( $pattern )
-        echo ::set-output name=NAME::"${files[0]}"
-    
-    - name: Upload so artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ steps.libname.outputs.NAME }}
-        path: ./build/${{ steps.libname.outputs.NAME }}
-        if-no-files-found: error
+      - uses: seanmiddleditch/gha-setup-ninja@v3
 
-    - name: Upload debug artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: debug_${{ steps.libname.outputs.NAME }}
-        path: ./build/debug/${{ steps.libname.outputs.NAME }}
-        if-no-files-found: error
+      - name: Get home path
+        run: |
+          echo "HOME=$HOME" | tee -a "$GITHUB_ENV"
 
-    - name: Upload qmod artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{env.qmodName}}.qmod
-        path: ./${{ env.qmodName }}.qmod
-        if-no-files-found: error
+      - name: Extract version
+        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.version != ''
+        id: version
+        run: |
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            FULL_VERSION="${{ github.event.inputs.version }}"
+            VERSION="${FULL_VERSION%%[-+]*}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+            FULL_VERSION="${GITHUB_REF#refs/tags/v}"
+            VERSION="${FULL_VERSION%%[-+]*}"
+          fi
 
-    - name: Prepare debug artifact for release
-      run: mv "./build/debug/${{ steps.libname.outputs.NAME }}" "./debug_${{ steps.libname.outputs.NAME }}"
-        
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: |
-            ./${{ env.qmodName }}.qmod
-            ./debug_${{ steps.libname.outputs.NAME }}
-      env: 
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          echo "TAG=$TAG" | tee -a "$GITHUB_OUTPUT"
+          echo "VERSION=$VERSION" | tee -a "$GITHUB_OUTPUT"
+          echo "FULL_VERSION=$FULL_VERSION" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Update version in qpm.json, qpm.shared.json, and mod.template.json
+        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.version != ''
+        run: |
+          # Update qpm.json
+          if [ -f qpm.json ]; then
+            MODIFIED_JSON="$(jq --arg version "$VERSION" '.info.version = $version' qpm.json)"
+            echo "$MODIFIED_JSON" > qpm.json
+          fi
+
+          # Update qpm.shared.json if it exists
+          if [ -f qpm.shared.json ]; then
+            MODIFIED_JSON="$(jq --arg version "$VERSION" '.config.info.version = $version' qpm.shared.json)"
+            echo "$MODIFIED_JSON" > qpm.shared.json
+          fi
+
+          # Update mod.template.json if it exists
+          if [ -f mod.template.json ]; then
+            MODIFIED_JSON="$(jq --arg version "$FULL_VERSION" '.version = $version' mod.template.json)"
+            echo "$MODIFIED_JSON" > mod.template.json
+          fi
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+          FULL_VERSION: ${{ steps.version.outputs.FULL_VERSION }}
+
+      - name: Setup qpm
+        uses: fernthedev/qpm-action@v1
+        with:
+          workflow_token: ${{ secrets.GITHUB_TOKEN }}
+          restore: true
+          resolve_ndk: true
+          cache: true
+
+      - name: Build & Create Qmod
+        run: |
+          qpm s build
+          qpm s qmod
+        env:
+          GITHUB_WORKFLOW_RUN: "true"
+
+      - name: Rename build artifacts
+        run: |
+          mv "./build/debug/${{ needs.qpm_info.outputs.override_so_name }}" "./debug_${{ needs.qpm_info.outputs.override_so_name }}"
+          mv "./build/${{ needs.qpm_info.outputs.override_so_name }}" "./${{ needs.qpm_info.outputs.override_so_name }}"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          if-no-files-found: error
+          path: |
+            ./${{ needs.qpm_info.outputs.override_so_name }}
+            ./debug_${{ needs.qpm_info.outputs.override_so_name }}
+            ${{ needs.qpm_info.outputs.qmod_output_path }}

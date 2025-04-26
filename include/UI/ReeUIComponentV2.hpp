@@ -17,12 +17,12 @@
 #include <unordered_map>
 #include <stdexcept>
 
-DECLARE_CLASS_CODEGEN(BeatLeader, ContentStateListener, UnityEngine::MonoBehaviour,
+DECLARE_CLASS_CODEGEN(BeatLeader, ContentStateListener, UnityEngine::MonoBehaviour) {
     DECLARE_INSTANCE_FIELD(System::Action_1<bool>*, StateChangedEvent);
 
     DECLARE_INSTANCE_METHOD(void, OnEnable);
     DECLARE_INSTANCE_METHOD(void, OnDisable);
-)
+};
 
 class ReeComponentState {
     public:
@@ -32,7 +32,7 @@ class ReeComponentState {
     static const int HierarchySet = 3;
 };
 
-DECLARE_CLASS_CODEGEN(BeatLeader, ReeComponent, UnityEngine::MonoBehaviour,
+DECLARE_CLASS_CODEGEN(BeatLeader, ReeComponent, UnityEngine::MonoBehaviour) {
     DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, _uiComponent);
     DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, _parent);
     DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, _content);
@@ -55,7 +55,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, ReeComponent, UnityEngine::MonoBehaviour,
 
     public:
     void* nativeComponent = nullptr;
-)
+};
 
 namespace BeatLeader {
 

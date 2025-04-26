@@ -5,7 +5,7 @@
 
 #include "custom-types/shared/macros.hpp"
 
-DECLARE_CLASS_CODEGEN(QuestUI, ExternalComponents, UnityEngine::MonoBehaviour,
+DECLARE_CLASS_CODEGEN(QuestUI, ExternalComponents, UnityEngine::MonoBehaviour) {
 
     private:
         std::vector<UnityEngine::Component*> components;
@@ -22,4 +22,4 @@ DECLARE_CLASS_CODEGEN(QuestUI, ExternalComponents, UnityEngine::MonoBehaviour,
 
     DECLARE_SIMPLE_DTOR();
 
-)
+    };

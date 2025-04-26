@@ -3,7 +3,7 @@
 #include "beatsaber-hook/shared/utils/typedefs.h"
 #include <string_view>
 
-#include "paper/shared/logger.hpp"
+#include "paper2_scotland2/shared/logger.hpp"
 
 #define INFO(str, ...) Paper::Logger::fmtLogTag<Paper::LogLevel::INF>(str, "UmbrellaBoard" __VA_OPT__(, __VA_ARGS__))
 #define ERROR(str, ...) Paper::Logger::fmtLogTag<Paper::LogLevel::ERR>(str, "UmbrellaBoard" __VA_OPT__(, __VA_ARGS__))

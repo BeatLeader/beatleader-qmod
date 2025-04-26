@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/QuestPackageManager/QPM.Package/refs/heads/main/qpm.schema.json",
   "version": "0.1.0",
   "sharedDir": "shared",
   "dependenciesDir": "extern",
@@ -12,36 +13,64 @@
     }
   },
   "workspace": {
-    "scripts": {}
+    "scripts": {
+      "build": [
+        "pwsh ./scripts/build.ps1"
+      ],
+      "clean": [
+        "pwsh ./scripts/build.ps1 -clean"
+      ],
+      "copy": [
+        "pwsh ./scripts/copy.ps1"
+      ],
+      "log": [
+        "pwsh ./scripts/start-logging.ps1"
+      ],
+      "qmod": [
+        "pwsh ./scripts/createqmod.ps1"
+      ],
+      "restart": [
+        "pwsh ./scripts/restart-game.ps1"
+      ],
+      "stack": [
+        "pwsh ./scripts/ndk-stack.ps1"
+      ],
+      "tomb": [
+        "pwsh ./scripts/pull-tombstone.ps1"
+      ]
+    },
+    "ndk": "^27.2.12479018",
+    "qmodIncludeDirs": [],
+    "qmodIncludeFiles": [],
+    "qmodOutput": "./BeatLeader.qmod"
   },
   "dependencies": [
     {
       "id": "beatsaber-hook",
-      "versionRange": "^5.1.7",
-      "additionalData": {
-        "extraFiles": [
-          "src/inline-hook"
-        ]
-      }
-    },
-    {
-      "id": "scotland2",
-      "versionRange": "^0.1.4",
+      "versionRange": "^6.4.1",
       "additionalData": {}
     },
     {
+      "id": "scotland2",
+      "versionRange": "^0.1.6",
+      "additionalData": {
+        "includeQmod": false,
+        "private": true
+      }
+    },
+    {
       "id": "bs-cordl",
-      "versionRange": "3700.*",
+      "versionRange": "4004.*",
       "additionalData": {}
     },
     {
       "id": "custom-types",
-      "versionRange": "^0.17.8",
+      "versionRange": "^0.18.2",
       "additionalData": {}
     },
     {
       "id": "config-utils",
-      "versionRange": "^1.4.2",
+      "versionRange": "^2.0.2",
       "additionalData": {}
     },
     {
@@ -60,11 +89,6 @@
       "additionalData": {}
     },
     {
-      "id": "songcore",
-      "versionRange": "^1.1.13",
-      "additionalData": {}
-    },
-    {
       "id": "conditional-dependencies",
       "versionRange": "*",
       "additionalData": {}
@@ -75,18 +99,23 @@
       "additionalData": {}
     },
     {
-      "id": "paper",
-      "versionRange": "^3.6.3",
+      "id": "paper2_scotland2",
+      "versionRange": "^4.6.1",
       "additionalData": {}
     },
     {
       "id": "bsml",
-      "versionRange": "^0.4.34",
+      "versionRange": "^0.4.51",
+      "additionalData": {}
+    },
+    {
+      "id": "songcore",
+      "versionRange": "^1.1.20",
       "additionalData": {}
     },
     {
       "id": "playlistcore",
-      "versionRange": "^1.4.0",
+      "versionRange": "^1.5.0",
       "additionalData": {}
     }
   ]

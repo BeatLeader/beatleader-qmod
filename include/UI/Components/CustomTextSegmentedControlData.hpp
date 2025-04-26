@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 
-DECLARE_CLASS_CODEGEN_INTERFACES(QuestUI, CustomTextSegmentedControlData, UnityEngine::MonoBehaviour, classof(HMUI::SegmentedControl::IDataSource*),
+DECLARE_CLASS_CODEGEN_INTERFACES(QuestUI, CustomTextSegmentedControlData, UnityEngine::MonoBehaviour, HMUI::SegmentedControl::IDataSource*) {
     DECLARE_INSTANCE_FIELD(HMUI::SegmentedControl*, segmentedControl);
 
     DECLARE_INSTANCE_FIELD(HMUI::SegmentedControlCell*, firstCellPrefab);
@@ -33,4 +33,4 @@ DECLARE_CLASS_CODEGEN_INTERFACES(QuestUI, CustomTextSegmentedControlData, UnityE
         float padding = 2.0f;
     private:
         HMUI::TextSegmentedControlCell* InstantiateCell(UnityEngine::GameObject* prefab);
-)
+};

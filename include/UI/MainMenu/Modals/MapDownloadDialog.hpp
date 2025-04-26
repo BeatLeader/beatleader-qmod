@@ -7,12 +7,12 @@
 #include "Models/MapDetail.hpp"
 #include "UI/Abstract/AbstractReeModal.hpp"
 
-DECLARE_CLASS_CUSTOM(BeatLeader, MapDownloadDialogComponent, BeatLeader::ReeComponent,
+DECLARE_CLASS_CUSTOM(BeatLeader, MapDownloadDialogComponent, BeatLeader::ReeComponent) {
     DECLARE_INSTANCE_FIELD(UnityEngine::GameObject*, _loadingContainer);
     DECLARE_INSTANCE_FIELD(UnityEngine::GameObject*, _finishedContainer);
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _finishedText);
     DECLARE_INSTANCE_FIELD(UnityEngine::UI::Button*, _okButton);
-)
+};
 
 namespace BeatLeader {
 
