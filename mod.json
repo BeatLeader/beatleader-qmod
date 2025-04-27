@@ -45,6 +45,11 @@
       "version": "^1.5.0",
       "id": "playlistcore",
       "downloadIfMissing": "https://github.com/Metalit/PlaylistCore/releases/download/v1.5.0/PlaylistCore.qmod"
+    },
+    {
+      "version": "^1.0.0",
+      "id": "metacore",
+      "downloadIfMissing": "https://github.com/Metalit/MetaCore/releases/download/v1.0.0/MetaCore.qmod"
     }
   ],
   "modFiles": [],

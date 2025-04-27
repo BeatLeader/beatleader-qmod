@@ -1,6 +1,7 @@
 #pragma once
 #include "config-utils/shared/config-utils.hpp"
 #include "bs-utils/shared/utils.hpp"
+#include "metacore/shared/game.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 
 DECLARE_CONFIG(ModConfig) {
@@ -21,7 +22,7 @@ DECLARE_CONFIG(ModConfig) {
 };
 
 inline bool UploadEnabled() {
-    return bs_utils::Submission::getEnabled();
+    return bs_utils::Submission::getEnabled() && !MetaCore::Game::IsScoreSubmissionDisabled();
 }
 
 inline bool UploadDisabledByReplay() {
@@ -29,19 +30,40 @@ inline bool UploadDisabledByReplay() {
         if (kv.id == "Replay") {
             return true;
         }
-    } 
+    }
+
+    for (auto kv : MetaCore::Game::GetScoreSubmissionDisablers()) {
+        if (kv == "Replay") {
+            return true;
+        }
+    }
     return false;
 }
 
 inline std::string UploadDisablers() {
+    std::vector<std::string> disablers;
+    
+    // Add bs-utils disablers
     auto map = bs_utils::Submission::getDisablingMods();
-    std::string result = "Score submission disabled by ";
-    int counter = 0;
-    int size = map.size();
-
     for (auto kv : map) {
-        counter++;
-        result += kv.id + (counter != size ? ", " : "");
-    } 
+        disablers.push_back(kv.id);
+    }
+
+    // Add MetaCore disablers
+    auto metacoreDisablers = MetaCore::Game::GetScoreSubmissionDisablers();
+    for (auto disabler : metacoreDisablers) {
+        // Only add if not already present
+        if (std::find(disablers.begin(), disablers.end(), disabler) == disablers.end()) {
+            disablers.push_back(disabler);
+        }
+    }
+
+    std::string result = "Score submission disabled by ";
+    for (int i = 0; i < disablers.size(); i++) {
+        result += disablers[i];
+        if (i < disablers.size() - 1) {
+            result += ", ";
+        }
+    }
     return result;
 }
