@@ -145,3 +145,13 @@ jobs:
             ./${{ needs.qpm_info.outputs.override_so_name }}
             ./debug_${{ needs.qpm_info.outputs.override_so_name }}
             ${{ needs.qpm_info.outputs.qmod_output_path }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+              ${{ needs.qpm_info.outputs.qmod_output_path }}
+              ./debug_${{ needs.qpm_info.outputs.override_so_name }}
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
