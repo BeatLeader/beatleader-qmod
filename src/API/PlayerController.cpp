@@ -33,8 +33,11 @@ void callbackWrapper(optional<Player> const& player) {
 
 void PlayerController::Refresh(int retry, const function<void(optional<Player> const&, string)>& finished) {
     // Error Handler
-    auto handleError = [retry, finished](){
-        if (retry < 3) {
+    auto handleError = [retry, finished](long status){
+        if (retry < 5) {
+            if (status != 401) {
+                std::this_thread::sleep_for(std::chrono::seconds{(retry + 1) * 10});
+            }
             Refresh(retry + 1, finished);
         } else {
             currentPlayer = nullopt;
@@ -89,7 +92,7 @@ void PlayerController::Refresh(int retry, const function<void(optional<Player> c
                     callbackWrapper(currentPlayer);
                 }
                 else {
-                    handleError();
+                    handleError(historyStatus);
                 }
             });
 
@@ -99,7 +102,7 @@ void PlayerController::Refresh(int retry, const function<void(optional<Player> c
             WebUtils::PostJSONAsync(WebUtils::API_URL + "cookieRefresh", "", [](long status, string error){ });
         }
         else{
-            handleError();
+            handleError(status);
         }
     });
 }
