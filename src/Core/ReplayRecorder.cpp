@@ -212,6 +212,7 @@ namespace ReplayRecorder {
         }
         
         replayCallback(*replay, playEndData, skipUpload);
+        replay = nullopt;
     }
 
     MAKE_HOOK_MATCH(ProcessResultsSolo, &StandardLevelScenesTransitionSetupDataSO::Finish, void, StandardLevelScenesTransitionSetupDataSO* self, LevelCompletionResults* levelCompletionResults) {

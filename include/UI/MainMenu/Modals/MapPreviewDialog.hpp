@@ -41,14 +41,11 @@ public:
         this->context = reinterpret_cast<TrendingMapData*>(context);
         OnContextChanged();
     }
-    void HandlePlayButtonClicked();
-    void HandleCloseButtonClicked();
 
     void LoadCoverImage();
     void LoadAndPlayPreview();
 
     // Override from AbstractReeModal
-    void OnInitialize() override;
     StringW GetContent() override;
 
     static void OpenSongOrDownloadDialog(TrendingMapData mapDetail, UnityEngine::Transform* screenChild);

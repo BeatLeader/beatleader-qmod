@@ -31,29 +31,45 @@ using namespace GlobalNamespace;
 DEFINE_TYPE(BeatLeader, MapPreviewDialogComponent);
 
 namespace BeatLeader {
-
-    void MapPreviewDialog::OnInitialize() {
-        AbstractReeModal::OnInitialize();
-
-        // add actions to buttons
-        LocalComponent()->_playButton->get_onClick()->AddListener(custom_types::MakeDelegate<UnityEngine::Events::UnityAction*>((std::function<void()>)[this]() {
-            MapPreviewDialog::HandlePlayButtonClicked();
-        }));
-    }
-
     void MapPreviewDialog::OnContextChanged() {
         auto array = UnityEngine::Resources::FindObjectsOfTypeAll<SongPreviewPlayer*>();
         if (array.size() > 0) {
             songPreviewPlayer = array[0];
         }
 
-        LocalComponent()->_mapName->set_text(context->song.name);
-        LocalComponent()->_songAuthor->set_text(context->song.author);
-        LocalComponent()->_mapper->set_text("Mapped by " + context->song.mapper);
+        auto song = context->song;
+
+        LocalComponent()->_mapName->set_text(song.name);
+        LocalComponent()->_songAuthor->set_text(song.author);
+        LocalComponent()->_mapper->set_text("Mapped by " + song.mapper);
         LocalComponent()->_description->set_text(context->description);
         LocalComponent()->_trendingValue->set_text(context->trendingValue);
 
         LoadCoverImage();
+
+         // add actions to buttons
+        LocalComponent()->_playButton->get_onClick()->AddListener(custom_types::MakeDelegate<UnityEngine::Events::UnityAction*>((std::function<void()>)[this, song]() {
+            LocalComponent()->_playButton->set_interactable(false);
+            LocalComponent()->_loadingContainer->SetActive(true);
+            LocalComponent()->_finishedContainer->SetActive(false);
+            offClickCloses = false;
+            
+            PlaylistSynchronizer::DownloadBeatmap(song.downloadUrl, song.hash, 0, [this, song](bool success) {
+                BSML::MainThreadScheduler::ScheduleAfterTime(5, [this, success, song] {
+                    auto map = FetchMap(song);
+                    if (map != nullptr) {
+                        OpenMap(map);
+                        return;
+                    }
+
+                    LocalComponent()->_finishedText->set_text(success ? "Download has finished" : "Download has failed!");
+                    LocalComponent()->_loadingContainer->SetActive(false);
+                    LocalComponent()->_finishedContainer->SetActive(true);
+                    LocalComponent()->_playButton->set_interactable(true);
+                    offClickCloses = true;
+                });
+            });
+        }));
     }
 
     void MapPreviewDialog::LoadCoverImage() {
@@ -99,33 +115,6 @@ namespace BeatLeader {
         if (songPreviewPlayer != nullptr) {
             songPreviewPlayer->CrossfadeToDefault();
         }
-    }
-
-    void MapPreviewDialog::HandlePlayButtonClicked() {
-        LocalComponent()->_playButton->set_interactable(false);
-        LocalComponent()->_loadingContainer->SetActive(true);
-        LocalComponent()->_finishedContainer->SetActive(false);
-        offClickCloses = false;
-
-        PlaylistSynchronizer::DownloadBeatmap(context->song.downloadUrl, context->song.hash, 0, [this](bool success) {
-            BSML::MainThreadScheduler::ScheduleAfterTime(2, [this, success] {
-                auto map = FetchMap(context->song);
-                if (map != nullptr) {
-                    OpenMap(map);
-                    return;
-                }
-
-                LocalComponent()->_finishedText->set_text(success ? "Download has finished" : "Download has failed!");
-                LocalComponent()->_loadingContainer->SetActive(false);
-                LocalComponent()->_finishedContainer->SetActive(true);
-                LocalComponent()->_playButton->set_interactable(true);
-                offClickCloses = true;
-            });
-        });
-    }
-
-    void MapPreviewDialog::HandleCloseButtonClicked() {
-        Close();
     }
 
     void MapPreviewDialog::OpenSongOrDownloadDialog(TrendingMapData mapDetail, Transform* screenChild) {

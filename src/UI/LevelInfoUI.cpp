@@ -103,7 +103,7 @@ namespace LevelInfoUI {
         if (!self->_beatmapLevel || 
             !self->_beatmapCharacteristicSegmentedControlController ||
             !self->_beatmapCharacteristicSegmentedControlController->_selectedBeatmapCharacteristic) return;
-        if (starsLabel == NULL && !bslInstalled) {
+        if (starsLabel == NULL) {
 
             ///////////////////////////
             // Skill Triangle
