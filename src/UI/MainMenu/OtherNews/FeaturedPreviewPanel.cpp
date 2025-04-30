@@ -8,6 +8,9 @@
 #include "custom-types/shared/delegate.hpp"
 #include "include/Assets/Sprites.hpp"
 
+#include "UI/Components/SmoothHoverController.hpp"
+#include "UI/Components/SimpleClickHandler.hpp"
+
 DEFINE_TYPE(BeatLeader, FeaturedPreviewComponent);
 
 namespace BeatLeader {
@@ -30,9 +33,19 @@ namespace BeatLeader {
                 }
             }
         ));
+
+        auto controller = SmoothHoverController::Custom(component->_content->get_gameObject(), [this](bool hovered, float progress) {
+            this->component->_background->set_color(UnityEngine::Color(0, 0, 0, 0.5f + 0.4f * progress));
+        });
+
+        auto clickHandler = SimpleClickHandler::Custom(component->_content->get_gameObject(), [this](bool clicked) {
+            if (LocalComponent()->_backgroundAction) {
+                LocalComponent()->_backgroundAction->Invoke();
+            }
+        });
     }
 
-    void FeaturedPreviewComponent::SetupData(StringW previewUrl, StringW topText, StringW bottomText, StringW buttonText, System::Action* buttonAction) {
+    void FeaturedPreviewComponent::SetupData(StringW previewUrl, StringW topText, StringW bottomText, StringW buttonText, System::Action* buttonAction, System::Action* backgroundAction) {
         _topText->set_text(" " + topText);
         _bottomText->set_text(bottomText);
 
@@ -41,7 +54,8 @@ namespace BeatLeader {
             textMesh->set_text(buttonText);
         }
         _buttonAction = buttonAction;
-        
+        _backgroundAction = backgroundAction;
+
         Sprites::get_Icon(previewUrl, [this](UnityEngine::Sprite* sprite) {
             this->_image->set_sprite(sprite);
         });

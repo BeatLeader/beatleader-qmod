@@ -41,6 +41,10 @@ public:
         // Virtual - implemented by derived classes
     }
 
+    virtual void OnClose() {
+        // Virtual - implemented by derived classes
+    }
+
     virtual void OnOffClick() {
         if (offClickCloses) {
             Close();
@@ -81,6 +85,7 @@ public:
         if (closeAction != nullptr) {
             closeAction->Invoke();
         }
+        OnClose();
     }
 
     void HandleOffClick() override {

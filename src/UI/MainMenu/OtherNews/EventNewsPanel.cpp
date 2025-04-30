@@ -71,7 +71,7 @@ namespace BeatLeader {
             System::Action* action = custom_types::MakeDelegate<System::Action*>((std::function<void()>)[item, this]() {
                 ReeModalSystem::OpenModal<EventDetailsDialog>(LocalComponent()->_content->get_transform(), (Il2CppObject*)&item);
             });
-            previewPanel->LocalComponent()->SetupData(item.image, item.name, bottomText, "Details", action);
+            previewPanel->LocalComponent()->SetupData(item.image, item.name, bottomText, "Details", action, action);
             _list->Add(previewPanel->LocalComponent());
         }
 

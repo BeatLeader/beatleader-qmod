@@ -1,6 +1,7 @@
 #include "UI/MainMenu/OtherNews/MapNewsPanel.hpp"
 #include "UI/MainMenu/OtherNews/FeaturedPreviewPanel.hpp"
 #include "UI/MainMenu/Modals/MapDownloadDialog.hpp"
+#include "UI/MainMenu/Modals/MapPreviewDialog.hpp"
 #include "UnityEngine/GameObject.hpp"
 #include "System/Collections/Generic/List_1.hpp"
 #include "custom-types/shared/delegate.hpp"
@@ -9,7 +10,7 @@
 
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
-#include "Models/MapData.hpp"
+#include "Models/TrendingMapData.hpp"
 #include "Models/Paged.hpp"
 
 namespace BeatLeader {
@@ -25,7 +26,7 @@ namespace BeatLeader {
         
         WebUtils::GetJSONAsync(WebUtils::API_URL + "mod/maps/trending", [this](long status, bool error, rapidjson::Document const& response) {
             if (status == 200 && !error) {
-                auto result = Paged<MapData>(response.GetObject());
+                auto result = Paged<TrendingMapData>(response.GetObject());
                 BSML::MainThreadScheduler::Schedule([this, result] {
                     LocalComponent()->_loadingIndicator->SetActive(false);
 
@@ -49,7 +50,7 @@ namespace BeatLeader {
         });
     }
 
-    void MapNewsPanel::PresentList(std::vector<MapData> const& items) {
+    void MapNewsPanel::PresentList(std::vector<TrendingMapData> const& items) {
         DisposeList();
 
         for (int i = 0; i < items.size(); i++) {
@@ -64,12 +65,19 @@ namespace BeatLeader {
                 }
             );
 
+            auto backgroundAction = custom_types::MakeDelegate<System::Action*>(
+                (std::function<void()>)[item, this] {
+                    MapPreviewDialog::OpenSongOrDownloadDialog(item, this->LocalComponent()->_content->get_transform());
+                }
+            );
+
             panelComponent->SetupData(
                 item.song.coverImage,
                 item.song.name,
                 item.song.mapper,
                 "Play",
-                buttonAction
+                buttonAction,
+                backgroundAction
             );
             if (!_list) {
                 _list = System::Collections::Generic::List_1<UnityEngine::MonoBehaviour*>::New_ctor();

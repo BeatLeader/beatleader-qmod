@@ -12,8 +12,9 @@ DECLARE_CLASS_CUSTOM(BeatLeader, FeaturedPreviewComponent, BeatLeader::ReeCompon
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _bottomText);
     DECLARE_INSTANCE_FIELD(UnityEngine::UI::Button*, _button);
     DECLARE_INSTANCE_FIELD(System::Action*, _buttonAction);
+    DECLARE_INSTANCE_FIELD(System::Action*, _backgroundAction);
 
-    DECLARE_INSTANCE_METHOD(void, SetupData, StringW previewUrl, StringW topText, StringW bottomText, StringW buttonText, System::Action* buttonAction);
+    DECLARE_INSTANCE_METHOD(void, SetupData, StringW previewUrl, StringW topText, StringW bottomText, StringW buttonText, System::Action* buttonAction, System::Action* backgroundAction);
 };
 
 namespace BeatLeader {

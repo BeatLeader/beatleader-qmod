@@ -10,6 +10,9 @@
 #include "UnityEngine/Object.hpp"
 #include "UnityEngine/Time.hpp"
 #include "UnityEngine/SpriteMeshType.hpp"
+#include "UnityEngine/GameObject.hpp"
+#include "UnityEngine/Transform.hpp"
+#include "UnityEngine/Vector3.hpp"
 
 #include "Utils/ModConfig.hpp"
 #include "Utils/WebUtils.hpp"
@@ -25,18 +28,37 @@
 using namespace BSML;
 using namespace UnityEngine;
 
-static float lerpCoefficient = 10.0f;
-
 DEFINE_TYPE(BeatLeader, SmoothHoverController);
 
 void BeatLeader::SmoothHoverController::ctor() {
     INVOKE_CTOR();
     hoverStateChangedEvent = HoverStateChangedEvent();
+    lerpCoefficient = 10.0f;
     
     static auto base_ctor = il2cpp_utils::FindMethod(classof(UnityEngine::MonoBehaviour*), ".ctor");
     if (base_ctor) {
         il2cpp_utils::RunMethod(this, base_ctor);
     }
+}
+
+BeatLeader::SmoothHoverController* BeatLeader::SmoothHoverController::Custom(UnityEngine::GameObject* gameObject, std::function<void(bool, float)> handler) {
+    auto* component = gameObject->AddComponent<BeatLeader::SmoothHoverController*>();
+    component->get_hoverStateChangedEvent() += handler;
+    handler(component->IsHovered, component->Progress);
+    return component;
+}
+
+BeatLeader::SmoothHoverController* BeatLeader::SmoothHoverController::Scale(UnityEngine::GameObject* gameObject, float defaultScale, float hoverScale) {
+    return Scale(gameObject, gameObject->get_transform(), defaultScale, hoverScale);
+}
+
+BeatLeader::SmoothHoverController* BeatLeader::SmoothHoverController::Scale(UnityEngine::GameObject* gameObject, UnityEngine::Transform* target, float defaultScale, float hoverScale) {
+    auto* component = gameObject->AddComponent<BeatLeader::SmoothHoverController*>();
+    component->get_hoverStateChangedEvent() += [target, defaultScale, hoverScale](bool hovered, float progress) {
+        float scale = AccuracyGraphUtils::Lerp(defaultScale, hoverScale, progress);
+        target->set_localScale(UnityEngine::Vector3(scale, scale, scale));
+    };
+    return component;
 }
 
 void BeatLeader::SmoothHoverController::OnDisable() {
