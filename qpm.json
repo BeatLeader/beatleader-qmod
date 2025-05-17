@@ -40,7 +40,10 @@
       ]
     },
     "ndk": "^27.2.12479018",
-    "qmodIncludeDirs": [],
+    "qmodIncludeDirs": [
+      "build",
+      "extern/libs"
+    ],
     "qmodIncludeFiles": [],
     "qmodOutput": "./BeatLeader.qmod"
   },
@@ -48,6 +51,61 @@
     {
       "id": "beatsaber-hook",
       "versionRange": "^6.4.1",
+      "additionalData": {}
+    },
+    {
+      "id": "bs-cordl",
+      "versionRange": "4005.*",
+      "additionalData": {}
+    },
+    {
+      "id": "bs-utils",
+      "versionRange": "^0.8.6",
+      "additionalData": {}
+    },
+    {
+      "id": "bsml",
+      "versionRange": "^0.4.52",
+      "additionalData": {}
+    },
+    {
+      "id": "conditional-dependencies",
+      "versionRange": "*",
+      "additionalData": {}
+    },
+    {
+      "id": "config-utils",
+      "versionRange": "^2.0.3",
+      "additionalData": {}
+    },
+    {
+      "id": "custom-types",
+      "versionRange": "^0.18.2",
+      "additionalData": {}
+    },
+    {
+      "id": "gif-lib",
+      "versionRange": "^5.2.2",
+      "additionalData": {}
+    },
+    {
+      "id": "libcurl",
+      "versionRange": "=8.5.0",
+      "additionalData": {}
+    },
+    {
+      "id": "metacore",
+      "versionRange": "^1.2.2",
+      "additionalData": {}
+    },
+    {
+      "id": "paper2_scotland2",
+      "versionRange": "^4.6.4",
+      "additionalData": {}
+    },
+    {
+      "id": "playlistcore",
+      "versionRange": "^1.5.1",
       "additionalData": {}
     },
     {
@@ -59,68 +117,13 @@
       }
     },
     {
-      "id": "bs-cordl",
-      "versionRange": "4004.*",
-      "additionalData": {}
-    },
-    {
-      "id": "custom-types",
-      "versionRange": "^0.18.2",
-      "additionalData": {}
-    },
-    {
-      "id": "config-utils",
-      "versionRange": "^2.0.2",
-      "additionalData": {}
-    },
-    {
-      "id": "libcurl",
-      "versionRange": "=8.5.0",
-      "additionalData": {}
-    },
-    {
-      "id": "gif-lib",
-      "versionRange": "^5.2.2",
-      "additionalData": {}
-    },
-    {
       "id": "sombrero",
-      "versionRange": "^0.1.40",
-      "additionalData": {}
-    },
-    {
-      "id": "conditional-dependencies",
-      "versionRange": "*",
-      "additionalData": {}
-    },
-    {
-      "id": "bs-utils",
-      "versionRange": "^0.8.2",
-      "additionalData": {}
-    },
-    {
-      "id": "paper2_scotland2",
-      "versionRange": "^4.6.1",
-      "additionalData": {}
-    },
-    {
-      "id": "bsml",
-      "versionRange": "^0.4.51",
+      "versionRange": "^0.1.43",
       "additionalData": {}
     },
     {
       "id": "songcore",
-      "versionRange": "^1.1.20",
-      "additionalData": {}
-    },
-    {
-      "id": "playlistcore",
-      "versionRange": "^1.5.0",
-      "additionalData": {}
-    },
-    {
-      "id": "metacore",
-      "versionRange": "^1.0.0",
+      "versionRange": "^1.1.21",
       "additionalData": {}
     }
   ]
