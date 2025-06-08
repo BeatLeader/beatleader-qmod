@@ -94,11 +94,6 @@
       "additionalData": {}
     },
     {
-      "id": "bs-utils",
-      "versionRange": "^0.8.2",
-      "additionalData": {}
-    },
-    {
       "id": "paper2_scotland2",
       "versionRange": "^4.6.1",
       "additionalData": {}
