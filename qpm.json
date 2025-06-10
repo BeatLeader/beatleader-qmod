@@ -15,32 +15,35 @@
   "workspace": {
     "scripts": {
       "build": [
-        "pwsh ./scripts/build.ps1"
+        "pwsh ./scripts/build.ps1 $0:?"
       ],
       "clean": [
         "pwsh ./scripts/build.ps1 -clean"
       ],
       "copy": [
-        "pwsh ./scripts/copy.ps1"
+        "pwsh ./scripts/copy.ps1 $0:?"
       ],
       "log": [
-        "pwsh ./scripts/start-logging.ps1"
+        "pwsh ./scripts/start-logging.ps1 $0:?"
       ],
       "qmod": [
-        "pwsh ./scripts/createqmod.ps1"
+        "pwsh ./scripts/createqmod.ps1 $0:?"
       ],
       "restart": [
-        "pwsh ./scripts/restart-game.ps1"
+        "pwsh ./scripts/restart-game.ps1 $0:?"
       ],
       "stack": [
-        "pwsh ./scripts/ndk-stack.ps1"
+        "pwsh ./scripts/ndk-stack.ps1 $0:?"
       ],
       "tomb": [
-        "pwsh ./scripts/pull-tombstone.ps1"
+        "pwsh ./scripts/pull-tombstone.ps1 $0:?"
       ]
     },
     "ndk": "^27.2.12479018",
-    "qmodIncludeDirs": [],
+    "qmodIncludeDirs": [
+      "./build",
+      "./extern/libs"
+    ],
     "qmodIncludeFiles": [],
     "qmodOutput": "./BeatLeader.qmod"
   },
