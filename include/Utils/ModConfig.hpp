@@ -1,6 +1,5 @@
 #pragma once
 #include "config-utils/shared/config-utils.hpp"
-#include "bs-utils/shared/utils.hpp"
 #include "metacore/shared/game.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 
@@ -22,16 +21,10 @@ DECLARE_CONFIG(ModConfig) {
 };
 
 inline bool UploadEnabled() {
-    return bs_utils::Submission::getEnabled() && !MetaCore::Game::IsScoreSubmissionDisabled();
+    return !MetaCore::Game::IsScoreSubmissionDisabled();
 }
 
 inline bool UploadDisabledByReplay() {
-    for (auto kv : bs_utils::Submission::getDisablingMods()) {
-        if (kv.id == "Replay") {
-            return true;
-        }
-    }
-
     for (auto kv : MetaCore::Game::GetScoreSubmissionDisablers()) {
         if (kv == "Replay") {
             return true;
@@ -42,12 +35,6 @@ inline bool UploadDisabledByReplay() {
 
 inline std::string UploadDisablers() {
     std::vector<std::string> disablers;
-    
-    // Add bs-utils disablers
-    auto map = bs_utils::Submission::getDisablingMods();
-    for (auto kv : map) {
-        disablers.push_back(kv.id);
-    }
 
     // Add MetaCore disablers
     auto metacoreDisablers = MetaCore::Game::GetScoreSubmissionDisablers();
