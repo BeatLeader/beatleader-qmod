@@ -92,6 +92,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     accDetailsRowMaterial = GetMaterial("AccDetailsRowMaterial");
     miniProfileBackgroundMaterial = GetMaterial("UIMiniProfileBackgroundMaterial");
     skillTriangleMaterial = GetMaterial("UISkillTriangleMaterial");
+    experienceBarMaterial = GetMaterial("UIExperienceBarMaterial");
     clanTagBackgroundMaterial = GetMaterial("ClanTagBackgroundMaterial");
     roundTexture10Material = GetMaterial("UIRoundTexture10Material");
     roundTexture2Material = GetMaterial("UIRoundTexture2Material");

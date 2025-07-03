@@ -1,5 +1,7 @@
 #include "include/UI/LeaderboardUI.hpp"
 
+#include "UI/ExperienceBar.hpp"
+#include "Utils/ReplayManager.hpp"
 #include "shared/Models/Replay.hpp"
 #include "shared/Models/Score.hpp"
 #include "shared/Models/ClanScore.hpp"
@@ -788,10 +790,20 @@ namespace LeaderboardUI {
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
+            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(140, 55), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
 
             EmojiSupport::AddSupport(playerName);
+
+            auto bar = ExperienceBar::Instantiate<ExperienceBar>(parentScreen->get_transform());
+            bar->LocalComponent()->ManualInit(parentScreen->get_transform());
+            auto rectTransform1 = bar->LocalComponent()->HorizontalLayout->get_transform().cast<RectTransform>();
+            rectTransform1->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
+            rectTransform1->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
+            rectTransform1->set_anchoredPosition({138, 125});
+            if (PlayerController::currentPlayer != std::nullopt) {
+                bar->OnProfileRequestStateChanged(PlayerController::currentPlayer.value(), ReplayUploadStatus::finished);
+            }
 
             auto rankLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(parentScreen->get_transform());
             rankLayout->set_spacing(3);
@@ -799,7 +811,7 @@ namespace LeaderboardUI {
             auto rectTransform = rankLayout->get_transform().cast<RectTransform>();
             rectTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
             rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
-            rectTransform->set_anchoredPosition({138, 45});
+            rectTransform->set_anchoredPosition({138, 50});
 
             auto globalLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(rankLayout->get_transform());
             globalLayout->set_spacing(1);

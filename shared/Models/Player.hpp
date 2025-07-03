@@ -37,6 +37,9 @@ class Player
     optional<string> questId;
     int rank;
     int countryRank;
+    int level;
+    int experience;
+    int prestige;
     float pp;
     int lastRank;
     int lastCountryRank;
@@ -46,9 +49,9 @@ class Player
     vector<string> friends;
     vector<Social> socials;
     vector<Clan> clans;
+    vector<Player> contexts;
 
     Player(rapidjson::Value const& userModInterface);
     void SetHistory(rapidjson::Value const& history);
-    void SetFromScore(rapidjson::Value const& score);
     Player() = default;
 };

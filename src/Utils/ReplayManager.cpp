@@ -31,7 +31,7 @@ void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool
     }    
     
     if (replay.info.failTime > 0.001 || replay.info.speed > 0.001) {
-        finished(ReplayUploadStatus::finished, std::nullopt, "<color=#BB2020ff>Failed attempt was saved!</color>", 0, -1);
+        finished(ReplayUploadStatus::finished, std::nullopt, "<color=#BB2020ff>Failed attempt was saved V2!</color>", 0, -1);
     }
     if(skipUpload)
         return;
@@ -55,7 +55,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
     FILE *replayFile = fopen(name.data(), "rb");
     chrono::steady_clock::time_point replayPostStart = chrono::steady_clock::now();
     
-    WebUtils::PostFileAsync(WebUtils::API_URL + "replayoculus" + status.ToQueryString(), replayFile, (long)file_info.st_size, [name, tryIndex, finished, replayFile, replayPostStart, runCallback, status](long statusCode, string result, string headers) {
+    WebUtils::PostFileAsync(WebUtils::API_URL + "v2/replayoculus" + status.ToQueryString(), replayFile, (long)file_info.st_size, [name, tryIndex, finished, replayFile, replayPostStart, runCallback, status](long statusCode, string result, string headers) {
         fclose(replayFile);
         if ((statusCode >= 450 || statusCode < 200) && tryIndex < 2) {
             BeatLeaderLogger.info("{}", ("Retrying posting replay after " + to_string(statusCode) + " #" + to_string(tryIndex) + " " + std::string(result)).c_str());
@@ -70,7 +70,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
             auto duration = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now() - replayPostStart).count();
             BeatLeaderLogger.info("{}", ("Replay was posted! It took: " + to_string((int)duration) + "msec. \n").c_str());
             if (runCallback) {
-                finished(ReplayUploadStatus::finished, result, "<color=#20BB20ff>Replay was posted!</color>", 100, statusCode);
+                finished(ReplayUploadStatus::finished, result, "<color=#20BB20ff>Replay was posted using V2!</color>", 100, statusCode);
             }
             if (!getModConfig().SaveLocalReplays.GetValue()) {
                 remove(name.data());
