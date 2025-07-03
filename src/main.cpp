@@ -1,5 +1,6 @@
 #include "main.hpp"
 
+#include "Utils/ReplayManager.hpp"
 #include "include/UI/LevelInfoUI.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
@@ -8,6 +9,7 @@
 #include "include/UI/ResultsViewController.hpp"
 #include "include/UI/QuestUI.hpp"
 #include "include/UI/MainMenu/BeatLeaderNewsViewController.hpp"
+#include "include/UI/PrestigePanel.hpp"
 
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
@@ -83,17 +85,26 @@ MAKE_HOOK_MATCH(MenuTransitionsHelperRestartGame, &MenuTransitionsHelper::Restar
     resetUI();
 }
 
+namespace BeatLeader {
+    invokable<ScoreUpload, ReplayUploadStatus> UploadStateCallback;
+}
+
 void replayPostCallback(ReplayUploadStatus status, std::optional<string> score, const string& description, float progress, int code) {
     if (!ReplayRecorder::recording) {
         BSML::MainThreadScheduler::Schedule([status, score, description, progress, code] {
             LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
-            if (status == ReplayUploadStatus::finished) {
-                if (score != std::nullopt) {
-                    rapidjson::Document document;
-                    document.Parse(score->data());
-                    PlayerController::currentPlayer->SetFromScore(document.GetObject());
+            if (status == ReplayUploadStatus::finished && score != std::nullopt) {
+                rapidjson::Document document;
+                document.Parse(score->data());
+                ScoreUpload object = ScoreUpload(document.GetObject());
+                if (object.Status == ScoreUploadStatus::Uploaded) {
+                    object.Score.player.lastRank = PlayerController::currentPlayer->lastRank;
+                    object.Score.player.lastCountryRank = PlayerController::currentPlayer->lastCountryRank;
+                    object.Score.player.lastPP = PlayerController::currentPlayer->lastPP;
+                    PlayerController::currentPlayer = object.Score.player;
                 }
                 LeaderboardUI::updatePlayerRank();
+                BeatLeader::UploadStateCallback.invoke(object, status);
             }
         });
     }
@@ -241,7 +252,7 @@ MOD_EXPORT "C" void late_load() {
         [](Replay const& replay, PlayEndData status, bool skipUpload) {
             ReplayManager::ProcessReplay(replay, status, skipUpload, replayPostCallback); 
         });
-
+    
     BeatLeaderLogger.info("Installing main hooks...");
     
     INSTALL_HOOK(BeatLeaderLogger, HandleSettingsFlowCoordinatorDidFinish);
