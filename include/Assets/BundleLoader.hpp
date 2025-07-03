@@ -42,6 +42,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Material*, accDetailsRowMaterial);
     DECLARE_INSTANCE_FIELD(Material*, miniProfileBackgroundMaterial);
     DECLARE_INSTANCE_FIELD(Material*, skillTriangleMaterial);
+    DECLARE_INSTANCE_FIELD(Material*, experienceBarMaterial);
     DECLARE_INSTANCE_FIELD(Material*, clanTagBackgroundMaterial);
     DECLARE_INSTANCE_FIELD(Material*, roundTexture10Material);
     DECLARE_INSTANCE_FIELD(Material*, roundTexture2Material);
@@ -101,6 +102,17 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour,
     DECLARE_INSTANCE_FIELD(Sprite*, AnchorIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, ProgressRingIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, RotateRightIcon);
+
+    DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon1);
+    DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon2);
+    DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon3);
+    DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon4);
+    DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon5);
+    DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon6);
+    DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon7);
+    DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon8);
+    DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon9);
+    DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon10);
 
     DECLARE_INSTANCE_FIELD(::HMUI::IconSegmentedControl::DataItem*, IconSegmentedControl);
 

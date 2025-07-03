@@ -1,5 +1,7 @@
 #include "include/UI/LeaderboardUI.hpp"
 
+#include "UI/ExperienceBar.hpp"
+#include "Utils/ReplayManager.hpp"
 #include "shared/Models/Replay.hpp"
 #include "shared/Models/Score.hpp"
 #include "shared/Models/ClanScore.hpp"
@@ -125,6 +127,8 @@ namespace LeaderboardUI {
     TMPro::TextMeshProUGUI* uploadStatus = NULL;
 
     TMPro::TextMeshProUGUI* playerName = NULL;
+    HMUI::ImageView* prestigeIcon = NULL;
+    BeatLeader::ExperienceBar* experienceBar = NULL;
     BeatLeader::PlayerAvatar* playerAvatar = NULL;
 
     UnityEngine::UI::Toggle* showBeatLeaderButton = NULL;
@@ -273,6 +277,56 @@ namespace LeaderboardUI {
                     
                     groupsSelector->set_texts(values);
                 }
+
+                prestigeIcon->gameObject->SetActive(true);
+                switch (player->prestige) {
+                    case 1:
+                      prestigeIcon->sprite =
+                          BundleLoader::bundle->PrestigeIcon1;
+                      break;
+                    case 2:
+                      prestigeIcon->sprite =
+                          BundleLoader::bundle->PrestigeIcon2;
+                      break;
+                    case 3:
+                      prestigeIcon->sprite =
+                          BundleLoader::bundle->PrestigeIcon3;
+                      break;
+                    case 4:
+                      prestigeIcon->sprite =
+                          BundleLoader::bundle->PrestigeIcon4;
+                      break;
+                    case 5:
+                      prestigeIcon->sprite =
+                          BundleLoader::bundle->PrestigeIcon5;
+                      break;
+                    case 6:
+                      prestigeIcon->sprite =
+                          BundleLoader::bundle->PrestigeIcon6;
+                      break;
+                    case 7:
+                      prestigeIcon->sprite =
+                          BundleLoader::bundle->PrestigeIcon7;
+                      break;
+                    case 8:
+                      prestigeIcon->sprite =
+                          BundleLoader::bundle->PrestigeIcon8;
+                      break;
+                    case 9:
+                      prestigeIcon->sprite =
+                          BundleLoader::bundle->PrestigeIcon9;
+                      break;
+                    case 10:
+                      prestigeIcon->sprite =
+                          BundleLoader::bundle->PrestigeIcon10;
+                      break;
+                    default:
+                      prestigeIcon->gameObject->SetActive(false);
+                      break;
+                    }
+
+                    experienceBar->OnProfileRequestStateChanged(
+                        player.value(), ReplayUploadStatus::finished);
             } else {
                 playerName->SetText(player->name + ", play something!", true);
             }
@@ -280,6 +334,7 @@ namespace LeaderboardUI {
             globalRank->SetText("#0", true);
             countryRankAndPp->SetText("#0", true);
             playerAvatar->HideImage();
+            prestigeIcon->gameObject->SetActive(false);
             if (countryRankIcon) {
                 countryRankIcon->set_sprite(BundleLoader::bundle->globeIcon);
             }
@@ -788,10 +843,19 @@ namespace LeaderboardUI {
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
+            prestigeIcon = BSML::Lite::CreateImage(parentScreen->get_transform(), BundleLoader::bundle->PrestigeIcon1, { 130, 55}, {7, 7});
+
+            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(142, 55), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
 
             EmojiSupport::AddSupport(playerName);
+
+            experienceBar = ExperienceBar::Instantiate<ExperienceBar>(parentScreen->get_transform());
+            experienceBar->LocalComponent()->ManualInit(parentScreen->get_transform());
+            auto expBarTransform = experienceBar->LocalComponent()->HorizontalLayout->get_transform().cast<RectTransform>();
+            expBarTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
+            expBarTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
+            expBarTransform->set_anchoredPosition({138, 126});
 
             auto rankLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(parentScreen->get_transform());
             rankLayout->set_spacing(3);
@@ -799,7 +863,7 @@ namespace LeaderboardUI {
             auto rectTransform = rankLayout->get_transform().cast<RectTransform>();
             rectTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
             rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
-            rectTransform->set_anchoredPosition({138, 45});
+            rectTransform->set_anchoredPosition({138, 50});
 
             auto globalLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(rankLayout->get_transform());
             globalLayout->set_spacing(1);
