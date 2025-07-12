@@ -63,7 +63,7 @@
     },
     {
       "id": "bs-cordl",
-      "versionRange": "4006.*",
+      "versionRange": "4007.*",
       "additionalData": {}
     },
     {
@@ -93,7 +93,7 @@
     },
     {
       "id": "conditional-dependencies",
-      "versionRange": "*",
+      "versionRange": "^0.3.0",
       "additionalData": {}
     },
     {
@@ -103,22 +103,22 @@
     },
     {
       "id": "bsml",
-      "versionRange": "^0.4.53",
+      "versionRange": "^0.4.54",
       "additionalData": {}
     },
     {
       "id": "songcore",
-      "versionRange": "^1.1.22",
+      "versionRange": "^1.1.23",
       "additionalData": {}
     },
     {
       "id": "playlistcore",
-      "versionRange": "^1.5.2",
+      "versionRange": "^1.5.3",
       "additionalData": {}
     },
     {
       "id": "metacore",
-      "versionRange": "^1.3.0",
+      "versionRange": "^1.3.3",
       "additionalData": {}
     }
   ]
