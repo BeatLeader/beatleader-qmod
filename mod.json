@@ -1,12 +1,13 @@
 {
+  "$schema": "https://raw.githubusercontent.com/Lauriethefish/QuestPatcher.QMod/refs/heads/main/QuestPatcher.QMod/Resources/qmod.schema.json",
   "_QPVersion": "0.1.1",
   "name": "BeatLeader",
   "id": "BeatLeader",
   "modloader": "Scotland2",
   "author": "NSGolova",
-  "version": "0.8.72",
+  "version": "0.8.73",
   "packageId": "com.beatgames.beatsaber",
-  "packageVersion": "1.40.7_7060",
+  "packageVersion": "1.40.8_7379",
   "description": "beatleader.com | In-game leaderboards for custom and OST maps | Score replays | Clans, events, playlists and much more",
   "coverImage": "cover.png",
   "dependencies": [
@@ -26,24 +27,24 @@
       "downloadIfMissing": "https://github.com/Fernthedev/paperlog/releases/download/v4.6.4/paper2_scotland2.qmod"
     },
     {
-      "version": "^0.4.53",
+      "version": "^0.4.55",
       "id": "bsml",
-      "downloadIfMissing": "https://github.com/bsq-ports/Quest-BSML/releases/download/v0.4.53/BSML.qmod"
+      "downloadIfMissing": "https://github.com/bsq-ports/Quest-BSML/releases/download/v0.4.55/BSML.qmod"
     },
     {
-      "version": "^1.1.22",
+      "version": "^1.1.24",
       "id": "songcore",
-      "downloadIfMissing": "https://github.com/raineaeternal/Quest-SongCore/releases/download/v1.1.22/SongCore.qmod"
+      "downloadIfMissing": "https://github.com/raineaeternal/Quest-SongCore/releases/download/v1.1.24/SongCore.qmod"
     },
     {
-      "version": "^1.5.2",
+      "version": "^1.5.5",
       "id": "playlistcore",
-      "downloadIfMissing": "https://github.com/Metalit/PlaylistCore/releases/download/v1.5.2/PlaylistCore.qmod"
+      "downloadIfMissing": "https://github.com/Metalit/PlaylistCore/releases/download/v1.5.5/PlaylistCore.qmod"
     },
     {
-      "version": "^1.3.0",
+      "version": "^1.4.0",
       "id": "metacore",
-      "downloadIfMissing": "https://github.com/Metalit/MetaCore/releases/download/v1.3.1/MetaCore.qmod"
+      "downloadIfMissing": "https://github.com/Metalit/MetaCore/releases/download/v1.4.0/MetaCore.qmod"
     }
   ],
   "modFiles": [],
