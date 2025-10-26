@@ -26,8 +26,9 @@ namespace BeatLeader {
 
     void ExperienceBarComponent::Update() {
         if (_initialized && _level != 100 && (_isIdle || _isAnimated)) {
+            _elapsedTime += Time::get_deltaTime();
             if (_isIdle) {
-                _elapsedTime += Time::get_deltaTime();
+                // Idle highlight animation, slowly pulses the highlight value
                 float t = Mathf::Clamp01(_elapsedTime / _animationDuration);
                 if (!_reverse) {
                     _highlight = Mathf::Lerp(0.0f, 1.0f, t);
@@ -41,39 +42,37 @@ namespace BeatLeader {
                 }
             }
             else if (_isAnimated) {
-                _elapsedTime2 += Time::get_deltaTime();
-                _gradientT = Mathf::Clamp01(_elapsedTime2 / _animationDuration);
-                if (_levelUpValue > 0) {
-                    _elapsedTime += Time::get_deltaTime();
-                    float t = Mathf::Clamp01(_elapsedTime * (_levelUpValue + 1) / _animationDuration);
+                // Experience filling the bar animation with wave effect
+                if (_levelUpValue > 0) { // Level up animation
+                    _elapsedTime2 += Time::get_deltaTime();
+                    float t = Mathf::Clamp01(_elapsedTime2 * (_levelUpValue + 1) / _animationDuration);
                     float targetValue = 1 - _expProgress;
-                    if (_levelUpCount != 0) {
+                    if (_levelUpCount != 0) { // Before final level
                         _sessionProgress = Mathf::Lerp(0.0f, targetValue, t);
-                    } else {
+                    } else { // Final level
                         _sessionProgress = Mathf::Lerp(0.0f, _targetValue, t);
                     }
-
-                    if (_elapsedTime * (_levelUpValue + 1) >= _animationDuration) {
-                        if (_levelUpCount == 0) {
-                            _sessionProgress = _targetValue;
-                            _elapsedTime = 0.0f;
-                            _isAnimated = false;
-                        } else {
-                            _levelUpCount--;
-                            SetLevelText(++_level);
-                            _expProgress = 0.0f;
-                            _sessionProgress = 0.0f;
-                            _elapsedTime = 0.0f;
-                        }
+                    // Consider the number of level ups to speed up the animation
+                    if (_elapsedTime2 * (_levelUpValue + 1) >= _animationDuration) {
+                      if (_levelUpCount != 0) { // Reset for next level up
+                        _levelUpCount--;
+                        SetLevelText(++_level);
+                        _expProgress = 0.0f;
+                        _sessionProgress = 0.0f;
+                        _elapsedTime2 = 0.0f;
+                      }
                     }
-                } else {
+                } else { // Non-level up animation
+                    _gradientT = Mathf::Clamp01(_elapsedTime / _animationDuration);
                     _sessionProgress = Mathf::Lerp(0, _targetValue, _gradientT);
+                }
 
-                    if (_elapsedTime2 >= _animationDuration)
-                    {
-                        _sessionProgress = _targetValue;
-                        _isAnimated = false;
-                    }
+                // Forcefully end animation if time exceeded
+                if (_elapsedTime >= _animationDuration) {
+                  _level += _levelUpCount; // Add leftover level ups if still existing
+                  SetLevelText(_level);
+                  _sessionProgress = _targetValue;
+                  _isAnimated = false;
                 }
             }
 
@@ -219,14 +218,12 @@ namespace BeatLeader {
         }
 
         if (state == ReplayUploadStatus::finished) {
-            LocalComponent()->_isIdle = false;
-            LocalComponent()->_highlight = 0;
+            ResetExperienceBarData();
 
             if (scoreUpload.Status != ScoreUploadStatus::Error) {
                 Player player = scoreUpload.Score.player;
                 if (player.level == LocalComponent()->_level) {
                     LocalComponent()->_targetValue = player.experience / LocalComponent()->_requiredExp - LocalComponent()->_expProgress;
-                    LocalComponent()->_levelUpValue = 0;
                 } else {
                     LocalComponent()->_levelUpCount = player.level - LocalComponent()->_level;
                     LocalComponent()->_levelUpValue = LocalComponent()->_levelUpCount;
