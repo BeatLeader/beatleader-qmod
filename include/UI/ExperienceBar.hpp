@@ -24,7 +24,7 @@ DECLARE_CLASS_CUSTOM(BeatLeader, ExperienceBarComponent, BeatLeader::ReeComponen
     DECLARE_INSTANCE_METHOD(void, OnClick);
     
 public:
-    const float _animationDuration = 3.0f;
+    static constexpr float _animationDuration = 3.0f;
 
     __declspec(property(get = get_LevelText, put = set_LevelText)) StringW LevelText;
     __declspec(property(get = get_NextLevelText, put = set_NextLevelText)) StringW NextLevelText;
