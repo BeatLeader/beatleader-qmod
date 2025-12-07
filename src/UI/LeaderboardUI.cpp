@@ -280,7 +280,7 @@ namespace LeaderboardUI {
 
                 auto prestigeIconSprite = UIUtils::getPrestigeIcon(player.value());
                 prestigeIcon->sprite = prestigeIconSprite;
-                prestigeIcon->gameObject->SetActive(prestigeIconSprite != NULL);
+                prestigeIcon->gameObject->SetActive(prestigeIconSprite != NULL && getModConfig().ExperienceBarEnabled.GetValue());
 
                 experienceBar->OnProfileRequestStateChanged(
                         player.value(), ReplayUploadStatus::finished);
@@ -350,6 +350,12 @@ namespace LeaderboardUI {
                 updateStatus(cachedStatus, cachedDescription, cachedProgress, cachedShowRestart);
             }
             toggleGroupsSelector(showBeatLeader);
+        }
+
+        if (experienceBar) {
+            experienceBar->OnExperienceBarConfigChanged(getModConfig().ExperienceBarEnabled.GetValue());
+            prestigeIcon->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
+            playerName->GetComponent<UnityEngine::RectTransform*>()->anchoredPosition = { getModConfig().ExperienceBarEnabled.GetValue() ? 142.0f : 140.0f, 55 };
         }
     }
 

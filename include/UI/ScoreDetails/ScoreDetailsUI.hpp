@@ -26,6 +26,7 @@ namespace BeatLeader {
             TMPro::TextMeshProUGUI* name;
             TMPro::TextMeshProUGUI* pp;
             HMUI::ImageView* prestigeIcon;
+            UnityEngine::UI::HorizontalLayoutGroup* prestigeGroup;
             TMPro::TextMeshProUGUI* sponsorMessage;
 
             PlayerButtons playerButtons;

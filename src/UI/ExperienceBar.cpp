@@ -150,13 +150,13 @@ namespace BeatLeader {
             if (LocalComponent()->_prestige == 10) {
                 LocalComponent()->_experienceBar->raycastTarget = false;
             }
-            LocalComponent()->SetLevelText(LocalComponent()->_level);
             LocalComponent()->_requiredExp = CalculateRequiredExperience(player.level, player.prestige);
             LocalComponent()->_expProgress = player.experience / LocalComponent()->_requiredExp;
             ResetExperienceBarData();
             if (getModConfig().ExperienceBarEnabled.GetValue()) {
                 LocalComponent()->_experienceBar->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
                 LocalComponent()->_initialized = true;
+                LocalComponent()->SetLevelText(LocalComponent()->_level);
             }
         }
     }
