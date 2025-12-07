@@ -74,8 +74,19 @@ void BeatLeader::initScoreDetailsPopup(
         UIUtils::CreateRoundRectImage(modalTransform, UnityEngine::Vector2(-24.5, -24), UnityEngine::Vector2(7, 7));
     }
 
+    auto nameLevelLayoutGroup = BSML::Lite::CreateHorizontalLayoutGroup(modalTransform);
+    nameLevelLayoutGroup->set_spacing(1);
+    nameLevelLayoutGroup->set_padding(UnityEngine::RectOffset::New_ctor(1,1,1,1));
+    nameLevelLayoutGroup->GetComponentInChildren<UnityEngine::UI::ContentSizeFitter*>()->set_horizontalFit(UnityEngine::UI::ContentSizeFitter_FitMode::PreferredSize);
+    nameLevelLayoutGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement *>()->set_preferredHeight(6.0f);
+    nameLevelLayoutGroup->get_transform().cast<RectTransform>()->set_anchoredPosition({0, 18});
     modalUI->rank = QuestUI::CreateText(modalTransform, "", UnityEngine::Vector2(6.0, 16.0));
-    modalUI->name = QuestUI::CreateText(modalTransform, "", UnityEngine::Vector2(0.0, 18.0));
+    auto prestigeGroup = BSML::Lite::CreateHorizontalLayoutGroup(nameLevelLayoutGroup->get_transform());;
+    prestigeGroup->GetComponentInChildren<UnityEngine::UI::ContentSizeFitter*>()->set_horizontalFit(UnityEngine::UI::ContentSizeFitter_FitMode::PreferredSize);
+    prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredWidth(4);
+    prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement *>()->set_preferredHeight(4);
+    modalUI->prestigeIcon = BSML::Lite::CreateImage(prestigeGroup->get_transform(), BundleLoader::bundle->PrestigeIcon0, {0, 0}, {2, 2});
+    modalUI->name = BSML::Lite::CreateText(nameLevelLayoutGroup->get_transform(), "");
     modalUI->sponsorMessage = QuestUI::CreateText(modalTransform, "", UnityEngine::Vector2(0, -32));
 
     EmojiSupport::AddSupport(modalUI->name);
@@ -138,10 +149,13 @@ void BeatLeader::initScoreDetailsPopup(
 void BeatLeader::ScoreDetailsPopup::updatePlayerDetails(Player player) {
     if (!PlayerController::IsIncognito(player)) {
         name->SetText(FormatUtils::FormatNameWithClans(player, 20, true), true);
+        prestigeIcon->sprite = UIUtils::getPrestigeIcon(player);
+        prestigeIcon->gameObject->SetActive(true);
         auto params = GetAvatarParams(player, false);
         playerAvatar->SetPlayer(player.avatar, params.baseMaterial, params.hueShift, params.saturation);
     } else {
         name->SetText("[REDACTED]", true);
+        prestigeIcon->gameObject->SetActive(false);
         playerAvatar->SetHiddenPlayer();
     }
 }

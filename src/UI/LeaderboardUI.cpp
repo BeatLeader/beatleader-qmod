@@ -278,54 +278,11 @@ namespace LeaderboardUI {
                     groupsSelector->set_texts(values);
                 }
 
-                prestigeIcon->gameObject->SetActive(true);
-                switch (player->prestige) {
-                    case 1:
-                      prestigeIcon->sprite =
-                          BundleLoader::bundle->PrestigeIcon1;
-                      break;
-                    case 2:
-                      prestigeIcon->sprite =
-                          BundleLoader::bundle->PrestigeIcon2;
-                      break;
-                    case 3:
-                      prestigeIcon->sprite =
-                          BundleLoader::bundle->PrestigeIcon3;
-                      break;
-                    case 4:
-                      prestigeIcon->sprite =
-                          BundleLoader::bundle->PrestigeIcon4;
-                      break;
-                    case 5:
-                      prestigeIcon->sprite =
-                          BundleLoader::bundle->PrestigeIcon5;
-                      break;
-                    case 6:
-                      prestigeIcon->sprite =
-                          BundleLoader::bundle->PrestigeIcon6;
-                      break;
-                    case 7:
-                      prestigeIcon->sprite =
-                          BundleLoader::bundle->PrestigeIcon7;
-                      break;
-                    case 8:
-                      prestigeIcon->sprite =
-                          BundleLoader::bundle->PrestigeIcon8;
-                      break;
-                    case 9:
-                      prestigeIcon->sprite =
-                          BundleLoader::bundle->PrestigeIcon9;
-                      break;
-                    case 10:
-                      prestigeIcon->sprite =
-                          BundleLoader::bundle->PrestigeIcon10;
-                      break;
-                    default:
-                      prestigeIcon->gameObject->SetActive(false);
-                      break;
-                    }
+                auto prestigeIconSprite = UIUtils::getPrestigeIcon(player.value());
+                prestigeIcon->sprite = prestigeIconSprite;
+                prestigeIcon->gameObject->SetActive(prestigeIconSprite != NULL);
 
-                    experienceBar->OnProfileRequestStateChanged(
+                experienceBar->OnProfileRequestStateChanged(
                         player.value(), ReplayUploadStatus::finished);
             } else {
                 playerName->SetText(player->name + ", play something!", true);
@@ -843,7 +800,7 @@ namespace LeaderboardUI {
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            prestigeIcon = BSML::Lite::CreateImage(parentScreen->get_transform(), BundleLoader::bundle->PrestigeIcon1, { 130, 55}, {7, 7});
+            prestigeIcon = BSML::Lite::CreateImage(parentScreen->get_transform(), BundleLoader::bundle->PrestigeIcon0, { 130, 56}, {5, 5});
 
             playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(142, 55), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);

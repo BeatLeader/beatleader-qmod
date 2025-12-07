@@ -1,8 +1,10 @@
+#include "Models/Player.hpp"
 #include "System/Reflection/BindingFlags.hpp"
 #include "System/Reflection/PropertyInfo.hpp"
 #include "System/Reflection/FieldInfo.hpp"
 #include "System/Type.hpp"
 #include "System/Object.hpp"
+#include "include/Assets/BundleLoader.hpp"
 
 #include "UI/UIUtils.hpp"
 
@@ -159,5 +161,45 @@ namespace UIUtils {
             default:
                 return rating.stars;
         }
+    }
+
+    UnityEngine::Sprite *getPrestigeIcon(const Player &player) {
+      switch (player.prestige) {
+      case 0:
+        return BundleLoader::bundle->PrestigeIcon0;
+        break;
+      case 1:
+        return BundleLoader::bundle->PrestigeIcon1;
+        break;
+      case 2:
+        return BundleLoader::bundle->PrestigeIcon2;
+        break;
+      case 3:
+        return BundleLoader::bundle->PrestigeIcon3;
+        break;
+      case 4:
+        return BundleLoader::bundle->PrestigeIcon4;
+        break;
+      case 5:
+        return BundleLoader::bundle->PrestigeIcon5;
+        break;
+      case 6:
+        return BundleLoader::bundle->PrestigeIcon6;
+        break;
+      case 7:
+        return BundleLoader::bundle->PrestigeIcon7;
+        break;
+      case 8:
+        return BundleLoader::bundle->PrestigeIcon8;
+        break;
+      case 9:
+        return BundleLoader::bundle->PrestigeIcon9;
+        break;
+      case 10:
+        return BundleLoader::bundle->PrestigeIcon10;
+        break;
+      default:
+        return NULL;
+      }
     }
 }

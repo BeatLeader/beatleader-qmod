@@ -103,6 +103,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour) {
     DECLARE_INSTANCE_FIELD(Sprite*, ProgressRingIcon);
     DECLARE_INSTANCE_FIELD(Sprite*, RotateRightIcon);
 
+    DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon0);
     DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon1);
     DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon2);
     DECLARE_INSTANCE_FIELD(Sprite*, PrestigeIcon3);

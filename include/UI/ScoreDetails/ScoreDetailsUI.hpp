@@ -25,6 +25,7 @@ namespace BeatLeader {
             TMPro::TextMeshProUGUI* rank;
             TMPro::TextMeshProUGUI* name;
             TMPro::TextMeshProUGUI* pp;
+            HMUI::ImageView* prestigeIcon;
             TMPro::TextMeshProUGUI* sponsorMessage;
 
             PlayerButtons playerButtons;

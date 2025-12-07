@@ -153,6 +153,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     ProgressRingIcon = GetSprite("BL_ProgressRingIcon");
     RotateRightIcon = GetSprite("BL_RotateRightIcon");
 
+    PrestigeIcon0 = GetSprite("BL_PrestigeIcon0");
     PrestigeIcon1 = GetSprite("BL_PrestigeIcon1");
     PrestigeIcon2 = GetSprite("BL_PrestigeIcon2");
     PrestigeIcon3 = GetSprite("BL_PrestigeIcon3");

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "shared/Models/TriangleRating.hpp"
+#include "Models/Player.hpp"
 
 #include "UnityEngine/RectTransform.hpp"
 #include "UnityEngine/Component.hpp"
@@ -64,4 +65,5 @@ namespace UIUtils {
     void OpenSettings();
     HMUI::ImageView* CreateRoundRectImage(UnityEngine::Transform* parent, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta);
     float getStarsToShow(TriangleRating rating);
+    UnityEngine::Sprite *getPrestigeIcon(const Player &player);
 }
