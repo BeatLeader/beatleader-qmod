@@ -13,6 +13,8 @@
 
 #include "include/Core/ReplayPlayer.hpp"
 
+#include "include/Managers/PrestigeLevelIconsManager.hpp"
+
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"
 #include "UnityEngine/Component.hpp"
@@ -85,7 +87,7 @@ void BeatLeader::initScoreDetailsPopup(
     modalUI->prestigeGroup->GetComponentInChildren<UnityEngine::UI::ContentSizeFitter*>()->set_horizontalFit(UnityEngine::UI::ContentSizeFitter_FitMode::PreferredSize);
     modalUI->prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredWidth(4);
     modalUI->prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement *>()->set_preferredHeight(4);
-    modalUI->prestigeIcon = BSML::Lite::CreateImage(modalUI->prestigeGroup->get_transform(), BundleLoader::bundle->PrestigeIcon0, {0, 0}, {2, 2});
+    modalUI->prestigeIcon = BSML::Lite::CreateImage(modalUI->prestigeGroup->get_transform(), NULL, {0, 0}, {2, 2});
     modalUI->name = BSML::Lite::CreateText(nameLevelLayoutGroup->get_transform(), "");
     modalUI->sponsorMessage = QuestUI::CreateText(modalTransform, "", UnityEngine::Vector2(0, -32));
 
@@ -149,7 +151,7 @@ void BeatLeader::initScoreDetailsPopup(
 void BeatLeader::ScoreDetailsPopup::updatePlayerDetails(Player player) {
     if (!PlayerController::IsIncognito(player)) {
         name->SetText(FormatUtils::FormatNameWithClans(player, 20, true), true);
-        prestigeIcon->sprite = UIUtils::getPrestigeIcon(player);
+        prestigeIcon->sprite = BeatLeader::PrestigeLevelIconsManagerNS::Instance.getSprite(player.prestige);
         prestigeGroup->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
         auto params = GetAvatarParams(player, false);
         playerAvatar->SetPlayer(player.avatar, params.baseMaterial, params.hueShift, params.saturation);

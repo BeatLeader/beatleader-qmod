@@ -13,6 +13,7 @@
 
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
+#include "include/Core/Events.hpp"
 
 #include "include/Assets/BundleLoader.hpp"
 #include "include/Assets/Sprites.hpp"
@@ -21,6 +22,8 @@
 #include "include/Utils/PlaylistSynchronizer.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/FileManager.hpp"
+
+#include "include/Managers/PrestigeLevelIconsManager.hpp"
 
 #include "config-utils/shared/config-utils.hpp"
 #include "custom-types/shared/register.hpp"
@@ -224,6 +227,9 @@ MOD_EXPORT "C" void late_load() {
 
     BSML::Init();
     BSML::Register::RegisterSettingsMenu<BeatLeader::PreferencesViewController*>("BeatLeader");
+
+    BeatLeader::EventManagement::RegisterAllEvents();
+    BeatLeader::PrestigeLevelIconsManagerNS::Instance.Init();
     
     LeaderboardUI::retryCallback = []() {
         ReplayManager::RetryPosting(replayPostCallback);

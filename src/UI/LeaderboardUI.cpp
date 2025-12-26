@@ -36,6 +36,9 @@
 #include "include/Utils/ModConfig.hpp"
 
 #include "include/Managers/LeaderboardContextsManager.hpp"
+#include "include/Managers/PrestigeLevelIconsManager.hpp"
+
+#include "include/Core/Events.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
@@ -278,9 +281,12 @@ namespace LeaderboardUI {
                     groupsSelector->set_texts(values);
                 }
 
-                auto prestigeIconSprite = UIUtils::getPrestigeIcon(player.value());
-                prestigeIcon->sprite = prestigeIconSprite;
-                prestigeIcon->gameObject->SetActive(prestigeIconSprite != NULL && getModConfig().ExperienceBarEnabled.GetValue());
+                BeatLeader::EventManagement::AddCallback(BeatLeader::EventManagement::Events::PrestigeIconsLoaded, [player]()  {
+                    prestigeIcon->sprite = BeatLeader::PrestigeLevelIconsManagerNS::Instance.getSprite(player.value().prestige);
+                }, true);
+                // Call here again, in case it was already loaded. Then we wont get the event callback
+                prestigeIcon->sprite = BeatLeader::PrestigeLevelIconsManagerNS::Instance.getSprite(player.value().prestige);
+                prestigeIcon->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
 
                 experienceBar->OnProfileRequestStateChanged(
                         player.value(), ReplayUploadStatus::finished);
@@ -806,7 +812,7 @@ namespace LeaderboardUI {
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            prestigeIcon = BSML::Lite::CreateImage(parentScreen->get_transform(), BundleLoader::bundle->PrestigeIcon0, { 130, 56}, {5, 5});
+            prestigeIcon = BSML::Lite::CreateImage(parentScreen->get_transform(), NULL, { 130, 56}, {5, 5});
 
             playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(142, 55), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
