@@ -28,6 +28,10 @@ namespace FormatUtils {
         const int Month = 30 * Day;
         const int Year = 365 * Day;
 
+        inline int rdiv(int num, int denom) {
+            return (num + denom / 2) / denom;
+        }
+
         inline string GetRelativeTimeString(string_view timeSet) {
             int timeSetSeconds = std::stoi(timeSet.data());
             int nowSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -36,14 +40,14 @@ namespace FormatUtils {
             if (delta < 2 * Minute) return "a minute ago";
             if (delta < 45 * Minute) return to_string(delta / Minute) + " minutes ago";
             if (delta < 90 * Minute) return "an hour ago";
-            if (delta < 24 * Hour) return to_string(delta / Hour) + " hours ago";
+            if (delta < 24 * Hour) return to_string(rdiv(delta, Hour)) + " hours ago";
             if (delta < 48 * Hour) return "yesterday";
-            if (delta < 30 * Day) return to_string(delta / Day) + " days ago";
+            if (delta < 30 * Day) return to_string(rdiv(delta, Day)) + " days ago";
             if (delta < 12 * Month) {
-                int months = delta / Month;
+                int months = rdiv(delta, Month);
                 return months <= 1 ? "one month ago" : to_string(months) + " months ago";
             }
-            int years = delta / Year;
+            int years = rdiv(delta, Year);
             return years <= 1 ? "one year ago" : to_string(years) + " years ago";
         }
 
