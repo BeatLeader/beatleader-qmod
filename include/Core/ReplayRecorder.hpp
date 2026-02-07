@@ -3,10 +3,20 @@
 #include "shared/Models/Replay.hpp"
 #include "GlobalNamespace/LevelCompletionResults.hpp"
 
+#include "UnityEngine/MonoBehaviour.hpp"
+
+#include "custom-types/shared/macros.hpp"
+
 #include <string>
 #include <sstream>
 #include <map>
 #include <utility>
+
+namespace GlobalNamespace {
+class PlayerTransforms;
+class SaberManager;
+class AudioTimeSyncController;
+}
 
 using LevelEndStateType = GlobalNamespace::LevelCompletionResults::LevelEndStateType;
 using LevelEndAction = GlobalNamespace::LevelCompletionResults::LevelEndAction;
@@ -83,3 +93,17 @@ namespace ReplayRecorder {
         function<void(Replay const &, PlayEndData, bool)> const &callback);
     static bool recording;
 }
+
+DECLARE_CLASS_CODEGEN(BeatLeader, ReplayRecorderTicker, UnityEngine::MonoBehaviour) {
+    private:
+      GlobalNamespace::PlayerTransforms *playerTransforms;
+      GlobalNamespace::SaberManager *saberManager;
+      GlobalNamespace::AudioTimeSyncController* audioTimeSyncController;
+
+      DECLARE_DEFAULT_CTOR();
+      DECLARE_SIMPLE_DTOR();
+  
+public:
+  void Init(GlobalNamespace::PlayerTransforms* playerTransforms, GlobalNamespace::SaberManager* saberManager, GlobalNamespace::AudioTimeSyncController* audioTimeSyncController);
+  void LateUpdate();
+};
