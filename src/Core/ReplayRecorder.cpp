@@ -574,10 +574,6 @@ namespace ReplayRecorder {
         replay->saberOffsets = SaberOffsets(leftLocalPos, leftLocalRot, rightLocalPos, rightLocalRot);
     }
 
-    MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
-        Tick(trans);
-    }
-
     void StartRecording(
         function<void(void)> const &started,
         function<void(Replay const &, PlayEndData, bool)> const &callback) {
@@ -592,7 +588,6 @@ namespace ReplayRecorder {
         INSTALL_HOOK(BeatLeaderLogger, LevelPause);
         INSTALL_HOOK(BeatLeaderLogger, LevelUnpause);
         INSTALL_HOOK(BeatLeaderLogger, GameplayCoreInstallerInstall);
-        INSTALL_HOOK(BeatLeaderLogger, Tick);
         INSTALL_HOOK(BeatLeaderLogger, ComputeSwingRating);
         INSTALL_HOOK(BeatLeaderLogger, ProcessNewSwingData);
         INSTALL_HOOK(BeatLeaderLogger, PlayerHeightDetectorLateUpdate);
