@@ -97,6 +97,8 @@
 using namespace GlobalNamespace;
 using UnityEngine::Resources;
 
+DEFINE_TYPE(BeatLeader, ReplayRecorderTicker);
+
 namespace ReplayRecorder {
 
     optional<Replay> replay;
@@ -530,6 +532,11 @@ namespace ReplayRecorder {
         
         playerTransforms = reinterpret_cast<PlayerTransforms*>(container->Resolve(csTypeOf(PlayerTransforms*)));
         saberManager = reinterpret_cast<SaberManager*>(container->Resolve(csTypeOf(SaberManager*)));
+        audioTimeSyncController = reinterpret_cast<AudioTimeSyncController*>(container->Resolve(csTypeOf(AudioTimeSyncController*)));
+
+        auto recorder = playerTransforms->gameObject
+                            ->AddComponent<BeatLeader::ReplayRecorderTicker *>();
+        recorder->Init(playerTransforms, saberManager, audioTimeSyncController);
     }
 
     void TryGetSaberOffsets(Saber* saber, Sombrero::FastVector3& localPosition, Sombrero::FastQuaternion& localRotation) {
@@ -567,43 +574,6 @@ namespace ReplayRecorder {
         replay->saberOffsets = SaberOffsets(leftLocalPos, leftLocalRot, rightLocalPos, rightLocalRot);
     }
 
-    MAKE_HOOK_MATCH(Tick, &PlayerTransforms::Update, void, PlayerTransforms* trans) {
-        Tick(trans);
-        if (replay == nullopt || !saberManager || trans != playerTransforms) return;
-
-        if (audioTimeSyncController != nullptr && _currentPause == nullopt) {
-            
-            auto time = audioTimeSyncController->songTime;
-            auto fps = 1.0f / UnityEngine::Time::get_deltaTime();
-
-            auto origin = trans->_originParentTransform;
-            auto headTransform = trans->_headTransform;
-            auto leftSaber = saberManager->leftSaber->get_transform();
-            auto rightSaber = saberManager->rightSaber->get_transform();
-            
-            auto head = ReplayTransform(origin->InverseTransformPoint(headTransform->position), BeatLeader::ReeTransform::InverseTransformRotation(origin->rotation, headTransform->rotation));
-            auto leftHand = ReplayTransform(origin->InverseTransformPoint(leftSaber->position), BeatLeader::ReeTransform::InverseTransformRotation(origin->rotation, leftSaber->rotation));
-            auto rightHand = ReplayTransform(origin->InverseTransformPoint(rightSaber->position), BeatLeader::ReeTransform::InverseTransformRotation(origin->rotation, rightSaber->rotation));
-            
-            replay->frames.emplace_back(time, fps, head, leftHand, rightHand);
-        }
-
-        if (_currentWallEvent != nullopt) {
-            if (phoi->_intersectingObstacles->get_Count() == 0)
-            {
-                WallEvent& wallEvent = replay->walls[replay->walls.size() - 1];
-                wallEvent.energy = audioTimeSyncController->songTime;
-                _currentWallEvent = nullopt;
-            }
-        }
-
-        if (framesSkipped > 10 && !offsetsRecorded) {
-            RecordOffsets();
-            offsetsRecorded = true;
-        }
-        framesSkipped++;
-    }
-
     void StartRecording(
         function<void(void)> const &started,
         function<void(Replay const &, PlayEndData, bool)> const &callback) {
@@ -618,7 +588,6 @@ namespace ReplayRecorder {
         INSTALL_HOOK(BeatLeaderLogger, LevelPause);
         INSTALL_HOOK(BeatLeaderLogger, LevelUnpause);
         INSTALL_HOOK(BeatLeaderLogger, GameplayCoreInstallerInstall);
-        INSTALL_HOOK(BeatLeaderLogger, Tick);
         INSTALL_HOOK(BeatLeaderLogger, ComputeSwingRating);
         INSTALL_HOOK(BeatLeaderLogger, ProcessNewSwingData);
         INSTALL_HOOK(BeatLeaderLogger, PlayerHeightDetectorLateUpdate);
@@ -634,4 +603,56 @@ namespace ReplayRecorder {
         startedCallback = started;
         replayCallback = callback;
     }
+}
+
+void BeatLeader::ReplayRecorderTicker::Init(GlobalNamespace::PlayerTransforms* playerTransforms, GlobalNamespace::SaberManager* saberManager, GlobalNamespace::AudioTimeSyncController* audioTimeSyncController) {
+  this->playerTransforms = playerTransforms;
+  this->saberManager = saberManager;
+  this->audioTimeSyncController = audioTimeSyncController;
+}
+
+void BeatLeader::ReplayRecorderTicker::LateUpdate() {
+  if (::ReplayRecorder::replay == nullopt || !saberManager)
+    return;
+
+  auto trans = this->playerTransforms;
+  if (audioTimeSyncController != nullptr && ::ReplayRecorder::_currentPause == nullopt) {
+
+    auto time = audioTimeSyncController->_songTime;
+    auto fps = 1.0f / UnityEngine::Time::get_deltaTime();
+
+    auto origin = trans->_originParentTransform;
+    auto headTransform = trans->_headTransform;
+    auto leftSaber = saberManager->leftSaber->get_transform();
+    auto rightSaber = saberManager->rightSaber->get_transform();
+
+    auto head =
+        ReplayTransform(origin->InverseTransformPoint(headTransform->position),
+                        BeatLeader::ReeTransform::InverseTransformRotation(
+                            origin->rotation, headTransform->rotation));
+    auto leftHand =
+        ReplayTransform(origin->InverseTransformPoint(leftSaber->position),
+                        BeatLeader::ReeTransform::InverseTransformRotation(
+                            origin->rotation, leftSaber->rotation));
+    auto rightHand =
+        ReplayTransform(origin->InverseTransformPoint(rightSaber->position),
+                        BeatLeader::ReeTransform::InverseTransformRotation(
+                            origin->rotation, rightSaber->rotation));
+
+    ::ReplayRecorder::replay->frames.emplace_back(time, fps, head, leftHand, rightHand);
+  }
+
+  if (ReplayRecorder::_currentWallEvent != nullopt) {
+    if (ReplayRecorder::phoi->_intersectingObstacles->Count == 0) {
+      WallEvent &wallEvent = ReplayRecorder::replay->walls[ReplayRecorder::replay->walls.size() - 1];
+      wallEvent.energy = audioTimeSyncController->songTime;
+      ReplayRecorder::_currentWallEvent = nullopt;
+    }
+  }
+
+  if (ReplayRecorder::framesSkipped > 10 && !ReplayRecorder::offsetsRecorded) {
+    ReplayRecorder::RecordOffsets();
+    ReplayRecorder::offsetsRecorded = true;
+  }
+  ReplayRecorder::framesSkipped++;
 }
