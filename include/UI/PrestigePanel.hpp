@@ -26,7 +26,7 @@ namespace BeatLeader {
             GlobalNamespace::FireworksController* fireworksController;
 
             void OnProfileRequestStateChanged(Player player, ReplayUploadStatus state);
-            void OnUploadStateChanged(ScoreUpload instance, ReplayUploadStatus state);
+            void OnUploadStateChanged(std::optional<ScoreUpload> scoreUpload, ReplayUploadStatus state);
             void RequestPrestige();
             void Fireworks(double duration);
             void InitializePrestigeButtons();

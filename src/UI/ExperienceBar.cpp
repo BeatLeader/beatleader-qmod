@@ -198,7 +198,7 @@ namespace BeatLeader {
 
     static bool firstInProgressHasRun = false;
 
-    void ExperienceBar::OnUploadStateChanged(ScoreUpload scoreUpload, ReplayUploadStatus state) 
+    void ExperienceBar::OnUploadStateChanged(std::optional<ScoreUpload> scoreUpload, ReplayUploadStatus state) 
     {
         if (LocalComponent()->_level == 100) return;
 
@@ -220,8 +220,8 @@ namespace BeatLeader {
         if (state == ReplayUploadStatus::finished) {
             ResetExperienceBarData();
 
-            if (scoreUpload.Status != ScoreUploadStatus::Error) {
-                Player player = scoreUpload.Score.player;
+            if (scoreUpload != std::nullopt && scoreUpload->status != ScoreUploadStatus::Error && scoreUpload->score != std::nullopt) {
+                Player player = scoreUpload->score->player;
                 if (player.level == LocalComponent()->_level) {
                     LocalComponent()->_targetValue = player.experience / LocalComponent()->_requiredExp - LocalComponent()->_expProgress;
                 } else {

@@ -1,4 +1,5 @@
-#pragma onece
+#pragma once
+
 #include "Score.hpp"
 #include <string>
 
@@ -11,9 +12,9 @@ enum class ScoreUploadStatus {
 
 struct ScoreUpload 
 {
-    Score Score;
-    ScoreUploadStatus Status;
-    std::string Description;
+    std::optional<Score> score;
+    ScoreUploadStatus status;
+    std::string description;
 
     ScoreUpload();
     ScoreUpload(rapidjson::Value const& document);

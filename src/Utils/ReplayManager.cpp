@@ -5,6 +5,8 @@
 #include "include/Utils/StringUtils.hpp"
 #include "include/Utils/ModConfig.hpp"
 #include "include/API/PlayerController.hpp"
+#include "shared/Models/ScoreUpload.hpp"
+#include "shared/Models/Score.hpp"
 #include "include/main.hpp"
 
 #include <sys/stat.h>
@@ -13,7 +15,7 @@
 string ReplayManager::lastReplayFilename = "";
 PlayEndData ReplayManager::lastReplayStatus = PlayEndData(LevelEndType::Fail, 0);
 
-void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool skipUpload, function<void(ReplayUploadStatus, std::optional<string>, string, float,
+void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool skipUpload, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
                                                                                   int)> const &finished) {
     if (status.GetEndType() == LevelEndType::Unknown) {
         return;
@@ -39,7 +41,7 @@ void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool
         TryPostReplay(filename, status, 0, finished);
 }
 
-void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex, function<void(ReplayUploadStatus, std::optional<string>, string, float,
+void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
                                                                                 int)> const &finished) {
     struct stat file_info;
     stat(name.data(), &file_info);
@@ -70,7 +72,14 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
             auto duration = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now() - replayPostStart).count();
             BeatLeaderLogger.info("{}", ("Replay was posted! It took: " + to_string((int)duration) + "msec. \n").c_str());
             if (runCallback) {
-                finished(ReplayUploadStatus::finished, result, "<color=#20BB20ff>Replay was posted!</color>", 100, statusCode);
+                rapidjson::Document document;
+                document.Parse(result.data());
+                ScoreUpload object = ScoreUpload(document.GetObject());
+                if (object.status == ScoreUploadStatus::Uploaded && object.score.has_value()) {
+                    finished(ReplayUploadStatus::finished, object, "<color=#20BB20ff>Replay was posted!</color>", 100, statusCode);
+                } else {
+                    finished(ReplayUploadStatus::error, object, "<color=#BB2020ff>Replay was not posted. " + object.description + "</color>", 0, statusCode);
+                }
             }
             if (!getModConfig().SaveLocalReplays.GetValue()) {
                 remove(name.data());
@@ -92,7 +101,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
     });
 }
 
-void ReplayManager::RetryPosting(const std::function<void(ReplayUploadStatus, std::optional<string>, string, float, int)>& finished) {
+void ReplayManager::RetryPosting(const std::function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float, int)>& finished) {
     TryPostReplay(lastReplayFilename, lastReplayStatus, 0, finished);
 };
 

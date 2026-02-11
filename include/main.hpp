@@ -22,7 +22,7 @@ constexpr auto BeatLeaderLogger = Paper::ConstLoggerContext("BeatLeader");
 
 namespace BeatLeader 
 {
-    using UploadStateFunc = std::function<void(ScoreUpload, ReplayUploadStatus)>;
-    using UploadStateCallbackFunc = callback<ScoreUpload, ReplayUploadStatus>;
-    extern invokable<ScoreUpload, ReplayUploadStatus> UploadStateCallback;
+    using UploadStateFunc = std::function<void(std::optional<ScoreUpload>, ReplayUploadStatus)>;
+    using UploadStateCallbackFunc = callback<std::optional<ScoreUpload>, ReplayUploadStatus>;
+    extern invokable<std::optional<ScoreUpload>, ReplayUploadStatus> UploadStateCallback;
 }

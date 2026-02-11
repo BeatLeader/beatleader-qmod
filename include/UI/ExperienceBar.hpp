@@ -67,7 +67,7 @@ public:
     // Public methods
     void OnExperienceBarConfigChanged(bool enabled);
     void OnProfileRequestStateChanged(Player player, ReplayUploadStatus state);
-    void OnUploadStateChanged(ScoreUpload instance, ReplayUploadStatus state);
+    void OnUploadStateChanged(std::optional<ScoreUpload> scoreUpload, ReplayUploadStatus state);
     void OnPrestigeRequestStateChanged();
 
 private:

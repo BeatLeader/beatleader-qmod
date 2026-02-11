@@ -89,26 +89,24 @@ MAKE_HOOK_MATCH(MenuTransitionsHelperRestartGame, &MenuTransitionsHelper::Restar
 }
 
 namespace BeatLeader {
-    invokable<ScoreUpload, ReplayUploadStatus> UploadStateCallback;
+    invokable<std::optional<ScoreUpload>, ReplayUploadStatus> UploadStateCallback;
 }
 
-void replayPostCallback(ReplayUploadStatus status, std::optional<string> score, const string& description, float progress, int code) {
+void replayPostCallback(ReplayUploadStatus status, std::optional<ScoreUpload> scoreUpload, const string& description, float progress, int code) {
     if (!ReplayRecorder::recording) {
-        BSML::MainThreadScheduler::Schedule([status, score, description, progress, code] {
+        BSML::MainThreadScheduler::Schedule([status, scoreUpload, description, progress, code] {
             LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
-            if (status == ReplayUploadStatus::finished && score != std::nullopt) {
-                rapidjson::Document document;
-                document.Parse(score->data());
-                ScoreUpload object = ScoreUpload(document.GetObject());
-                if (object.Status == ScoreUploadStatus::Uploaded) {
-                    object.Score.player.lastRank = PlayerController::currentPlayer->lastRank;
-                    object.Score.player.lastCountryRank = PlayerController::currentPlayer->lastCountryRank;
-                    object.Score.player.lastPP = PlayerController::currentPlayer->lastPP;
-                    PlayerController::currentPlayer = object.Score.player;
+            if (status == ReplayUploadStatus::finished && scoreUpload != std::nullopt) {
+                if (scoreUpload->status == ScoreUploadStatus::Uploaded && scoreUpload->score != std::nullopt) {
+                    Player player = scoreUpload->score->player;
+                    player.lastRank = PlayerController::currentPlayer->lastRank;
+                    player.lastCountryRank = PlayerController::currentPlayer->lastCountryRank;
+                    player.lastPP = PlayerController::currentPlayer->lastPP;
+                    PlayerController::currentPlayer = player;
                 }
                 LeaderboardUI::updatePlayerRank();
-                BeatLeader::UploadStateCallback.invoke(object, status);
             }
+            BeatLeader::UploadStateCallback.invoke(scoreUpload, status);
         });
     }
 }

@@ -42,11 +42,11 @@ namespace BeatLeader {
         }
     }
 
-    void PrestigePanel::OnUploadStateChanged(ScoreUpload instance, ReplayUploadStatus state) {
+    void PrestigePanel::OnUploadStateChanged(std::optional<ScoreUpload> scoreUpload, ReplayUploadStatus state) {
         switch (state) {
             case ReplayUploadStatus::finished:
-                if (instance.Status != ScoreUploadStatus::Error) {
-                    Player player = instance.Score.player;
+                if (scoreUpload != std::nullopt && scoreUpload->status != ScoreUploadStatus::Error && scoreUpload->score != std::nullopt) {
+                    Player player = scoreUpload->score->player;
                     if (player.level == 100) {
                         LocalComponent()->_PrestigeYesButton->interactable = true;
                     } else {
