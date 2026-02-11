@@ -1,5 +1,6 @@
 #include "main.hpp"
 
+#include "Utils/ReplayManager.hpp"
 #include "include/UI/LevelInfoUI.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
@@ -8,9 +9,11 @@
 #include "include/UI/ResultsViewController.hpp"
 #include "include/UI/QuestUI.hpp"
 #include "include/UI/MainMenu/BeatLeaderNewsViewController.hpp"
+#include "include/UI/PrestigePanel.hpp"
 
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
+#include "include/Core/Events.hpp"
 
 #include "include/Assets/BundleLoader.hpp"
 #include "include/Assets/Sprites.hpp"
@@ -19,6 +22,8 @@
 #include "include/Utils/PlaylistSynchronizer.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "include/Utils/FileManager.hpp"
+
+#include "include/Managers/PrestigeLevelIconsManager.hpp"
 
 #include "config-utils/shared/config-utils.hpp"
 #include "custom-types/shared/register.hpp"
@@ -83,18 +88,25 @@ MAKE_HOOK_MATCH(MenuTransitionsHelperRestartGame, &MenuTransitionsHelper::Restar
     resetUI();
 }
 
-void replayPostCallback(ReplayUploadStatus status, std::optional<string> score, const string& description, float progress, int code) {
+namespace BeatLeader {
+    invokable<std::optional<ScoreUpload>, ReplayUploadStatus> UploadStateCallback;
+}
+
+void replayPostCallback(ReplayUploadStatus status, std::optional<ScoreUpload> scoreUpload, const string& description, float progress, int code) {
     if (!ReplayRecorder::recording) {
-        BSML::MainThreadScheduler::Schedule([status, score, description, progress, code] {
+        BSML::MainThreadScheduler::Schedule([status, scoreUpload, description, progress, code] {
             LeaderboardUI::updateStatus(status, description, progress, code > 450 || code < 200);
-            if (status == ReplayUploadStatus::finished) {
-                if (score != std::nullopt) {
-                    rapidjson::Document document;
-                    document.Parse(score->data());
-                    PlayerController::currentPlayer->SetFromScore(document.GetObject());
+            if (status == ReplayUploadStatus::finished && scoreUpload != std::nullopt) {
+                if (scoreUpload->status == ScoreUploadStatus::Uploaded && scoreUpload->score != std::nullopt) {
+                    Player player = scoreUpload->score->player;
+                    player.lastRank = PlayerController::currentPlayer->lastRank;
+                    player.lastCountryRank = PlayerController::currentPlayer->lastCountryRank;
+                    player.lastPP = PlayerController::currentPlayer->lastPP;
+                    PlayerController::currentPlayer = player;
                 }
                 LeaderboardUI::updatePlayerRank();
             }
+            BeatLeader::UploadStateCallback.invoke(scoreUpload, status);
         });
     }
 }
@@ -213,6 +225,9 @@ MOD_EXPORT "C" void late_load() {
 
     BSML::Init();
     BSML::Register::RegisterSettingsMenu<BeatLeader::PreferencesViewController*>("BeatLeader");
+
+    BeatLeader::EventManagement::RegisterAllEvents();
+    BeatLeader::PrestigeLevelIconsManagerNS::Instance.Init();
     
     LeaderboardUI::retryCallback = []() {
         ReplayManager::RetryPosting(replayPostCallback);
@@ -241,7 +256,7 @@ MOD_EXPORT "C" void late_load() {
         [](Replay const& replay, PlayEndData status, bool skipUpload) {
             ReplayManager::ProcessReplay(replay, status, skipUpload, replayPostCallback); 
         });
-
+    
     BeatLeaderLogger.info("Installing main hooks...");
     
     INSTALL_HOOK(BeatLeaderLogger, HandleSettingsFlowCoordinatorDidFinish);

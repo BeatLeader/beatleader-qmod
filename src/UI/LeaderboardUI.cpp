@@ -1,5 +1,7 @@
 #include "include/UI/LeaderboardUI.hpp"
 
+#include "UI/ExperienceBar.hpp"
+#include "Utils/ReplayManager.hpp"
 #include "shared/Models/Replay.hpp"
 #include "shared/Models/Score.hpp"
 #include "shared/Models/ClanScore.hpp"
@@ -34,6 +36,9 @@
 #include "include/Utils/ModConfig.hpp"
 
 #include "include/Managers/LeaderboardContextsManager.hpp"
+#include "include/Managers/PrestigeLevelIconsManager.hpp"
+
+#include "include/Core/Events.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
@@ -125,6 +130,8 @@ namespace LeaderboardUI {
     TMPro::TextMeshProUGUI* uploadStatus = NULL;
 
     TMPro::TextMeshProUGUI* playerName = NULL;
+    HMUI::ImageView* prestigeIcon = NULL;
+    BeatLeader::ExperienceBar* experienceBar = NULL;
     BeatLeader::PlayerAvatar* playerAvatar = NULL;
 
     UnityEngine::UI::Toggle* showBeatLeaderButton = NULL;
@@ -273,6 +280,16 @@ namespace LeaderboardUI {
                     
                     groupsSelector->set_texts(values);
                 }
+
+                BeatLeader::EventManagement::AddCallback(BeatLeader::EventManagement::Events::PrestigeIconsLoaded, [player]()  {
+                    prestigeIcon->sprite = BeatLeader::PrestigeLevelIconsManagerNS::Instance.getSprite(player.value().prestige);
+                }, true);
+                // Call here again, in case it was already loaded. Then we wont get the event callback
+                prestigeIcon->sprite = BeatLeader::PrestigeLevelIconsManagerNS::Instance.getSprite(player.value().prestige);
+                prestigeIcon->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
+
+                experienceBar->OnProfileRequestStateChanged(
+                        player.value(), ReplayUploadStatus::finished);
             } else {
                 playerName->SetText(player->name + ", play something!", true);
             }
@@ -280,6 +297,7 @@ namespace LeaderboardUI {
             globalRank->SetText("#0", true);
             countryRankAndPp->SetText("#0", true);
             playerAvatar->HideImage();
+            prestigeIcon->gameObject->SetActive(false);
             if (countryRankIcon) {
                 countryRankIcon->set_sprite(BundleLoader::bundle->globeIcon);
             }
@@ -338,6 +356,12 @@ namespace LeaderboardUI {
                 updateStatus(cachedStatus, cachedDescription, cachedProgress, cachedShowRestart);
             }
             toggleGroupsSelector(showBeatLeader);
+        }
+
+        if (experienceBar) {
+            experienceBar->OnExperienceBarConfigChanged(getModConfig().ExperienceBarEnabled.GetValue());
+            prestigeIcon->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
+            playerName->GetComponent<UnityEngine::RectTransform*>()->anchoredPosition = { getModConfig().ExperienceBarEnabled.GetValue() ? 142.0f : 140.0f, 55 };
         }
     }
 
@@ -788,10 +812,19 @@ namespace LeaderboardUI {
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
+            prestigeIcon = BSML::Lite::CreateImage(parentScreen->get_transform(), NULL, { 130, 56}, {5, 5});
+
+            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(142, 55), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
 
             EmojiSupport::AddSupport(playerName);
+
+            experienceBar = ExperienceBar::Instantiate<ExperienceBar>(parentScreen->get_transform());
+            experienceBar->LocalComponent()->ManualInit(parentScreen->get_transform());
+            auto expBarTransform = experienceBar->LocalComponent()->HorizontalLayout->get_transform().cast<RectTransform>();
+            expBarTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
+            expBarTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
+            expBarTransform->set_anchoredPosition({138, 126});
 
             auto rankLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(parentScreen->get_transform());
             rankLayout->set_spacing(3);
@@ -799,7 +832,7 @@ namespace LeaderboardUI {
             auto rectTransform = rankLayout->get_transform().cast<RectTransform>();
             rectTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
             rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
-            rectTransform->set_anchoredPosition({138, 45});
+            rectTransform->set_anchoredPosition({138, 50});
 
             auto globalLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(rankLayout->get_transform());
             globalLayout->set_spacing(1);
