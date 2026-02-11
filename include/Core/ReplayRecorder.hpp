@@ -7,6 +7,8 @@
 
 #include "custom-types/shared/macros.hpp"
 
+#include "Zenject/ILateTickable.hpp"
+
 #include <string>
 #include <sstream>
 #include <map>
@@ -94,16 +96,17 @@ namespace ReplayRecorder {
     static bool recording;
 }
 
-DECLARE_CLASS_CODEGEN(BeatLeader, ReplayRecorderTicker, UnityEngine::MonoBehaviour) {
+DECLARE_CLASS_CODEGEN_INTERFACES(BeatLeader, ReplayRecorderTicker, UnityEngine::MonoBehaviour, Zenject::ILateTickable*) {
     private:
       GlobalNamespace::PlayerTransforms *playerTransforms;
       GlobalNamespace::SaberManager *saberManager;
       GlobalNamespace::AudioTimeSyncController* audioTimeSyncController;
+
+      DECLARE_OVERRIDE_METHOD(void, LateTick, il2cpp_utils::il2cpp_type_check::MetadataGetter<&Zenject::ILateTickable::LateTick>::methodInfo());
 
       DECLARE_DEFAULT_CTOR();
       DECLARE_SIMPLE_DTOR();
   
 public:
   void Init(GlobalNamespace::PlayerTransforms* playerTransforms, GlobalNamespace::SaberManager* saberManager, GlobalNamespace::AudioTimeSyncController* audioTimeSyncController);
-  void LateUpdate();
 };

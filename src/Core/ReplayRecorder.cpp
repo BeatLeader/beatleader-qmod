@@ -81,6 +81,9 @@
 #include "GlobalNamespace/EnvironmentInfoSO.hpp"
 
 #include "Zenject/DiContainer.hpp"
+#include "Zenject/FromBinder.hpp"
+#include "Zenject/FromBinderGeneric_1.hpp"
+#include "Zenject/ScopeConcreteIdArgConditionCopyNonLazyBinder.hpp"
 
 #include "sombrero/shared/FastQuaternion.hpp"
 #include "sombrero/shared/Vector3Utils.hpp"
@@ -534,8 +537,8 @@ namespace ReplayRecorder {
         saberManager = reinterpret_cast<SaberManager*>(container->Resolve(csTypeOf(SaberManager*)));
         audioTimeSyncController = reinterpret_cast<AudioTimeSyncController*>(container->Resolve(csTypeOf(AudioTimeSyncController*)));
 
-        auto recorder = playerTransforms->gameObject
-                            ->AddComponent<BeatLeader::ReplayRecorderTicker *>();
+        container->BindInterfacesAndSelfTo(csTypeOf(BeatLeader::ReplayRecorderTicker*))->FromNewComponentOnRoot()->AsSingle();
+        auto recorder = reinterpret_cast<BeatLeader::ReplayRecorderTicker*>(container->Resolve(csTypeOf(BeatLeader::ReplayRecorderTicker*)));
         recorder->Init(playerTransforms, saberManager, audioTimeSyncController);
     }
 
@@ -609,9 +612,11 @@ void BeatLeader::ReplayRecorderTicker::Init(GlobalNamespace::PlayerTransforms* p
   this->playerTransforms = playerTransforms;
   this->saberManager = saberManager;
   this->audioTimeSyncController = audioTimeSyncController;
+
+  BeatLeaderLogger.info("ReplayRecorderTicker initialized! {} {} {}", playerTransforms != nullptr, saberManager != nullptr, audioTimeSyncController != nullptr);
 }
 
-void BeatLeader::ReplayRecorderTicker::LateUpdate() {
+void BeatLeader::ReplayRecorderTicker::LateTick() {
   if (::ReplayRecorder::replay == nullopt || !saberManager)
     return;
 
