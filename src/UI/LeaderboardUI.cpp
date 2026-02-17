@@ -133,6 +133,7 @@ namespace LeaderboardUI {
     HMUI::ImageView* prestigeIcon = NULL;
     BeatLeader::ExperienceBar* experienceBar = NULL;
     BeatLeader::PlayerAvatar* playerAvatar = NULL;
+    RectTransform* rankLayoutTransform = NULL;
 
     UnityEngine::UI::Toggle* showBeatLeaderButton = NULL;
     HMUI::CurvedTextMeshPro* showBeatleaderText = NULL;
@@ -288,6 +289,9 @@ namespace LeaderboardUI {
                 prestigeIcon->sprite = BeatLeader::PrestigeLevelIconsManagerNS::Instance.getSprite(player.value().prestige);
                 prestigeIcon->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
 
+                playerName->GetComponent<UnityEngine::RectTransform*>()->anchoredPosition = { getModConfig().ExperienceBarEnabled.GetValue() ? 142.0f : 140.0f, getModConfig().ExperienceBarEnabled.GetValue() ? 55.0f : 53.0f };
+                rankLayoutTransform->set_anchoredPosition({ 138, getModConfig().ExperienceBarEnabled.GetValue() ? 50.0f : 45.0f});
+
                 experienceBar->OnProfileRequestStateChanged(
                         player.value(), ReplayUploadStatus::finished);
             } else {
@@ -356,12 +360,6 @@ namespace LeaderboardUI {
                 updateStatus(cachedStatus, cachedDescription, cachedProgress, cachedShowRestart);
             }
             toggleGroupsSelector(showBeatLeader);
-        }
-
-        if (experienceBar) {
-            experienceBar->OnExperienceBarConfigChanged(getModConfig().ExperienceBarEnabled.GetValue());
-            prestigeIcon->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
-            playerName->GetComponent<UnityEngine::RectTransform*>()->anchoredPosition = { getModConfig().ExperienceBarEnabled.GetValue() ? 142.0f : 140.0f, 55 };
         }
     }
 
@@ -829,10 +827,10 @@ namespace LeaderboardUI {
             auto rankLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(parentScreen->get_transform());
             rankLayout->set_spacing(3);
             EnableHorizontalFit(rankLayout);
-            auto rectTransform = rankLayout->get_transform().cast<RectTransform>();
-            rectTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
-            rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
-            rectTransform->set_anchoredPosition({138, 50});
+            rankLayoutTransform = rankLayout->get_transform().cast<RectTransform>();
+            rankLayoutTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
+            rankLayoutTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
+            rankLayoutTransform->set_anchoredPosition({138, 50});
 
             auto globalLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(rankLayout->get_transform());
             globalLayout->set_spacing(1);
@@ -1364,44 +1362,56 @@ namespace LeaderboardUI {
     }
 
     void initSettingsModal(UnityEngine::Transform* parent){
-        auto container = BSML::Lite::CreateModal(parent, {40,60}, nullptr, true);
+        auto container = BSML::Lite::CreateModal(parent, {40,70}, nullptr, true);
         
-        BSML::Lite::CreateText(container->get_transform(), "Leaderboard Settings", {-13, 27});
+        BSML::Lite::CreateText(container->get_transform(), "Leaderboard Settings", {-13, 32});
 
-        BSML::Lite::CreateText(container->get_transform(), "Avatar", {-14, 18});
+        BSML::Lite::CreateText(container->get_transform(), "Avatar", {-14, 23});
 
         CreateToggle(container->get_transform(), getModConfig().AvatarsActive.GetValue(), {-3, 16}, [](bool value){
             getModConfig().AvatarsActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Clans", {-14, 8});
+        BSML::Lite::CreateText(container->get_transform(), "Clans", {-14, 13});
 
         CreateToggle(container->get_transform(), getModConfig().ClansActive.GetValue(), {-3, 6}, [](bool value){
             getModConfig().ClansActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Score", {-14, -2});
+        BSML::Lite::CreateText(container->get_transform(), "Score", {-14, 3});
 
         CreateToggle(container->get_transform(), getModConfig().ScoresActive.GetValue(), {-3, -4}, [](bool value){
             getModConfig().ScoresActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Time", {-14, -12});
+        BSML::Lite::CreateText(container->get_transform(), "Time", {-14, -7});
 
         CreateToggle(container->get_transform(), getModConfig().TimesetActive.GetValue(), {-3, -14}, [](bool value){
             getModConfig().TimesetActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Capture", {-14, -22});
+        BSML::Lite::CreateText(container->get_transform(), "Capture", {-14, -17});
 
         CreateToggle(container->get_transform(), getModConfig().CaptureActive.GetValue(), {-3, -24}, [](bool value){
             getModConfig().CaptureActive.SetValue(value);
             CaptorClanUI::setActive(value);
             plvc->Refresh(true, true);
+        });
+
+        BSML::Lite::CreateText(container->get_transform(), "XP Bar", {-14, -27});
+
+        CreateToggle(container->get_transform(), getModConfig().ExperienceBarEnabled.GetValue(), {-3, -34}, [](bool value){
+            getModConfig().ExperienceBarEnabled.SetValue(value);
+            if (experienceBar) {
+                experienceBar->OnExperienceBarConfigChanged(value);
+                prestigeIcon->gameObject->SetActive(value);
+                playerName->GetComponent<UnityEngine::RectTransform*>()->anchoredPosition = { value ? 142.0f : 140.0f, value ? 55.0f : 53.0f };
+                rankLayoutTransform->set_anchoredPosition({ 138, value ? 50.0f : 45.0f});
+            }
         });
 
         settingsContainer = container;

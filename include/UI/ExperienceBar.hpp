@@ -16,8 +16,6 @@ DECLARE_CLASS_CUSTOM(BeatLeader, ExperienceBarComponent, BeatLeader::ReeComponen
     DECLARE_INSTANCE_FIELD(UnityEngine::UI::VerticalLayoutGroup*, HorizontalLayout);
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _levelTextHolder);
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _nextLevelTextHolder);
-    DECLARE_BSML_PROPERTY(StringW, LevelText);
-    DECLARE_BSML_PROPERTY(StringW, NextLevelText);
 
     DECLARE_CTOR(ctor);
     DECLARE_INSTANCE_METHOD(void, Update);
@@ -25,9 +23,6 @@ DECLARE_CLASS_CUSTOM(BeatLeader, ExperienceBarComponent, BeatLeader::ReeComponen
     
 public:
     static constexpr float _animationDuration = 3.0f;
-
-    __declspec(property(get = get_LevelText, put = set_LevelText)) StringW LevelText;
-    __declspec(property(get = get_NextLevelText, put = set_NextLevelText)) StringW NextLevelText;
 
     int _level;
     int _prestige;
@@ -50,6 +45,7 @@ public:
 
     void SetMaterialProperties();
     void SetLevelText(int level);
+    void HideLevelText();
 };
 
 namespace BeatLeader {

@@ -20,8 +20,6 @@ DEFINE_TYPE(BeatLeader, ExperienceBarComponent);
 namespace BeatLeader {
 
     void ExperienceBarComponent::ctor() {
-        _LevelText = StringW("");
-        _NextLevelText = StringW("");
     }
 
     void ExperienceBarComponent::Update() {
@@ -107,8 +105,7 @@ namespace BeatLeader {
             BeatLeader::UploadStateCallback.hook(uploadStateCallbackFunc);
             BeatLeader::PrestigePanelStatic::RequestStateChanged.hook(prestigeRequestStateChangedCallbackFunc);
         } else {
-            LocalComponent()->LevelText = StringW("");
-            LocalComponent()->NextLevelText = StringW("");
+            LocalComponent()->HideLevelText();
             LocalComponent()->_experienceBar->gameObject->SetActive(false);
         }
     }
@@ -133,13 +130,11 @@ namespace BeatLeader {
         if (enabled && !LocalComponent()->_initialized) {
             BeatLeader::UploadStateCallback.hook(uploadStateCallbackFunc);
             LocalComponent()->SetLevelText(LocalComponent()->_level);
-            LocalComponent()-> _initialized = enabled;
-        } else if (LocalComponent()->_initialized) {
+        } else if (!enabled && LocalComponent()->_initialized) {
             BeatLeader::UploadStateCallback.unhook(uploadStateCallbackFunc);
-            LocalComponent()->LevelText = StringW("");
-            LocalComponent()->NextLevelText = StringW("");
-            LocalComponent()->_initialized = enabled;
+            LocalComponent()->HideLevelText();
         }
+        LocalComponent()->_initialized = enabled;
     }
 
     void ExperienceBar::OnProfileRequestStateChanged(Player player, ReplayUploadStatus state) 
@@ -171,12 +166,19 @@ namespace BeatLeader {
     }
 
     void ExperienceBarComponent::SetLevelText(int level) {
-        LevelText = StringW(std::to_string(level));
+        _levelTextHolder->set_text(StringW(std::to_string(level)));
+        _levelTextHolder->gameObject->SetActive(true);
         if (level != 100) {
-            NextLevelText = StringW(std::to_string(level + 1));
+            _nextLevelTextHolder->set_text(StringW(std::to_string(level + 1)));
         } else {
-            NextLevelText = StringW("Prestige");
+            _nextLevelTextHolder->set_text(StringW("Prestige"));
         }
+        _nextLevelTextHolder->gameObject->SetActive(true);
+    }
+
+    void ExperienceBarComponent::HideLevelText() {
+      _levelTextHolder->gameObject->SetActive(false);
+      _nextLevelTextHolder->gameObject->SetActive(false);
     }
 
     void ExperienceBar::ResetExperienceBarData(bool refreshVisual) 
@@ -217,22 +219,20 @@ namespace BeatLeader {
             firstInProgressHasRun = false;
         }
 
-        if (state == ReplayUploadStatus::finished) {
+        if (scoreUpload != std::nullopt && scoreUpload->score != std::nullopt) {
             ResetExperienceBarData();
 
-            if (scoreUpload != std::nullopt && scoreUpload->status != ScoreUploadStatus::Error && scoreUpload->score != std::nullopt) {
-                Player player = scoreUpload->score->player;
-                if (player.level == LocalComponent()->_level) {
-                    LocalComponent()->_targetValue = player.experience / LocalComponent()->_requiredExp - LocalComponent()->_expProgress;
-                } else {
-                    LocalComponent()->_levelUpCount = player.level - LocalComponent()->_level;
-                    LocalComponent()->_levelUpValue = LocalComponent()->_levelUpCount;
-                    LocalComponent()->_requiredExp = CalculateRequiredExperience(player.level, player.prestige);
-                    LocalComponent()->_targetValue = player.experience / LocalComponent()->_requiredExp;
-                }
-
-                LocalComponent()->_isAnimated = true;
+            Player player = scoreUpload->score->player;
+            if (player.level == LocalComponent()->_level) {
+                LocalComponent()->_targetValue = player.experience / LocalComponent()->_requiredExp - LocalComponent()->_expProgress;
+            } else {
+                LocalComponent()->_levelUpCount = player.level - LocalComponent()->_level;
+                LocalComponent()->_levelUpValue = LocalComponent()->_levelUpCount;
+                LocalComponent()->_requiredExp = CalculateRequiredExperience(player.level, player.prestige);
+                LocalComponent()->_targetValue = player.experience / LocalComponent()->_requiredExp;
             }
+
+            LocalComponent()->_isAnimated = true;
         }
     }
 
@@ -262,25 +262,11 @@ namespace BeatLeader {
         return StringW(R"(
             <vertical id="HorizontalLayout">
                 <horizontal pref-height="6" pad-top="2" spacing="2">
-                    <text id="_levelTextHolder" text="~LevelText" font-size="3.5" pref-width="3" align="Left" bold="true"/>
+                    <text id="_levelTextHolder" font-size="3.5" pref-width="3" align="Left" bold="true"/>
                     <clickable-image id="_experienceBar" preserve-aspect="false" pref-width="40" on-click="OnClick"/>
-                    <text id="_nextLevelTextHolder" text="~NextLevelText" font-size="3.5" pref-width="3" align="Left" bold="true"/>
+                    <text id="_nextLevelTextHolder" font-size="3.5" pref-width="3" align="Left" bold="true"/>
                 </horizontal>
             </vertical>
         )");
-    }
-
-    StringW ExperienceBarComponent::get_LevelText() { return _LevelText; }
-
-    void ExperienceBarComponent::set_LevelText(StringW value) {
-      _LevelText = value;
-      _levelTextHolder->set_text(value);
-    }
-
-    StringW ExperienceBarComponent::get_NextLevelText() { return _NextLevelText; }
-
-    void ExperienceBarComponent::set_NextLevelText(StringW value) {
-      _NextLevelText = value;
-      _nextLevelTextHolder->set_text(value);
     }
 } // namespace BeatLeader

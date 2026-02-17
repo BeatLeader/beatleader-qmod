@@ -32,9 +32,6 @@ void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool
         return;
     }    
     
-    if (replay.info.failTime > 0.001 || replay.info.speed > 0.001) {
-        finished(ReplayUploadStatus::finished, std::nullopt, "<color=#BB2020ff>Failed attempt was saved!</color>", 0, -1);
-    }
     if(skipUpload)
         return;
     if(PlayerController::currentPlayer != std::nullopt)
@@ -71,15 +68,22 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
         } else if (statusCode == 200) {
             auto duration = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now() - replayPostStart).count();
             BeatLeaderLogger.info("{}", ("Replay was posted! It took: " + to_string((int)duration) + "msec. \n").c_str());
-            if (runCallback) {
-                rapidjson::Document document;
-                document.Parse(result.data());
-                ScoreUpload object = ScoreUpload(document.GetObject());
-                if (object.status == ScoreUploadStatus::Uploaded && object.score.has_value()) {
+            rapidjson::Document document;
+            document.Parse(result.data());
+            ScoreUpload object = ScoreUpload(document.GetObject());
+            switch (object.status) {
+                case ScoreUploadStatus::Uploaded:
                     finished(ReplayUploadStatus::finished, object, "<color=#20BB20ff>Replay was posted!</color>", 100, statusCode);
-                } else {
+                    break;
+                case ScoreUploadStatus::Attempt:
+                    finished(ReplayUploadStatus::finished, object, "<color=#BB2020ff>Failed attempt was saved!</color>", 0, -1);
+                    break;
+                case ScoreUploadStatus::NonPB:
+                    finished(ReplayUploadStatus::finished, object, "<color=#BB2020ff>Attempt was saved, but it was worse than your existing score!</color>", 0, -1);
+                    break;
+                case ScoreUploadStatus::Error:
                     finished(ReplayUploadStatus::error, object, "<color=#BB2020ff>Replay was not posted. " + object.description + "</color>", 0, statusCode);
-                }
+                    break;
             }
             if (!getModConfig().SaveLocalReplays.GetValue()) {
                 remove(name.data());
