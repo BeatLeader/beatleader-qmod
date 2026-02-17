@@ -1,5 +1,6 @@
 #include "shared/Models/Player.hpp"
 
+#include "Models/Score.hpp"
 #include "include/Utils/ModConfig.hpp"
 #include "include/main.hpp"
 
@@ -10,6 +11,9 @@ Player::Player(rapidjson::Value const& userModInterface) {
     country = userModInterface["country"].GetString();
     avatar = userModInterface["avatar"].GetString();
     role = userModInterface["role"].GetString();
+    level = userModInterface["level"].GetInt();
+    experience = userModInterface["experience"].GetInt();
+    prestige = userModInterface["prestige"].GetInt();
 
     if (userModInterface.HasMember("questId") && !userModInterface["questId"].IsNull()) {
         questId = userModInterface["questId"].GetString();
@@ -89,29 +93,4 @@ ProfileSettings::ProfileSettings(rapidjson::Value const& document) {
     effectName = document["effectName"].IsNull() ? "" : document["effectName"].GetString();
     hue = document["hue"].GetInt();
     saturation = document["saturation"].GetFloat();
-}
-
-void Player::SetFromScore(rapidjson::Value const& score) {
-
-    auto const& userModInterface = score["player"];
-    int currentContext = getModConfig().Context.GetValue();
-    std::optional<rapidjson::GenericArray<true, rapidjson::Value>> contextExtensions = 
-        userModInterface.HasMember("contextExtensions") && !userModInterface["contextExtensions"].IsNull() 
-        ? userModInterface["contextExtensions"].GetArray() 
-        : std::optional<rapidjson::GenericArray<true, rapidjson::Value>>();
-    // If we are Standard Context or we have no contexts or our selected context is not in contextextensions we use the normal rank. Else we use the correct context extension rank
-    rapidjson::Value const& contextRank = 
-        currentContext == 0 || 
-        !contextExtensions ? userModInterface : [&]() -> const rapidjson::Value& {
-            for (auto& ext : contextExtensions.value()) {
-                if (ext["context"].GetInt() == currentContext) {
-                    return ext;
-                }
-            }
-            return userModInterface;
-        }();
-
-    rank = contextRank["rank"].GetInt();
-    countryRank = contextRank["countryRank"].GetInt();
-    pp = contextRank["pp"].GetFloat();
 }

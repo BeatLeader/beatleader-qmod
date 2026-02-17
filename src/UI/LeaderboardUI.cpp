@@ -1,5 +1,7 @@
 #include "include/UI/LeaderboardUI.hpp"
 
+#include "UI/ExperienceBar.hpp"
+#include "Utils/ReplayManager.hpp"
 #include "shared/Models/Replay.hpp"
 #include "shared/Models/Score.hpp"
 #include "shared/Models/ClanScore.hpp"
@@ -34,6 +36,9 @@
 #include "include/Utils/ModConfig.hpp"
 
 #include "include/Managers/LeaderboardContextsManager.hpp"
+#include "include/Managers/PrestigeLevelIconsManager.hpp"
+
+#include "include/Core/Events.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
@@ -125,7 +130,10 @@ namespace LeaderboardUI {
     TMPro::TextMeshProUGUI* uploadStatus = NULL;
 
     TMPro::TextMeshProUGUI* playerName = NULL;
+    HMUI::ImageView* prestigeIcon = NULL;
+    BeatLeader::ExperienceBar* experienceBar = NULL;
     BeatLeader::PlayerAvatar* playerAvatar = NULL;
+    RectTransform* rankLayoutTransform = NULL;
 
     UnityEngine::UI::Toggle* showBeatLeaderButton = NULL;
     HMUI::CurvedTextMeshPro* showBeatleaderText = NULL;
@@ -273,6 +281,19 @@ namespace LeaderboardUI {
                     
                     groupsSelector->set_texts(values);
                 }
+
+                BeatLeader::EventManagement::AddCallback(BeatLeader::EventManagement::Events::PrestigeIconsLoaded, [player]()  {
+                    prestigeIcon->sprite = BeatLeader::PrestigeLevelIconsManagerNS::Instance.getSprite(player.value().prestige);
+                }, true);
+                // Call here again, in case it was already loaded. Then we wont get the event callback
+                prestigeIcon->sprite = BeatLeader::PrestigeLevelIconsManagerNS::Instance.getSprite(player.value().prestige);
+                prestigeIcon->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
+
+                playerName->GetComponent<UnityEngine::RectTransform*>()->anchoredPosition = { getModConfig().ExperienceBarEnabled.GetValue() ? 142.0f : 140.0f, getModConfig().ExperienceBarEnabled.GetValue() ? 55.0f : 53.0f };
+                rankLayoutTransform->set_anchoredPosition({ 138, getModConfig().ExperienceBarEnabled.GetValue() ? 50.0f : 45.0f});
+
+                experienceBar->OnProfileRequestStateChanged(
+                        player.value(), ReplayUploadStatus::finished);
             } else {
                 playerName->SetText(player->name + ", play something!", true);
             }
@@ -280,6 +301,7 @@ namespace LeaderboardUI {
             globalRank->SetText("#0", true);
             countryRankAndPp->SetText("#0", true);
             playerAvatar->HideImage();
+            prestigeIcon->gameObject->SetActive(false);
             if (countryRankIcon) {
                 countryRankIcon->set_sprite(BundleLoader::bundle->globeIcon);
             }
@@ -788,18 +810,27 @@ namespace LeaderboardUI {
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(140, 53), UnityEngine::Vector2(60, 10));
+            prestigeIcon = BSML::Lite::CreateImage(parentScreen->get_transform(), NULL, { 130, 56}, {5, 5});
+
+            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(142, 55), UnityEngine::Vector2(60, 10));
             playerName->set_fontSize(6);
 
             EmojiSupport::AddSupport(playerName);
 
+            experienceBar = ExperienceBar::Instantiate<ExperienceBar>(parentScreen->get_transform());
+            experienceBar->LocalComponent()->ManualInit(parentScreen->get_transform());
+            auto expBarTransform = experienceBar->LocalComponent()->HorizontalLayout->get_transform().cast<RectTransform>();
+            expBarTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
+            expBarTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
+            expBarTransform->set_anchoredPosition({138, 126});
+
             auto rankLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(parentScreen->get_transform());
             rankLayout->set_spacing(3);
             EnableHorizontalFit(rankLayout);
-            auto rectTransform = rankLayout->get_transform().cast<RectTransform>();
-            rectTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
-            rectTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
-            rectTransform->set_anchoredPosition({138, 45});
+            rankLayoutTransform = rankLayout->get_transform().cast<RectTransform>();
+            rankLayoutTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
+            rankLayoutTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
+            rankLayoutTransform->set_anchoredPosition({138, 50});
 
             auto globalLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(rankLayout->get_transform());
             globalLayout->set_spacing(1);
@@ -1331,44 +1362,56 @@ namespace LeaderboardUI {
     }
 
     void initSettingsModal(UnityEngine::Transform* parent){
-        auto container = BSML::Lite::CreateModal(parent, {40,60}, nullptr, true);
+        auto container = BSML::Lite::CreateModal(parent, {40,70}, nullptr, true);
         
-        BSML::Lite::CreateText(container->get_transform(), "Leaderboard Settings", {-13, 27});
+        BSML::Lite::CreateText(container->get_transform(), "Leaderboard Settings", {-13, 32});
 
-        BSML::Lite::CreateText(container->get_transform(), "Avatar", {-14, 18});
+        BSML::Lite::CreateText(container->get_transform(), "Avatar", {-14, 23});
 
         CreateToggle(container->get_transform(), getModConfig().AvatarsActive.GetValue(), {-3, 16}, [](bool value){
             getModConfig().AvatarsActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Clans", {-14, 8});
+        BSML::Lite::CreateText(container->get_transform(), "Clans", {-14, 13});
 
         CreateToggle(container->get_transform(), getModConfig().ClansActive.GetValue(), {-3, 6}, [](bool value){
             getModConfig().ClansActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Score", {-14, -2});
+        BSML::Lite::CreateText(container->get_transform(), "Score", {-14, 3});
 
         CreateToggle(container->get_transform(), getModConfig().ScoresActive.GetValue(), {-3, -4}, [](bool value){
             getModConfig().ScoresActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Time", {-14, -12});
+        BSML::Lite::CreateText(container->get_transform(), "Time", {-14, -7});
 
         CreateToggle(container->get_transform(), getModConfig().TimesetActive.GetValue(), {-3, -14}, [](bool value){
             getModConfig().TimesetActive.SetValue(value);
             plvc->Refresh(true, true);
         });
 
-        BSML::Lite::CreateText(container->get_transform(), "Capture", {-14, -22});
+        BSML::Lite::CreateText(container->get_transform(), "Capture", {-14, -17});
 
         CreateToggle(container->get_transform(), getModConfig().CaptureActive.GetValue(), {-3, -24}, [](bool value){
             getModConfig().CaptureActive.SetValue(value);
             CaptorClanUI::setActive(value);
             plvc->Refresh(true, true);
+        });
+
+        BSML::Lite::CreateText(container->get_transform(), "XP Bar", {-14, -27});
+
+        CreateToggle(container->get_transform(), getModConfig().ExperienceBarEnabled.GetValue(), {-3, -34}, [](bool value){
+            getModConfig().ExperienceBarEnabled.SetValue(value);
+            if (experienceBar) {
+                experienceBar->OnExperienceBarConfigChanged(value);
+                prestigeIcon->gameObject->SetActive(value);
+                playerName->GetComponent<UnityEngine::RectTransform*>()->anchoredPosition = { value ? 142.0f : 140.0f, value ? 55.0f : 53.0f };
+                rankLayoutTransform->set_anchoredPosition({ 138, value ? 50.0f : 45.0f});
+            }
         });
 
         settingsContainer = container;

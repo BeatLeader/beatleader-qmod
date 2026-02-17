@@ -2,6 +2,7 @@
 
 #include "shared/Models/Replay.hpp"
 #include "include/Core/ReplayRecorder.hpp"
+#include "shared/Models/ScoreUpload.hpp"
 
 using namespace std;
 
@@ -16,11 +17,11 @@ enum struct ReplayUploadStatus {
 class ReplayManager
 {  
 public:
-   static void ProcessReplay(Replay const &replay, PlayEndData status, bool skipUpload, function<void(ReplayUploadStatus, std::optional<string>, string, float,
+   static void ProcessReplay(Replay const &replay, PlayEndData status, bool skipUpload, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
                                                                              int)> const &finished);
-   static void RetryPosting(function<void(ReplayUploadStatus, std::optional<string>, string, float, int)> const& finished);
+   static void RetryPosting(function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float, int)> const& finished);
 
-   static void TryPostReplay(string name, PlayEndData status, int tryIndex, function<void(ReplayUploadStatus, std::optional<string>, string, float,
+   static void TryPostReplay(string name, PlayEndData status, int tryIndex, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
                                                                            int)> const &finished);
    static string lastReplayFilename;
    static PlayEndData lastReplayStatus;

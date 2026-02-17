@@ -42,6 +42,7 @@ DECLARE_CLASS_CODEGEN(BeatLeader, Bundle, MonoBehaviour) {
     DECLARE_INSTANCE_FIELD(Material*, accDetailsRowMaterial);
     DECLARE_INSTANCE_FIELD(Material*, miniProfileBackgroundMaterial);
     DECLARE_INSTANCE_FIELD(Material*, skillTriangleMaterial);
+    DECLARE_INSTANCE_FIELD(Material*, experienceBarMaterial);
     DECLARE_INSTANCE_FIELD(Material*, clanTagBackgroundMaterial);
     DECLARE_INSTANCE_FIELD(Material*, roundTexture10Material);
     DECLARE_INSTANCE_FIELD(Material*, roundTexture2Material);
