@@ -88,6 +88,10 @@ namespace FormatUtils {
             return "<color=#B856FF>" + to_string_wprecision(value, 2) + "<size=70%>pp</size></color>";
         }
 
+        inline string FormatStars(float value) {
+            return to_string_wprecision(value, 2) + "★";
+        }
+
         inline string FormatClanTag(string_view tag) {
             return "<alpha=#00>.<alpha=#FF><b><noparse>" + string(tag) + "</noparse></b><alpha=#00>.<alpha=#FF>";
         }

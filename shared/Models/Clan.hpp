@@ -2,6 +2,7 @@
 
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
+#include <optional>
 #include <string>
 using namespace std;
 
@@ -12,8 +13,8 @@ struct Clan
     string icon;
     string color;
 
-    int rank;
-    float pp;
+    int rank = 0;
+    float pp = 0.0f;
 
     Clan(rapidjson::Value const& document);
     Clan() = default;
@@ -21,9 +22,9 @@ struct Clan
 
 struct ClanRankingStatus
 {
-    std::optional<Clan> clan;
-    bool clanRankingContested;
-    bool applicable;
+    std::optional<Clan> clan = std::nullopt;
+    bool clanRankingContested = false;
+    bool applicable = false;
 
     ClanRankingStatus(rapidjson::Value const& document);
     ClanRankingStatus() = default;

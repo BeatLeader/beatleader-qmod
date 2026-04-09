@@ -1,4 +1,4 @@
-#include "include/UI/LevelInfoUI.hpp"
+#include "include/Managers/LeaderboardHeaderManager.hpp"
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/UIUtils.hpp"
 #include "include/Utils/StringUtils.hpp"
@@ -56,6 +56,48 @@ namespace ModifiersUI {
 
     static vector<GameplayModifierToggle*> modifiers;
 
+    struct ModifierEffects {
+        float totalMultiplier = 1.0f;
+        TriangleRating ratingSelected {};
+    };
+
+    ModifierEffects GetModifierEffects() {
+        ModifierEffects effects {};
+        if (!modifiersPanel) {
+            return effects;
+        }
+
+        auto modifierParams = modifiersPanel->_gameplayModifiersModel->CreateModifierParamsList(modifiersPanel->gameplayModifiers);
+        auto hasSongSpecificModifiers = !songModifiers.empty() || !songModifierRatings.empty();
+
+        for (size_t i = 0; i < modifierParams->get_Count(); i++) {
+            auto param = modifierParams->get_Item(i);
+            if (param->multiplierConditionallyValid || !hasSongSpecificModifiers) {
+                continue;
+            }
+
+            string modifierName = param->get_modifierNameLocalizationKey();
+            if (!modifierKeyFromName.contains(modifierName)) {
+                continue;
+            }
+
+            auto const& key = modifierKeyFromName[modifierName];
+            if (songModifierRatings.contains(key)) {
+                effects.ratingSelected = songModifierRatings[key];
+            } else if (songModifiers.contains(key)) {
+                effects.totalMultiplier += songModifiers[key];
+            } else {
+                effects.totalMultiplier += param->multiplier;
+            }
+        }
+
+        if (effects.totalMultiplier < 0.0f) {
+            effects.totalMultiplier = 0.0f;
+        }
+
+        return effects;
+    }
+
     string_view getRankForMultiplier(float modifier) {
         if (modifier > 0.9) {
             return "SS";
@@ -95,8 +137,9 @@ namespace ModifiersUI {
 
         modifiersPanel = self;
         // Refresh Rating labels as a rating modifier could have been selected (this also calls refreshAllModifiers)
-        if(!ssActive && !multiActive)
-            LevelInfoUI::refreshRatingLabels();
+        if(!ssActive && !multiActive) {
+            BeatLeader::LeaderboardHeaderManagerNS::Instance.RefreshMapStatus();
+        }
     }
 
     MAKE_HOOK_MATCH(ModifierStart, &GameplayModifierToggle::Start, void, GameplayModifierToggle* self) {
@@ -143,34 +186,9 @@ namespace ModifiersUI {
         TriangleRating ratingSelected;
         // If we dont have a panel reference we cant do anything
         if (modifiersPanel) {
-
-            // Now we iterate all modifiers to set the totalMultiplier (% value on top) and the max achievable rank
-            auto modifierParams = modifiersPanel->_gameplayModifiersModel->CreateModifierParamsList(modifiersPanel->gameplayModifiers);
-
-            float totalMultiplier = 1;
-
-            for (size_t i = 0; i < modifierParams->get_Count(); i++)
-            {
-                auto param = modifierParams->get_Item(i);
-                
-                // If parameter is not nofail, we have a received any modifiers from the server and we have a short form of this modifier
-                if (!param->multiplierConditionallyValid && !songModifiers.empty() && modifierKeyFromName.contains(param->get_modifierNameLocalizationKey())) {
-                    string key = modifierKeyFromName[param->get_modifierNameLocalizationKey()];
-                    if (songModifierRatings.contains(key)) {
-                        // ModifierRatings apply to star value and have no effect on max rank.
-                        // But we need to return it so that it can be shown in the respective labels
-                        ratingSelected = songModifierRatings[key];
-                    }
-                    else if (songModifiers.contains(key)) {
-                        totalMultiplier += songModifiers[key];
-                    }
-                    else {
-                        totalMultiplier += param->multiplier;
-                    }
-                }
-            }
-
-            if (totalMultiplier < 0) totalMultiplier = 0; // thanks Beat Games for Zen mode -1000%
+            auto effects = GetModifierEffects();
+            auto totalMultiplier = effects.totalMultiplier;
+            ratingSelected = effects.ratingSelected;
 
             // Correct texts & color of total multiplier & rank with our values
             modifiersPanel->_totalMultiplierValueText->SetText((totalMultiplier > 1 ? "+" : "") + to_string_wprecision(totalMultiplier * 100.0f, 1) + "%", true);
@@ -181,6 +199,19 @@ namespace ModifiersUI {
             modifiersPanel->_maxRankValueText->set_color(color);
         }
         return ratingSelected;
+    }
+
+    TriangleRating ApplyCurrentModifiers(TriangleRating rating) {
+        auto effects = GetModifierEffects();
+        if (effects.ratingSelected.stars > 0.0f) {
+            rating = effects.ratingSelected;
+        }
+
+        rating.stars *= effects.totalMultiplier;
+        rating.techRating *= effects.totalMultiplier;
+        rating.accRating *= effects.totalMultiplier;
+        rating.passRating *= effects.totalMultiplier;
+        return rating;
     }
 
     void setup() {

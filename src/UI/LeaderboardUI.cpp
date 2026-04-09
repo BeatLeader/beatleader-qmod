@@ -23,7 +23,6 @@
 #include "include/UI/RoleColorScheme.hpp"
 #include "include/UI/Themes/ThemeUtils.hpp"
 #include "include/UI/ResultsViewController.hpp"
-#include "include/UI/LevelInfoUI.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/CaptorClanUI.hpp"
@@ -36,6 +35,7 @@
 #include "include/Utils/ModConfig.hpp"
 
 #include "include/Managers/LeaderboardContextsManager.hpp"
+#include "include/Managers/LeaderboardHeaderManager.hpp"
 #include "include/Managers/PrestigeLevelIconsManager.hpp"
 
 #include "include/Core/Events.hpp"
@@ -344,14 +344,8 @@ namespace LeaderboardUI {
 
     MAKE_HOOK_MATCH(LeaderboardActivate, &PlatformLeaderboardViewController::DidActivate, void, PlatformLeaderboardViewController* self, bool firstActivation, bool addedToHeirarchy, bool screenSystemEnabling) {
         LeaderboardActivate(self, firstActivation, addedToHeirarchy, screenSystemEnabling);
-        if (showBeatLeader && firstActivation) {
-            HMUI::ImageView* imageView = self->get_transform()->Find("HeaderPanel")->GetComponentInChildren<HMUI::ImageView*>();
-            imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
-            imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
-            imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
-        }
-
         plvc = self;
+        BeatLeader::LeaderboardHeaderManagerNS::Instance.SetVisible(showBeatLeader);
 
         if (parentScreen != NULL) {
             visible = showBeatLeader;
@@ -674,7 +668,7 @@ namespace LeaderboardUI {
                 BSML::MainThreadScheduler::Schedule([status, response, rankable, type] {
                     if (status == 200) {
                         setVotingButtonsState(stoi(response));
-                        LevelInfoUI::addVoteToCurrentLevel(rankable, type);
+                        BeatLeader::LeaderboardHeaderManagerNS::Instance.ApplyVoteToCurrentBeatmap(rankable, type);
                     } else {
                         setVotingButtonsState(1);
                     } 
@@ -909,29 +903,32 @@ namespace LeaderboardUI {
 
             initSettingsModal(self->get_transform());
 
-            auto settingsButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->settingsIcon, [](){
-                settingsContainer->Show(true, true, nullptr);
-            }, {180, 36}, {4.5, 4.5});
-
-            settingsButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
-            settingsButton->set_defaultColor(FadedColor);
-            settingsButton->set_highlightColor(SelectedColor);
-
-            auto leaderboardLinkButton = ::BSML::Lite::CreateClickableImage(parentScreen->get_transform(), BundleLoader::bundle->profileIcon, [](){
-                string url = WebUtils::WEB_URL + "leaderboard/global/" + lastLeaderboardId;
-                static auto UnityEngine_Application_OpenURL = il2cpp_utils::resolve_icall<void, StringW>("UnityEngine.Application::OpenURL");
-                UnityEngine_Application_OpenURL(url);
-            }, {174, 36}, {4.5, 4.5});
-
-            leaderboardLinkButton->set_material(BundleLoader::bundle->UIAdditiveGlowMaterial);
-            leaderboardLinkButton->set_defaultColor(FadedColor);
-            leaderboardLinkButton->set_highlightColor(SelectedColor);
-            
-            CaptorClanUI::initCaptorClan(plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject(), plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<TMPro::TextMeshProUGUI*>());
             CaptorClanUI::showClanRankingCallback = []() {
                 clearTable();
                 refreshFromTheServerCurrent();
             };
+
+            BeatLeader::LeaderboardHeaderManagerNS::Instance.EnsureInitialized(
+                plvc,
+                []() {
+                    if (lastLeaderboardId.empty()) {
+                        return;
+                    }
+
+                    string url = WebUtils::WEB_URL + "leaderboard/global/" + lastLeaderboardId;
+                    static auto UnityEngine_Application_OpenURL = il2cpp_utils::resolve_icall<void, StringW>("UnityEngine.Application::OpenURL");
+                    UnityEngine_Application_OpenURL(url);
+                },
+                []() {
+                    if (settingsContainer) {
+                        settingsContainer->Show(true, true, nullptr);
+                    }
+                }
+            );
+            if (showBeatLeader) {
+                BeatLeader::LeaderboardHeaderManagerNS::Instance.SetBeatmap(plvc->_beatmapKey);
+            }
+            BeatLeader::LeaderboardHeaderManagerNS::Instance.SetVisible(showBeatLeader);
 
             bool hasClans = PlayerController::currentPlayer && !PlayerController::currentPlayer->clans.empty();
             ArrayW<StringW> values(hasClans ? PlayerController::currentPlayer->clans.size() + 2 : 2);
@@ -977,7 +974,6 @@ namespace LeaderboardUI {
             preferencesButton->get_gameObject()->SetActive(showBeatLeader);
         }
 
-        LevelInfoUI::SetLevelInfoActive(showBeatLeader);
         ModifiersUI::SetModifiersActive(showBeatLeader);
         CaptorClanUI::setActive(showBeatLeader && getModConfig().CaptureActive.GetValue());
 
@@ -991,16 +987,9 @@ namespace LeaderboardUI {
             downPageButton->get_gameObject()->SetActive(showBeatLeader);
         }
         
-        HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
-        
-        if (showBeatLeader) {
-            imageView->set_color(UnityEngine::Color(0.64,0.64,0.64,1));
-            imageView->set_color0(UnityEngine::Color(0.93,0,0.55,1));
-            imageView->set_color1(UnityEngine::Color(0.25,0.52,0.9,1));
-        } else {
-            imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
-            imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
-            imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
+        BeatLeader::LeaderboardHeaderManagerNS::Instance.SetVisible(showBeatLeader);
+        if (showBeatLeader && plvc) {
+            BeatLeader::LeaderboardHeaderManagerNS::Instance.SetBeatmap(plvc->_beatmapKey);
         }
 
         auto dataItem = plvc->_scopeSegmentedControl->_dataItems.get(2);
@@ -1043,14 +1032,7 @@ namespace LeaderboardUI {
                 updateSelectedLeaderboard();
             });
 
-            if (!showBeatLeader) {
-                BSML::MainThreadScheduler::Schedule([] {
-                    HMUI::ImageView* imageView = plvc->get_gameObject()->get_transform()->Find("HeaderPanel")->get_gameObject()->GetComponentInChildren<HMUI::ImageView*>();
-                    imageView->set_color(UnityEngine::Color(0.5,0.5,0.5,1));
-                    imageView->set_color0(UnityEngine::Color(0.5,0.5,0.5,1));
-                    imageView->set_color1(UnityEngine::Color(0.5,0.5,0.5,1));
-                });
-            }
+            BeatLeader::LeaderboardHeaderManagerNS::Instance.SetVisible(showBeatLeader);
             
             if (ssInstalled) {
                 updateSelectedLeaderboard();
@@ -1101,6 +1083,9 @@ namespace LeaderboardUI {
         RefreshLevelStats(self);
 
         refreshGroupsSelector();
+        if (showBeatLeader) {
+            BeatLeader::LeaderboardHeaderManagerNS::Instance.SetBeatmap(self->_beatmapKey);
+        }
     }
 
     LeaderboardTableCell* CellForIdxReimplement(LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
@@ -1535,6 +1520,7 @@ namespace LeaderboardUI {
         linkContainer = NULL;
         settingsContainer = NULL;
         contextsContainer = NULL;
+        BeatLeader::LeaderboardHeaderManagerNS::Instance.Reset();
         loginPrompt = NULL;
         preferencesButton = NULL;
         parentScreen = NULL;
@@ -1546,8 +1532,8 @@ namespace LeaderboardUI {
         ResultsView::reset();
         upPageButton = NULL;
         groupsSelector = NULL;
+        CaptorClanUI::setShowClanRanking(false);
         CaptorClanUI::Reset();
-        CaptorClanUI::showClanRanking = false;
         ssWasOpened = false;
         if (ssInstalled) {
             showBeatLeader = getModConfig().ShowBeatleader.GetValue();

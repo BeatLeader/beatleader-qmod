@@ -75,10 +75,14 @@ namespace BeatLeader {
     }
 
     void ReeComponent::ManualInit(UnityEngine::Transform* rootNode) {
+        BeatLeaderLogger.info("ReeComponent::ManualInit 1");
         DisposeIfNeeded();
         get_transform()->SetParent(rootNode, true);
+        BeatLeaderLogger.info("ReeComponent::ManualInit 2");
         ApplyHierarchy();
+        BeatLeaderLogger.info("ReeComponent::ManualInit 3");
         OnInitialize();
+        BeatLeaderLogger.info("ReeComponent::ManualInit 4");
     }
 
     void ReeComponent::SetRootActive(bool active) {
@@ -123,9 +127,14 @@ namespace BeatLeader {
     }
 
     void ReeComponent::ApplyHierarchy() {
+        BeatLeaderLogger.info("ReeComponent::ApplyHierarchy {} {}", _content == nullptr ? "nullptr" : "not nullptr", _uiComponent == nullptr ? "nullptr" : "not nullptr");
         _content->SetParent(_uiComponent->get_parent(), true);
+        BeatLeaderLogger.info("ReeComponent::ApplyHierarchy 1");
         _uiComponent->SetParent(_parent, false);
+        BeatLeaderLogger.info("ReeComponent::ApplyHierarchy 2");
         get_gameObject()->SetActive(true);
+        BeatLeaderLogger.info("ReeComponent::ApplyHierarchy 3");
         _state = ReeComponentState::HierarchySet;
+        BeatLeaderLogger.info("ReeComponent::ApplyHierarchy 4");
     }
 }

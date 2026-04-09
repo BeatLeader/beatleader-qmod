@@ -12,13 +12,13 @@ using namespace std;
 
 struct Difficulty 
 {
-    int status;
-    int type;
-    vector<float> votes;
-    unordered_map<string, float> modifierValues;
-    unordered_map<string, TriangleRating> modifiersRating;
-    TriangleRating rating;
-    ClanRankingStatus clanStatus;
+    int status = 0;
+    int type = 0;
+    vector<float> votes = {};
+    unordered_map<string, float> modifierValues = {};
+    unordered_map<string, TriangleRating> modifiersRating = {};
+    TriangleRating rating = {};
+    ClanRankingStatus clanStatus = {};
 
     Difficulty(rapidjson::Value const& document);
     Difficulty(int statusGiven, int typeGiven, vector<float> votesGive, unordered_map<string, float> modifierValuesGiven, unordered_map<string, TriangleRating> modifiersRatingGiven, TriangleRating ratingGiven);

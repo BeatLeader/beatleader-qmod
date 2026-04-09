@@ -16,10 +16,10 @@
 #include "Utils/ModConfig.hpp"
 #include "Utils/WebUtils.hpp"
 #include "API/PlayerController.hpp"
+#include "include/Managers/LeaderboardHeaderManager.hpp"
 #include "include/Core/ReplayPlayer.hpp"
 
 #include "include/UI/PreferencesViewController.hpp"
-#include "include/UI/LevelInfoUI.hpp"
 #include "include/UI/LogoAnimation.hpp"
 #include "include/UI/EmojiSupport.hpp"
 #include "include/UI/QuestUI.hpp"
@@ -210,7 +210,7 @@ void BeatLeader::PreferencesViewController::DidActivate(bool firstActivation, bo
         // // if the same map, that was selected before changing the setting, is selected again before selecting any other map. 
         // // This results in setLabels not being called again and the stars of the old setting are displayed, which is why we call it manually here after selecting an option
         starsDropdown->dropdown->add_didSelectCellWithIdxEvent(custom_types::MakeDelegate<System::Action_2<UnityW<HMUI::DropdownWithTableView>, int>*>((function<void(UnityW<HMUI::DropdownWithTableView>, int)>)[](auto throwaway1, auto throwaway2){
-            LevelInfoUI::refreshRatingLabels();
+            BeatLeader::LeaderboardHeaderManagerNS::Instance.RefreshMapStatus();
         }));
 
         serverDropdown = AddConfigValueDropdownEnum(containerTransform, getModConfig().DomainType, serverOptions);

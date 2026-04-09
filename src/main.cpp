@@ -1,7 +1,6 @@
 #include "main.hpp"
 
 #include "Utils/ReplayManager.hpp"
-#include "include/UI/LevelInfoUI.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/PreferencesViewController.hpp"
@@ -24,6 +23,7 @@
 #include "include/Utils/FileManager.hpp"
 
 #include "include/Managers/PrestigeLevelIconsManager.hpp"
+#include "include/Managers/MapTypesManager.hpp"
 
 #include "config-utils/shared/config-utils.hpp"
 #include "custom-types/shared/register.hpp"
@@ -66,7 +66,6 @@ static GlobalNamespace::MainFlowCoordinator* mainCoordinator;
 
 void resetUI() {
     LeaderboardUI::reset();
-    LevelInfoUI::reset();
     EmojiSupport::Reset();
     Sprites::ResetCache();
 
@@ -228,12 +227,12 @@ MOD_EXPORT "C" void late_load() {
 
     BeatLeader::EventManagement::RegisterAllEvents();
     BeatLeader::PrestigeLevelIconsManagerNS::Instance.Init();
+    BeatLeader::MapTypesManagerNS::Instance.Init();
     
     LeaderboardUI::retryCallback = []() {
         ReplayManager::RetryPosting(replayPostCallback);
     };
 
-    LevelInfoUI::setup();
     ModifiersUI::setup();
     ResultsView::setup();
 

@@ -1,9 +1,9 @@
 #pragma once
 
+#include <functional>
 #include <string>
 #include <tuple>
 #include "include/Utils/ReplayManager.hpp"
-#include "include/UI/LevelInfoUI.hpp"
 #include "GlobalNamespace/BeatmapLevel.hpp"
 #include "UnityEngine/Transform.hpp"
 #include "UnityEngine/UI/Toggle.hpp"
