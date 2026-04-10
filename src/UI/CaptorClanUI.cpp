@@ -153,7 +153,7 @@ namespace BeatLeader {
 
     StringW CaptorClanView::GetContent() {
         return StringW(R"(
-            <horizontal id="_background" pad-left="1" pad-right="1" spacing="3" bg="round-rect-panel">
+            <horizontal id="_background" pad-left="1" pad-right="1" spacing="2" bg="round-rect-panel">
                 <horizontal pref-height="6">
                     <text id="_captorClanText" font-size="4" align="Midline"/>
                 </horizontal>

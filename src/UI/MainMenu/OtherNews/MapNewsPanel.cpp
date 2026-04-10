@@ -28,22 +28,32 @@ namespace BeatLeader {
             if (status == 200 && !error) {
                 auto result = Paged<TrendingMapData>(response.GetObject());
                 BSML::MainThreadScheduler::Schedule([this, result] {
-                    LocalComponent()->_loadingIndicator->SetActive(false);
+                    auto* localComponent = TryGetUsableComponent();
+                    if (!localComponent || !localComponent->_loadingIndicator || !localComponent->_emptyText) {
+                        return;
+                    }
+
+                    localComponent->_loadingIndicator->SetActive(false);
 
                     if (result.data.size() > 0) {
-                        LocalComponent()->_emptyText->get_gameObject()->SetActive(false);
+                        localComponent->_emptyText->get_gameObject()->SetActive(false);
                         PresentList(result.data);
                     } else {
-                        LocalComponent()->_emptyText->get_gameObject()->SetActive(true);
-                        LocalComponent()->_emptyText->set_text("There are no trending maps");
+                        localComponent->_emptyText->get_gameObject()->SetActive(true);
+                        localComponent->_emptyText->set_text("There are no trending maps");
                         DisposeList();
                     }
                 });
             } else {
                 BSML::MainThreadScheduler::Schedule([this] {
-                    LocalComponent()->_loadingIndicator->SetActive(false);
-                    LocalComponent()->_emptyText->get_gameObject()->SetActive(true);
-                    LocalComponent()->_emptyText->set_text("<color=#ff8888>Failed to load");
+                    auto* localComponent = TryGetUsableComponent();
+                    if (!localComponent || !localComponent->_loadingIndicator || !localComponent->_emptyText) {
+                        return;
+                    }
+
+                    localComponent->_loadingIndicator->SetActive(false);
+                    localComponent->_emptyText->get_gameObject()->SetActive(true);
+                    localComponent->_emptyText->set_text("<color=#ff8888>Failed to load");
                     DisposeList();
                 });
             }
@@ -51,23 +61,46 @@ namespace BeatLeader {
     }
 
     void MapNewsPanel::PresentList(std::vector<TrendingMapData> const& items) {
+        auto* localComponent = TryGetUsableComponent();
+        if (!localComponent || !EnsureList()) {
+            return;
+        }
+
         DisposeList();
 
         for (int i = 0; i < items.size(); i++) {
             auto item = items[i];
-            auto previewPanel = FeaturedPreviewPanel::Instantiate<FeaturedPreviewPanel>(LocalComponent()->get_transform());
+            auto previewPanel = FeaturedPreviewPanel::Instantiate<FeaturedPreviewPanel>(localComponent->get_transform());
+            if (!previewPanel) {
+                continue;
+            }
+
             auto panelComponent = previewPanel->LocalComponent();
-            panelComponent->ManualInit(LocalComponent()->_mainContainer);
+            if (!panelComponent) {
+                continue;
+            }
+
+            panelComponent->ManualInit(localComponent->_mainContainer);
             
             auto buttonAction = custom_types::MakeDelegate<System::Action*>(
                 (std::function<void()>)[item, this] {
-                    MapDownloadDialog::OpenSongOrDownloadDialog(item.song, this->LocalComponent()->_content->get_transform());
+                    auto* localComponent = this->TryGetUsableComponent();
+                    if (!localComponent || !localComponent->_content) {
+                        return;
+                    }
+
+                    MapDownloadDialog::OpenSongOrDownloadDialog(item.song, localComponent->_content->get_transform());
                 }
             );
 
             auto backgroundAction = custom_types::MakeDelegate<System::Action*>(
                 (std::function<void()>)[item, this] {
-                    MapPreviewDialog::OpenSongOrDownloadDialog(item, this->LocalComponent()->_content->get_transform());
+                    auto* localComponent = this->TryGetUsableComponent();
+                    if (!localComponent || !localComponent->_content) {
+                        return;
+                    }
+
+                    MapPreviewDialog::OpenSongOrDownloadDialog(item, localComponent->_content->get_transform());
                 }
             );
 
@@ -79,26 +112,33 @@ namespace BeatLeader {
                 buttonAction,
                 backgroundAction
             );
-            if (!_list) {
-                _list = System::Collections::Generic::List_1<UnityEngine::MonoBehaviour*>::New_ctor();
-            }
 
             _list->Add(panelComponent);
         }
 
-        LocalComponent()->MarkScrollbarDirty();
+        auto* refreshedComponent = TryGetUsableComponent();
+        if (refreshedComponent) {
+            refreshedComponent->MarkScrollbarDirty();
+        }
     }
 
     void MapNewsPanel::DisposeList() {
+        if (!_list) {
+            return;
+        }
+
         for (int i = 0; i < _list->get_Count(); i++) {
             auto post = _list->get_Item(i);
-            if (post != nullptr) {
+            if (post != nullptr && post->get_gameObject() != nullptr) {
                 UnityEngine::Object::Destroy(post->get_gameObject());
             }
         }
 
         _list->Clear();
-        LocalComponent()->MarkScrollbarDirty();
+        auto* localComponent = TryGetUsableComponent();
+        if (localComponent) {
+            localComponent->MarkScrollbarDirty();
+        }
     }
 
     StringW MapNewsPanel::GetContent() {

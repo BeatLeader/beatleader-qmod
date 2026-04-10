@@ -821,9 +821,9 @@ namespace LeaderboardUI {
 
             auto prestigeGroup = BSML::Lite::CreateHorizontalLayoutGroup(playerNameLayout->get_transform());
             prestigeGroup->GetComponentInChildren<UnityEngine::UI::ContentSizeFitter*>()->set_horizontalFit(UnityEngine::UI::ContentSizeFitter_FitMode::PreferredSize);
-            prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredWidth(4.0f);
-            prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredHeight(4.0f);
-            prestigeIcon = BSML::Lite::CreateImage(prestigeGroup->get_transform(), NULL, {}, {4, 4});
+            prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredWidth(5.0f);
+            prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredHeight(5.0f);
+            prestigeIcon = BSML::Lite::CreateImage(prestigeGroup->get_transform(), NULL, {0, 1}, {5, 5});
 
             playerName = ::BSML::Lite::CreateText(playerNameLayout->get_transform(), "");
             playerName->set_fontSize(6);

@@ -240,7 +240,7 @@ MOD_EXPORT "C" void late_load() {
         // }
     });
     BSML::MainThreadScheduler::Schedule([] {
-        PlayerController::Refresh();
+        PlayerController::Refresh(0, nullptr, true);
         INSTALL_HOOK(BeatLeaderLogger, ModalView_Show);
     });
 

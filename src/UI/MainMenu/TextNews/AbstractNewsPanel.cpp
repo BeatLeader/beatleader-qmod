@@ -14,8 +14,35 @@ namespace BeatLeader {
     bool AbstractNewsPanel::HasHeader() {
         return false;
     }
-    void AbstractNewsPanel::OnInitialize() {
+
+    bool AbstractNewsPanel::EnsureList() {
+        if (_list) {
+            return true;
+        }
+
         _list = System::Collections::Generic::List_1<UnityEngine::MonoBehaviour*>::New_ctor();
+        return _list != nullptr;
+    }
+
+    AbstractNewsPanelComponent* AbstractNewsPanel::TryGetUsableComponent() {
+        auto* localComponent = LocalComponent();
+        if (!localComponent) {
+            return nullptr;
+        }
+
+        if (localComponent->_state != ReeComponentState::HierarchySet) {
+            return nullptr;
+        }
+
+        if (!localComponent->get_gameObject() || !localComponent->_mainContainer) {
+            return nullptr;
+        }
+
+        return localComponent;
+    }
+
+    void AbstractNewsPanel::OnInitialize() {
+        EnsureList();
 
         LocalComponent()->_background->set_raycastTarget(true);
         LocalComponent()->InitializeScrollView();

@@ -40,8 +40,11 @@ Player::Player(rapidjson::Value const& userModInterface) {
         }();
 
     rank = contextRank["rank"].GetInt();
-        countryRank = contextRank["countryRank"].GetInt();
+    countryRank = contextRank["countryRank"].GetInt();
     pp = contextRank["pp"].GetFloat();
+    lastRank = rank;
+    lastCountryRank = countryRank;
+    lastPP = pp;
 
     auto clansList = userModInterface["clans"].GetArray();
     for (int index = 0; index < (int)clansList.Size(); ++index) {

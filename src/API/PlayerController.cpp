@@ -18,6 +18,11 @@
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
+#include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <thread>
+
 using UnityEngine::Resources;
 using namespace GlobalNamespace;
 using namespace rapidjson;
@@ -26,22 +31,144 @@ optional<Player> PlayerController::currentPlayer = nullopt;
 string PlayerController::lastErrorDescription = "";
 vector<function<void(optional<Player> const&)>> PlayerController::playerChanged;
 
+namespace {
+    constexpr int kMaxRefreshRetries = 5;
+    constexpr int kMaxHistoryRetries = 2;
+    constexpr auto kBackgroundRefreshRetryDelay = std::chrono::minutes(1);
+
+    std::atomic_bool backgroundRefreshRetryScheduled = false;
+
+    bool IsTransientRefreshFailure(long status, bool parseError) {
+        if (status == 401) {
+            return false;
+        }
+
+        if (parseError) {
+            return true;
+        }
+
+        if (status == 0 || (status > 0 && status < 100)) {
+            return true;
+        }
+
+        return status == 408 || status == 425 || status == 429 || status >= 500;
+    }
+
+    int GetRetryDelaySeconds(int retry) {
+        return std::min(60, (retry + 1) * 10);
+    }
+
+    void CompleteRefresh(const function<void(optional<Player> const&, string)>& finished);
+    void LoadPlayerHistory(string playerId, int contextId, int retry, const function<void(optional<Player> const&, string)>& finished);
+    void ScheduleBackgroundRefreshRetry();
+}
+
 void callbackWrapper(optional<Player> const& player) {
     for (auto && fn : PlayerController::playerChanged)
         fn(player);
 }
 
-void PlayerController::Refresh(int retry, const function<void(optional<Player> const&, string)>& finished) {
-    // Error Handler
-    auto handleError = [retry, finished](long status){
-        if (retry < 5) {
-            if (status != 401) {
-                std::this_thread::sleep_for(std::chrono::seconds{(retry + 1) * 10});
+namespace {
+    void CompleteRefresh(const function<void(optional<Player> const&, string)>& finished) {
+        if (finished) {
+            finished(PlayerController::currentPlayer, "");
+        }
+        callbackWrapper(PlayerController::currentPlayer);
+    }
+
+    void LoadPlayerHistory(string playerId, int contextId, int retry, const function<void(optional<Player> const&, string)>& finished) {
+        WebUtils::GetJSONAsync(
+            WebUtils::API_URL + "player/" + playerId + "/history?leaderboardContext=" + to_string(contextId) + "&count=1",
+            [playerId, contextId, retry, finished](long status, bool error, rapidjson::Document const& result) {
+                if (status == 200 && !error && result.IsArray() && result.Size() > 0 && result[0].IsObject()) {
+                    if (PlayerController::currentPlayer != nullopt && PlayerController::currentPlayer->id == playerId) {
+                        PlayerController::currentPlayer->SetHistory(result[0]);
+                    }
+
+                    CompleteRefresh(finished);
+                    return;
+                }
+
+                if (retry < kMaxHistoryRetries && IsTransientRefreshFailure(status, error)) {
+                    int delaySeconds = GetRetryDelaySeconds(retry);
+                    BeatLeaderLogger.warn(
+                        "Failed to refresh player history for {} (status {} parseError {}), retrying in {}s",
+                        playerId,
+                        status,
+                        error,
+                        delaySeconds
+                    );
+                    std::this_thread::sleep_for(std::chrono::seconds(delaySeconds));
+                    LoadPlayerHistory(playerId, contextId, retry + 1, finished);
+                    return;
+                }
+
+                BeatLeaderLogger.warn(
+                    "Failed to refresh player history for {} (status {} parseError {}), continuing without history",
+                    playerId,
+                    status,
+                    error
+                );
+                CompleteRefresh(finished);
             }
-            Refresh(retry + 1, finished);
-        } else {
+        );
+    }
+
+    void ScheduleBackgroundRefreshRetry() {
+        bool expected = false;
+        if (!backgroundRefreshRetryScheduled.compare_exchange_strong(expected, true)) {
+            return;
+        }
+
+        std::thread([] {
+            std::this_thread::sleep_for(kBackgroundRefreshRetryDelay);
+            backgroundRefreshRetryScheduled.store(false);
+            PlayerController::Refresh(0, nullptr, true);
+        }).detach();
+    }
+}
+
+void PlayerController::Refresh(int retry, const function<void(optional<Player> const&, string)>& finished, bool keepTrying) {
+    // Error Handler
+    auto handleError = [retry, finished, keepTrying](long status, bool parseError) {
+        if (status == 401) {
+            backgroundRefreshRetryScheduled.store(false);
             currentPlayer = nullopt;
-            if (finished) finished(nullopt, "Failed to retrieve player");
+            callbackWrapper(currentPlayer);
+            if (finished) {
+                finished(nullopt, "Unauthorized");
+            }
+            return;
+        }
+
+        if (retry < kMaxRefreshRetries && IsTransientRefreshFailure(status, parseError)) {
+            int delaySeconds = GetRetryDelaySeconds(retry);
+            BeatLeaderLogger.warn(
+                "Failed to refresh player (status {} parseError {}), retrying in {}s ({}/{})",
+                status,
+                parseError,
+                delaySeconds,
+                retry + 1,
+                kMaxRefreshRetries + 1
+            );
+            std::this_thread::sleep_for(std::chrono::seconds(delaySeconds));
+            Refresh(retry + 1, finished, keepTrying);
+            return;
+        }
+
+        if (keepTrying && currentPlayer == nullopt && std::filesystem::exists(WebUtils::getCookieFile())) {
+            BeatLeaderLogger.warn(
+                "Failed to refresh player after {} attempts, scheduling another retry in {}s",
+                retry + 1,
+                std::chrono::duration_cast<std::chrono::seconds>(kBackgroundRefreshRetryDelay).count()
+            );
+            ScheduleBackgroundRefreshRetry();
+        } else {
+            BeatLeaderLogger.warn("Failed to refresh player (status {} parseError {})", status, parseError);
+        }
+
+        if (finished) {
+            finished(currentPlayer, currentPlayer == nullopt ? "Failed to retrieve player" : "Failed to refresh player");
         }
     };
 
@@ -76,31 +203,19 @@ void PlayerController::Refresh(int retry, const function<void(optional<Player> c
     }
 
     // Get new userdata and refresh the interface with it
-    WebUtils::GetJSONAsync(WebUtils::API_URL + "user/modinterface", [retry, finished, handleError](long status, bool error, rapidjson::Document const& result){
-        if (status == 200 && !error) {
+    WebUtils::GetJSONAsync(WebUtils::API_URL + "user/modinterface", [finished, handleError](long status, bool error, rapidjson::Document const& result) {
+        if (status == 200 && !error && result.IsObject()) {
+            backgroundRefreshRetryScheduled.store(false);
             currentPlayer = Player(result.GetObject());
-            // We also need the history so we can display the ranking change
-            // Leaderboard Context on Server is a bit flag and ours just a normal enum. Therefor we need to calculate 2^Context to get the right parameter
-            WebUtils::GetJSONAsync(WebUtils::API_URL + "player/" + currentPlayer->id + "/history?leaderboardContext="+to_string(getModConfig().Context.GetValue())+"&count=1", [finished, handleError](long historyStatus, bool historyError, rapidjson::Document const& historyResult){
-                // Only do stuff if we are successful
-                if(historyStatus == 200 && !historyError){
-                    // Set the new Historydata on the player
-                    currentPlayer->SetHistory(historyResult.GetArray()[0]);
-
-                    // Call callbacks
-                    if (finished) finished(currentPlayer, "");
-                    callbackWrapper(currentPlayer);
-                }
-                else {
-                    handleError(historyStatus);
-                }
-            });
 
             // Refresh the cookie to keep player logged in
             WebUtils::PostJSONAsync(WebUtils::API_URL + "cookieRefresh", "", [](long status, string error){ });
+
+            // History is only used for rank-delta UI, so auth should remain successful even if this request fails.
+            LoadPlayerHistory(currentPlayer->id, getModConfig().Context.GetValue(), 0, finished);
         }
-        else{
-            handleError(status);
+        else {
+            handleError(status, error || !result.IsObject());
         }
     });
 }

@@ -16,6 +16,10 @@ DEFINE_TYPE(BeatLeader, FeaturedPreviewComponent);
 namespace BeatLeader {
     void FeaturedPreviewPanel::OnInitialize() {
         auto component = LocalComponent();
+        if (!component || !component->_background || !component->_image || !component->_topText || !component->_bottomText) {
+            return;
+        }
+
         component->_background->_skew = 0.18f;
         component->_background->__Refresh();
         component->_image->set_material(BundleLoader::bundle->roundTexture10Material);
@@ -26,38 +30,54 @@ namespace BeatLeader {
         component->_bottomText->set_overflowMode(TMPro::TextOverflowModes::Ellipsis);
 
         // Setup button click handler
-        component->_button->get_onClick()->AddListener(custom_types::MakeDelegate<UnityEngine::Events::UnityAction*>(
-            (std::function<void()>)[this] { 
-                if (LocalComponent()->_buttonAction) {
-                    LocalComponent()->_buttonAction->Invoke();
+        if (component->_button && component->_button->get_onClick()) {
+            component->_button->get_onClick()->AddListener(custom_types::MakeDelegate<UnityEngine::Events::UnityAction*>(
+                (std::function<void()>)[this] { 
+                    auto* localComponent = LocalComponent();
+                    if (localComponent && localComponent->_buttonAction) {
+                        localComponent->_buttonAction->Invoke();
+                    }
                 }
-            }
-        ));
+            ));
+        }
 
-        auto controller = SmoothHoverController::Custom(component->_content->get_gameObject(), [this](bool hovered, float progress) {
-            this->component->_background->set_color(UnityEngine::Color(0, 0, 0, 0.5f + 0.4f * progress));
-        });
+        if (component->_content) {
+            auto controller = SmoothHoverController::Custom(component->_content->get_gameObject(), [this](bool hovered, float progress) {
+                if (this->component && this->component->_background) {
+                    this->component->_background->set_color(UnityEngine::Color(0, 0, 0, 0.5f + 0.4f * progress));
+                }
+            });
 
-        auto clickHandler = SimpleClickHandler::Custom(component->_content->get_gameObject(), [this](bool clicked) {
-            if (LocalComponent()->_backgroundAction) {
-                LocalComponent()->_backgroundAction->Invoke();
-            }
-        });
+            auto clickHandler = SimpleClickHandler::Custom(component->_content->get_gameObject(), [this](bool clicked) {
+                auto* localComponent = LocalComponent();
+                if (localComponent && localComponent->_backgroundAction) {
+                    localComponent->_backgroundAction->Invoke();
+                }
+            });
+        }
     }
 
     void FeaturedPreviewComponent::SetupData(StringW previewUrl, StringW topText, StringW bottomText, StringW buttonText, System::Action* buttonAction, System::Action* backgroundAction) {
-        _topText->set_text(" " + topText);
-        _bottomText->set_text(bottomText);
+        if (_topText) {
+            _topText->set_text(" " + topText);
+        }
+        if (_bottomText) {
+            _bottomText->set_text(bottomText);
+        }
 
-        TMPro::TextMeshProUGUI* textMesh = _button->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
-        if (textMesh) {
-            textMesh->set_text(buttonText);
+        if (_button) {
+            TMPro::TextMeshProUGUI* textMesh = _button->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
+            if (textMesh) {
+                textMesh->set_text(buttonText);
+            }
         }
         _buttonAction = buttonAction;
         _backgroundAction = backgroundAction;
 
         Sprites::get_Icon(previewUrl, [this](UnityEngine::Sprite* sprite) {
-            this->_image->set_sprite(sprite);
+            if (this->_image) {
+                this->_image->set_sprite(sprite);
+            }
         });
     }
 

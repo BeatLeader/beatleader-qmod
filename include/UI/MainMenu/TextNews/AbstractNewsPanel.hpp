@@ -34,7 +34,10 @@ class AbstractNewsPanel : public ReeUIComponentV2<AbstractNewsPanelComponent*> {
 public:
     void OnInitialize();
     virtual bool HasHeader();
-    System::Collections::Generic::List_1<UnityEngine::MonoBehaviour*>* _list;
+    bool EnsureList();
+    AbstractNewsPanelComponent* TryGetUsableComponent();
+
+    System::Collections::Generic::List_1<UnityEngine::MonoBehaviour*>* _list = nullptr;
 };
 
 } // namespace BeatLeader

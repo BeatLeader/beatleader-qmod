@@ -392,7 +392,8 @@ namespace WebUtils {
                 curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
                 curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
-                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, &data);
+                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+                curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(data.size()));
 
                 CURLcode res = curl_easy_perform(curl);
                 /* Check for errors */
