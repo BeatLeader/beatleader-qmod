@@ -3,7 +3,6 @@
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
 
-#include "include/UI/EmojiSupport.hpp"
 #include "include/API/PlayerController.hpp"
 
 #include "include/Utils/FormatUtils.hpp"

@@ -19,7 +19,6 @@
 #include "include/UI/LinksContainer.hpp"
 #include "include/UI/LogoAnimation.hpp"
 #include "include/UI/PlayerAvatar.hpp"
-#include "include/UI/EmojiSupport.hpp"
 #include "include/UI/RoleColorScheme.hpp"
 #include "include/UI/Themes/ThemeUtils.hpp"
 #include "include/UI/ResultsViewController.hpp"
@@ -829,8 +828,6 @@ namespace LeaderboardUI {
             playerName = ::BSML::Lite::CreateText(playerNameLayout->get_transform(), "");
             playerName->set_fontSize(6);
 
-            EmojiSupport::AddSupport(playerName);
-
             experienceBar = ExperienceBar::Instantiate<ExperienceBar>(parentScreen->get_transform());
             experienceBar->LocalComponent()->ManualInit(parentScreen->get_transform());
             auto expBarTransform = experienceBar->LocalComponent()->HorizontalLayout->get_transform().cast<RectTransform>();
@@ -1143,7 +1140,6 @@ namespace LeaderboardUI {
                 result->_playerNameText->set_fontSize(3);
                 result->_fullComboText->set_fontSize(3);
                 result->_scoreText->set_fontSize(2);
-                EmojiSupport::AddSupport(result->_playerNameText);
 
                 if (!cellBackgrounds.count(result)) {
                     avatars[result] = ::BSML::Lite::CreateImage(result->get_transform(), plvc->_aroundPlayerLeaderboardIcon, UnityEngine::Vector2(-30.5, 0), UnityEngine::Vector2(4, 4));
@@ -1172,7 +1168,6 @@ namespace LeaderboardUI {
             }
         } else {
             if (result->_scoreText->get_fontSize() == 2) {
-                EmojiSupport::RemoveSupport(result->_playerNameText);
                 result->_playerNameText->set_enableAutoSizing(true);
                 resize(result->_playerNameText, -24, 0);
                 

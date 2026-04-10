@@ -2,7 +2,6 @@
 #include "include/Utils/FormatUtils.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
-#include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsOverview.hpp"
 #include "include/UI/QuestUI.hpp"
 

@@ -3,7 +3,6 @@
 #include "include/Assets/BundleLoader.hpp"
 #include "include/UI/Components/SimpleClickHandler.hpp"
 #include "include/UI/Components/SmoothHoverController.hpp"
-#include "include/UI/EmojiSupport.hpp"
 #include "include/Utils/FormatUtils.hpp"
 
 #include "GlobalNamespace/ColorExtensions.hpp"
@@ -138,7 +137,6 @@ namespace BeatLeader {
         ApplyHeaderBackgroundColor(LocalComponent()->_background);
         LocalComponent()->_captorClanText->set_fontSize(4.0f);
         LocalComponent()->_captorClanText->set_alignment(TMPro::TextAlignmentOptions::Midline);
-        EmojiSupport::AddSupport(LocalComponent()->_captorClanText);
 
         LocalComponent()->_captorClanTag->container->set_localScale(UnityEngine::Vector3(ClanTagScale, ClanTagScale, ClanTagScale));
 

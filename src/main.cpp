@@ -4,7 +4,6 @@
 #include "include/UI/LeaderboardUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/PreferencesViewController.hpp"
-#include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ResultsViewController.hpp"
 #include "include/UI/QuestUI.hpp"
 #include "include/UI/MainMenu/BeatLeaderNewsViewController.hpp"
@@ -66,7 +65,6 @@ static GlobalNamespace::MainFlowCoordinator* mainCoordinator;
 
 void resetUI() {
     LeaderboardUI::reset();
-    EmojiSupport::Reset();
     Sprites::ResetCache();
 
     newsViewController = nullptr;

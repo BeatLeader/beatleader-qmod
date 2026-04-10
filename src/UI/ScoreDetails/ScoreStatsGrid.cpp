@@ -1,7 +1,6 @@
 #include "include/UI/ScoreDetails/ScoreDetailsUI.hpp"
 #include "include/Utils/FormatUtils.hpp"
 #include "include/Assets/Sprites.hpp"
-#include "include/UI/EmojiSupport.hpp"
 #include "include/UI/ScoreDetails/ScoreStatsGrid.hpp"
 
 #include "UnityEngine/Resources.hpp"

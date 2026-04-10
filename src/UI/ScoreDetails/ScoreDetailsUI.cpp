@@ -6,7 +6,6 @@
 #include "include/Assets/BundleLoader.hpp"
 #include "shared/Models/ScoreStats.hpp"
 
-#include "include/UI/EmojiSupport.hpp"
 #include "include/UI/UIUtils.hpp"
 #include "include/UI/Themes/ThemeUtils.hpp"
 #include "include/UI/QuestUI.hpp"
@@ -90,9 +89,6 @@ void BeatLeader::initScoreDetailsPopup(
     modalUI->prestigeIcon = BSML::Lite::CreateImage(modalUI->prestigeGroup->get_transform(), NULL, {0, 0}, {2, 2});
     modalUI->name = BSML::Lite::CreateText(nameLevelLayoutGroup->get_transform(), "");
     modalUI->sponsorMessage = QuestUI::CreateText(modalTransform, "", UnityEngine::Vector2(0, -32));
-
-    EmojiSupport::AddSupport(modalUI->name);
-    EmojiSupport::AddSupport(modalUI->sponsorMessage);
 
     modalUI->pp = QuestUI::CreateText(modalTransform, "", UnityEngine::Vector2(45.0, 16.0));
 

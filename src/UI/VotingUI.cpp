@@ -6,7 +6,6 @@
 #include "include/UI/UIUtils.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/Assets/BundleLoader.hpp"
-#include "include/UI/EmojiSupport.hpp"
 
 #include "UnityEngine/Resources.hpp"
 #include "HMUI/ImageView.hpp"

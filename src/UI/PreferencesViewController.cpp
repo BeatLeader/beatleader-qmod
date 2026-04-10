@@ -26,7 +26,6 @@
 
 #include "include/UI/PreferencesViewController.hpp"
 #include "include/UI/LogoAnimation.hpp"
-#include "include/UI/EmojiSupport.hpp"
 #include "include/UI/QuestUI.hpp"
 #include "include/Assets/BundleLoader.hpp"
 
@@ -272,7 +271,6 @@ void ShowLoading() {
 
 void BuildAccountTab(UnityEngine::Transform* parent) {
     nameField = ::BSML::Lite::CreateText(parent, "");
-    EmojiSupport::AddSupport(nameField);
 
     logoutButton = ::BSML::Lite::CreateUIButton(parent, "Logout", []() {
         PlayerController::LogOut();
