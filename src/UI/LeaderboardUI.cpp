@@ -78,6 +78,7 @@
 #include "UnityEngine/TextAnchor.hpp"
 #include "UnityEngine/RectOffset.hpp"
 #include "UnityEngine/UI/ContentSizeFitter.hpp"
+#include "UnityEngine/UI/LayoutRebuilder.hpp"
 
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
@@ -133,6 +134,7 @@ namespace LeaderboardUI {
     HMUI::ImageView* prestigeIcon = NULL;
     BeatLeader::ExperienceBar* experienceBar = NULL;
     BeatLeader::PlayerAvatar* playerAvatar = NULL;
+    RectTransform* playerNameLayoutTransform = NULL;
     RectTransform* rankLayoutTransform = NULL;
 
     UnityEngine::UI::Toggle* showBeatLeaderButton = NULL;
@@ -289,7 +291,13 @@ namespace LeaderboardUI {
                 prestigeIcon->sprite = BeatLeader::PrestigeLevelIconsManagerNS::Instance.getSprite(player.value().prestige);
                 prestigeIcon->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
 
-                playerName->GetComponent<UnityEngine::RectTransform*>()->anchoredPosition = { getModConfig().ExperienceBarEnabled.GetValue() ? 142.0f : 140.0f, getModConfig().ExperienceBarEnabled.GetValue() ? 55.0f : 53.0f };
+                if (playerNameLayoutTransform) {
+                    playerNameLayoutTransform->set_anchoredPosition({
+                        getModConfig().ExperienceBarEnabled.GetValue() ? 139.0f : 140.0f,
+                        getModConfig().ExperienceBarEnabled.GetValue() ? 55.0f : 53.0f
+                    });
+                    UnityEngine::UI::LayoutRebuilder::ForceRebuildLayoutImmediate(playerNameLayoutTransform);
+                }
                 rankLayoutTransform->set_anchoredPosition({ 138, getModConfig().ExperienceBarEnabled.GetValue() ? 50.0f : 45.0f});
 
                 experienceBar->OnProfileRequestStateChanged(
@@ -804,9 +812,21 @@ namespace LeaderboardUI {
             playerAvatar = playerAvatarImage->get_gameObject()->AddComponent<BeatLeader::PlayerAvatar*>();
             playerAvatar->Init(playerAvatarImage);
 
-            prestigeIcon = BSML::Lite::CreateImage(parentScreen->get_transform(), NULL, { 130, 56}, {5, 5});
+            auto playerNameLayout = ::BSML::Lite::CreateHorizontalLayoutGroup(parentScreen->get_transform());
+            playerNameLayout->set_spacing(1.0f);
+            EnableHorizontalFit(playerNameLayout);
+            playerNameLayoutTransform = playerNameLayout->get_transform().cast<RectTransform>();
+            playerNameLayoutTransform->set_anchorMin(UnityEngine::Vector2(0.5f, 0.5f));
+            playerNameLayoutTransform->set_anchorMax(UnityEngine::Vector2(0.5f, 0.5f));
+            playerNameLayoutTransform->set_anchoredPosition({139.0f, 55.0f});
 
-            playerName = ::BSML::Lite::CreateText(parentScreen->get_transform(), "", UnityEngine::Vector2(142, 55), UnityEngine::Vector2(60, 10));
+            auto prestigeGroup = BSML::Lite::CreateHorizontalLayoutGroup(playerNameLayout->get_transform());
+            prestigeGroup->GetComponentInChildren<UnityEngine::UI::ContentSizeFitter*>()->set_horizontalFit(UnityEngine::UI::ContentSizeFitter_FitMode::PreferredSize);
+            prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredWidth(4.0f);
+            prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredHeight(4.0f);
+            prestigeIcon = BSML::Lite::CreateImage(prestigeGroup->get_transform(), NULL, {}, {4, 4});
+
+            playerName = ::BSML::Lite::CreateText(playerNameLayout->get_transform(), "");
             playerName->set_fontSize(6);
 
             EmojiSupport::AddSupport(playerName);

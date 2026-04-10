@@ -21,7 +21,7 @@ public:
                                                                              int)> const &finished);
    static void RetryPosting(function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float, int)> const& finished);
 
-   static void TryPostReplay(string name, PlayEndData status, int tryIndex, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
+   static void TryPostReplay(string name, PlayEndData status, int tryIndex, bool keepLocalReplay, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
                                                                            int)> const &finished);
    static string lastReplayFilename;
    static PlayEndData lastReplayStatus;

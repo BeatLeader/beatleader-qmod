@@ -157,7 +157,7 @@ void Replay::Encode(NoteEvent const &note, ofstream& stream) {
     Encode(note.eventTime, stream);
     Encode(note.spawnTime, stream);
     Encode((int)note.eventType, stream);
-    if (note.eventType == NoteEventType::GOOD || note.eventType == NoteEventType::BAD) {
+    if (note.eventType != NoteEventType::MISS) {
         ReplayNoteCutInfo const& info = note.noteCutInfo;
         Encode(info.speedOK, stream);
         Encode(info.directionOK, stream);

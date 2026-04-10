@@ -9,8 +9,62 @@
 #include "shared/Models/Score.hpp"
 #include "include/main.hpp"
 
+#include <filesystem>
 #include <sys/stat.h>
 #include <stdio.h>
+
+namespace {
+    bool lastReplayShouldPersist = false;
+
+    bool ShouldKeepReplayLocally(PlayEndData const& status) {
+        if (!getModConfig().SaveLocalReplays.GetValue()) {
+            return false;
+        }
+
+        switch (status.GetEndType()) {
+            case LevelEndType::Fail:
+                return getModConfig().KeepFailReplays.GetValue();
+            case LevelEndType::Quit:
+            case LevelEndType::Restart:
+                return getModConfig().KeepExitReplays.GetValue();
+            case LevelEndType::Practice:
+                return getModConfig().KeepPracticeReplays.GetValue();
+            case LevelEndType::Clear:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    void DeleteMatchingReplays(Replay const& replay) {
+        std::error_code errorCode;
+        auto replaysDirectory = std::filesystem::path(getDataDir(modInfo)) / "replays";
+        if (!std::filesystem::exists(replaysDirectory, errorCode)) {
+            return;
+        }
+
+        for (auto const& entry : std::filesystem::directory_iterator(replaysDirectory, errorCode)) {
+            if (errorCode || !entry.is_regular_file() || entry.path().extension() != ".bsor") {
+                continue;
+            }
+
+            auto replayInfo = FileManager::ReadInfo(entry.path().string());
+            if (!replayInfo.has_value()) {
+                continue;
+            }
+
+            if (replayInfo->playerID != replay.info.playerID
+                || replayInfo->songName != replay.info.songName
+                || replayInfo->difficulty != replay.info.difficulty
+                || replayInfo->mode != replay.info.mode
+                || replayInfo->hash != replay.info.hash) {
+                continue;
+            }
+
+            remove(entry.path().string().c_str());
+        }
+    }
+}
 
 string ReplayManager::lastReplayFilename = "";
 PlayEndData ReplayManager::lastReplayStatus = PlayEndData(LevelEndType::Fail, 0);
@@ -20,30 +74,65 @@ void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool
     if (status.GetEndType() == LevelEndType::Unknown) {
         return;
     }
-    
-    string filename = FileManager::ToFilePath(replay);
+
+    auto keepLocalReplay = ShouldKeepReplayLocally(status);
+    auto shouldUpload = !skipUpload && PlayerController::currentPlayer != std::nullopt && UploadEnabled();
+
+    lastReplayFilename.clear();
+    lastReplayStatus = status;
+    lastReplayShouldPersist = keepLocalReplay;
+
+    if (!keepLocalReplay && !shouldUpload) {
+        if (!UploadEnabled()) {
+            finished(
+                ReplayUploadStatus::finished,
+                std::nullopt,
+                "<color=#BB2020ff>Upload disabled. Replay was not kept locally.</color>",
+                0,
+                -1
+            );
+        }
+        return;
+    }
+
+    if (keepLocalReplay && !getModConfig().SaveEveryReplayAttempt.GetValue()) {
+        DeleteMatchingReplays(replay);
+    }
+
+    string filename = FileManager::ToFilePath(replay, status);
     lastReplayFilename = filename;
 
-    FileManager::WriteReplay(replay);
+    FileManager::WriteReplay(filename, replay);
     BeatLeaderLogger.info("{}",("Replay saved " + filename).c_str());
 
     if(!UploadEnabled()) {
-        finished(ReplayUploadStatus::finished, std::nullopt, "<color=#BB2020ff>Upload disabled. But replay was saved.</color>", 0, -1);
+        finished(
+            ReplayUploadStatus::finished,
+            std::nullopt,
+            keepLocalReplay
+                ? "<color=#BB2020ff>Upload disabled. But replay was saved.</color>"
+                : "<color=#BB2020ff>Upload disabled. Replay was not kept locally.</color>",
+            0,
+            -1
+        );
         return;
     }    
     
     if(skipUpload)
         return;
     if(PlayerController::currentPlayer != std::nullopt)
-        TryPostReplay(filename, status, 0, finished);
+        TryPostReplay(filename, status, 0, keepLocalReplay, finished);
 }
 
-void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
+void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex, bool keepLocalReplay, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
                                                                                 int)> const &finished) {
     struct stat file_info;
-    stat(name.data(), &file_info);
+    if (stat(name.data(), &file_info) != 0) {
+        return;
+    }
 
     lastReplayStatus = status;
+    lastReplayShouldPersist = keepLocalReplay;
     bool runCallback = status.GetEndType() == LevelEndType::Clear;
     if (tryIndex == 0) {
         BeatLeaderLogger.info("{}",("Started posting " + to_string(file_info.st_size)).c_str());
@@ -54,7 +143,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
     FILE *replayFile = fopen(name.data(), "rb");
     chrono::steady_clock::time_point replayPostStart = chrono::steady_clock::now();
     
-    WebUtils::PostFileAsync(WebUtils::API_URL + "v2/replayoculus" + status.ToQueryString(), replayFile, (long)file_info.st_size, [name, tryIndex, finished, replayFile, replayPostStart, runCallback, status](long statusCode, string result, string headers) {
+    WebUtils::PostFileAsync(WebUtils::API_URL + "v2/replayoculus" + status.ToQueryString(), replayFile, (long)file_info.st_size, [name, tryIndex, finished, replayFile, replayPostStart, runCallback, status, keepLocalReplay](long statusCode, string result, string headers) {
         fclose(replayFile);
         if ((statusCode >= 450 || statusCode < 200) && tryIndex < 2) {
             BeatLeaderLogger.info("{}", ("Retrying posting replay after " + to_string(statusCode) + " #" + to_string(tryIndex) + " " + std::string(result)).c_str());
@@ -64,7 +153,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
             if (runCallback) {
                 finished(ReplayUploadStatus::inProgress, std::nullopt, "<color=#ffff00ff>Retrying posting replay after " + to_string(statusCode) + " try #" + to_string(tryIndex) + " " + std::string(result) + "</color>", 0, statusCode);
             }
-            TryPostReplay(name, status, tryIndex + 1, finished);
+            TryPostReplay(name, status, tryIndex + 1, keepLocalReplay, finished);
         } else if (statusCode == 200) {
             auto duration = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now() - replayPostStart).count();
             BeatLeaderLogger.info("{}", ("Replay was posted! It took: " + to_string((int)duration) + "msec. \n").c_str());
@@ -85,7 +174,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
                     finished(ReplayUploadStatus::error, object, "<color=#BB2020ff>Replay was not posted. " + object.description + "</color>", 0, statusCode);
                     break;
             }
-            if (!getModConfig().SaveLocalReplays.GetValue()) {
+            if (!keepLocalReplay) {
                 remove(name.data());
             }
         } else {
@@ -106,7 +195,11 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
 }
 
 void ReplayManager::RetryPosting(const std::function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float, int)>& finished) {
-    TryPostReplay(lastReplayFilename, lastReplayStatus, 0, finished);
+    if (lastReplayFilename.empty()) {
+        return;
+    }
+
+    TryPostReplay(lastReplayFilename, lastReplayStatus, 0, lastReplayShouldPersist, finished);
 };
 
 int ReplayManager::GetLocalScore(string filename) {

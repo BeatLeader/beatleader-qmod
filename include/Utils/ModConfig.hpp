@@ -7,12 +7,16 @@ DECLARE_CONFIG(ModConfig) {
     CONFIG_VALUE(ServerType, std::string, "ServerType", "Main", "");
     CONFIG_VALUE(DomainType, int, "Domain Type", 0);
     CONFIG_VALUE(SaveLocalReplays, bool, "Keep local replays", true, "Save replays on this device");
+    CONFIG_VALUE(KeepFailReplays, bool, "Keep failed replays", true);
+    CONFIG_VALUE(KeepExitReplays, bool, "Keep exit replays", true);
+    CONFIG_VALUE(KeepPracticeReplays, bool, "Keep practice replays", false);
+    CONFIG_VALUE(SaveEveryReplayAttempt, bool, "Save every attempt", false);
     CONFIG_VALUE(AvatarsActive, bool, "Show Avatars", false);
     CONFIG_VALUE(ClansActive, bool, "Show Clans", true);
     CONFIG_VALUE(ScoresActive, bool, "Show Scores", true);
     CONFIG_VALUE(TimesetActive, bool, "Show Timeset", true);
     CONFIG_VALUE(IncognitoList, std::string, "Hidden players", "{}");
-    CONFIG_VALUE(ShowReplaySettings, bool, "Show replay settings", true);
+    CONFIG_VALUE(ShowReplaySettings, bool, "Show replay buttons", true);
     CONFIG_VALUE(ShowBeatleader, bool, "Show BeatLeader", true, "Priority for BeatLeader or SS");
     CONFIG_VALUE(StarValueToShow, int, "Display Stars", 0);
     CONFIG_VALUE(Context, int, "Selected Context", static_cast<int>(LeaderboardUI::Context::Standard));
