@@ -6,6 +6,7 @@
 #include "UnityEngine/Transform.hpp"
 #include "UnityEngine/UI/Image.hpp"
 #include "UnityEngine/UI/Button.hpp"
+#include "UnityEngine/Events/UnityAction.hpp"
 #include "GlobalNamespace/SongPreviewPlayer.hpp"
 #include "Models/TrendingMapData.hpp"
 #include "UI/Abstract/AbstractReeModal.hpp"
@@ -33,6 +34,7 @@ public:
     TrendingMapData* context;
     GlobalNamespace::SongPreviewPlayer* songPreviewPlayer;
     UnityEngine::AudioClip* previewClip;
+    UnityEngine::Events::UnityAction* playButtonClickListener = nullptr;
 
     void OnContextChanged() override;
     void OnResume() override;

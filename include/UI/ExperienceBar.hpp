@@ -5,17 +5,19 @@
 #include "TMPro/TextMeshProUGUI.hpp"
 #include "UI/ReeUIComponentV2.hpp"
 #include "Utils/ReplayManager.hpp"
-#include "UnityEngine/UI/Image.hpp"
 #include "UnityEngine/Material.hpp"
+#include "HMUI/HoverHint.hpp"
+#include "bsml/shared/BSML/Components/ClickableImage.hpp"
 #include "main.hpp"
 #include <functional>
 
 DECLARE_CLASS_CUSTOM(BeatLeader, ExperienceBarComponent, BeatLeader::ReeComponent) {
-    DECLARE_INSTANCE_FIELD(UnityEngine::UI::Image*, _experienceBar);
+    DECLARE_INSTANCE_FIELD(BSML::ClickableImage*, _experienceBar);
     DECLARE_INSTANCE_FIELD(UnityEngine::Material*, _materialInstance);
     DECLARE_INSTANCE_FIELD(UnityEngine::UI::VerticalLayoutGroup*, HorizontalLayout);
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _levelTextHolder);
     DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _nextLevelTextHolder);
+    DECLARE_INSTANCE_FIELD(HMUI::HoverHint*, _hoverHint);
 
     DECLARE_CTOR(ctor);
     DECLARE_INSTANCE_METHOD(void, Update);
@@ -30,6 +32,7 @@ public:
     float _expProgress;
     float _sessionProgress;
     float _requiredExp;
+    int _currentExperience;
 
     bool _initialized;
     int _levelUpValue;
@@ -70,6 +73,7 @@ private:
     BeatLeader::UploadStateCallbackFunc uploadStateCallbackFunc;
     BeatLeader::PrestigePanelStatic::RequestStateChangedCallbackFunc prestigeRequestStateChangedCallbackFunc;
 
+    void ApplyPlayerState(Player const& player, bool refreshVisual = true);
     int CalculateRequiredExperience(int level, int prestige);
     void ResetExperienceBarData(bool refreshVisual = true);
     void SetMaterial();

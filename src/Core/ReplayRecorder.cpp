@@ -215,6 +215,10 @@ namespace ReplayRecorder {
         if (playEndData.GetEndType() == LevelEndType::Fail) {
             replay->info.failTime = audioTimeSyncController->songTime;
         }
+
+        if (replay->info.speed > 0.0001) {
+            playEndData = PlayEndData(LevelEndType::Practice, playEndData.GetTime());
+        }
         
         replayCallback(*replay, playEndData, skipUpload);
         replay = nullopt;

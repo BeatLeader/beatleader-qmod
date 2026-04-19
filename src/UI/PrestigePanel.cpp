@@ -2,6 +2,9 @@
 #include "API/PlayerController.hpp"
 #include "UI/LeaderboardUI.hpp"
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
+#include "UnityEngine/RectTransform.hpp"
+#include "UnityEngine/UI/LayoutRebuilder.hpp"
+#include "TMPro/TextMeshProUGUI.hpp"
 #include <chrono>
 #include <thread>
 #include "include/Utils/WebUtils.hpp"
@@ -10,6 +13,30 @@
 DEFINE_TYPE(BeatLeader, PrestigePanelComponent);
 
 namespace BeatLeader {
+    namespace {
+        void SetButtonText(UnityEngine::UI::Button* button, std::string const& text) {
+            if (!button) {
+                return;
+            }
+
+            auto* textMesh = button->GetComponentInChildren<TMPro::TextMeshProUGUI*>();
+            if (textMesh) {
+                textMesh->SetText(text, true);
+            }
+        }
+
+        void RefreshPanelLayout(PrestigePanelComponent* component) {
+            if (!component || !component->_content) {
+                return;
+            }
+
+            auto* rectTransform = component->_content->GetComponent<UnityEngine::RectTransform*>();
+            if (rectTransform) {
+                UnityEngine::UI::LayoutRebuilder::ForceRebuildLayoutImmediate(rectTransform);
+            }
+        }
+    }
+
     void PrestigePanel::OnInitialize() {
         AbstractReeModal<PrestigePanelComponent*>::OnInitialize();
         this->InitializePrestigeButtons();
@@ -28,18 +55,17 @@ namespace BeatLeader {
     }
 
     void PrestigePanel::OnProfileRequestStateChanged(Player player,ReplayUploadStatus state) {
-        switch (state) {
-            case ReplayUploadStatus::finished: {
-                if (player.level == 100) {
-                LocalComponent()->_PrestigeYesButton->interactable = true;
-                } else {
-                LocalComponent()->_PrestigeYesButton->interactable = false;
+        BSML::MainThreadScheduler::Schedule([this, player, state] {
+            switch (state) {
+                case ReplayUploadStatus::finished: {
+                    UpdatePanelContent(player, player.level >= 100);
+                    break;
                 }
-                break;
+                default:
+                    UpdatePanelContent(Player(), false);
+                    return;
             }
-            default:
-                return;
-        }
+        });
     }
 
     void PrestigePanel::OnUploadStateChanged(std::optional<ScoreUpload> scoreUpload, ReplayUploadStatus state) {
@@ -47,11 +73,7 @@ namespace BeatLeader {
             case ReplayUploadStatus::finished:
                 if (scoreUpload != std::nullopt && scoreUpload->status != ScoreUploadStatus::Error && scoreUpload->score != std::nullopt) {
                     Player player = scoreUpload->score->player;
-                    if (player.level == 100) {
-                        LocalComponent()->_PrestigeYesButton->interactable = true;
-                    } else {
-                        LocalComponent()->_PrestigeYesButton->interactable = false;
-                    }
+                    UpdatePanelContent(player, player.level >= 100);
                 }
                 break;
             default: 
@@ -102,24 +124,54 @@ namespace BeatLeader {
         }));
     }
 
+    void PrestigePanel::UpdatePanelContent(Player const& player, bool canPrestige) {
+        auto* component = LocalComponent();
+        if (!component) {
+            return;
+        }
+
+        if (component->_PrimaryText) {
+            component->_PrimaryText->SetText(
+                canPrestige
+                    ? "<b><color=#ffffff>Congratulations!</color></b>\nYou've reached <b>level 100</b> and can now <b>Prestige</b>."
+                    : "Gain experience points by playing any maps, even for failing! Reach <b>level 100</b> to be able to <b>prestige</b> into the next iteration.",
+                true
+            );
+        }
+
+        if (component->_SecondaryText) {
+            component->_SecondaryText->SetText(
+                canPrestige
+                    ? "This will reset your level and you will reach the <b>Prestige " + std::to_string(player.prestige + 1) + "</b>. <color=#ffffff>Are you ready?</color>"
+                    : "To get more points, pass maps always with 95+% accuracy. But even playing with 90% accuracy will give you almost the full xp for the time played.\n<color=#ffffff>Just play more!</color>",
+                true
+            );
+        }
+
+        if (component->_PrestigeYesButton) {
+            component->_PrestigeYesButton->gameObject->SetActive(canPrestige);
+            component->_PrestigeYesButton->interactable = canPrestige;
+            SetButtonText(component->_PrestigeYesButton, "Prestige");
+        }
+
+        if (component->_PrestigeNoButton) {
+            SetButtonText(component->_PrestigeNoButton, "Close");
+        }
+
+        RefreshPanelLayout(component);
+    }
+
     StringW PrestigePanel::GetContent() {
         return StringW(R"(
-<vertical spacing="1" pad="1" vertical-fit="PreferredSize" bg="round-rect-panel">
-    <macro.define name="image-width" value="18"/>
-    <horizontal pref-height="20">
-        <vertical spacing="0.5" vertical-fit="PreferredSize">
-            <horizontal pref-height="5">
-                <text text="Do you want to Prestige? This will reset your level" font-size="5" font-color="#999999" align="Center"/>
-            </horizontal>
-            <horizontal pref-height="5">
-                <text text="You must be max level (100) to Prestige" font-size="5" font-color="#999999" align="Center"/>
-            </horizontal>
-            <horizontal pref-height="5" spacing="2" horizontal-fit="PreferredSize">
-                <button pref-width="16" id="_PrestigeYesButton" text="Yes"/>
-                <button pref-width="16" id="_PrestigeNoButton" text="No"/>
-            </horizontal>
-        </vertical>
-    </horizontal>
+<vertical spacing="2" pad="2" pref-width="72" vertical-fit="PreferredSize" bg="round-rect-panel">
+    <vertical spacing="1" pref-width="70" vertical-fit="PreferredSize">
+        <text id="_PrimaryText" word-wrapping="true" font-size="4.25" font-color="#999999" align="Center"/>
+        <text id="_SecondaryText" word-wrapping="true" font-size="3.75" font-color="#999999" align="Center"/>
+        <horizontal pref-height="8" spacing="2" horizontal-fit="PreferredSize">
+            <button pref-width="20" id="_PrestigeYesButton" text="Prestige"/>
+            <button pref-width="20" id="_PrestigeNoButton" text="Close"/>
+        </horizontal>
+    </vertical>
 </vertical>
         )");
     }

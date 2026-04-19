@@ -12,12 +12,17 @@
 #include "main.hpp"
 #include "UI/Abstract/ReeModalSystem.hpp"
 #include "UI/PrestigePanel.hpp"
+#include "bsml/shared/BSML-Lite.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 using namespace UnityEngine;
 
 DEFINE_TYPE(BeatLeader, ExperienceBarComponent);
 
 namespace BeatLeader {
+    namespace {
+        bool firstInProgressHasRun = false;
+    }
 
     void ExperienceBarComponent::ctor() {
     }
@@ -62,7 +67,7 @@ namespace BeatLeader {
                     }
                 } else { // Non-level up animation
                     _gradientT = Mathf::Clamp01(_elapsedTime / _animationDuration);
-                    _sessionProgress = Mathf::Lerp(0, _targetValue, _gradientT);
+                    _sessionProgress = Mathf::Lerp(0.0f, _targetValue, _gradientT);
                 }
 
                 // Forcefully end animation if time exceeded
@@ -98,16 +103,11 @@ namespace BeatLeader {
     {
         LocalComponent()->_initialized = false;
         SetMaterial();
+        LocalComponent()->_hoverHint = BSML::Lite::AddHoverHint(LocalComponent()->_experienceBar, "");
         PlayerController::playerChanged.emplace_back([this](std::optional<Player> optPlayer) {
             this->OnProfileRequestStateChanged(optPlayer.value_or(Player()), optPlayer.has_value() ? ReplayUploadStatus::finished : ReplayUploadStatus::error);
         });
-        if (getModConfig().ExperienceBarEnabled.GetValue()) {
-            BeatLeader::UploadStateCallback.hook(uploadStateCallbackFunc);
-            BeatLeader::PrestigePanelStatic::RequestStateChanged.hook(prestigeRequestStateChangedCallbackFunc);
-        } else {
-            LocalComponent()->HideLevelText();
-            LocalComponent()->_experienceBar->gameObject->SetActive(false);
-        }
+        OnExperienceBarConfigChanged(getModConfig().ExperienceBarEnabled.GetValue());
     }
 
     void ExperienceBar::OnDispose() 
@@ -126,41 +126,78 @@ namespace BeatLeader {
     void ExperienceBar::OnExperienceBarConfigChanged(bool enabled) 
     {
         LocalComponent()->_experienceBar->gameObject->SetActive(enabled);
-        ResetExperienceBarData();
+
         if (enabled && !LocalComponent()->_initialized) {
             BeatLeader::UploadStateCallback.hook(uploadStateCallbackFunc);
-            LocalComponent()->SetLevelText(LocalComponent()->_level);
+            BeatLeader::PrestigePanelStatic::RequestStateChanged.hook(prestigeRequestStateChangedCallbackFunc);
         } else if (!enabled && LocalComponent()->_initialized) {
             BeatLeader::UploadStateCallback.unhook(uploadStateCallbackFunc);
+            BeatLeader::PrestigePanelStatic::RequestStateChanged.unhook(prestigeRequestStateChangedCallbackFunc);
+        }
+
+        LocalComponent()->_initialized = enabled;
+        firstInProgressHasRun = false;
+
+        if (enabled) {
+            if (PlayerController::currentPlayer != std::nullopt) {
+                ApplyPlayerState(PlayerController::currentPlayer.value());
+            } else {
+                LocalComponent()->_level = 0;
+                LocalComponent()->_prestige = 0;
+                LocalComponent()->_currentExperience = 0;
+                LocalComponent()->_requiredExp = CalculateRequiredExperience(0, 0);
+                LocalComponent()->_expProgress = 0.0f;
+                ResetExperienceBarData();
+                LocalComponent()->HideLevelText();
+            }
+        } else {
+            ResetExperienceBarData();
+            LocalComponent()->_experienceBar->raycastTarget = true;
             LocalComponent()->HideLevelText();
         }
-        LocalComponent()->_initialized = enabled;
+    }
+
+    void ExperienceBar::ApplyPlayerState(Player const& player, bool refreshVisual) 
+    {
+        LocalComponent()->_level = player.level;
+        LocalComponent()->_prestige = player.prestige;
+        LocalComponent()->_currentExperience = player.experience;
+        LocalComponent()->_experienceBar->raycastTarget = player.prestige != 10;
+        LocalComponent()->_requiredExp = CalculateRequiredExperience(player.level, player.prestige);
+        LocalComponent()->_expProgress = LocalComponent()->_requiredExp > 0.0f
+            ? Mathf::Clamp01(static_cast<float>(player.experience) / LocalComponent()->_requiredExp)
+            : 0.0f;
+
+        ResetExperienceBarData(refreshVisual);
+
+        if (LocalComponent()->_initialized) {
+            LocalComponent()->SetLevelText(LocalComponent()->_level);
+        }
     }
 
     void ExperienceBar::OnProfileRequestStateChanged(Player player, ReplayUploadStatus state) 
     {
-        if (!LocalComponent()->_initialized && state == ReplayUploadStatus::finished) {
-            LocalComponent()->_level = player.level;
-            LocalComponent()->_prestige = player.prestige;
-            if (LocalComponent()->_prestige == 10) {
-                LocalComponent()->_experienceBar->raycastTarget = false;
+        BSML::MainThreadScheduler::Schedule([this, player, state] {
+            if (state == ReplayUploadStatus::finished) {
+                ApplyPlayerState(player, getModConfig().ExperienceBarEnabled.GetValue());
+            } else if (PlayerController::currentPlayer == std::nullopt) {
+                LocalComponent()->_level = 0;
+                LocalComponent()->_prestige = 0;
+                LocalComponent()->_currentExperience = 0;
+                LocalComponent()->_requiredExp = CalculateRequiredExperience(0, 0);
+                LocalComponent()->_expProgress = 0.0f;
+                LocalComponent()->_experienceBar->raycastTarget = true;
+                ResetExperienceBarData(getModConfig().ExperienceBarEnabled.GetValue());
+                LocalComponent()->HideLevelText();
             }
-            LocalComponent()->_requiredExp = CalculateRequiredExperience(player.level, player.prestige);
-            LocalComponent()->_expProgress = player.experience / LocalComponent()->_requiredExp;
-            ResetExperienceBarData();
-            if (getModConfig().ExperienceBarEnabled.GetValue()) {
-                LocalComponent()->_experienceBar->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
-                LocalComponent()->_initialized = true;
-                LocalComponent()->SetLevelText(LocalComponent()->_level);
-            }
-        }
+        });
     }
 
     int ExperienceBar::CalculateRequiredExperience(int level, int prestige) 
     {
         int requiredExp = 500 + (50 * level);
         if (prestige != 0) {
-            requiredExp = (int)Mathf::Round(requiredExp * Mathf::Pow(1.33f, prestige));
+            requiredExp = (int)Mathf::Round(requiredExp * Mathf::Pow(1.2f, prestige));
         }
         return requiredExp;
     }
@@ -170,8 +207,18 @@ namespace BeatLeader {
         _levelTextHolder->gameObject->SetActive(true);
         if (level != 100) {
             _nextLevelTextHolder->set_text(StringW(std::to_string(level + 1)));
+            if (_hoverHint) {
+                _hoverHint->set_text(
+                    std::to_string(_currentExperience) + " | " +
+                    std::to_string(static_cast<int>(_requiredExp)) + " to level " +
+                    std::to_string(level + 1)
+                );
+            }
         } else {
             _nextLevelTextHolder->set_text(StringW("Prestige"));
+            if (_hoverHint) {
+                _hoverHint->set_text("You can prestige now!");
+            }
         }
         _nextLevelTextHolder->gameObject->SetActive(true);
     }
@@ -179,6 +226,9 @@ namespace BeatLeader {
     void ExperienceBarComponent::HideLevelText() {
       _levelTextHolder->gameObject->SetActive(false);
       _nextLevelTextHolder->gameObject->SetActive(false);
+      if (_hoverHint) {
+          _hoverHint->set_text("");
+      }
     }
 
     void ExperienceBar::ResetExperienceBarData(bool refreshVisual) 
@@ -198,11 +248,10 @@ namespace BeatLeader {
         }
     }
 
-    static bool firstInProgressHasRun = false;
-
     void ExperienceBar::OnUploadStateChanged(std::optional<ScoreUpload> scoreUpload, ReplayUploadStatus state) 
     {
         if (LocalComponent()->_level == 100) return;
+        bool hadUploadStart = firstInProgressHasRun;
 
         if (state == ReplayUploadStatus::inProgress && !firstInProgressHasRun) {
             if (LocalComponent()->_levelUpValue == 0) {
@@ -215,16 +264,25 @@ namespace BeatLeader {
             firstInProgressHasRun = true;
         }
 
-        if (state != ReplayUploadStatus::inProgress) {
-            firstInProgressHasRun = false;
-        }
+        if (state == ReplayUploadStatus::finished && scoreUpload != std::nullopt && scoreUpload->score != std::nullopt) {
+            // Clear uploads emit an inProgress event first, but failed attempts do not.
+            // When there was no upload-start event, commit the previous animated gain here
+            // so the next delta is computed from the correct base progress.
+            if (!hadUploadStart) {
+                if (LocalComponent()->_levelUpValue == 0) {
+                    LocalComponent()->_expProgress += LocalComponent()->_targetValue;
+                } else {
+                    LocalComponent()->_expProgress = LocalComponent()->_targetValue;
+                }
+            }
 
-        if (scoreUpload != std::nullopt && scoreUpload->score != std::nullopt) {
             ResetExperienceBarData();
 
             Player player = scoreUpload->score->player;
+            LocalComponent()->_currentExperience = player.experience;
             if (player.level == LocalComponent()->_level) {
                 LocalComponent()->_targetValue = player.experience / LocalComponent()->_requiredExp - LocalComponent()->_expProgress;
+                LocalComponent()->SetLevelText(LocalComponent()->_level);
             } else {
                 LocalComponent()->_levelUpCount = player.level - LocalComponent()->_level;
                 LocalComponent()->_levelUpValue = LocalComponent()->_levelUpCount;
@@ -234,21 +292,20 @@ namespace BeatLeader {
 
             LocalComponent()->_isAnimated = true;
         }
+
+        if (state != ReplayUploadStatus::inProgress) {
+            firstInProgressHasRun = false;
+        }
     }
 
     void ExperienceBar::OnPrestigeRequestStateChanged() 
     {
-        // That if doesnt do anything on quest anyways so i was too lazy to port it
-        // if (state == ReplayUploadStatus::finished) {
-        LocalComponent()->_level = 0;
-        LocalComponent()->_prestige = PlayerController::currentPlayer->prestige;
-        if (LocalComponent()->_prestige == 10) {
-          LocalComponent()->_experienceBar->raycastTarget = false;
+        if (PlayerController::currentPlayer == std::nullopt) {
+            return;
         }
-        LocalComponent()->SetLevelText(LocalComponent()->_level);
-        LocalComponent()->_expProgress = 0;
-        ResetExperienceBarData();
-        // }
+
+        firstInProgressHasRun = false;
+        ApplyPlayerState(PlayerController::currentPlayer.value(), true);
     }
 
     void ExperienceBar::SetMaterial() 

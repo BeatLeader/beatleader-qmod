@@ -131,6 +131,7 @@ namespace LeaderboardUI {
 
     TMPro::TextMeshProUGUI* playerName = NULL;
     HMUI::ImageView* prestigeIcon = NULL;
+    UnityEngine::GameObject* prestigeGroupObject = NULL;
     BeatLeader::ExperienceBar* experienceBar = NULL;
     BeatLeader::PlayerAvatar* playerAvatar = NULL;
     RectTransform* playerNameLayoutTransform = NULL;
@@ -236,6 +237,28 @@ namespace LeaderboardUI {
         }
     }
 
+    void updatePlayerHeaderLayout(bool showExperienceBar) {
+        if (prestigeGroupObject) {
+            prestigeGroupObject->SetActive(showExperienceBar);
+        }
+
+        if (prestigeIcon) {
+            prestigeIcon->gameObject->SetActive(showExperienceBar);
+        }
+
+        if (playerNameLayoutTransform) {
+            playerNameLayoutTransform->set_anchoredPosition({
+                showExperienceBar ? 139.0f : 140.0f,
+                showExperienceBar ? 55.0f : 53.0f
+            });
+            UnityEngine::UI::LayoutRebuilder::ForceRebuildLayoutImmediate(playerNameLayoutTransform);
+        }
+
+        if (rankLayoutTransform) {
+            rankLayoutTransform->set_anchoredPosition({138, showExperienceBar ? 50.0f : 45.0f});
+        }
+    }
+
     void refreshGroupsSelector() {
         bool shouldShow = showBeatLeader && plvc && plvc->_scopeSegmentedControl->selectedCellNumber == 2;
         if (groupsSelector) {
@@ -288,17 +311,7 @@ namespace LeaderboardUI {
                 }, true);
                 // Call here again, in case it was already loaded. Then we wont get the event callback
                 prestigeIcon->sprite = BeatLeader::PrestigeLevelIconsManagerNS::Instance.getSprite(player.value().prestige);
-                prestigeIcon->gameObject->SetActive(getModConfig().ExperienceBarEnabled.GetValue());
-
-                if (playerNameLayoutTransform) {
-                    playerNameLayoutTransform->set_anchoredPosition({
-                        getModConfig().ExperienceBarEnabled.GetValue() ? 139.0f : 140.0f,
-                        getModConfig().ExperienceBarEnabled.GetValue() ? 55.0f : 53.0f
-                    });
-                    UnityEngine::UI::LayoutRebuilder::ForceRebuildLayoutImmediate(playerNameLayoutTransform);
-                }
-                rankLayoutTransform->set_anchoredPosition({ 138, getModConfig().ExperienceBarEnabled.GetValue() ? 50.0f : 45.0f});
-
+                updatePlayerHeaderLayout(getModConfig().ExperienceBarEnabled.GetValue());
                 experienceBar->OnProfileRequestStateChanged(
                         player.value(), ReplayUploadStatus::finished);
             } else {
@@ -308,7 +321,7 @@ namespace LeaderboardUI {
             globalRank->SetText("#0", true);
             countryRankAndPp->SetText("#0", true);
             playerAvatar->HideImage();
-            prestigeIcon->gameObject->SetActive(false);
+            updatePlayerHeaderLayout(false);
             if (countryRankIcon) {
                 countryRankIcon->set_sprite(BundleLoader::bundle->globeIcon);
             }
@@ -820,10 +833,11 @@ namespace LeaderboardUI {
             playerNameLayoutTransform->set_anchoredPosition({139.0f, 55.0f});
 
             auto prestigeGroup = BSML::Lite::CreateHorizontalLayoutGroup(playerNameLayout->get_transform());
+            prestigeGroupObject = prestigeGroup->get_gameObject();
             prestigeGroup->GetComponentInChildren<UnityEngine::UI::ContentSizeFitter*>()->set_horizontalFit(UnityEngine::UI::ContentSizeFitter_FitMode::PreferredSize);
             prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredWidth(5.0f);
             prestigeGroup->GetComponentInChildren<UnityEngine::UI::LayoutElement*>()->set_preferredHeight(5.0f);
-            prestigeIcon = BSML::Lite::CreateImage(prestigeGroup->get_transform(), NULL, {0, 1}, {5, 5});
+            prestigeIcon = BSML::Lite::CreateImage(prestigeGroup->get_transform(), NULL, {0, 2}, {5, 5});
 
             playerName = ::BSML::Lite::CreateText(playerNameLayout->get_transform(), "");
             playerName->set_fontSize(6);
@@ -1333,7 +1347,7 @@ namespace LeaderboardUI {
         float modalHeight = static_cast<float>((ScoresContexts::allContexts.size() + 1) * 10 + 5);
         auto container = BSML::Lite::CreateModal(parent, {40, modalHeight}, nullptr, true);
 
-        BSML::Lite::CreateText(container->get_transform(), "Scores Context", {-8, 27});
+        BSML::Lite::CreateText(container->get_transform(), "Scores Context", {-10, 27 + ((ScoresContexts::allContexts.size() - 4) * 4.0f)});
 
         int i = 0;
         for (const auto& context : ScoresContexts::allContexts) {
@@ -1408,9 +1422,7 @@ namespace LeaderboardUI {
             getModConfig().ExperienceBarEnabled.SetValue(value);
             if (experienceBar) {
                 experienceBar->OnExperienceBarConfigChanged(value);
-                prestigeIcon->gameObject->SetActive(value);
-                playerName->GetComponent<UnityEngine::RectTransform*>()->anchoredPosition = { value ? 142.0f : 140.0f, value ? 55.0f : 53.0f };
-                rankLayoutTransform->set_anchoredPosition({ 138, value ? 50.0f : 45.0f});
+                updatePlayerHeaderLayout(value);
             }
         });
 

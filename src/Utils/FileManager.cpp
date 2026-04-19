@@ -87,7 +87,7 @@ std::optional<ReplayInfo> FileManager::ReadInfo(string replayPath) {
     return Replay::DecodeInfo(stream);
 }
 
-string FileManager::ToFilePath(Replay const &replay, PlayEndData const& playEndData) {
+string FileManager::ToFilePath(Replay const &replay, PlayEndData const& playEndData, bool forceUniqueAttempt) {
     string practice = replay.info.speed > 0.0001 ? "-practice" : "";
     string fail = replay.info.failTime > 0.0001 ? "-fail" : "";
     string exit = playEndData.GetEndType() == LevelEndType::Quit || playEndData.GetEndType() == LevelEndType::Restart ? "-exit" : "";
@@ -99,7 +99,7 @@ string FileManager::ToFilePath(Replay const &replay, PlayEndData const& playEndD
         + "-" + SanitizeFilenameComponent(replay.info.mode, false, "UnknownMode")
         + "-" + SanitizeFilenameComponent(replay.info.hash, false, "UnknownHash");
 
-    if (getModConfig().SaveEveryReplayAttempt.GetValue()) {
+    if (forceUniqueAttempt || GetReplaySaveMode() == ReplaySaveMode::KeepAllAttempts) {
         auto timestamp = SanitizeFilenameComponent(replay.info.timestamp, false, "");
         if (!timestamp.empty()) {
             filename += "-" + timestamp;

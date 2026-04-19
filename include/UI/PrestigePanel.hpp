@@ -3,10 +3,13 @@
 #include "EventCallback/invokable.hpp"
 #include "main.hpp"
 #include "UI/Abstract/AbstractReeModal.hpp"
+#include "TMPro/TextMeshProUGUI.hpp"
 #include "UnityEngine/UI/Button.hpp"
 #include "GlobalNamespace/FireworksController.hpp"
 
 DECLARE_CLASS_CUSTOM(BeatLeader, PrestigePanelComponent, BeatLeader::ReeComponent) {
+    DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _PrimaryText);
+    DECLARE_INSTANCE_FIELD(TMPro::TextMeshProUGUI*, _SecondaryText);
     DECLARE_INSTANCE_FIELD(UnityEngine::UI::Button*, _PrestigeYesButton);
     DECLARE_INSTANCE_FIELD(UnityEngine::UI::Button*, _PrestigeNoButton);
 };
@@ -30,6 +33,7 @@ namespace BeatLeader {
             void RequestPrestige();
             void Fireworks(double duration);
             void InitializePrestigeButtons();
+            void UpdatePanelContent(Player const& player, bool canPrestige);
     };
 }
 

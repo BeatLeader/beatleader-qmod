@@ -27,5 +27,5 @@ public:
    static PlayEndData lastReplayStatus;
    static float GetTotalMultiplier(string modifiers);
 
-   int GetLocalScore(string filename);
+   static int GetLocalScore(string filename);
 };

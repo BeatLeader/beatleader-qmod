@@ -47,8 +47,18 @@ namespace BeatLeader {
 
         LoadCoverImage();
 
-         // add actions to buttons
-        LocalComponent()->_playButton->get_onClick()->AddListener(custom_types::MakeDelegate<UnityEngine::Events::UnityAction*>((std::function<void()>)[this, song]() {
+        auto* playButton = LocalComponent()->_playButton;
+        auto* onClick = playButton ? playButton->get_onClick() : nullptr;
+        if (!onClick) {
+            return;
+        }
+
+        if (playButtonClickListener) {
+            onClick->RemoveListener(playButtonClickListener);
+            playButtonClickListener = nullptr;
+        }
+
+        playButtonClickListener = custom_types::MakeDelegate<UnityEngine::Events::UnityAction*>((std::function<void()>)[this, song]() {
             LocalComponent()->_playButton->set_interactable(false);
             LocalComponent()->_loadingContainer->SetActive(true);
             LocalComponent()->_finishedContainer->SetActive(false);
@@ -69,7 +79,8 @@ namespace BeatLeader {
                     offClickCloses = true;
                 });
             });
-        }));
+        });
+        onClick->AddListener(playButtonClickListener);
     }
 
     void MapPreviewDialog::LoadCoverImage() {

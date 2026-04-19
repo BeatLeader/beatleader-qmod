@@ -70,13 +70,14 @@ TMPro::TextMeshProUGUI* errorDescriptionLabel = nullptr;
 
 BSML::DropdownListSetting* serverDropdown = nullptr;
 BSML::DropdownListSetting* starsDropdown = nullptr;
+BSML::DropdownListSetting* replaySaveModeDropdown = nullptr;
 BSML::ToggleSetting* showReplaySettingsToggle = nullptr;
 BSML::ToggleSetting* noticeboardToggle = nullptr;
 BSML::ToggleSetting* keepReplaysToggle = nullptr;
 BSML::ToggleSetting* keepFailToggle = nullptr;
 BSML::ToggleSetting* keepExitToggle = nullptr;
 BSML::ToggleSetting* keepPracticeToggle = nullptr;
-BSML::ToggleSetting* saveEveryAttemptToggle = nullptr;
+TMPro::TextMeshProUGUI* replaySaveModeDescription = nullptr;
 BeatLeader::LogoAnimation* spinner = nullptr;
 
 string login;
@@ -95,6 +96,32 @@ std::vector<std::string_view> serverOptions = {
     ".net",
     ".org"
 };
+
+std::vector<std::string_view> replaySaveModeOptions = {
+    "Keep latest",
+    "Keep better score",
+    "Keep all attempts"
+};
+
+StringW GetReplaySaveModeDescription() {
+    switch (GetReplaySaveMode()) {
+        case ReplaySaveMode::KeepBetterScore:
+            return "Saves a replay only when it beats your existing local replay for that map.";
+        case ReplaySaveMode::KeepAllAttempts:
+            return "Saves every replay and appends the attempt timestamp to the filename.";
+        case ReplaySaveMode::KeepLatest:
+        default:
+            return "Keeps one local replay per map and replaces it with your newest attempt.";
+    }
+}
+
+void UpdateReplaySaveModeDescription() {
+    if (!replaySaveModeDescription) {
+        return;
+    }
+
+    replaySaveModeDescription->SetText(GetReplaySaveModeDescription(), true);
+}
 
 UnityEngine::Transform* CreateAnchoredContainer(UnityEngine::Transform* parent, StringW name, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta) {
     auto* gameObject = UnityEngine::GameObject::New_ctor(name);
@@ -182,7 +209,16 @@ void RefreshReplayToggleInteractivity(bool interactable) {
     SetSettingInteractable(keepFailToggle, interactable);
     SetSettingInteractable(keepExitToggle, interactable);
     SetSettingInteractable(keepPracticeToggle, interactable);
-    SetSettingInteractable(saveEveryAttemptToggle, interactable);
+
+    if (replaySaveModeDropdown) {
+        replaySaveModeDropdown->get_gameObject()->SetActive(interactable);
+    }
+
+    if (replaySaveModeDescription) {
+        replaySaveModeDescription->get_gameObject()->SetActive(interactable);
+    }
+
+    RefreshCurrentTabLayout();
 }
 
 void RefreshReplayToggleInteractivity() {
@@ -374,7 +410,18 @@ void BuildReplaysTab(UnityEngine::Transform* parent) {
     keepFailToggle = AddConfigValueToggle(parent, getModConfig().KeepFailReplays);
     keepExitToggle = AddConfigValueToggle(parent, getModConfig().KeepExitReplays);
     keepPracticeToggle = AddConfigValueToggle(parent, getModConfig().KeepPracticeReplays);
-    saveEveryAttemptToggle = AddConfigValueToggle(parent, getModConfig().SaveEveryReplayAttempt);
+    replaySaveModeDropdown = AddConfigValueDropdownEnum(parent, getModConfig().ReplaySaveMode, replaySaveModeOptions);
+
+    if (replaySaveModeDropdown && replaySaveModeDropdown->dropdown) {
+        replaySaveModeDropdown->dropdown->add_didSelectCellWithIdxEvent(
+            custom_types::MakeDelegate<System::Action_2<UnityW<HMUI::DropdownWithTableView>, int>*>(
+                (function<void(UnityW<HMUI::DropdownWithTableView>, int)>)[](auto, auto) {
+                    UpdateReplaySaveModeDescription();
+                    RefreshCurrentTabLayout();
+                }
+            )
+        );
+    }
 
     auto* toggle = keepReplaysToggle ? keepReplaysToggle->GetComponentInChildren<UnityEngine::UI::Toggle*>() : nullptr;
     if (toggle && toggle->onValueChanged) {
@@ -387,13 +434,13 @@ void BuildReplaysTab(UnityEngine::Transform* parent) {
         );
     }
 
-    auto* replayNote = QuestUI::CreateText(
+    replaySaveModeDescription = QuestUI::CreateText(
         parent,
-        "Turning off 'Save every attempt' keeps only the latest replay.",
+        GetReplaySaveModeDescription(),
         false
     );
-    replayNote->set_fontSize(3.0f);
-    replayNote->set_color(UnityEngine::Color(0.7f, 0.7f, 0.7f, 1.0f));
+    replaySaveModeDescription->set_fontSize(3.0f);
+    replaySaveModeDescription->set_color(UnityEngine::Color(0.7f, 0.7f, 0.7f, 1.0f));
 }
 
 void SetActiveTab(PreferencesTab tab) {

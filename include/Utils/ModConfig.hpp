@@ -3,6 +3,12 @@
 #include "metacore/shared/game.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 
+enum class ReplaySaveMode {
+    KeepLatest = 0,
+    KeepBetterScore = 1,
+    KeepAllAttempts = 2
+};
+
 DECLARE_CONFIG(ModConfig) {
     CONFIG_VALUE(ServerType, std::string, "ServerType", "Main", "");
     CONFIG_VALUE(DomainType, int, "Domain Type", 0);
@@ -10,7 +16,7 @@ DECLARE_CONFIG(ModConfig) {
     CONFIG_VALUE(KeepFailReplays, bool, "Keep failed replays", true);
     CONFIG_VALUE(KeepExitReplays, bool, "Keep exit replays", true);
     CONFIG_VALUE(KeepPracticeReplays, bool, "Keep practice replays", false);
-    CONFIG_VALUE(SaveEveryReplayAttempt, bool, "Save every attempt", false);
+    CONFIG_VALUE(ReplaySaveMode, int, "Replay save mode", static_cast<int>(ReplaySaveMode::KeepLatest));
     CONFIG_VALUE(AvatarsActive, bool, "Show Avatars", false);
     CONFIG_VALUE(ClansActive, bool, "Show Clans", true);
     CONFIG_VALUE(ScoresActive, bool, "Show Scores", true);
@@ -24,6 +30,16 @@ DECLARE_CONFIG(ModConfig) {
     CONFIG_VALUE(NoticeboardEnabled, bool, "Show Noticeboard in main menu", true);
     CONFIG_VALUE(ExperienceBarEnabled, bool, "Show experience bar", true);
 };
+
+inline ReplaySaveMode GetReplaySaveMode() {
+    auto configuredValue = getModConfig().ReplaySaveMode.GetValue();
+    if (configuredValue < static_cast<int>(ReplaySaveMode::KeepLatest)
+        || configuredValue > static_cast<int>(ReplaySaveMode::KeepAllAttempts)) {
+        return ReplaySaveMode::KeepLatest;
+    }
+
+    return static_cast<ReplaySaveMode>(configuredValue);
+}
 
 inline bool UploadEnabled() {
     return !MetaCore::Game::IsScoreSubmissionDisabled();

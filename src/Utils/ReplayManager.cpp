@@ -9,7 +9,6 @@
 #include "shared/Models/Score.hpp"
 #include "include/main.hpp"
 
-#include <filesystem>
 #include <sys/stat.h>
 #include <stdio.h>
 
@@ -36,33 +35,9 @@ namespace {
         }
     }
 
-    void DeleteMatchingReplays(Replay const& replay) {
-        std::error_code errorCode;
-        auto replaysDirectory = std::filesystem::path(getDataDir(modInfo)) / "replays";
-        if (!std::filesystem::exists(replaysDirectory, errorCode)) {
-            return;
-        }
-
-        for (auto const& entry : std::filesystem::directory_iterator(replaysDirectory, errorCode)) {
-            if (errorCode || !entry.is_regular_file() || entry.path().extension() != ".bsor") {
-                continue;
-            }
-
-            auto replayInfo = FileManager::ReadInfo(entry.path().string());
-            if (!replayInfo.has_value()) {
-                continue;
-            }
-
-            if (replayInfo->playerID != replay.info.playerID
-                || replayInfo->songName != replay.info.songName
-                || replayInfo->difficulty != replay.info.difficulty
-                || replayInfo->mode != replay.info.mode
-                || replayInfo->hash != replay.info.hash) {
-                continue;
-            }
-
-            remove(entry.path().string().c_str());
-        }
+    bool FileExists(string const& path) {
+        struct stat buffer;
+        return stat(path.data(), &buffer) == 0;
     }
 }
 
@@ -76,18 +51,38 @@ void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool
     }
 
     auto keepLocalReplay = ShouldKeepReplayLocally(status);
-    auto shouldUpload = !skipUpload && PlayerController::currentPlayer != std::nullopt && UploadEnabled();
+    auto shouldUploadReplay = !skipUpload && PlayerController::currentPlayer != std::nullopt && UploadEnabled();
+    auto replaySaveMode = GetReplaySaveMode();
+    auto shouldPersistReplay = false;
+    auto persistentFilename = FileManager::ToFilePath(replay, status, false);
+
+    if (keepLocalReplay) {
+        switch (replaySaveMode) {
+            case ReplaySaveMode::KeepLatest:
+                shouldPersistReplay = true;
+                break;
+            case ReplaySaveMode::KeepBetterScore:
+                shouldPersistReplay = !FileExists(persistentFilename)
+                    || replay.info.score > ReplayManager::GetLocalScore(persistentFilename);
+                break;
+            case ReplaySaveMode::KeepAllAttempts:
+                shouldPersistReplay = true;
+                break;
+        }
+    }
 
     lastReplayFilename.clear();
     lastReplayStatus = status;
-    lastReplayShouldPersist = keepLocalReplay;
+    lastReplayShouldPersist = shouldPersistReplay;
 
-    if (!keepLocalReplay && !shouldUpload) {
+    if (!shouldPersistReplay && !shouldUploadReplay) {
         if (!UploadEnabled()) {
             finished(
                 ReplayUploadStatus::finished,
                 std::nullopt,
-                "<color=#BB2020ff>Upload disabled. Replay was not kept locally.</color>",
+                replaySaveMode == ReplaySaveMode::KeepBetterScore && keepLocalReplay
+                    ? "<color=#BB2020ff>Upload disabled. Replay was not saved because a better or equal local replay already exists.</color>"
+                    : "<color=#BB2020ff>Upload disabled. Replay was not kept locally.</color>",
                 0,
                 -1
             );
@@ -95,33 +90,30 @@ void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool
         return;
     }
 
-    if (keepLocalReplay && !getModConfig().SaveEveryReplayAttempt.GetValue()) {
-        DeleteMatchingReplays(replay);
-    }
-
-    string filename = FileManager::ToFilePath(replay, status);
+    // Local replay retention and replay uploads are independent:
+    // if a replay should not replace the local file, we still write a unique file for upload.
+    string filename = shouldPersistReplay
+        ? persistentFilename
+        : FileManager::ToFilePath(replay, status, shouldUploadReplay);
     lastReplayFilename = filename;
 
     FileManager::WriteReplay(filename, replay);
     BeatLeaderLogger.info("{}",("Replay saved " + filename).c_str());
 
-    if(!UploadEnabled()) {
+    if (!shouldUploadReplay) {
         finished(
             ReplayUploadStatus::finished,
             std::nullopt,
-            keepLocalReplay
+            shouldPersistReplay
                 ? "<color=#BB2020ff>Upload disabled. But replay was saved.</color>"
                 : "<color=#BB2020ff>Upload disabled. Replay was not kept locally.</color>",
             0,
             -1
         );
         return;
-    }    
-    
-    if(skipUpload)
-        return;
-    if(PlayerController::currentPlayer != std::nullopt)
-        TryPostReplay(filename, status, 0, keepLocalReplay, finished);
+    }
+
+    TryPostReplay(filename, status, 0, shouldPersistReplay, finished);
 }
 
 void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex, bool keepLocalReplay, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
@@ -207,7 +199,7 @@ int ReplayManager::GetLocalScore(string filename) {
     if ((stat (filename.data(), &buffer) == 0)) {
         auto info = FileManager::ReadInfo(filename);
         if (info != std::nullopt) {
-            return (int)((float)info->score * GetTotalMultiplier(info->modifiers)); 
+            return (int)((float)info->score); 
         }
     }
 
