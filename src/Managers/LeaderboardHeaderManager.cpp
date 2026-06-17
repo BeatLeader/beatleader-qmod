@@ -5,6 +5,7 @@
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "include/Enhancers/MapEnhancer.hpp"
+#include "include/UI/ModifiersUI.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 
@@ -247,6 +248,7 @@ namespace BeatLeader {
             return;
         }
 
+        ModifiersUI::SetSongModifiers(diffIt->second.modifierValues, diffIt->second.modifiersRating);
         _infoPanel->SetMapDifficulty(diffIt->second);
         if (_mapDifficultyPanel) {
             _mapDifficultyPanel->SetDifficulty(diffIt->second);
@@ -254,6 +256,7 @@ namespace BeatLeader {
     }
 
     void LeaderboardHeaderManager::ClearCurrentBeatmapData() {
+        ModifiersUI::ClearSongModifiers();
         if (_infoPanel) {
             _infoPanel->ClearBeatmapData();
         }

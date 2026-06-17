@@ -159,6 +159,18 @@ namespace ModifiersUI {
         }
     }
 
+    void SetSongModifiers(unordered_map<string, float> const& modifiers, unordered_map<string, TriangleRating> const& ratings) {
+        songModifiers = modifiers;
+        songModifierRatings = ratings;
+        refreshAllModifiers();
+    }
+
+    void ClearSongModifiers() {
+        songModifiers.clear();
+        songModifierRatings.clear();
+        refreshAllModifiers();
+    }
+
     TriangleRating refreshAllModifiers(){
         // Set the map dependant modifier values on the toggles (with colors)
         for(auto& [key, value] : allModifierToggles){
