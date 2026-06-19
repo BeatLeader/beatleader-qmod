@@ -31,45 +31,82 @@ namespace BeatLeader {
     }
 
     void TextNewsPanel::ShowNews(Paged<NewsPost> news) {
-        LocalComponent()->_loadingIndicator->SetActive(false);
+        auto* localComponent = TryGetUsableComponent();
+        if (!localComponent || !localComponent->_loadingIndicator || !localComponent->_emptyText) {
+            return;
+        }
+
+        localComponent->_loadingIndicator->SetActive(false);
         if (news.data.size() > 0) {
-            LocalComponent()->_emptyText->get_gameObject()->SetActive(false);
+            localComponent->_emptyText->get_gameObject()->SetActive(false);
             PresentList(news.data);
         } else {
-            LocalComponent()->_emptyText->get_gameObject()->SetActive(true);
-            LocalComponent()->_emptyText->set_text("There is no news");
+            localComponent->_emptyText->get_gameObject()->SetActive(true);
+            localComponent->_emptyText->set_text("There is no news");
             DisposeList();
         }
     }
 
     void TextNewsPanel::ShowError() {
-        LocalComponent()->_loadingIndicator->SetActive(false);
-        LocalComponent()->_emptyText->get_gameObject()->SetActive(true);
-        LocalComponent()->_emptyText->set_text("<color=#ff8888>Failed to load");
+        auto* localComponent = TryGetUsableComponent();
+        if (!localComponent || !localComponent->_loadingIndicator || !localComponent->_emptyText) {
+            return;
+        }
+
+        localComponent->_loadingIndicator->SetActive(false);
+        localComponent->_emptyText->get_gameObject()->SetActive(true);
+        localComponent->_emptyText->set_text("<color=#ff8888>Failed to load");
         DisposeList();
-    }   
+    }
 
     void TextNewsPanel::PresentList(std::vector<NewsPost> const& items) {
+        auto* localComponent = TryGetUsableComponent();
+        if (!localComponent || !EnsureList()) {
+            return;
+        }
+
         DisposeList();
 
         for (int i = 0; i < items.size(); i++) {
             auto item = items[i];
-            auto postPanel = TextNewsPostPanel::Instantiate<TextNewsPostPanel>(LocalComponent()->get_transform());
-            postPanel->LocalComponent()->ManualInit(LocalComponent()->_mainContainer);
+            auto postPanel = TextNewsPostPanel::Instantiate<TextNewsPostPanel>(localComponent->get_transform());
+            if (!postPanel) {
+                continue;
+            }
+
+            auto panelComponent = postPanel->LocalComponent();
+            if (!panelComponent) {
+                continue;
+            }
+
+            panelComponent->ManualInit(localComponent->_mainContainer);
             postPanel->SetupData(item);
-            _list->Add(postPanel->LocalComponent());
+            _list->Add(panelComponent);
         }
 
-        LocalComponent()->MarkScrollbarDirty();
+        auto* refreshedComponent = TryGetUsableComponent();
+        if (refreshedComponent) {
+            refreshedComponent->MarkScrollbarDirty();
+        }
     }
 
     void TextNewsPanel::DisposeList() {
+        if (!_list) {
+            return;
+        }
+
         for (int i = 0; i < _list->get_Count(); i++) {
             auto component = _list->get_Item(i);
-            UnityEngine::Object::Destroy(component->get_gameObject());
+            if (component != nullptr && component->get_gameObject() != nullptr) {
+                UnityEngine::Object::Destroy(component->get_gameObject());
+            }
         }
         _list->Clear();
-        LocalComponent()->MarkScrollbarDirty();
+
+        auto* localComponent = TryGetUsableComponent();
+        if (localComponent) {
+            localComponent->MarkScrollbarDirty();
+        }
     }
 
     StringW TextNewsPanel::GetContent() {
