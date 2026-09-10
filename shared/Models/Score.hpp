@@ -26,9 +26,11 @@ struct Score
     // int baseScore;
     int modifiedScore;
     float accuracy;
+    float fcAccuracy = 0;
     string playerId;
     string leaderboardId;
     float pp;
+    float fcPp = 0;
     // float Weight;
     int rank;
     int countryRank;

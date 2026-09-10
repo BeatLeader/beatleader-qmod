@@ -9,6 +9,7 @@ namespace WebUtils {
     extern string GameVersion;
     extern string API_URL;
     extern string WEB_URL;
+    extern string USER_AGENT;
 
     void refresh_urls();
 

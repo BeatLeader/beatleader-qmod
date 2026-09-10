@@ -2,6 +2,7 @@
 #include "include/Utils/FormatUtils.hpp"
 #include "include/Assets/Sprites.hpp"
 #include "include/UI/ScoreDetails/GeneralScoreDetails.hpp"
+#include "include/UI/Components/SmoothHoverController.hpp"
 #include "include/UI/QuestUI.hpp"
 
 #include "UnityEngine/Resources.hpp"
@@ -19,6 +20,11 @@ using namespace UnityEngine;
 using namespace UnityEngine::UI;
 using namespace GlobalNamespace;
 
+void BeatLeader::HoverableText::Refresh() const {
+    if (!text) return;
+    text->SetText((hoverEnabled && hovered) ? hoverText : normalText, true);
+}
+
 BeatLeader::GeneralScoreDetails::GeneralScoreDetails(HMUI::ModalView *modal) noexcept {
 
     datePlayed = CreateText(modal->get_transform(), "", UnityEngine::Vector2(0.0, 11.0));
@@ -27,7 +33,24 @@ BeatLeader::GeneralScoreDetails::GeneralScoreDetails(HMUI::ModalView *modal) noe
     accuracy = CreateText(modal->get_transform(), "", UnityEngine::Vector2(26.0, 2.0));
     scorePp = CreateText(modal->get_transform(), "", UnityEngine::Vector2(46.0, 2.0));
 
-    scoreDetails = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5, -12));   
+    scoreDetails = CreateText(modal->get_transform(), "", UnityEngine::Vector2(5, -12));
+
+    accuracyHover = std::make_shared<HoverableText>();
+    accuracyHover->text = accuracy;
+    ppHover = std::make_shared<HoverableText>();
+    ppHover->text = scorePp;
+
+    auto onHover = [](std::shared_ptr<HoverableText> const& state, bool hovered) {
+        if (state->hovered == hovered) return;
+        state->hovered = hovered;
+        state->Refresh();
+    };
+    SmoothHoverController::Custom(accuracy->get_gameObject(), [state = accuracyHover, onHover](bool hovered, float progress) {
+        onHover(state, hovered);
+    });
+    SmoothHoverController::Custom(scorePp->get_gameObject(), [state = ppHover, onHover](bool hovered, float progress) {
+        onHover(state, hovered);
+    });
 }
 
 string GetStringWithLabel(const string& value, const string& label) {
@@ -105,13 +128,28 @@ inline string FormatPP(const Score& score) {
     return result;
 }
 
+static const string Good = "#88FF88";
+static const string HoverHint = " <size=60%><color=" + Good + ">[?]</color></size>";
+
 void BeatLeader::GeneralScoreDetails::setScore(const Score& score) const {
     datePlayed->SetText(GetTimeSetString(score), true);
     datePlayed->set_alignment(TMPro::TextAlignmentOptions::Center);
 
     modifiedScore->SetText(GetStringWithLabel(FormatScore(score), "score"), true);
-    accuracy->SetText(GetStringWithLabel(FormatAcc(score), "accuracy"), true);
-    scorePp->SetText(GetStringWithLabel(FormatPP(score), "pp"), true);
+
+    bool accHoverEnabled = !score.fullCombo;
+    accuracyHover->hoverEnabled = accHoverEnabled;
+    accuracyHover->normalText = GetStringWithLabel(FormatAcc(score), accHoverEnabled ? "accuracy" + HoverHint : "accuracy");
+    accuracyHover->hoverText = GetStringWithLabel(FormatUtils::formatAcc(score.fcAccuracy), "<color=" + Good + ">FC accuracy</color>");
+    accuracy->set_raycastTarget(accHoverEnabled);
+    accuracyHover->Refresh();
+
+    bool ppHoverEnabled = !score.fullCombo && score.fcPp != 0;
+    ppHover->hoverEnabled = ppHoverEnabled;
+    ppHover->normalText = GetStringWithLabel(FormatPP(score), ppHoverEnabled ? "pp" + HoverHint : "pp");
+    ppHover->hoverText = GetStringWithLabel(FormatUtils::FormatPP(score.fcPp), "<color=" + Good + ">FC pp</color>");
+    scorePp->set_raycastTarget(ppHoverEnabled);
+    ppHover->Refresh();
 
     scoreDetails->SetText(GetDetailsString(score), true);
 }

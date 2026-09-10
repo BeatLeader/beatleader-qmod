@@ -58,7 +58,7 @@ void BeatLeader::initScoreDetailsPopup(
     if (modalUI != nullptr){
         UnityEngine::GameObject::Destroy(modalUI->modal->get_gameObject());
     }
-    if (modalUI == nullptr) modalUI = (BeatLeader::ScoreDetailsPopup*) malloc(sizeof(BeatLeader::ScoreDetailsPopup));
+    if (modalUI == nullptr) modalUI = (BeatLeader::ScoreDetailsPopup*) calloc(1, sizeof(BeatLeader::ScoreDetailsPopup));
     modalUI->modal = QuestUI::CreateModal(parent, UnityEngine::Vector2(60, 90), {}, nullptr, true);
     MakeModalTransparent(modalUI->modal);
 

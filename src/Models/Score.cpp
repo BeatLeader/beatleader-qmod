@@ -10,6 +10,18 @@ Score::Score(rapidjson::Value const& document) {
     pp = document["pp"].GetFloat();
     rank = document["rank"].GetInt();
     accuracy = document["accuracy"].GetFloat();
+
+    if (document.HasMember("fcAccuracy") && !document["fcAccuracy"].IsNull()) {
+        fcAccuracy = document["fcAccuracy"].GetFloat();
+    } else {
+        fcAccuracy = 0;
+    }
+    if (document.HasMember("fcPp") && !document["fcPp"].IsNull()) {
+        fcPp = document["fcPp"].GetFloat();
+    } else {
+        fcPp = 0;
+    }
+
     replay = document["replay"].GetString();
     playerId = document["playerId"].GetString();
     fullCombo = document["fullCombo"].GetBool();
