@@ -21,7 +21,7 @@ namespace BeatLeader {
         }
 
         _list = System::Collections::Generic::List_1<UnityEngine::MonoBehaviour*>::New_ctor();
-        return _list != nullptr;
+        return static_cast<bool>(_list);
     }
 
     AbstractNewsPanelComponent* AbstractNewsPanel::TryGetUsableComponent() {
@@ -61,11 +61,19 @@ namespace BeatLeader {
     }
 
     void AbstractNewsPanelComponent::UpdateScrollbarIfDirty() {
-        if (!_scrollbarDirty || _skipFrames > 0) return;
-        _skipFrames--;
+        if (!_scrollbarDirty) return;
+
+        // Wait a couple of frames for the layout to settle before measuring it.
+        if (_skipFrames > 0) {
+            _skipFrames--;
+            return;
+        }
+
         _scrollbarDirty = false;
-        _scrollView->SetContentSize(_heightWrapper->get_preferredHeight());
-        _scrollView->ScrollTo(0.0f, false);
+        if (_scrollView && _heightWrapper) {
+            _scrollView->SetContentSize(_heightWrapper->get_preferredHeight());
+            _scrollView->ScrollTo(0.0f, false);
+        }
     }
 
     void AbstractNewsPanelComponent::InitializeScrollView() {
