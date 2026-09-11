@@ -50,7 +50,7 @@ namespace BeatLeader {
         auto state = LevelSelectionFlowCoordinator::State::New_ctor(
             levelCategory,
             playlistCS,
-            ByRef<GlobalNamespace::BeatmapKey>(&beatmapKey),
+            by_ref<GlobalNamespace::BeatmapKey>(beatmapKey),
             nullptr);
         UnityEngine::GameObject::FindObjectOfType<SoloFreePlayFlowCoordinator*>()->Setup(state);
         auto soloButton = UnityEngine::GameObject::Find(StringW("SoloButton"));

@@ -26,7 +26,7 @@
 
 #include "config-utils/shared/config-utils.hpp"
 #include "custom-types/shared/register.hpp"
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "GlobalNamespace/AppInit.hpp"
@@ -35,7 +35,7 @@
 #include "GlobalNamespace/SettingsFlowCoordinator.hpp"
 #include "HMUI/FlowCoordinator.hpp"
 
-#include "BeatSaber/Init/BSAppInit.hpp"
+#include "GlobalNamespace/BeatSaberInit.hpp"
 #include "UnityEngine/SceneManagement/SceneManager.hpp"
 #include "UnityEngine/SceneManagement/Scene.hpp"
 
@@ -108,8 +108,8 @@ void replayPostCallback(ReplayUploadStatus status, std::optional<ScoreUpload> sc
     }
 }
 
-MAKE_HOOK_MATCH(AppInitStart, &BeatSaber::Init::BSAppInit::InstallBindings, void,
-    BeatSaber::Init::BSAppInit *self) {
+MAKE_HOOK_MATCH(AppInitStart, &GlobalNamespace::BeatSaberInit::InstallBindings, void,
+    GlobalNamespace::BeatSaberInit* self) {
     self->::UnityEngine::MonoBehaviour::StartCoroutine(custom_types::Helpers::CoroutineHelper::New(BundleLoader::LoadBundle(self->get_gameObject())));
     AppInitStart(self);
     LeaderboardUI::setup();
@@ -119,7 +119,7 @@ static bool hasInited = false;
 static bool shouldClear = false;
 
 // do things with the scene transition stuff
-MAKE_HOOK_MATCH(RichPresenceManager_HandleGameScenesManagerTransitionDidFinish, &GlobalNamespace::RichPresenceManager::HandleGameScenesManagerTransitionDidFinish, void, GlobalNamespace::RichPresenceManager* self, GlobalNamespace::GameScenesManager_SceneTransitionType sceneTransitionType, GlobalNamespace::ScenesTransitionSetupDataSO* setupData, Zenject::DiContainer* container) {
+MAKE_HOOK_MATCH(RichPresenceManager_HandleGameScenesManagerTransitionDidFinish, &GlobalNamespace::RichPresenceManager::HandleGameScenesManagerTransitionDidFinish, void, GlobalNamespace::RichPresenceManager* self, GlobalNamespace::GameScenesManager_SceneTransitionType sceneTransitionType, GlobalNamespace::ScenesTransitionSetupData* setupData, Zenject::DiContainer* container) {
     RichPresenceManager_HandleGameScenesManagerTransitionDidFinish(self, sceneTransitionType, setupData, container);
 
     if (shouldClear) {
@@ -141,7 +141,8 @@ MAKE_HOOK_MATCH(SceneManager_Internal_ActiveSceneChanged, &UnityEngine::SceneMan
         std::string prevSceneName(prevScene.get_name());
         std::string nextSceneName(nextScene.get_name());
 
-        if (prevSceneName == "QuestInit") hasInited = true;
+        // The init scene is "QuestInit" up to 1.40 and "GameInit" from 1.45 (AppInitScenesTransitionSetupData::kGameInitSceneName)
+        if (prevSceneName == "QuestInit" || prevSceneName == "GameInit") hasInited = true;
 
         // if we just inited, and aren't already going to clear, check the next scene name for the menu
         if (hasInited && !shouldClear && nextSceneName.find("Menu") != std::u16string::npos) {
@@ -205,8 +206,8 @@ MAKE_HOOK_MATCH(Image_get_pixelsPerUnit, &UnityEngine::UI::Image::get_pixelsPerU
     float result = Image_get_pixelsPerUnit(self);
     
     // Check if the instance is a FixedImageView
-    auto fixedView = il2cpp_utils::try_cast<BeatLeader::UI::BSML_Addons::FixedImageView>(self);
-    if (fixedView != nullopt) {
+    auto fixedView = i2c::try_cast<BeatLeader::UI::BSML_Addons::FixedImageView*>(self);
+    if (fixedView != nullptr) {
         result *= self->pixelsPerUnitMultiplier;
     }
     
@@ -215,7 +216,7 @@ MAKE_HOOK_MATCH(Image_get_pixelsPerUnit, &UnityEngine::UI::Image::get_pixelsPerU
 
 // Called later on in the game loading - a good time to install function hooks
 MOD_EXPORT "C" void late_load() {
-    il2cpp_functions::Init();
+    i2c::functions::initialize();
     custom_types::Register::AutoRegister();
     WebUtils::refresh_urls();
     FileManager::EnsureReplaysFolderExists();

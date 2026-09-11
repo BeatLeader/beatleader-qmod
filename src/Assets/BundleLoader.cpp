@@ -3,6 +3,8 @@
 #include "include/Utils/StringUtils.hpp"
 
 #include <utility>
+#include <filesystem>
+#include <fstream>
 #include "main.hpp"
 
 DEFINE_TYPE(BeatLeader, Bundle);
@@ -13,17 +15,27 @@ BeatLeader::Bundle* BundleLoader::bundle;
 custom_types::Helpers::Coroutine BundleLoader::LoadBundle(UnityEngine::GameObject* container)
 {
     if (assetBundle == NULL) {
-        ArrayW<uint8_t> bytes(bl_bundle::getLength());
-        std::copy(bl_bundle::getData(), bl_bundle::getData() + bl_bundle::getLength(), bytes.begin());
+        // Unity 6 (Beat Saber 1.45+) stripped AssetBundle.LoadFromMemory*, so the embedded
+        // bundle is written to the mod data directory and loaded from file instead.
+        std::string bundleDirectory = get_data_dir(modInfo);
+        std::filesystem::create_directories(bundleDirectory);
+        std::string bundlePath = bundleDirectory + "bl.bundle";
+        {
+            std::ofstream bundleFile(bundlePath, std::ios::binary | std::ios::trunc);
+            bundleFile.write(reinterpret_cast<char const*>(bl_bundle::getData()), bl_bundle::getLength());
+        }
 
-        using AssetBundle_LoadFromMemoryAsync = function_ptr_t<UnityEngine::AssetBundleCreateRequest*, ArrayW<uint8_t>, int>;
-        static auto assetBundle_LoadFromMemoryAsync = reinterpret_cast<AssetBundle_LoadFromMemoryAsync>(il2cpp_functions::resolve_icall("UnityEngine.AssetBundle::LoadFromMemoryAsync_Internal"));
-
-        auto req = assetBundle_LoadFromMemoryAsync(bytes, 0);
+        auto req = UnityEngine::AssetBundle::LoadFromFileAsync(StringW(bundlePath));
         req->set_allowSceneActivation(true);
         co_yield reinterpret_cast<System::Collections::IEnumerator*>(req);
 
         assetBundle = req->get_assetBundle();
+        if (assetBundle) {
+            BeatLeaderLogger.info("Loaded asset bundle from {} with {} assets", bundlePath, assetBundle->GetAllAssetNames().size());
+        } else {
+            BeatLeaderLogger.error("Failed to load asset bundle from {} (wrong Unity version or build target?)", bundlePath);
+            co_return;
+        }
     }
 
     bundle = container->AddComponent<BeatLeader::Bundle*>();
@@ -66,18 +78,26 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
     materials = System::Collections::Generic::Dictionary_2<StringW, Material*>::New_ctor();
     sprites = System::Collections::Generic::Dictionary_2<StringW, Sprite*>::New_ctor();
 
+    int duplicateNames = 0;
     for (size_t i = 0; i < allnames.size(); i++)
     {
         StringW name = allnames[i];
-        auto material = assetBundle->LoadAsset<Material*>(name);
-        if (material != NULL) {
-            materials->Add(material->get_name(), material);
-        }
-        auto sprite = assetBundle->LoadAsset<Sprite*>(name);
-        if (sprite != NULL) {
-            sprites->Add(sprite->get_name(), sprite);
+        try {
+            auto material = assetBundle->LoadAsset<Material*>(name);
+            if (material != NULL) {
+                // Assets are keyed by object name; the bundle may contain same-named assets in different folders,
+                // keep the first one instead of letting Dictionary.Add throw.
+                if (!materials->TryAdd(material->get_name(), material)) duplicateNames++;
+            }
+            auto sprite = assetBundle->LoadAsset<Sprite*>(name);
+            if (sprite != NULL) {
+                if (!sprites->TryAdd(sprite->get_name(), sprite)) duplicateNames++;
+            }
+        } catch (std::exception const& e) {
+            BeatLeaderLogger.error("Failed to index bundle asset {}: {}", static_cast<std::string>(name), e.what());
         }
     }
+    BeatLeaderLogger.info("Indexed bundle: {} materials, {} sprites ({} duplicate names skipped)", materials->get_Count(), sprites->get_Count(), duplicateNames);
 
     logoMaterial = GetMaterial("LogoMaterial");
     defaultAvatarMaterial = GetMaterial("DefaultAvatar");

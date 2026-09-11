@@ -2,7 +2,7 @@
 
 #include <string>
 #include "UnityEngine/Sprite.hpp"
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 
 namespace BeatLeader {
     class ScoresContext {

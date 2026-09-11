@@ -1,6 +1,7 @@
 #pragma once
+#include <vector>
 
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 #include "shared/Models/Clan.hpp"
 
 #include <string>

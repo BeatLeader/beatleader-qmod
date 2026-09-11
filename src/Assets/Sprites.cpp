@@ -25,7 +25,7 @@ void Sprites::get_Icon(string url, const std::function<void(UnityEngine::Sprite*
         std::vector<uint8_t> bytes = iconCache[url];
         ArrayW<uint8_t> spriteArray{bytes};
         UnityEngine::Sprite* sprite;
-        Gif gif = Gif(spriteArray);
+        Gif gif = Gif(spriteArray.ref_to());
         if (gif.Parse() == 0 && gif.Slurp() == 1) {
             auto tex = gif.get_frame(0);
             sprite = UnityEngine::Sprite::Create(
@@ -65,25 +65,30 @@ void Sprites::get_AnimatedIcon(string url, const std::function<void(AllFramesRes
         std::vector<uint8_t> bytes = iconCache[url];
         ArrayW<uint8_t> spriteArray{bytes};
         AllFramesResult result;
-        Gif gif = Gif(spriteArray);
+        Gif gif = Gif(spriteArray.ref_to());
         bool isOK = false;
         if (gif.Parse() == 0 && gif.Slurp() == 1) {
             result = gif.get_all_frames();
             isOK = true;
             
         } else {
-            Texture2D* texture = Texture2D::New_ctor(0, 0, TextureFormat::RGBA32, false, false);
-            if (UnityEngine::ImageConversion::LoadImage(texture, spriteArray, false)) {
-                texture->set_wrapMode(TextureWrapMode::Clamp);
-                ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(1);
-                ArrayW<float> timings = ArrayW<float> (1);
+            try {
+                // Unity 6 throws on 0x0 textures; LoadImage resizes the placeholder anyway
+                Texture2D* texture = Texture2D::New_ctor(1, 1, TextureFormat::RGBA32, false, false);
+                if (UnityEngine::ImageConversion::LoadImage(texture, spriteArray, false)) {
+                    texture->set_wrapMode(TextureWrapMode::Clamp);
+                    ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(1);
+                    ArrayW<float> timings = ArrayW<float> (1);
 
-                frames[0] = texture;
-                timings[0] = 0;
-                result = {
-                    frames, timings
-                };
-                isOK = true;
+                    frames[0] = texture;
+                    timings[0] = 0;
+                    result = {
+                        frames, timings
+                    };
+                    isOK = true;
+                }
+            } catch (std::exception const& e) {
+                BeatLeaderLogger.error("Failed to decode icon {}: {}", url, e.what());
             }
         }
 

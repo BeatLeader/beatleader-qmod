@@ -35,9 +35,9 @@ void BeatLeader::SmoothHoverController::ctor() {
     hoverStateChangedEvent = HoverStateChangedEvent();
     lerpCoefficient = 10.0f;
     
-    static auto base_ctor = il2cpp_utils::FindMethod(classof(UnityEngine::MonoBehaviour*), ".ctor");
+    static auto base_ctor = i2c::find_method(::i2c::class_of<UnityEngine::MonoBehaviour*>(), ".ctor");
     if (base_ctor) {
-        il2cpp_utils::RunMethod(this, base_ctor);
+        i2c::run_method(this, base_ctor);
     }
 }
 

@@ -90,7 +90,7 @@ class ReeUIComponentV2 {
 
     template<typename T>
     static T* Instantiate(UnityEngine::Transform* parent, bool parseImmediately = true) {
-        auto gameObject = UnityEngine::GameObject::New_ctor(il2cpp_utils::newcsstr(typeid(T).name()));
+        auto gameObject = UnityEngine::GameObject::New_ctor(StringW(typeid(T).name()));
        
         T* object = new T();
         auto component = gameObject->AddComponent<C>();

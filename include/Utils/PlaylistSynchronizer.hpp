@@ -1,7 +1,8 @@
+#include <functional>
 #include <map>
 #include <string>
 
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 #include <dirent.h>
 
 using namespace std;

@@ -1,6 +1,6 @@
 #include "include/Managers/LeaderboardHeaderManager.hpp"
 
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
@@ -8,6 +8,7 @@
 #include "include/UI/ModifiersUI.hpp"
 #include "include/Utils/WebUtils.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
+#include "GlobalNamespace/BeatmapCharacteristicExtensions.hpp"
 
 #include <regex>
 
@@ -192,14 +193,14 @@ namespace BeatLeader {
     }
 
     bool LeaderboardHeaderManager::TryGetBeatmapLookupKey(GlobalNamespace::BeatmapKey beatmapKey, std::pair<std::string, std::string>& key) const {
-        if (!beatmapKey.beatmapCharacteristic) {
+        if (!beatmapKey.IsValid()) {
             return false;
         }
 
         auto levelId = static_cast<std::string>(beatmapKey.levelId);
         auto hash = std::regex_replace(levelId, std::basic_regex("custom_level_"), "");
         auto difficulty = MapEnhancer::DiffName(beatmapKey.difficulty.value__);
-        auto mode = static_cast<std::string>(beatmapKey.beatmapCharacteristic->serializedName);
+        auto mode = static_cast<std::string>(GlobalNamespace::BeatmapCharacteristicExtensions::SerializedName(beatmapKey.characteristic));
 
         if (levelId.empty() || hash.empty() || difficulty.empty() || mode.empty()) {
             return false;

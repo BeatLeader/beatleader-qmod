@@ -1,6 +1,6 @@
 #pragma once
 #include "config-utils/shared/config-utils.hpp"
-#include "metacore/shared/game.hpp"
+#include "metacore-bs/shared/game.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 
 enum class ReplaySaveMode {

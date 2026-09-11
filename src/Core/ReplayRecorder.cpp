@@ -16,7 +16,7 @@
 #include "include/Utils/ReeTransform.hpp"
 #include "include/API/PlayerController.hpp"
 
-#include "beatsaber-hook/shared/utils/hooking.hpp"
+#include "beatsaber-hook/shared/hooking.hpp"
 
 #include "config-utils/shared/config-utils.hpp"
 #include "custom-types/shared/register.hpp"
@@ -30,7 +30,7 @@
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/BeatmapData.hpp"
 #include "GlobalNamespace/GameplayModifiers.hpp"
-#include "GlobalNamespace/StandardLevelScenesTransitionSetupDataSO.hpp"
+#include "GlobalNamespace/StandardLevelScenesTransitionSetupData.hpp"
 #include "GlobalNamespace/OverrideEnvironmentSettings.hpp"
 #include "GlobalNamespace/GameplayCoreInstaller.hpp"
 #include "GlobalNamespace/AudioTimeSyncController.hpp"
@@ -71,8 +71,9 @@
 #include "GlobalNamespace/GoodCutScoringElement.hpp"
 #include "GlobalNamespace/MissScoringElement.hpp"
 #include "GlobalNamespace/MultiplayerController.hpp"
-#include "GlobalNamespace/MultiplayerLevelScenesTransitionSetupDataSO.hpp"
+#include "GlobalNamespace/MultiplayerLevelScenesTransitionSetupData.hpp"
 #include "GlobalNamespace/MultiplayerResultsData.hpp"
+#include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "GlobalNamespace/MultiplayerPlayerResultsData.hpp"
 #include "GlobalNamespace/MultiplayerLevelCompletionResults.hpp"
 #include "GlobalNamespace/PlayersSpecificSettingsAtGameStartModel.hpp"
@@ -140,20 +141,20 @@ namespace ReplayRecorder {
     System::Action_1<ScoringElement*>* _scoreEvent;
     System::Action_1<UnityW<ObstacleController>>* _wallEvent;
     
-    void collectMapData(StandardLevelScenesTransitionSetupDataSO* self) {
+    void collectMapData(StandardLevelScenesTransitionSetupData* self) {
 
         mapEnhancer.difficultyBeatmap = self->beatmapKey;
         mapEnhancer.beatmapLevel = self->beatmapLevel;
         mapEnhancer.gameplayModifiers = self->gameplayModifiers;
         mapEnhancer.playerSpecificSettings = self->gameplayCoreSceneSetupData->playerSpecificSettings;
         mapEnhancer.practiceSettings = self->practiceSettings;
-        mapEnhancer.environmentName = self->beatmapLevel->GetEnvironmentName(self->beatmapKey.beatmapCharacteristic, self->beatmapKey.difficulty);;
+        mapEnhancer.environmentName = self->beatmapLevel->GetEnvironmentName(self->beatmapKey.characteristic, self->beatmapKey.difficulty);;
         mapEnhancer.colorScheme = self->colorScheme;
 
         automaticPlayerHeight = self->gameplayCoreSceneSetupData->playerSpecificSettings->automaticPlayerHeight;
     }
 
-    void collectMultiplayerMapData(MultiplayerLevelScenesTransitionSetupDataSO* self) {
+    void collectMultiplayerMapData(MultiplayerLevelScenesTransitionSetupData* self) {
         GameplayCoreSceneSetupData* gameplayCoreSceneSetupData = reinterpret_cast<GameplayCoreSceneSetupData*>(self->gameplayCoreSceneSetupData);
 
         mapEnhancer.difficultyBeatmap = self->beatmapKey;
@@ -161,7 +162,7 @@ namespace ReplayRecorder {
         mapEnhancer.gameplayModifiers = gameplayCoreSceneSetupData->gameplayModifiers;
         mapEnhancer.playerSpecificSettings = gameplayCoreSceneSetupData->playerSpecificSettings;
         mapEnhancer.practiceSettings = NULL;
-        mapEnhancer.environmentName = self->_loadedMultiplayerEnvironmentInfo->_environmentName;
+        mapEnhancer.environmentName = GlobalNamespace::EnvironmentName(self->_environmentInfo->_environmentName);
         mapEnhancer.colorScheme = self->colorScheme;
 
         automaticPlayerHeight = gameplayCoreSceneSetupData->playerSpecificSettings->automaticPlayerHeight;
@@ -224,7 +225,7 @@ namespace ReplayRecorder {
         replay = nullopt;
     }
 
-    MAKE_HOOK_MATCH(ProcessResultsSolo, &StandardLevelScenesTransitionSetupDataSO::Finish, void, StandardLevelScenesTransitionSetupDataSO* self, LevelCompletionResults* levelCompletionResults) {
+    MAKE_HOOK_MATCH(ProcessResultsSolo, &StandardLevelScenesTransitionSetupData::Finish, void, StandardLevelScenesTransitionSetupData* self, LevelCompletionResults* levelCompletionResults) {
         ProcessResultsSolo(self, levelCompletionResults);
         recording = false;
         if (replay != nullopt) {
@@ -257,12 +258,30 @@ namespace ReplayRecorder {
         }
     }
 
-    MAKE_HOOK_MATCH(ProcessResultsMultiplayer, &MultiplayerLevelScenesTransitionSetupDataSO::Finish, void, MultiplayerLevelScenesTransitionSetupDataSO* self, MultiplayerResultsData* levelCompletionResults) {
+    MAKE_HOOK_MATCH(ProcessResultsMultiplayer, &MultiplayerLevelScenesTransitionSetupData::Finish, void, MultiplayerLevelScenesTransitionSetupData* self, MultiplayerResultsData* levelCompletionResults) {
         ProcessResultsMultiplayer(self, levelCompletionResults);
         recording = false;
         if (replay != nullopt && levelCompletionResults != NULL) {
             collectMultiplayerMapData(self);
             processMultiplayerResults(levelCompletionResults);
+        }
+    }
+
+    MAKE_HOOK_MATCH(ProcessResultsSoloDidFinish, &MenuTransitionsHelper::HandleMainGameSceneDidFinish, void, MenuTransitionsHelper* self, StandardLevelScenesTransitionSetupData* setupData, LevelCompletionResults* levelCompletionResults) {
+        ProcessResultsSoloDidFinish(self, setupData, levelCompletionResults);
+        recording = false;
+        if (replay != nullopt && setupData != nullptr && levelCompletionResults != nullptr) {
+            collectMapData(setupData);
+            processResults(levelCompletionResults, setupData->gameMode == "Party");
+        }
+    }
+
+    MAKE_HOOK_MATCH(ProcessResultsMultiplayerDidFinish, &MenuTransitionsHelper::HandleMultiplayerLevelDidFinish, void, MenuTransitionsHelper* self, MultiplayerLevelScenesTransitionSetupData* setupData, MultiplayerResultsData* resultsData) {
+        ProcessResultsMultiplayerDidFinish(self, setupData, resultsData);
+        recording = false;
+        if (replay != nullopt && setupData != nullptr && resultsData != nullptr) {
+            collectMultiplayerMapData(setupData);
+            processMultiplayerResults(resultsData);
         }
     }
 
@@ -319,7 +338,7 @@ namespace ReplayRecorder {
         }
     }
 
-    MAKE_HOOK_MATCH(HandleNoteControllerNoteWasCut, &BeatmapObjectManager::HandleNoteControllerNoteWasCut, void, BeatmapObjectManager* self, NoteController* noteController, ByRef<::GlobalNamespace::NoteCutInfo> noteCutInfo) {
+    MAKE_HOOK_MATCH(HandleNoteControllerNoteWasCut, &BeatmapObjectManager::HandleNoteControllerNoteWasCut, void, BeatmapObjectManager* self, NoteController* noteController, by_ref<::GlobalNamespace::NoteCutInfo> noteCutInfo) {
         HandleNoteControllerNoteWasCut(self, noteController, noteCutInfo);
 
         if (replay == nullopt) return;
@@ -329,7 +348,7 @@ namespace ReplayRecorder {
         if (!_noteIdCache.count(noteData)) return;
 
         int noteId = _noteIdCache[noteData];
-        _noteCutInfoCache[noteId] = noteCutInfo.heldRef;
+        _noteCutInfoCache[noteId] = *noteCutInfo;
     }
 
     static float ChooseSwingRating(float real, float unclamped) {
@@ -357,11 +376,11 @@ namespace ReplayRecorder {
         NoteEvent& noteEvent = replay->notes.at(replayNoteId);
         bool isBomb = noteData->colorType == ColorType::None;
         
-        if (il2cpp_utils::try_cast<MissScoringElement>(scoringElement) != nullopt) {
+        if (i2c::try_cast<MissScoringElement*>(scoringElement) != nullptr) {
             if (isBomb) return;
 
             noteEvent.eventType = NoteEventType::MISS;
-        } else if (il2cpp_utils::try_cast<BadCutScoringElement>(scoringElement) != nullopt) {
+        } else if (i2c::try_cast<BadCutScoringElement*>(scoringElement) != nullptr) {
             noteEvent.eventType = isBomb ? NoteEventType::BOMB : NoteEventType::BAD;
 
             if (!_noteCutInfoCache.count(noteId)) return;
@@ -369,8 +388,8 @@ namespace ReplayRecorder {
             ReplayNoteCutInfo& noteCutInfo = noteEvent.noteCutInfo;
             PopulateNoteCutInfo(noteCutInfo, _noteCutInfoCache[noteId], _noteControllerCache[noteId]);
                 
-        } else if (il2cpp_utils::try_cast<GoodCutScoringElement>(scoringElement) != nullopt) {
-            GoodCutScoringElement* goodCut = il2cpp_utils::try_cast<GoodCutScoringElement>(scoringElement).value();
+        } else if (i2c::try_cast<GoodCutScoringElement*>(scoringElement) != nullptr) {
+            GoodCutScoringElement* goodCut = i2c::try_cast<GoodCutScoringElement*>(scoringElement);
             CutScoreBuffer* cutScoreBuffer = goodCut->_cutScoreBuffer;
             SaberSwingRatingCounter* saberSwingRatingCounter = cutScoreBuffer->_saberSwingRatingCounter;
 
@@ -403,7 +422,7 @@ namespace ReplayRecorder {
                 if (scoringElement->get_time() >= skipAfter && scoringElement->get_time() <= nearestNotCutNoteTime) break;
                 
                 auto noteData = scoringElement->noteData;
-                if (il2cpp_utils::try_cast<MissScoringElement>(scoringElement) != nullopt && (noteData->colorType == ColorType::None || noteData->scoringType == NoteData::ScoringType::NoScore)) continue;
+                if (i2c::try_cast<MissScoringElement*>(scoringElement) != nullptr && (noteData->colorType == ColorType::None || noteData->scoringType == NoteData::ScoringType::NoScore)) continue;
 
                 int noteId = _noteIdCache[noteData];
                 NoteEvent& noteEvent = _noteEventCache.at(noteId);
@@ -537,12 +556,12 @@ namespace ReplayRecorder {
 
         auto container = installer->get_Container();
         
-        playerTransforms = reinterpret_cast<PlayerTransforms*>(container->Resolve(csTypeOf(PlayerTransforms*)));
-        saberManager = reinterpret_cast<SaberManager*>(container->Resolve(csTypeOf(SaberManager*)));
-        audioTimeSyncController = reinterpret_cast<AudioTimeSyncController*>(container->Resolve(csTypeOf(AudioTimeSyncController*)));
+        playerTransforms = reinterpret_cast<PlayerTransforms*>(container->Resolve(i2c::cs_type_of<PlayerTransforms*>()));
+        saberManager = reinterpret_cast<SaberManager*>(container->Resolve(i2c::cs_type_of<SaberManager*>()));
+        audioTimeSyncController = reinterpret_cast<AudioTimeSyncController*>(container->Resolve(i2c::cs_type_of<AudioTimeSyncController*>()));
 
-        container->BindInterfacesAndSelfTo(csTypeOf(BeatLeader::ReplayRecorderTicker*))->FromNewComponentOnRoot()->AsSingle();
-        auto recorder = reinterpret_cast<BeatLeader::ReplayRecorderTicker*>(container->Resolve(csTypeOf(BeatLeader::ReplayRecorderTicker*)));
+        container->BindInterfacesAndSelfTo(i2c::cs_type_of<BeatLeader::ReplayRecorderTicker*>())->FromNewComponentOnRoot()->AsSingle();
+        auto recorder = reinterpret_cast<BeatLeader::ReplayRecorderTicker*>(container->Resolve(i2c::cs_type_of<BeatLeader::ReplayRecorderTicker*>()));
         recorder->Init(playerTransforms, saberManager, audioTimeSyncController);
     }
 
@@ -561,9 +580,9 @@ namespace ReplayRecorder {
         UnityEngine::Vector3 controllerPos;
         UnityEngine::Quaternion controllerRot;
 
-        ByRef<UnityEngine::Vector3> controllerPosRef = ByRef<UnityEngine::Vector3>(&controllerPos);
-        ByRef<UnityEngine::Quaternion> controllerRotRef = ByRef<UnityEngine::Quaternion>(&controllerRot);
-        vrController->_vrPlatformHelper->GetNodePose(vrController->_node, vrController->_nodeIdx, controllerPosRef, controllerRotRef);
+        by_ref<UnityEngine::Vector3> controllerPosRef = by_ref<UnityEngine::Vector3>(&controllerPos);
+        by_ref<UnityEngine::Quaternion> controllerRotRef = by_ref<UnityEngine::Quaternion>(&controllerRot);
+        vrController->_vrPlatformHelper->GetNodePose(vrController->_node, vrController->_nodeIndex, controllerPosRef, controllerRotRef);
         
         BeatLeader::ReeTransform controllerTransform(xrRigTransform.LocalToWorldPosition(controllerPos), xrRigTransform.LocalToWorldRotation(controllerRot));
 
@@ -601,6 +620,8 @@ namespace ReplayRecorder {
         INSTALL_HOOK(BeatLeaderLogger, ScoreControllerStart);
         INSTALL_HOOK(BeatLeaderLogger, ScoreControllerLateUpdate);
         INSTALL_HOOK(BeatLeaderLogger, ProcessResultsMultiplayer);
+        INSTALL_HOOK(BeatLeaderLogger, ProcessResultsSoloDidFinish);
+        INSTALL_HOOK(BeatLeaderLogger, ProcessResultsMultiplayerDidFinish);
         INSTALL_HOOK(BeatLeaderLogger, HandleNoteControllerNoteWasCut);
 
         BeatLeaderLogger.info("Installed all ReplayRecorder hooks!");

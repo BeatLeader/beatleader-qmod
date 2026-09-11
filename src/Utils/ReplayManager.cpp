@@ -47,6 +47,7 @@ PlayEndData ReplayManager::lastReplayStatus = PlayEndData(LevelEndType::Fail, 0)
 void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool skipUpload, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
                                                                                   int)> const &finished) {
     if (status.GetEndType() == LevelEndType::Unknown) {
+        BeatLeaderLogger.warn("ProcessReplay: unknown level end type, replay dropped");
         return;
     }
 

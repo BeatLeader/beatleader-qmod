@@ -1,3 +1,4 @@
+#include "beatsaber-hook/shared/safeptr.hpp"
 #include "UI/MainMenu/Modals/MapPreviewDialog.hpp"
 #include "Utils/WebUtils.hpp"
 #include "Utils/FileManager.hpp"
@@ -164,7 +165,7 @@ namespace BeatLeader {
         auto soloFreePlayFlowCoordinator = UnityEngine::Object::FindObjectOfType<SoloFreePlayFlowCoordinator*>();
         soloFreePlayFlowCoordinator->Setup(state);
 
-        SafePtrUnity<UnityEngine::GameObject> songSelectButton = UnityEngine::GameObject::Find("SoloButton").unsafePtr();
+        safe_ptr<UnityEngine::GameObject*> songSelectButton = UnityEngine::GameObject::Find("SoloButton").unsafe_ptr();
         if (!songSelectButton) {
             songSelectButton = UnityEngine::GameObject::Find("Wrapper/BeatmapWithModifiers/BeatmapSelection/EditButton");
         }

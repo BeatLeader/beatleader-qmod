@@ -138,7 +138,7 @@ void BeatLeader::PlayerAvatar::Update() {
 
       if (isFrameNeeded) {
         if (animationFrames.size() > currentFrame) {
-          auto frame = animationFrames.get(currentFrame);
+          auto frame = animationFrames[currentFrame];
 
           if (frame != nullptr) {
             materialInstance->SetTexture(AvatarTexturePropertyId, frame);

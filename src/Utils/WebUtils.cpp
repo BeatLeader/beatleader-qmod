@@ -138,7 +138,7 @@ namespace WebUtils {
     }
 
     string getCookieFile() {
-        string directory = getDataDir(modInfo) + "cookies/";
+        string directory = get_data_dir(modInfo) + "cookies/";
         std::filesystem::create_directories(directory);
         return directory + "cookies.txt";
     }

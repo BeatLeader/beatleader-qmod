@@ -1,6 +1,6 @@
 #pragma once
 
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 #include "shared/Models/TriangleRating.hpp"
 #include "shared/Models/Clan.hpp"
 

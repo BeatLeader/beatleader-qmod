@@ -10,7 +10,7 @@
 
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/filewritestream.h"
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/filereadstream.h"
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 

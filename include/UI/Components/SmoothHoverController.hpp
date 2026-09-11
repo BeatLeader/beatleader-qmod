@@ -1,5 +1,6 @@
 #pragma once
 
+#include "beatsaber-hook/shared/callback.hpp"
 #include "UnityEngine/MonoBehaviour.hpp"
 #include "UnityEngine/EventSystems/IPointerEnterHandler.hpp"
 #include "UnityEngine/EventSystems/IPointerExitHandler.hpp"
@@ -11,7 +12,7 @@
 #include <string>
 using namespace std;
 
-#define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::methodInfo()
+#define GET_FIND_METHOD(mPtr) ::i2c::metadata_getter<mPtr>::method_info()
 
 DECLARE_CLASS_CODEGEN_INTERFACES(
         BeatLeader, 
@@ -29,7 +30,7 @@ DECLARE_CLASS_CODEGEN_INTERFACES(
     DECLARE_CTOR(ctor);
 
     public:
-    using HoverStateChangedEvent = UnorderedEventCallback<bool, float>;
+    using HoverStateChangedEvent = unordered_event_callback<bool, float>;
 
     HoverStateChangedEvent & get_hoverStateChangedEvent();
     HoverStateChangedEvent hoverStateChangedEvent;
@@ -39,8 +40,8 @@ DECLARE_CLASS_CODEGEN_INTERFACES(
     static SmoothHoverController* Scale(UnityEngine::GameObject* gameObject, float defaultScale, float hoverScale);
     static SmoothHoverController* Scale(UnityEngine::GameObject* gameObject, UnityEngine::Transform* target, float defaultScale, float hoverScale);
      
-    DECLARE_OVERRIDE_METHOD(void, OnPointerEnter, il2cpp_utils::il2cpp_type_check::MetadataGetter<&UnityEngine::EventSystems::IPointerEnterHandler::OnPointerEnter>::methodInfo(), UnityEngine::EventSystems::PointerEventData*);
-    DECLARE_OVERRIDE_METHOD(void, OnPointerExit, il2cpp_utils::il2cpp_type_check::MetadataGetter<&UnityEngine::EventSystems::IPointerExitHandler::OnPointerExit>::methodInfo(), UnityEngine::EventSystems::PointerEventData*);
+    DECLARE_OVERRIDE_METHOD(void, OnPointerEnter, ::i2c::metadata_getter<&UnityEngine::EventSystems::IPointerEnterHandler::OnPointerEnter>::method_info(), UnityEngine::EventSystems::PointerEventData*);
+    DECLARE_OVERRIDE_METHOD(void, OnPointerExit, ::i2c::metadata_getter<&UnityEngine::EventSystems::IPointerExitHandler::OnPointerExit>::method_info(), UnityEngine::EventSystems::PointerEventData*);
 
     DECLARE_INSTANCE_METHOD(void, OnDisable);
     DECLARE_INSTANCE_METHOD(void, Update);

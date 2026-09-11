@@ -11,7 +11,7 @@
 
 using namespace std;
 
-#define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::methodInfo()
+#define GET_FIND_METHOD(mPtr) ::i2c::metadata_getter<mPtr>::method_info()
 
 DECLARE_CLASS_CODEGEN(BeatLeader, AccuracyGraphLine, UnityEngine::UI::Graphic) {
     DECLARE_INSTANCE_FIELD(UnityEngine::Rect, viewRect);

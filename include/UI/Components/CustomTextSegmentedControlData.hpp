@@ -19,8 +19,8 @@ DECLARE_CLASS_CODEGEN_INTERFACES(QuestUI, CustomTextSegmentedControlData, UnityE
     DECLARE_INSTANCE_FIELD(HMUI::SegmentedControlCell*, middleCellPrefab);
     DECLARE_INSTANCE_FIELD(ArrayW<StringW>, texts);
 
-    DECLARE_OVERRIDE_METHOD(int, NumberOfCells, il2cpp_utils::il2cpp_type_check::MetadataGetter<&HMUI::SegmentedControl::IDataSource::NumberOfCells>::methodInfo());
-    DECLARE_OVERRIDE_METHOD(HMUI::SegmentedControlCell*, CellForCellNumber, il2cpp_utils::il2cpp_type_check::MetadataGetter<&HMUI::SegmentedControl::IDataSource::CellForCellNumber>::methodInfo(), int idx);
+    DECLARE_OVERRIDE_METHOD(int, NumberOfCells, ::i2c::metadata_getter<&HMUI::SegmentedControl::IDataSource::NumberOfCells>::method_info());
+    DECLARE_OVERRIDE_METHOD(HMUI::SegmentedControlCell*, CellForCellNumber, ::i2c::metadata_getter<&HMUI::SegmentedControl::IDataSource::CellForCellNumber>::method_info(), int idx);
     DECLARE_CTOR(ctor);
     DECLARE_DTOR(dtor);
     public:

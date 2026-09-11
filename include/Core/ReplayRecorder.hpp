@@ -102,7 +102,7 @@ DECLARE_CLASS_CODEGEN_INTERFACES(BeatLeader, ReplayRecorderTicker, UnityEngine::
       GlobalNamespace::SaberManager *saberManager;
       GlobalNamespace::AudioTimeSyncController* audioTimeSyncController;
 
-      DECLARE_OVERRIDE_METHOD(void, LateTick, il2cpp_utils::il2cpp_type_check::MetadataGetter<&Zenject::ILateTickable::LateTick>::methodInfo());
+      DECLARE_OVERRIDE_METHOD(void, LateTick, ::i2c::metadata_getter<&Zenject::ILateTickable::LateTick>::method_info());
 
       DECLARE_DEFAULT_CTOR();
       DECLARE_SIMPLE_DTOR();

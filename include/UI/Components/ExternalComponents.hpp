@@ -12,7 +12,7 @@ DECLARE_CLASS_CODEGEN(QuestUI, ExternalComponents, UnityEngine::MonoBehaviour) {
     public:
         template<class T = UnityEngine::Component*>
         T Get() {
-            return (T)GetByType(csTypeOf(T));
+            return (T)GetByType(i2c::cs_type_of<T>());
         }
 
     DECLARE_INSTANCE_METHOD(void, Add, UnityEngine::Component* component); 

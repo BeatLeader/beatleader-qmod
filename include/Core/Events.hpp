@@ -1,7 +1,7 @@
 #include <functional>
 #include <string>
 #include <string_view>
-#include "metacore/shared/events.hpp"
+#include "metacore-bs/shared/events.hpp"
 #include "main.hpp"
 
 namespace BeatLeader::EventManagement {

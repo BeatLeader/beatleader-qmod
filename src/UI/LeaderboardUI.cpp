@@ -1,3 +1,5 @@
+#include "include/Utils/ArrayUtils.hpp"
+#include "beatsaber-hook/shared/safeptr.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 
 #include "UI/ExperienceBar.hpp"
@@ -39,8 +41,8 @@
 
 #include "include/Core/Events.hpp"
 
-#include "beatsaber-hook/shared/utils/hooking.hpp"
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/hooking.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/filereadstream.h"
 
 #include "bsml/shared/BSML.hpp"
@@ -89,6 +91,7 @@
 #include "GlobalNamespace/IBeatmapLevelData.hpp"
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
+#include "GlobalNamespace/BeatmapCharacteristicExtensions.hpp"
 #include "GlobalNamespace/BeatmapLevel.hpp"
 #include "GlobalNamespace/LeaderboardTableCell.hpp"
 #include "GlobalNamespace/SinglePlayerLevelSelectionFlowCoordinator.hpp"
@@ -341,7 +344,7 @@ namespace LeaderboardUI {
             ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(4);
             for (int index = 0; index < 3; ++index)
             {
-                dataItems[index] = plvc->_scopeSegmentedControl->_dataItems.get(index);
+                dataItems[index] = plvc->_scopeSegmentedControl->_dataItems[index];
             }
             dataItems[3] = BundleLoader::bundle->IconSegmentedControl;
 
@@ -350,12 +353,12 @@ namespace LeaderboardUI {
             BundleLoader::bundle->IconSegmentedControl = nullptr;
         } else {
             if (plvc->_scopeSegmentedControl->_dataItems.size() != 4) return;
-            BundleLoader::bundle->IconSegmentedControl = plvc->_scopeSegmentedControl->_dataItems.get(3);
+            BundleLoader::bundle->IconSegmentedControl = plvc->_scopeSegmentedControl->_dataItems[3];
             
             ArrayW<::HMUI::IconSegmentedControl::DataItem*> dataItems = ArrayW<::HMUI::IconSegmentedControl::DataItem*>(3);
             for (int index = 0; index < 3; ++index)
             {
-                dataItems[index] = plvc->_scopeSegmentedControl->_dataItems.get(index);
+                dataItems[index] = plvc->_scopeSegmentedControl->_dataItems[index];
             }
 
             plvc->_scopeSegmentedControl->SetData(dataItems);
@@ -441,7 +444,7 @@ namespace LeaderboardUI {
     {
         string hash = regex_replace((string)levelData.levelId, basic_regex("custom_level_"), "");
         string difficulty = MapEnhancer::DiffName(levelData.difficulty.value__);
-        string mode = (string)levelData.beatmapCharacteristic->serializedName;
+        string mode = (string)GlobalNamespace::BeatmapCharacteristicExtensions::SerializedName(levelData.characteristic);
         return make_tuple(hash, difficulty, mode);
     }
 
@@ -500,7 +503,7 @@ namespace LeaderboardUI {
                     plvc->_hasScoresData = false;
                     plvc->_loadingControl->ShowText("No scores were found!", true);
                     
-                    plvc->_leaderboardTableView->_tableView->SetDataSource(plvc->_leaderboardTableView.cast<HMUI::TableView::IDataSource>(), true);
+                    plvc->_leaderboardTableView->_tableView->SetDataSource(plvc->_leaderboardTableView->i___HMUI__TableView_IDataSource(), true);
                     return;
                 }
 
@@ -573,7 +576,7 @@ namespace LeaderboardUI {
 
                 plvc->_loadingControl->Hide();
                 plvc->_hasScoresData = true;
-                plvc->_leaderboardTableView->_tableView->SetDataSource(plvc->_leaderboardTableView.cast<HMUI::TableView::IDataSource>(), true);
+                plvc->_leaderboardTableView->_tableView->SetDataSource(plvc->_leaderboardTableView->i___HMUI__TableView_IDataSource(), true);
             });
         });
         
@@ -615,7 +618,7 @@ namespace LeaderboardUI {
                     plvc->_hasScoresData = false;
                     plvc->_loadingControl->ShowText("No clan rankings were found!", true);
                     
-                    plvc->_leaderboardTableView->_tableView->SetDataSource(plvc->_leaderboardTableView.cast<HMUI::TableView::IDataSource>(), true);
+                    plvc->_leaderboardTableView->_tableView->SetDataSource(plvc->_leaderboardTableView->i___HMUI__TableView_IDataSource(), true);
                     return;
                 }
 
@@ -655,7 +658,7 @@ namespace LeaderboardUI {
 
                 plvc->_loadingControl->Hide();
                 plvc->_hasScoresData = true;
-                plvc->_leaderboardTableView->_tableView->SetDataSource(plvc->_leaderboardTableView.cast<HMUI::TableView::IDataSource>(), true);
+                plvc->_leaderboardTableView->_tableView->SetDataSource(plvc->_leaderboardTableView->i___HMUI__TableView_IDataSource(), true);
             });
         });
 
@@ -715,7 +718,7 @@ namespace LeaderboardUI {
             plvc->_leaderboardTableView->_scores->Clear();
         }
         if (plvc->_leaderboardTableView && plvc->_leaderboardTableView->_tableView) {
-            plvc->_leaderboardTableView->_tableView->SetDataSource(plvc->_leaderboardTableView.cast<HMUI::TableView::IDataSource>(), true);
+            plvc->_leaderboardTableView->_tableView->SetDataSource(plvc->_leaderboardTableView->i___HMUI__TableView_IDataSource(), true);
         }
     }
 
@@ -770,7 +773,7 @@ namespace LeaderboardUI {
                 }
             }
 
-            ssLoadingIndicator = Resources::FindObjectsOfTypeAll<UnityEngine::GameObject*>()->FirstOrDefault([](auto x) { return x->get_name() == "ScoreSaberLoadingIndicator" && x->get_transform()->get_parent()->get_name() != "BSMLStackLayoutGroup"; });
+            ssLoadingIndicator = BeatLeader::FirstOrDefault(Resources::FindObjectsOfTypeAll<UnityEngine::GameObject*>(), [](auto x) { return x->get_name() == "ScoreSaberLoadingIndicator" && x->get_transform()->get_parent()->get_name() != "BSMLStackLayoutGroup"; });
         }
 
         if (PlayerController::currentPlayer == std::nullopt) {
@@ -794,7 +797,7 @@ namespace LeaderboardUI {
         }
 
         if (uploadStatus == NULL) {
-            auto dataItem = plvc->_scopeSegmentedControl->_dataItems.get(2);
+            auto dataItem = plvc->_scopeSegmentedControl->_dataItems[2];
             int selectedCell = plvc->_scopeSegmentedControl->selectedCellNumber;
             auto controlRectTransform = plvc->_scopeSegmentedControl->get_transform().cast<RectTransform>();
             if (showBeatLeader) {
@@ -947,7 +950,7 @@ namespace LeaderboardUI {
                     }
 
                     string url = WebUtils::WEB_URL + "leaderboard/global/" + lastLeaderboardId;
-                    static auto UnityEngine_Application_OpenURL = il2cpp_utils::resolve_icall<void, StringW>("UnityEngine.Application::OpenURL");
+                    static auto UnityEngine_Application_OpenURL = &::UnityEngine::Application::OpenURL;
                     UnityEngine_Application_OpenURL(url);
                 },
                 []() {
@@ -1023,7 +1026,7 @@ namespace LeaderboardUI {
             BeatLeader::LeaderboardHeaderManagerNS::Instance.SetBeatmap(plvc->_beatmapKey);
         }
 
-        auto dataItem = plvc->_scopeSegmentedControl->_dataItems.get(2);
+        auto dataItem = plvc->_scopeSegmentedControl->_dataItems[2];
         int selectedCell = plvc->_scopeSegmentedControl->selectedCellNumber;
         auto rectTransform = plvc->_scopeSegmentedControl->get_transform().cast<RectTransform>();
         if (showBeatLeader) {
@@ -1120,7 +1123,7 @@ namespace LeaderboardUI {
     }
 
     LeaderboardTableCell* CellForIdxReimplement(LeaderboardTableView* self, HMUI::TableView* tableView, int row) {
-        LeaderboardTableCell* leaderboardTableCell = tableView->DequeueReusableCellForIdentifier("Cell").try_cast<LeaderboardTableCell>().value_or(UnityW<LeaderboardTableCell>());
+        LeaderboardTableCell* leaderboardTableCell = tableView->DequeueReusableCellForIdentifier("Cell").try_cast<LeaderboardTableCell>();
         if (leaderboardTableCell == NULL)
         {
             leaderboardTableCell = (LeaderboardTableCell *)Object::Instantiate<LeaderboardTableCell*>(self->_cellPrefab);
@@ -1432,9 +1435,9 @@ namespace LeaderboardUI {
     UnityEngine::UI::Toggle* CreateToggle(UnityEngine::Transform* parent, bool currentValue, UnityEngine::Vector2 anchoredPosition, std::function<void(bool)> onValueChange)
     {
         // Code adapted from: https://github.com/darknight1050/bsml/blob/master/src/BeatSaberUI.cpp#L826
-        static SafePtrUnity<GameObject> toggleCopy;
+        static safe_ptr<GameObject*> toggleCopy;
         if (!toggleCopy) {
-            auto foundToggle = Resources::FindObjectsOfTypeAll<UnityEngine::UI::Toggle*>()->FirstOrDefault([](auto x) { return x->get_transform()->get_parent()->get_gameObject()->get_name() == "Fullscreen"; });
+            auto foundToggle = BeatLeader::FirstOrDefault(Resources::FindObjectsOfTypeAll<UnityEngine::UI::Toggle*>(), [](auto x) { return x->get_transform()->get_parent()->get_gameObject()->get_name() == "Fullscreen"; });
             toggleCopy = foundToggle ? foundToggle->get_transform()->get_parent()->get_gameObject() : nullptr;
         }
 

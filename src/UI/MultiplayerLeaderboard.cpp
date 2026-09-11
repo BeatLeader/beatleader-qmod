@@ -46,7 +46,7 @@ namespace MultiplayerLeaderboardManager {
         }
 
         auto beatmapKey = _levelSelectionNavigationController->beatmapKey;
-        _platformLeaderboardViewController->SetData(ByRef<GlobalNamespace::BeatmapKey>(&beatmapKey));
+        _platformLeaderboardViewController->SetData(by_ref<GlobalNamespace::BeatmapKey>(beatmapKey));
 
         _mainFlowCoordinator->YoungestChildFlowCoordinatorOrSelf()->SetRightScreenViewController(_platformLeaderboardViewController, ViewController::AnimationType::In);
         _serverPlayerListViewController->DeactivateGameObject();
@@ -66,11 +66,11 @@ namespace MultiplayerLeaderboardManager {
     }
 
     void Initialize(Zenject::DiContainer* container) {
-        _mainFlowCoordinator = reinterpret_cast<MainFlowCoordinator*>(container->Resolve(csTypeOf(MainFlowCoordinator*)));
-        _multiplayerLobbyController = reinterpret_cast<MultiplayerLobbyController*>(container->Resolve(csTypeOf(MultiplayerLobbyController*)));
-        _serverPlayerListViewController = reinterpret_cast<ServerPlayerListViewController*>(container->Resolve(csTypeOf(ServerPlayerListViewController*)));
-        _platformLeaderboardViewController = reinterpret_cast<PlatformLeaderboardViewController*>(container->Resolve(csTypeOf(PlatformLeaderboardViewController*)));
-        _levelSelectionNavigationController = reinterpret_cast<LevelSelectionNavigationController*>(container->Resolve(csTypeOf(LevelSelectionNavigationController*)));
+        _mainFlowCoordinator = reinterpret_cast<MainFlowCoordinator*>(container->Resolve(i2c::cs_type_of<MainFlowCoordinator*>()));
+        _multiplayerLobbyController = reinterpret_cast<MultiplayerLobbyController*>(container->Resolve(i2c::cs_type_of<MultiplayerLobbyController*>()));
+        _serverPlayerListViewController = reinterpret_cast<ServerPlayerListViewController*>(container->Resolve(i2c::cs_type_of<ServerPlayerListViewController*>()));
+        _platformLeaderboardViewController = reinterpret_cast<PlatformLeaderboardViewController*>(container->Resolve(i2c::cs_type_of<PlatformLeaderboardViewController*>()));
+        _levelSelectionNavigationController = reinterpret_cast<LevelSelectionNavigationController*>(container->Resolve(i2c::cs_type_of<LevelSelectionNavigationController*>()));
 
         delegate1 = custom_types::MakeDelegate<System::Action_1<UnityW<LevelSelectionNavigationController>> *>((std::function<void(UnityW<LevelSelectionNavigationController>)>)LevelSelectionNavigationControllerOndidChangeDifficultyBeatmapEvent);
         delegate2 = custom_types::MakeDelegate<System::Action_2<UnityW<LevelSelectionNavigationController>, StandardLevelDetailViewController::ContentType> *>((std::function<void(UnityW<LevelSelectionNavigationController>, StandardLevelDetailViewController::ContentType)>)LevelSelectionNavigationControllerOndidChangeLevelDetailContentEvent);

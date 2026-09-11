@@ -277,7 +277,7 @@ void BeatLeader::ScoreDetailsPopup::setButtonsMaterial() const {
 }
 
 void BeatLeader::ScoreDetailsPopup::playReplay() {
-    string directory = getDataDir(modInfo) + "replays/temp/";
+    string directory = get_data_dir(modInfo) + "replays/temp/";
     filesystem::create_directories(directory);
     string file = directory + "replay.bsor";
 

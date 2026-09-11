@@ -1,5 +1,6 @@
 #pragma once
 
+#include "beatsaber-hook/shared/safeptr.hpp"
 #include "shared/Models/TriangleRating.hpp"
 #include "Models/Player.hpp"
 
@@ -57,7 +58,7 @@ inline void EnableHorizontalFit(UnityEngine::UI::HorizontalLayoutGroup* layoutGr
 }
 
 namespace UIUtils {
-    extern SafePtrUnity<HMUI::ImageView> roundRectSprite;
+    extern safe_ptr<HMUI::ImageView*> roundRectSprite;
 
     HMUI::ImageView* getRoundRectSprite();
     void AddRoundRect(HMUI::ImageView* background);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
+#include "beatsaber-hook/shared/safeptr.hpp"
 #include "UI/ReeUIComponentV2.hpp"
 #include "UnityEngine/RectTransform.hpp"
 #include "UnityEngine/UI/ScrollRect.hpp"
@@ -38,7 +38,7 @@ public:
     bool EnsureList();
     AbstractNewsPanelComponent* TryGetUsableComponent();
 
-    SafePtr<System::Collections::Generic::List_1<UnityEngine::MonoBehaviour*>> _list;
+    safe_ptr<System::Collections::Generic::List_1<UnityEngine::MonoBehaviour*>*> _list;
 };
 
 } // namespace BeatLeader

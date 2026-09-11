@@ -1,3 +1,4 @@
+#include "beatsaber-hook/shared/safeptr.hpp"
 #include "include/Managers/LeaderboardHeaderManager.hpp"
 #include "include/UI/ModifiersUI.hpp"
 #include "include/UI/UIUtils.hpp"
@@ -11,8 +12,8 @@
 
 #include "GlobalNamespace/GameServerLobbyFlowCoordinator.hpp"
 
-#include "beatsaber-hook/shared/utils/hooking.hpp"
-#include "beatsaber-hook/shared/utils/logging.hpp"
+#include "beatsaber-hook/shared/hooking.hpp"
+#include "paper2_scotland2/shared/logger.hpp"
 
 #include "main.hpp"
 
@@ -29,7 +30,7 @@ using namespace std;
 namespace ModifiersUI {
     static UnityEngine::Color positiveColor = UnityEngine::Color(1.0, 0.0, 0.73, 1.0);
     static UnityEngine::Color negativeColor = UnityEngine::Color(0.65, 0.49, 1.0, 1.0);
-    SafePtrUnity<GameplayModifiersPanelController> modifiersPanel;
+    safe_ptr<GameplayModifiersPanelController*> modifiersPanel;
     unordered_map<string, GameplayModifierToggle*> allModifierToggles;
     unordered_map<string, float> songModifiers;
     unordered_map<string, TriangleRating> songModifierRatings;

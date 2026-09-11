@@ -6,7 +6,7 @@
   "info": {
     "name": "BeatLeader",
     "id": "BeatLeader",
-    "version": "0.9.0",
+    "version": "0.9.1",
     "url": null,
     "additionalData": {
       "overrideSoName": "libbl.so"
@@ -39,7 +39,7 @@
         "pwsh ./scripts/pull-tombstone.ps1 $0:?"
       ]
     },
-    "ndk": "^27.3.13750724",
+    "ndk": "^29.0.14206865",
     "qmodIncludeDirs": [
       "./build",
       "./extern/libs"
@@ -50,12 +50,12 @@
   "dependencies": [
     {
       "id": "beatsaber-hook",
-      "versionRange": "^6.4.2",
+      "versionRange": "^8.2.1",
       "additionalData": {}
     },
     {
       "id": "scotland2",
-      "versionRange": "^0.1.6",
+      "versionRange": "^0.1.7",
       "additionalData": {
         "includeQmod": false,
         "private": true
@@ -63,17 +63,17 @@
     },
     {
       "id": "bs-cordl",
-      "versionRange": "4008.*",
+      "versionRange": "4500.*",
       "additionalData": {}
     },
     {
       "id": "custom-types",
-      "versionRange": "^0.18.3",
+      "versionRange": "^0.20.1",
       "additionalData": {}
     },
     {
       "id": "config-utils",
-      "versionRange": "^2.0.3",
+      "versionRange": "^3.0.0",
       "additionalData": {}
     },
     {
@@ -87,38 +87,48 @@
       "additionalData": {}
     },
     {
-      "id": "sombrero",
-      "versionRange": "^0.1.43",
-      "additionalData": {}
-    },
-    {
       "id": "conditional-dependencies",
       "versionRange": "^0.3.0",
       "additionalData": {}
     },
     {
       "id": "paper2_scotland2",
-      "versionRange": "^4.6.4",
+      "versionRange": "^4.8.0",
       "additionalData": {}
     },
     {
       "id": "bsml",
-      "versionRange": "^0.4.55",
+      "versionRange": "^0.5.8",
       "additionalData": {}
     },
     {
       "id": "songcore",
-      "versionRange": "^1.1.24",
+      "versionRange": "^1.3.2",
       "additionalData": {}
     },
     {
       "id": "playlistcore",
-      "versionRange": "^1.5.5",
+      "versionRange": "^1.6.0",
       "additionalData": {}
     },
     {
       "id": "metacore",
-      "versionRange": "^1.4.0",
+      "versionRange": "^2.0.3",
+      "additionalData": {}
+    },
+    {
+      "id": "metacore-bs",
+      "versionRange": "^1.0.0",
+      "additionalData": {}
+    },
+    {
+      "id": "flamingo",
+      "versionRange": "^1.2.1",
+      "additionalData": {}
+    },
+    {
+      "id": "reflectcpp",
+      "versionRange": "^0.25.0",
       "additionalData": {}
     }
   ]
