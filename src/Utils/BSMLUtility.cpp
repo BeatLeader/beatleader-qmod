@@ -29,19 +29,22 @@ namespace BeatLeader::Utils {
         
         // Check cache first
         auto it = spriteCache.find(nameW);
-        if (it != spriteCache.end() && it->second) {
+        if (it != spriteCache.end() && it->second && it->second->m_CachedPtr.m_value) {
             return it->second;
         }
+        if (it != spriteCache.end()) spriteCache.erase(it);
 
         // Search all sprites if not in cache
         auto sprites = UnityEngine::Resources::FindObjectsOfTypeAll<UnityEngine::Sprite*>();
         UnityEngine::Sprite* result = nullptr;
 
         for (auto sprite : sprites) {
-            if (!sprite || sprite->get_name()->get_Length() == 0) continue;
+            if (!sprite || !sprite->m_CachedPtr.m_value || sprite->get_name()->get_Length() == 0) continue;
 
-            // Cache the sprite if not already cached
             StringW spriteName = sprite->get_name();
+            if (spriteName != nameW) continue;
+
+            // Keep only the requested UI sprite, not unrelated song artwork.
             auto cacheIt = spriteCache.find(spriteName);
             if (cacheIt == spriteCache.end() || !cacheIt->second) {
                 spriteCache[spriteName] = sprite;
