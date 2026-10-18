@@ -46,7 +46,7 @@ namespace MultiplayerLeaderboardManager {
         }
 
         auto beatmapKey = _levelSelectionNavigationController->beatmapKey;
-        _platformLeaderboardViewController->SetData(by_ref<GlobalNamespace::BeatmapKey>(beatmapKey));
+        _platformLeaderboardViewController->SetData(by_ref<const GlobalNamespace::BeatmapKey>(beatmapKey));
 
         _mainFlowCoordinator->YoungestChildFlowCoordinatorOrSelf()->SetRightScreenViewController(_platformLeaderboardViewController, ViewController::AnimationType::In);
         _serverPlayerListViewController->DeactivateGameObject();

@@ -1,4 +1,5 @@
 #include "System/String.hpp"
+#include "UnityEngine/Texture.hpp"
 #include "Utils/BSMLUtility.hpp"
 
 namespace BeatLeader::Utils {
