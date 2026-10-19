@@ -1,6 +1,5 @@
 #include "UI/MainMenu/Modals/EventDetailsDialog.hpp"
 
-#include "GlobalNamespace/BeatmapKey.hpp"
 #include "GlobalNamespace/LevelSelectionFlowCoordinator.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
 
@@ -43,7 +42,6 @@ namespace BeatLeader {
 
     void OpenPlaylist(PlaylistCore::Playlist* playlist) {
         GlobalNamespace::BeatmapLevelPack* playlistCS = playlist->playlistCS;
-        // Match a C# default key; the generated default constructor leaves scalars unset.
         GlobalNamespace::BeatmapKey beatmapKey(
             static_cast<GlobalNamespace::BeatmapCharacteristic>(0),
             static_cast<GlobalNamespace::BeatmapDifficulty>(0), nullptr,
@@ -124,4 +122,4 @@ namespace BeatLeader {
             </horizontal>
         )");
     }
-}
+} 
