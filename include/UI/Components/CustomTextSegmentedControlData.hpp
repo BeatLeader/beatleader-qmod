@@ -22,7 +22,6 @@ DECLARE_CLASS_CODEGEN_INTERFACES(QuestUI, CustomTextSegmentedControlData, UnityE
     DECLARE_OVERRIDE_METHOD(int, NumberOfCells, ::i2c::metadata_getter<&HMUI::SegmentedControl::IDataSource::NumberOfCells>::method_info());
     DECLARE_OVERRIDE_METHOD(HMUI::SegmentedControlCell*, CellForCellNumber, ::i2c::metadata_getter<&HMUI::SegmentedControl::IDataSource::CellForCellNumber>::method_info(), int idx);
     DECLARE_CTOR(ctor);
-    DECLARE_DTOR(dtor);
     public:
         void set_texts(ArrayW<StringW> list);
         void add_text(StringW addedText);

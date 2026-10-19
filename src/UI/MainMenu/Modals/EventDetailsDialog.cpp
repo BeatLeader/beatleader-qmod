@@ -42,7 +42,10 @@ namespace BeatLeader {
 
     void OpenPlaylist(PlaylistCore::Playlist* playlist) {
         GlobalNamespace::BeatmapLevelPack* playlistCS = playlist->playlistCS;
-        GlobalNamespace::BeatmapKey beatmapKey;
+        GlobalNamespace::BeatmapKey beatmapKey(
+            static_cast<GlobalNamespace::BeatmapCharacteristic>(0),
+            static_cast<GlobalNamespace::BeatmapDifficulty>(0), nullptr,
+            static_cast<GlobalNamespace::GameplayType>(0));
         auto levelCategory = System::Nullable_1<SelectLevelCategoryViewController::LevelCategory>();
         levelCategory.value = SelectLevelCategoryViewController::LevelCategory::CustomSongs;
         levelCategory.hasValue = true;
@@ -50,7 +53,7 @@ namespace BeatLeader {
         auto state = LevelSelectionFlowCoordinator::State::New_ctor(
             levelCategory,
             playlistCS,
-            by_ref<GlobalNamespace::BeatmapKey>(beatmapKey),
+            by_ref<const GlobalNamespace::BeatmapKey>(beatmapKey),
             nullptr);
         UnityEngine::GameObject::FindObjectOfType<SoloFreePlayFlowCoordinator*>()->Setup(state);
         auto soloButton = UnityEngine::GameObject::Find(StringW("SoloButton"));

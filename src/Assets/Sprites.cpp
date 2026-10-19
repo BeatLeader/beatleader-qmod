@@ -75,7 +75,7 @@ void Sprites::get_AnimatedIcon(string url, const std::function<void(AllFramesRes
             try {
                 // Unity 6 throws on 0x0 textures; LoadImage resizes the placeholder anyway
                 Texture2D* texture = Texture2D::New_ctor(1, 1, TextureFormat::RGBA32, false, false);
-                if (UnityEngine::ImageConversion::LoadImage(texture, spriteArray, false)) {
+                if (UnityEngine::ImageConversion::LoadImage(texture, spriteArray)) {
                     texture->set_wrapMode(TextureWrapMode::Clamp);
                     ArrayW<UnityEngine::Texture2D*> frames = ArrayW<UnityEngine::Texture2D*>(1);
                     ArrayW<float> timings = ArrayW<float> (1);

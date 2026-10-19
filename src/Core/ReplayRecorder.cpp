@@ -148,7 +148,7 @@ namespace ReplayRecorder {
         mapEnhancer.gameplayModifiers = self->gameplayModifiers;
         mapEnhancer.playerSpecificSettings = self->gameplayCoreSceneSetupData->playerSpecificSettings;
         mapEnhancer.practiceSettings = self->practiceSettings;
-        mapEnhancer.environmentName = self->beatmapLevel->GetEnvironmentName(self->beatmapKey.characteristic, self->beatmapKey.difficulty);;
+        mapEnhancer.environmentName = self->beatmapLevel->GetEnvironmentName(self->beatmapKey.gameplayType, self->beatmapKey.characteristic, self->beatmapKey.difficulty);
         mapEnhancer.colorScheme = self->colorScheme;
 
         automaticPlayerHeight = self->gameplayCoreSceneSetupData->playerSpecificSettings->automaticPlayerHeight;
@@ -206,7 +206,7 @@ namespace ReplayRecorder {
     }
 
     void processResults(LevelCompletionResults* levelCompletionResults, bool skipUpload) {
-        replay->info.score = levelCompletionResults->multipliedScore;
+        replay->info.score = levelCompletionResults->score.multiplied;
 
         mapEnhancer.energy = levelCompletionResults->energy;
         mapEnhancer.Enhance(replay.value());
@@ -230,7 +230,7 @@ namespace ReplayRecorder {
         recording = false;
         if (replay != nullopt) {
             collectMapData(self);
-            processResults(levelCompletionResults, self->gameMode == "Party");
+            processResults(levelCompletionResults, self->gameMode == GameMode::Party);
         }
     }
 
@@ -245,7 +245,7 @@ namespace ReplayRecorder {
                     auto results = levelCompletionResults->localPlayerResultData->multiplayerLevelCompletionResults->levelCompletionResults; 
                     auto playEndData = PlayEndData(results, replay->info.speed);
 
-                    replay->info.score = results->multipliedScore;
+                    replay->info.score = results->score.multiplied;
 
                     mapEnhancer.energy = results->energy;
                     mapEnhancer.Enhance(replay.value());
@@ -272,7 +272,7 @@ namespace ReplayRecorder {
         recording = false;
         if (replay != nullopt && setupData != nullptr && levelCompletionResults != nullptr) {
             collectMapData(setupData);
-            processResults(levelCompletionResults, setupData->gameMode == "Party");
+            processResults(levelCompletionResults, setupData->gameMode == GameMode::Party);
         }
     }
 
@@ -338,7 +338,7 @@ namespace ReplayRecorder {
         }
     }
 
-    MAKE_HOOK_MATCH(HandleNoteControllerNoteWasCut, &BeatmapObjectManager::HandleNoteControllerNoteWasCut, void, BeatmapObjectManager* self, NoteController* noteController, by_ref<::GlobalNamespace::NoteCutInfo> noteCutInfo) {
+    MAKE_HOOK_MATCH(HandleNoteControllerNoteWasCut, &BeatmapObjectManager::HandleNoteControllerNoteWasCut, void, BeatmapObjectManager* self, NoteController* noteController, by_ref<const ::GlobalNamespace::NoteCutInfo> noteCutInfo) {
         HandleNoteControllerNoteWasCut(self, noteController, noteCutInfo);
 
         if (replay == nullopt) return;
