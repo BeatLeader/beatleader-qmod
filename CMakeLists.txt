@@ -49,8 +49,8 @@ RECURSE_FILES(cpp_file_list ${SOURCE_DIR}/*.cpp)
 RECURSE_FILES(c_file_list ${SOURCE_DIR}/*.c)
 list(APPEND c_file_list ${INCLUDE_DIR}/zip/src/zip.c)
 
+# And64InlineHook.cpp is built from the patched copy in src/Utils
 RECURSE_FILES(src_inline_hook_beatsaber_hook_local_extra_c ${EXTERN_DIR}/includes/beatsaber-hook/shared/inline-hook/*.c)
-RECURSE_FILES(src_inline_hook_beatsaber_hook_local_extra_cpp ${EXTERN_DIR}/includes/beatsaber-hook/shared/inline-hook/*.cpp)
 
 # add all src files to compile
 add_library(
@@ -59,7 +59,6 @@ add_library(
         ${cpp_file_list}
         ${c_file_list}
         ${src_inline_hook_beatsaber_hook_local_extra_c}
-        ${src_inline_hook_beatsaber_hook_local_extra_cpp}
 )
 
 target_include_directories(${COMPILE_ID} PRIVATE .)
