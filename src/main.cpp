@@ -3,6 +3,7 @@
 #include "Utils/ReplayManager.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 #include "include/UI/ModifiersUI.hpp"
+#include "include/UI/UploadDisablersUI.hpp"
 #include "include/UI/PreferencesViewController.hpp"
 #include "include/UI/ResultsViewController.hpp"
 #include "include/UI/QuestUI.hpp"
@@ -243,6 +244,7 @@ MOD_EXPORT "C" void late_load() {
     };
 
     ModifiersUI::setup();
+    UploadDisablersUI::setup();
     DanceModeTracker::setup();
     DanceDread::setup();
     BeatLeader::DanceEventMenuDecor::setup();
