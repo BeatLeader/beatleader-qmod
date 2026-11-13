@@ -35,6 +35,14 @@ add_compile_options(-O3)
 add_compile_definitions(VERSION=\"${MOD_VERSION}\")
 add_compile_definitions(MOD_ID=\"${MOD_ID}\")
 add_compile_definitions(USE_CODEGEN_FIELDS)
+set(BL_TEST_USER_AGENT "" CACHE STRING "User agent override for testing")
+if(BL_TEST_USER_AGENT)
+    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/Utils/WebUtils.cpp PROPERTIES COMPILE_DEFINITIONS BL_TEST_USER_AGENT=\"${BL_TEST_USER_AGENT}\")
+endif()
+option(BL_DEV_AUTOPLAY "Start a level from the main menu for testing" OFF)
+if(BL_DEV_AUTOPLAY)
+    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/Dev/AutoPlay.cpp PROPERTIES COMPILE_DEFINITIONS BL_DEV_AUTOPLAY)
+endif()
 
 # recursively get all src files
 RECURSE_FILES(cpp_file_list ${SOURCE_DIR}/*.cpp)
@@ -70,6 +78,8 @@ target_include_directories(${COMPILE_ID} PRIVATE ${EXTERN_DIR}/includes/${CODEGE
 target_include_directories(${COMPILE_ID} PRIVATE include/zip/src)
 
 target_link_libraries(${COMPILE_ID} PRIVATE -llog -lz)
+# Build the ModifiersCoreQuest submodule first (cmake -B ModifiersCoreQuest/build ModifiersCoreQuest)
+target_link_libraries(${COMPILE_ID} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ModifiersCoreQuest/build/libModifiersCoreQuest.so)
 # add extern stuff like libs and other includes
 include(extern.cmake)
 

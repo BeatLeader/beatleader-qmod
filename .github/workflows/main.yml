@@ -124,6 +124,14 @@ jobs:
           resolve_ndk: true
           cache: true
 
+      - name: Build ModifiersCoreQuest
+        run: |
+          cd ModifiersCoreQuest
+          qpm restore
+          if [ -f ../ndkpath.txt ]; then cp ../ndkpath.txt .; fi
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -B build
+          cmake --build build
+
       - name: Build & Create Qmod
         run: |
           qpm s build

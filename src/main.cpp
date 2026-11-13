@@ -12,7 +12,10 @@
 #include "include/API/PlayerController.hpp"
 #include "include/Core/ReplayRecorder.hpp"
 #include "include/Core/Events.hpp"
-#include "Core/SpeedModifiers.hpp"
+#include "include/Core/SpeedModifiers.hpp"
+#include "include/Core/Dance/DanceModeTracker.hpp"
+#include "include/Core/Dance/DanceDread.hpp"
+#include "include/UI/MainMenu/DanceEvent/DanceEventMenuDecor.hpp"
 
 #include "include/Assets/BundleLoader.hpp"
 #include "include/Assets/Sprites.hpp"
@@ -50,6 +53,10 @@
 using namespace GlobalNamespace;
 using namespace BSML;
 
+#ifdef BL_DEV_AUTOPLAY
+void AutoPlaySetup();
+#endif
+
 // Called at the early stages of game loading
 MOD_EXPORT void setup(CModInfo *info) noexcept {
     *info = modInfo.to_c();
@@ -57,8 +64,8 @@ MOD_EXPORT void setup(CModInfo *info) noexcept {
     getModConfig().Init(modInfo);
 
     Paper::Logger::RegisterFileContextId(BeatLeaderLogger.tag);
-    
-    // Hook as early as possible so we get our hook before JDFixer
+
+    // Here and not in late_load, to hook before JDFixer
     SpeedModifiers::setup();
 
     BeatLeaderLogger.info("Completed setup!");
@@ -236,6 +243,12 @@ MOD_EXPORT "C" void late_load() {
     };
 
     ModifiersUI::setup();
+    DanceModeTracker::setup();
+    DanceDread::setup();
+    BeatLeader::DanceEventMenuDecor::setup();
+#ifdef BL_DEV_AUTOPLAY
+    AutoPlaySetup();
+#endif
     ResultsView::setup();
 
     PlayerController::playerChanged.emplace_back([](optional<Player> const& updated) {

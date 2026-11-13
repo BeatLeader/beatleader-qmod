@@ -1,8 +1,7 @@
 #include "Assets/BundleLoader.hpp"
 
 #include "include/Utils/StringUtils.hpp"
-#include "ModifiersCoreQuest/shared/Core/ModifiersManager.hpp"
-#include "/Core/SpeedModifiers.hpp"
+#include "include/Core/CustomModifiers.hpp"
 
 #include <utility>
 #include "main.hpp"
@@ -30,15 +29,8 @@ custom_types::Helpers::Coroutine BundleLoader::LoadBundle(UnityEngine::GameObjec
 
     bundle = container->AddComponent<BeatLeader::Bundle*>();
     bundle->Init(assetBundle);
+    CustomModifiers::Register();
 
-    // TODO make this a callback
-    if (!ModifiersCoreQuest::ModifiersManager::HasModifierWithId(SpeedModifiers::get_BFS().Id)) {
-        ModifiersCoreQuest::ModifiersManager::AddModifier(SpeedModifiers::get_BFS());
-    }
-    if (!ModifiersCoreQuest::ModifiersManager::HasModifierWithId(SpeedModifiers::get_BSF().Id)) {
-        ModifiersCoreQuest::ModifiersManager::AddModifier(SpeedModifiers::get_BSF());
-    }
-    
     co_return;
 }
 
@@ -142,6 +134,7 @@ void BeatLeader::Bundle::Init(AssetBundle* assetBundle) {
 
     BFSIcon = GetSprite("BL_BFSIcon");
     BSFIcon = GetSprite("BL_BSFIcon");
+    golfIcon = GetSprite("BL_ContextGolf");
 
     TMP_SpriteCurved = assetBundle->LoadAsset<Shader*>("TMP_SpriteCurved");
 

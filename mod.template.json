@@ -11,7 +11,8 @@
   "description": "beatleader.com | In-game leaderboards for custom and OST maps | Score replays | Clans, events, playlists and much more",
   "modFiles": [],
   "lateModFiles": [
-    "${binary}"
+    "${binary}",
+    "libModifiersCoreQuest.so"
   ],
   "libraryFiles": []
 }

@@ -26,6 +26,7 @@ DECLARE_CONFIG(ModConfig) {
     CONFIG_VALUE(ShowBeatleader, bool, "Show BeatLeader", true, "Priority for BeatLeader or SS");
     CONFIG_VALUE(StarValueToShow, int, "Display Stars", 0);
     CONFIG_VALUE(Context, int, "Selected Context", static_cast<int>(LeaderboardUI::Context::Standard));
+    CONFIG_VALUE(ManualContext, int, "Manual Context", -1);
     CONFIG_VALUE(CaptureActive, bool, "Show Leaderboard clan capture status", true);
     CONFIG_VALUE(NoticeboardEnabled, bool, "Show Noticeboard in main menu", true);
     CONFIG_VALUE(ExperienceBarEnabled, bool, "Show experience bar", true);
@@ -42,7 +43,12 @@ inline ReplaySaveMode GetReplaySaveMode() {
 }
 
 inline bool UploadEnabled() {
-    return !MetaCore::Game::IsScoreSubmissionDisabled();
+    for (auto const& disabler : MetaCore::Game::GetScoreSubmissionDisablers()) {
+        if (disabler != MOD_ID) {
+            return false;
+        }
+    }
+    return true;
 }
 
 inline bool UploadDisabledByReplay() {
@@ -60,6 +66,7 @@ inline std::string UploadDisablers() {
     // Add MetaCore disablers
     auto metacoreDisablers = MetaCore::Game::GetScoreSubmissionDisablers();
     for (auto disabler : metacoreDisablers) {
+        if (disabler == MOD_ID) continue;
         // Only add if not already present
         if (std::find(disablers.begin(), disablers.end(), disabler) == disablers.end()) {
             disablers.push_back(disabler);

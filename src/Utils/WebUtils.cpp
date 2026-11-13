@@ -38,6 +38,9 @@ namespace WebUtils {
             break;
         }
         USER_AGENT = "BeatLeader / " + modInfo.version + " (BeatSaber/" + (string)UnityEngine::Application::get_version() + ") (Oculus)";
+#ifdef BL_TEST_USER_AGENT
+        USER_AGENT = BL_TEST_USER_AGENT;
+#endif
     }
 
     //https://stackoverflow.com/a/55660581

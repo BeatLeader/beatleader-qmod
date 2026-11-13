@@ -20,6 +20,7 @@
 #include "Utils/ReplayManager.hpp"
 #include "UI/LeaderboardUI.hpp"
 #include "UI/QuestUI.hpp"
+#include "UI/Results/DanceResultsUI.hpp"
 #include "beatsaber-hook/shared/utils/il2cpp-functions.hpp"
 #include "custom-types/shared/delegate.hpp"
 #include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
@@ -99,11 +100,14 @@ namespace ResultsView {
 
         // Load initial status
         LeaderboardUI::updateVotingButton();
+
+        DanceResultsUI::Setup(self, lastGameWasReplay);
     }
 
     void setup() {
         INSTALL_HOOK(BeatLeaderLogger, GetLastReplayStateHook);
         INSTALL_HOOK(BeatLeaderLogger, ResultsViewDidActivate);
+        DanceResultsUI::setup();
     }
 
     void reset() {

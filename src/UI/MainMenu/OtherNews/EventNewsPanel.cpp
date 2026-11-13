@@ -2,6 +2,8 @@
 #include "Utils/FormatUtils.hpp"
 #include "UI/Abstract/ReeModalSystem.hpp"
 #include "UI/MainMenu/Modals/EventDetailsDialog.hpp"
+#include "UI/MainMenu/BeatLeaderNewsViewController.hpp"
+#include "Core/Dance/DanceEvent.hpp"
 
 #include "Models/Paged.hpp"
 #include "Models/PlatformEvent.hpp"
@@ -31,6 +33,8 @@ namespace BeatLeader {
             if (status == 200 && !error) {
                 auto result = Paged<PlatformEvent>(response.GetObject());
                 BSML::MainThreadScheduler::Schedule([this, result] {
+                    DanceEvent::SetEvents(result.data);
+
                     auto* localComponent = TryGetUsableComponent();
                     if (!localComponent || !localComponent->_loadingIndicator || !localComponent->_emptyText) {
                         return;
@@ -95,6 +99,12 @@ namespace BeatLeader {
             System::Action* action = custom_types::MakeDelegate<System::Action*>((std::function<void()>)[item, this]() {
                 auto* localComponent = this->TryGetUsableComponent();
                 if (!localComponent || !localComponent->_content) {
+                    return;
+                }
+
+                auto const& dance = DanceEvent::Current();
+                if (item.eventType == DanceEvent::EventType && dance && dance->id == item.id) {
+                    BeatLeaderNewsViewController::PresentDanceEventPanel();
                     return;
                 }
 

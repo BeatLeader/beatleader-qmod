@@ -34,6 +34,7 @@
 #include "include/Utils/ModConfig.hpp"
 
 #include "include/Managers/LeaderboardContextsManager.hpp"
+#include "include/Managers/LeaderboardContextSwitcher.hpp"
 #include "include/Managers/LeaderboardHeaderManager.hpp"
 #include "include/Managers/PrestigeLevelIconsManager.hpp"
 
@@ -727,6 +728,26 @@ namespace LeaderboardUI {
         }
     }
 
+    void selectContext(int contextId) {
+        // Set the new value
+        getModConfig().Context.SetValue(contextId);
+        if (!plvc || !contextsButton) {
+            return;
+        }
+        // Clear the leaderboard
+        clearTable();
+        // Refresh the context button icon
+        updateModifiersButton();
+        // Fill the leaderboard
+        refreshFromTheServerCurrent();
+        // Refresh the player rank
+        PlayerController::Refresh(0, [](auto player, auto str){
+            BSML::MainThreadScheduler::Schedule([]{
+                LeaderboardUI::updatePlayerRank();
+            });
+        });
+    }
+
     void PageDown() {
         page++;
 
@@ -1352,22 +1373,10 @@ namespace LeaderboardUI {
         int i = 0;
         for (const auto& context : ScoresContexts::allContexts) {
             BSML::Lite::CreateUIButton(container->get_transform(), context->name, {20.0f, static_cast<float>(-6 - (i + 1) * 10)}, [context](){
-                // Set the new value
-                getModConfig().Context.SetValue(context->id);
                 // Hide the modal
                 contextsContainer->Hide(true, nullptr);
-                // Clear the leaderboard
-                clearTable();
-                // Refresh the context button icon
-                updateModifiersButton();
-                // Fill the leaderboard
-                refreshFromTheServerCurrent();
-                // Refresh the player rank
-                PlayerController::Refresh(0, [](auto player, auto str){
-                    BSML::MainThreadScheduler::Schedule([]{
-                        LeaderboardUI::updatePlayerRank();
-                    });
-                });
+                BeatLeader::LeaderboardContextSwitcher::HandleManualContextChange();
+                selectContext(context->id);
             });
             i++;
         }

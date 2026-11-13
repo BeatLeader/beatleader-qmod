@@ -248,7 +248,7 @@ namespace BeatLeader {
             return;
         }
 
-        ModifiersUI::SetSongModifiers(diffIt->second.modifierValues, diffIt->second.modifiersRating);
+        ModifiersUI::SetSongModifiers(diffIt->second.modifierValues, diffIt->second.modifiersRating, diffIt->second.status);
         _infoPanel->SetMapDifficulty(diffIt->second);
         if (_mapDifficultyPanel) {
             _mapDifficultyPanel->SetDifficulty(diffIt->second);

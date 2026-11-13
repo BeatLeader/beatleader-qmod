@@ -5,10 +5,10 @@
 #include "GlobalNamespace/BeatmapLevel.hpp"
 
 #include "ModifiersCoreQuest/shared/Core/ModifiersManager.hpp"
-#include "ModifiersCoreQuest/shared/Utils/ModifierUtils.hpp"
+#include "include/Core/CustomModifiers.hpp"
+#include "include/Core/Dance/DanceModeTracker.hpp"
 
 #include "conditional-dependencies/shared/main.hpp"
-#include "main.hpp"
 
 #include <regex>
 #include <sstream>
@@ -65,9 +65,9 @@ vector<string> MapEnhancer::Modifiers() const {
     if (gameplayModifiers->instaFail) { result.emplace_back("IF"); }
     if (gameplayModifiers->energyType == GameplayModifiers::EnergyType::Battery && !reBeatEnabled) { result.emplace_back("BE"); }
 
-    for (auto const& m : ModifiersCoreQuest::ModifiersManager::get_CustomModifiers()) {
-        if (ModifiersCoreQuest::ModifiersManager::GetModifierState(m.Id)) {
-            result.emplace_back(m.Id);
+    for (auto const& modifier : ModifiersCoreQuest::ModifiersManager::get_CustomModifiers()) {
+        if (CustomModifiers::IsActive(modifier.Id) && (modifier.Id != DanceModifier::Id || DanceModeTracker::RanThisLevel())) {
+            result.emplace_back(modifier.Id);
         }
     }
 

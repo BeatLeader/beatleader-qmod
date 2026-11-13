@@ -9,11 +9,39 @@
 #include "shared/Models/Score.hpp"
 #include "include/main.hpp"
 
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
+
 #include <sys/stat.h>
 #include <stdio.h>
 
 namespace {
     bool lastReplayShouldPersist = false;
+
+    PlayUpload lastPlayUpload;
+    vector<function<void()>> playUploadListeners;
+
+    void NotifyPlayUpload() {
+        auto listeners = playUploadListeners;
+        for (auto const& listener : listeners) {
+            listener();
+        }
+    }
+
+    void StartPlayUpload() {
+        lastPlayUpload.started = true;
+        lastPlayUpload.done = false;
+        lastPlayUpload.result = std::nullopt;
+        NotifyPlayUpload();
+    }
+
+    void FinishPlayUpload(int play, std::optional<ScoreUpload> result) {
+        BSML::MainThreadScheduler::Schedule([play, result] {
+            if (lastPlayUpload.play != play) return;
+            lastPlayUpload.done = true;
+            lastPlayUpload.result = result;
+            NotifyPlayUpload();
+        });
+    }
 
     bool ShouldKeepReplayLocally(PlayEndData const& status) {
         if (!getModConfig().SaveLocalReplays.GetValue()) {
@@ -44,8 +72,19 @@ namespace {
 string ReplayManager::lastReplayFilename = "";
 PlayEndData ReplayManager::lastReplayStatus = PlayEndData(LevelEndType::Fail, 0);
 
+PlayUpload const& ReplayManager::LastPlayUpload() {
+    return lastPlayUpload;
+}
+
+void ReplayManager::AddPlayUploadListener(function<void()> listener) {
+    playUploadListeners.push_back(std::move(listener));
+}
+
 void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool skipUpload, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
                                                                                   int)> const &finished) {
+    lastPlayUpload = PlayUpload { .play = lastPlayUpload.play + 1 };
+    NotifyPlayUpload();
+
     if (status.GetEndType() == LevelEndType::Unknown) {
         return;
     }
@@ -113,13 +152,15 @@ void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool
         return;
     }
 
-    TryPostReplay(filename, status, 0, shouldPersistReplay, finished);
+    StartPlayUpload();
+    TryPostReplay(filename, status, 0, shouldPersistReplay, finished, lastPlayUpload.play);
 }
 
 void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex, bool keepLocalReplay, function<void(ReplayUploadStatus, std::optional<ScoreUpload>, string, float,
-                                                                                int)> const &finished) {
+                                                                                int)> const &finished, int play) {
     struct stat file_info;
     if (stat(name.data(), &file_info) != 0) {
+        FinishPlayUpload(play, std::nullopt);
         return;
     }
 
@@ -135,7 +176,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
     FILE *replayFile = fopen(name.data(), "rb");
     chrono::steady_clock::time_point replayPostStart = chrono::steady_clock::now();
     
-    WebUtils::PostFileAsync(WebUtils::API_URL + "v2/replayoculus" + status.ToQueryString(), replayFile, (long)file_info.st_size, [name, tryIndex, finished, replayFile, replayPostStart, runCallback, status, keepLocalReplay](long statusCode, string result, string headers) {
+    WebUtils::PostFileAsync(WebUtils::API_URL + "v2/replayoculus" + status.ToQueryString(), replayFile, (long)file_info.st_size, [name, tryIndex, finished, replayFile, replayPostStart, runCallback, status, keepLocalReplay, play](long statusCode, string result, string headers) {
         fclose(replayFile);
         if ((statusCode >= 450 || statusCode < 200) && tryIndex < 2) {
             BeatLeaderLogger.info("{}", ("Retrying posting replay after " + to_string(statusCode) + " #" + to_string(tryIndex) + " " + std::string(result)).c_str());
@@ -145,13 +186,14 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
             if (runCallback) {
                 finished(ReplayUploadStatus::inProgress, std::nullopt, "<color=#ffff00ff>Retrying posting replay after " + to_string(statusCode) + " try #" + to_string(tryIndex) + " " + std::string(result) + "</color>", 0, statusCode);
             }
-            TryPostReplay(name, status, tryIndex + 1, keepLocalReplay, finished);
+            TryPostReplay(name, status, tryIndex + 1, keepLocalReplay, finished, play);
         } else if (statusCode == 200) {
             auto duration = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now() - replayPostStart).count();
             BeatLeaderLogger.info("{}", ("Replay was posted! It took: " + to_string((int)duration) + "msec. \n").c_str());
             rapidjson::Document document;
             document.Parse(result.data());
-            ScoreUpload object = ScoreUpload(document.GetObject());
+            ScoreUpload object = ScoreUpload(document);
+            FinishPlayUpload(play, object);
             switch (object.status) {
                 case ScoreUploadStatus::Uploaded:
                     finished(ReplayUploadStatus::finished, object, "<color=#20BB20ff>Replay was posted!</color>", 100, statusCode);
@@ -175,6 +217,7 @@ void ReplayManager::TryPostReplay(string name, PlayEndData status, int tryIndex,
                 result = "Timed out";
             }
             BeatLeaderLogger.error("{}", ("Replay was not posted! " + to_string(statusCode) + result).c_str());
+            FinishPlayUpload(play, std::nullopt);
             if (runCallback) {
                 finished(ReplayUploadStatus::error, std::nullopt, std::string("<color=#BB2020ff>Replay was not posted. " + result), 0, statusCode);
             }
@@ -191,7 +234,8 @@ void ReplayManager::RetryPosting(const std::function<void(ReplayUploadStatus, st
         return;
     }
 
-    TryPostReplay(lastReplayFilename, lastReplayStatus, 0, lastReplayShouldPersist, finished);
+    StartPlayUpload();
+    TryPostReplay(lastReplayFilename, lastReplayStatus, 0, lastReplayShouldPersist, finished, lastPlayUpload.play);
 };
 
 int ReplayManager::GetLocalScore(string filename) {

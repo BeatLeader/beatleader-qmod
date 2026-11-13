@@ -29,6 +29,7 @@ namespace LeaderboardUI {
     void hideVotingUIs();
     void hidePopups();
     void updatePlayerRank();
+    void selectContext(int contextId);
     UnityEngine::UI::Toggle* CreateToggle(UnityEngine::Transform* parent, bool currentValue, UnityEngine::Vector2 anchoredPosition, std::function<void(bool)> onValueChange);
 
     enum class Context

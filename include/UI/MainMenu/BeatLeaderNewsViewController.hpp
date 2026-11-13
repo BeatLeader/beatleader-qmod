@@ -9,11 +9,14 @@
 #include "UI/MainMenu/TextNews/TextNewsPanel.hpp"
 #include "UI/MainMenu/OtherNews/MapNewsPanel.hpp"
 #include "UI/MainMenu/OtherNews/EventNewsPanel.hpp"
+#include "UI/MainMenu/DanceEvent/DanceEventPanel.hpp"
 
 DECLARE_CLASS_CODEGEN(BeatLeader, BeatLeaderNewsViewController, HMUI::ViewController) {
     DECLARE_INSTANCE_FIELD(BeatLeader::AbstractNewsPanelComponent*, textNewsPanel);
     DECLARE_INSTANCE_FIELD(BeatLeader::AbstractNewsPanelComponent*, mapNewsPanel);
     DECLARE_INSTANCE_FIELD(BeatLeader::AbstractNewsPanelComponent*, eventNewsPanel);
+    DECLARE_INSTANCE_FIELD(BeatLeader::DanceEventPanelComponent*, danceEventPanel);
+    DECLARE_INSTANCE_FIELD(bool, dancePresented);
     
     DECLARE_INSTANCE_FIELD(UnityEngine::RectTransform*, screenTransform);
     DECLARE_INSTANCE_FIELD(UnityEngine::Vector2, originalScreenSize);
@@ -31,9 +34,16 @@ DECLARE_CLASS_CODEGEN(BeatLeader, BeatLeaderNewsViewController, HMUI::ViewContro
     DECLARE_INSTANCE_METHOD(bool, LazyInitializeScreen);
     DECLARE_INSTANCE_METHOD(void, UpdateScreen);
     DECLARE_INSTANCE_METHOD(void, RevertScreenChanges);
+
+    DECLARE_INSTANCE_METHOD(void, CheckDanceEvent);
+    DECLARE_INSTANCE_METHOD(void, PresentDanceEvent);
+    DECLARE_INSTANCE_METHOD(void, HideDanceEvent);
+    DECLARE_INSTANCE_METHOD(void, RefreshDanceEvent);
+    DECLARE_INSTANCE_METHOD(void, ApplyDancePresentation);
     
     public:
         static UnityEngine::Vector2 GetTargetScreenSize();
+        static void PresentDanceEventPanel();
         static constexpr const char* get_content() {
             return R"(
                 <bg id='root-object'
@@ -51,6 +61,9 @@ DECLARE_CLASS_CODEGEN(BeatLeader, BeatLeaderNewsViewController, HMUI::ViewContro
                                 <macro.reparent transform="_uiComponent"/>
                             </macro.as-host>
                             <macro.as-host host="mapNewsPanel">
+                                <macro.reparent transform="_uiComponent"/>
+                            </macro.as-host>
+                            <macro.as-host host="danceEventPanel">
                                 <macro.reparent transform="_uiComponent"/>
                             </macro.as-host>
                         </vertical>

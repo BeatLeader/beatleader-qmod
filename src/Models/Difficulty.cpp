@@ -1,6 +1,5 @@
 #include "shared/Models/Difficulty.hpp"
 #include "shared/Models/TriangleRating.hpp"
-#include "main.hpp"
 
 Difficulty::Difficulty(rapidjson::Value const& document) {
     status = document["status"].GetInt();
@@ -30,9 +29,12 @@ Difficulty::Difficulty(rapidjson::Value const& document) {
         }
 
         // Extract aspect (tech, acc, pass, stars) and shorten key (to fs/sf/ss/bfs/bsf)
-        int shortKeyLength = key.starts_with('b') ? 3 : 2;
-        string aspect = key.substr(shortKeyLength);
-        key = key.substr(0, shortKeyLength);
+        size_t aspectStart = key.find_first_of("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        if (aspectStart == 0 || aspectStart == string::npos) {
+            continue;
+        }
+        string aspect = key.substr(aspectStart);
+        key = key.substr(0, aspectStart);
 
         // Normalize key
         std::transform(key.begin(), key.end(), key.begin(), ::toupper);
@@ -47,11 +49,6 @@ Difficulty::Difficulty(rapidjson::Value const& document) {
             modifiersRating[key].accRating = value;
         else if (aspect == "PassRating")
             modifiersRating[key].passRating = value;
-        // Not used ingame for now (its "predicted average accuracy of top 10 players on this map")
-        else if (aspect == "PredictedAcc"){}
-        // Should never happen but so we notice when something goes wrong
-        else
-            modifiersRating[key].stars = -1;
     }
 
     // Load non modifier rating for this diff
