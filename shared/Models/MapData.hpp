@@ -1,6 +1,6 @@
 #pragma once
 #include "MapDetail.hpp"
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 
 class MapData {
 public:

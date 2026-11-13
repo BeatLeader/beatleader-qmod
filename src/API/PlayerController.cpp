@@ -5,7 +5,6 @@
 #include "include/main.hpp"
 #include "include/UI/LeaderboardUI.hpp"
 
-#include "GlobalNamespace/IPlatformUserModel.hpp"
 #include "GlobalNamespace/UserInfo.hpp"
 #include "GlobalNamespace/PlatformLeaderboardsModel.hpp"
 
@@ -15,8 +14,8 @@
 
 #include "UnityEngine/Resources.hpp"
 
-#include "beatsaber-hook/shared/utils/hooking.hpp"
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/hooking.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 
 #include <algorithm>
 #include <atomic>

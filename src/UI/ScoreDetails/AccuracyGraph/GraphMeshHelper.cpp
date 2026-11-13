@@ -58,7 +58,7 @@ void BeatLeader::GraphMeshHelper::PopulateMesh(UnityEngine::UI::VertexHelper* vh
 
             vh->AddVert(
                 UnityEngine::Vector3(screenVertexPosition.x, screenVertexPosition.y, 0),
-                UnityEngine::Color32(0, 1, 1, 1, 1),
+                UnityEngine::Color32(0, 255, 255, 255, 255),
                 UnityEngine::Vector4::op_Implicit___UnityEngine__Vector4(uv0[vertexIndex]),
                 UnityEngine::Vector4::op_Implicit___UnityEngine__Vector4(screenNormalizedPosition),
                 UnityEngine::Vector4::op_Implicit___UnityEngine__Vector4(UnityEngine::Vector2(canvasRadius, 0)),

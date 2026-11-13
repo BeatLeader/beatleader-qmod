@@ -15,9 +15,9 @@ void BeatLeader::SimpleClickHandler::ctor() {
     INVOKE_CTOR();
     clickEvent = ClickEvent();
     
-    static auto base_ctor = il2cpp_utils::FindMethod(classof(UnityEngine::EventSystems::UIBehaviour*), ".ctor");
+    static auto base_ctor = i2c::find_method(::i2c::class_of<UnityEngine::EventSystems::UIBehaviour*>(), ".ctor");
     if (base_ctor) {
-        il2cpp_utils::RunMethod(this, base_ctor);
+        i2c::run_method(this, base_ctor);
     }
 }
 

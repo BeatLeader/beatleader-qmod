@@ -78,7 +78,11 @@ void BeatLeader::AccuracyGraph::Setup(ArrayW<float> points, float songDuration) 
     vector<Sombrero::FastVector2> positions;
     AccuracyGraphUtils::PostProcessPoints(points, &positions, &viewRect);
     
-    this->graphLine->Setup(ArrayW<UnityEngine::Vector2>(il2cpp_utils::vectorToArray(positions)), viewRect, GetCanvasRadius());
+    ArrayW<UnityEngine::Vector2> positionsArray(positions.size());
+    for (size_t i = 0; i < positions.size(); i++) {
+        positionsArray[i] = positions[i];
+    }
+    this->graphLine->Setup(positionsArray, viewRect, GetCanvasRadius());
     this->songDuration = songDuration;
 
     auto viewRectVector = UnityEngine::Vector4(viewRect.m_XMin, viewRect.m_YMin, viewRect.m_Width + viewRect.m_XMin, viewRect.m_YMin + viewRect.m_Height);

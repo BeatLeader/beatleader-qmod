@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 
 template<typename T>
 class Paged {

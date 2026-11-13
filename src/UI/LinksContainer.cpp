@@ -38,7 +38,7 @@ void BeatLeader::initLinksContainerPopup(BeatLeader::LinksContainerPopup** modal
     modalUI->versionText = CreateText(modalTransform, "Loading...", UnityEngine::Vector2(-11, 18.0));
     CreateText(modalTransform, "<u>These buttons will open the browser!", UnityEngine::Vector2(-22.0, 10.0));
 
-    static auto UnityEngine_Application_OpenURL = il2cpp_utils::resolve_icall<void, StringW>("UnityEngine.Application::OpenURL");
+    static auto UnityEngine_Application_OpenURL = &::UnityEngine::Application::OpenURL;
 
     modalUI->profile = ::BSML::Lite::CreateClickableImage(modalTransform, BundleLoader::bundle->websiteLinkIcon, [](){
         string url = WebUtils::WEB_URL;

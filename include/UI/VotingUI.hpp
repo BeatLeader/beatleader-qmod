@@ -17,7 +17,7 @@
 #include "include/UI/PlayerAvatar.hpp"
 
 enum MapType {
-    notSelected = 1 << -1,
+    notSelected = 0,
     acc = 1 << 0,
     tech = 1 << 1,
     midspeed = 1 << 2,

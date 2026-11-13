@@ -5,10 +5,10 @@
 #include "GlobalNamespace/StandardLevelDetailView.hpp"
 #include "GlobalNamespace/LevelParamsPanel.hpp"
 
-#include "beatsaber-hook/shared/utils/hooking.hpp"
+#include "beatsaber-hook/shared/hooking.hpp"
 #include "bsml/shared/BSML-Lite.hpp"
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
-#include "metacore/shared/events.hpp"
+#include "metacore-bs/shared/events.hpp"
 #include "scotland2/shared/modloader.h"
 
 #include "TMPro/TextMeshProUGUI.hpp"
@@ -17,7 +17,7 @@
 using namespace GlobalNamespace;
 
 namespace UploadDisablersUI {
-    static SafePtrUnity<TMPro::TextMeshProUGUI> label;
+    static safe_ptr<TMPro::TextMeshProUGUI*> label;
     static bool bslInstalled = false;
     static bool creationScheduled = false;
 
@@ -46,7 +46,7 @@ namespace UploadDisablersUI {
 
         if (!label && !creationScheduled && self->_beatmapLevel) {
             creationScheduled = true;
-            SafePtrUnity<StandardLevelDetailView> view = self;
+            safe_ptr<StandardLevelDetailView*> view = self;
             // A frame later, so BetterSongList has already cloned the panel with its children in its own RefreshContent hook
             BSML::MainThreadScheduler::ScheduleNextFrame([view] {
                 creationScheduled = false;

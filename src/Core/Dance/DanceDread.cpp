@@ -1,12 +1,13 @@
+#include "include/Utils/ArrayUtils.hpp"
 #include "include/Core/Dance/DanceDread.hpp"
 #include "include/Core/Dance/DanceDreadParts.hpp"
 #include "include/Core/Dance/DanceEvent.hpp"
 #include "include/Core/CustomModifiers.hpp"
 #include "include/Enhancers/MapEnhancer.hpp"
 
-#include "GlobalNamespace/AudioManagerSO.hpp"
+#include "GlobalNamespace/AudioManager.hpp"
 #include "GlobalNamespace/AudioTimeSyncController.hpp"
-#include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
+#include "GlobalNamespace/BeatmapCharacteristicExtensions.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/BeatmapKey.hpp"
 #include "GlobalNamespace/BloomFogEnvironmentParams.hpp"
@@ -16,12 +17,12 @@
 #include "GlobalNamespace/GameEnergyCounter.hpp"
 #include "GlobalNamespace/GamePause.hpp"
 #include "GlobalNamespace/GameplayCoreSceneSetupData.hpp"
-#include "GlobalNamespace/HapticFeedbackManager.hpp"
+#include "BeatSaber/Haptics/HapticFeedbackManager.hpp"
 #include "GlobalNamespace/IBpmController.hpp"
 #include "GlobalNamespace/IGamePause.hpp"
 #include "GlobalNamespace/MainAudioEffects.hpp"
 #include "GlobalNamespace/PlayerSpecificSettings.hpp"
-#include "Libraries/HM/HMLib/VR/HapticPresetSO.hpp"
+#include "BeatSaber/Haptics/HapticPresetSO.hpp"
 #include "System/Type.hpp"
 #include "UnityEngine/Audio/AudioMixer.hpp"
 #include "UnityEngine/AudioLowPassFilter.hpp"
@@ -39,7 +40,8 @@
 #include <cmath>
 
 using namespace GlobalNamespace;
-using Libraries::HM::HMLib::VR::HapticPresetSO;
+using BeatSaber::Haptics::HapticFeedbackManager;
+using BeatSaber::Haptics::HapticPresetSO;
 using UnityEngine::Vector3;
 
 namespace DanceDread {
@@ -72,15 +74,15 @@ namespace DanceDread {
     static std::string levelHash;
     static std::string levelDifficulty;
     static std::string levelMode;
-    static SafePtr<Zenject::DiContainer> levelContainer;
+    static safe_ptr<Zenject::DiContainer*> levelContainer;
 
-    static SafePtrUnity<AudioTimeSyncController> timeSyncController;
-    static SafePtrUnity<GameEnergyCounter> energyCounter;
-    static SafePtr<BpmController> bpmController;
-    static SafePtr<GamePause> gamePause;
-    static SafePtrUnity<MainAudioEffects> mainAudioEffects;
-    static SafePtrUnity<AudioManagerSO> audioManager;
-    static SafePtrUnity<HapticFeedbackManager> hapticFeedbackManager;
+    static safe_ptr<AudioTimeSyncController*> timeSyncController;
+    static safe_ptr<GameEnergyCounter*> energyCounter;
+    static safe_ptr<BpmController*> bpmController;
+    static safe_ptr<GamePause*> gamePause;
+    static safe_ptr<MainAudioEffects*> mainAudioEffects;
+    static safe_ptr<AudioManager*> audioManager;
+    static safe_ptr<HapticFeedbackManager*> hapticFeedbackManager;
 
     // Zenject's TryResolve still throws when there are several bindings
     static System::Object* TryResolve(Zenject::DiContainer* container, System::Type* type) {
@@ -94,18 +96,18 @@ namespace DanceDread {
 
     template <typename T, typename Bound = T>
     static T* Resolve(Zenject::DiContainer* container) {
-        return il2cpp_utils::try_cast<T>(TryResolve(container, csTypeOf(Bound*))).value_or(nullptr);
+        return i2c::try_cast<T*>(TryResolve(container, i2c::cs_type_of<Bound*>()));
     }
 
     template <typename T>
     static T* FindActive() {
-        auto found = UnityEngine::Object::FindObjectsOfType(csTypeOf(T*));
-        return found.size() > 0 ? reinterpret_cast<T*>(found[0].unsafePtr()) : nullptr;
+        auto found = UnityEngine::Object::FindObjectsOfType(i2c::cs_type_of<T*>());
+        return found.size() > 0 ? reinterpret_cast<T*>(found[0].unsafe_ptr()) : nullptr;
     }
 
     template <typename T>
     static T* CreateScriptable() {
-        return reinterpret_cast<T*>(UnityEngine::ScriptableObject::CreateInstance(csTypeOf(T*)).unsafePtr());
+        return reinterpret_cast<T*>(UnityEngine::ScriptableObject::CreateInstance(i2c::cs_type_of<T*>()).unsafe_ptr());
     }
 
     #pragma endregion
@@ -175,15 +177,15 @@ namespace DanceDread {
 
     static State s;
 
-    static SafePtrUnity<BloomFogSO> bloomFog;
-    static SafePtrUnity<BloomFogEnvironmentParams> dreadFog;
-    static SafePtrUnity<BloomFogEnvironmentParams> savedTransitionFog;
-    static SafePtrUnity<UnityEngine::GameObject> vignette;
-    static SafePtrUnity<UnityEngine::UI::Image> vignetteImage;
-    static SafePtrUnity<UnityEngine::AudioSource> audioSource;
-    static SafePtrUnity<UnityEngine::AudioSource> voiceSource;
-    static std::array<SafePtrUnity<UnityEngine::AudioSource>, WhisperSources> whisperSources;
-    static SafePtrUnity<HapticPresetSO> hapticPreset;
+    static safe_ptr<BloomFogSO*> bloomFog;
+    static safe_ptr<BloomFogEnvironmentParams*> dreadFog;
+    static safe_ptr<BloomFogEnvironmentParams*> savedTransitionFog;
+    static safe_ptr<UnityEngine::GameObject*> vignette;
+    static safe_ptr<UnityEngine::UI::Image*> vignetteImage;
+    static safe_ptr<UnityEngine::AudioSource*> audioSource;
+    static safe_ptr<UnityEngine::AudioSource*> voiceSource;
+    static std::array<safe_ptr<UnityEngine::AudioSource*>, WhisperSources> whisperSources;
+    static safe_ptr<HapticPresetSO*> hapticPreset;
 
     #pragma region Dread
 
@@ -259,7 +261,7 @@ namespace DanceDread {
         auto manager = Alive(audioManager);
         if (!manager || !manager->_audioMixer) return;
         float pitch = 1;
-        if (manager->_audioMixer->GetFloat("MusicPitch", ByRef<float>(&pitch)) && pitch > 0) {
+        if (manager->_audioMixer->GetFloat("MusicPitch", by_ref<float>(pitch)) && pitch > 0) {
             s.basePitch = pitch;
             s.basePitchKnown = true;
         } else {
@@ -318,7 +320,7 @@ namespace DanceDread {
                 s.fogUnavailable = true;
                 return;
             }
-            savedTransitionFog = fog->transitionFogParams.unsafePtr();
+            savedTransitionFog = fog->transitionFogParams.unsafe_ptr();
             s.savedTransition = fog->transition;
             auto params = CreateScriptable<BloomFogEnvironmentParams>();
             params->attenuation = std::max(current->attenuation * DreadFogThickness, DreadFogMinAttenuation);
@@ -353,7 +355,7 @@ namespace DanceDread {
     #pragma region Vignette
 
     static UnityEngine::Sprite* VignetteSprite() {
-        static SafePtrUnity<UnityEngine::Sprite> sprite;
+        static safe_ptr<UnityEngine::Sprite*> sprite;
         if (!sprite) {
             sprite = CreateAlphaSprite(256, 256, {0.5f, 0.5f}, [](float u, float v) {
                 return SmoothStep01(InverseLerp(0.33f, 0.75f, CenterDistance(u, v)));
@@ -515,7 +517,7 @@ namespace DanceDread {
         }
     }
 
-    static void DestroySource(SafePtrUnity<UnityEngine::AudioSource>& source) {
+    static void DestroySource(safe_ptr<UnityEngine::AudioSource*>& source) {
         if (auto alive = Alive(source)) UnityEngine::Object::Destroy(alive->gameObject);
         source = nullptr;
     }
@@ -554,7 +556,7 @@ namespace DanceDread {
         auto levelId = (std::string)key.levelId;
         levelHash = levelId.starts_with(CustomLevelPrefix) ? levelId.substr(CustomLevelPrefix.size()) : levelId;
         levelDifficulty = MapEnhancer::DiffName(key.difficulty.value__);
-        levelMode = key.beatmapCharacteristic ? (std::string)key.beatmapCharacteristic->serializedName : "Standard";
+        levelMode = (std::string)BeatmapCharacteristicExtensions::SerializedName(key.characteristic);
         levelContainer = container;
 
         Lights::BeginLevel();
@@ -588,13 +590,12 @@ namespace DanceDread {
         bpmController = Resolve<BpmController, IBpmController>(container);
         gamePause = Resolve<GamePause, IGamePause>(container);
         mainAudioEffects = Resolve<MainAudioEffects>(container);
-        audioManager = Resolve<AudioManagerSO>(container);
+        audioManager = Resolve<AudioManager>(container);
         hapticFeedbackManager = Resolve<HapticFeedbackManager>(container);
         if (!energyCounter) energyCounter = FindActive<GameEnergyCounter>();
         if (!mainAudioEffects) mainAudioEffects = FindActive<MainAudioEffects>();
         if (!hapticFeedbackManager) hapticFeedbackManager = FindActive<HapticFeedbackManager>();
-        if (!audioManager) audioManager = UnityEngine::Resources::FindObjectsOfTypeAll<AudioManagerSO*>()->FirstOrDefault();
-        bloomFog = UnityEngine::Resources::FindObjectsOfTypeAll<BloomFogSO*>()->FirstOrDefault();
+        bloomFog = BeatLeader::FirstOrDefault(UnityEngine::Resources::FindObjectsOfTypeAll<BloomFogSO*>());
         BeatLeaderLogger.info("Dance or Die: the haunting starts (time {}, energy {}, bpm {}, pause {}, low pass {}, audio {}, haptics {}, fog {})",
             (bool)timeSyncController, (bool)energyCounter, (bool)bpmController, (bool)gamePause, (bool)mainAudioEffects,
             (bool)audioManager, (bool)hapticFeedbackManager, (bool)bloomFog);
@@ -608,7 +609,7 @@ namespace DanceDread {
     static bool IsPaused() {
         if (gamePause) return gamePause->_pause;
         auto controller = Alive(timeSyncController);
-        return controller && controller->_state == AudioTimeSyncController_State::Paused;
+        return controller && controller->_state == IAudioTimeSource_State::Paused;
     }
 
     static void UpdateHaunting(Dance::DanceLive const& live) {

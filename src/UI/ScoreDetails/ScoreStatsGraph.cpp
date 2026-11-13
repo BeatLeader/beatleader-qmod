@@ -49,7 +49,7 @@ BeatLeader::ScoreStatsGraph::ScoreStatsGraph(HMUI::ModalView *modal) noexcept {
 void BeatLeader::ScoreStatsGraph::setScore(ScoreStats score) const {
     auto points = score.scoreGraphTracker.graph;
     
-    accuracyGraph->Setup(ArrayW{points}, score.winTracker.endTime);
+    accuracyGraph->Setup(ArrayW<float>(points), score.winTracker.endTime);
 }
 
 void BeatLeader::ScoreStatsGraph::setSelected(bool selected) const {

@@ -1,3 +1,5 @@
+#include "include/Utils/ArrayUtils.hpp"
+#include "beatsaber-hook/shared/safeptr.hpp"
 #include "Models/Player.hpp"
 #include "System/Reflection/BindingFlags.hpp"
 #include "System/Reflection/PropertyInfo.hpp"
@@ -25,11 +27,11 @@
 
 namespace UIUtils {
 
-    SafePtrUnity<HMUI::ImageView> roundRectSprite;
+    safe_ptr<HMUI::ImageView*> roundRectSprite;
 
     HMUI::ImageView* getRoundRectSprite() {
         if (!roundRectSprite) {
-            roundRectSprite = UnityEngine::Resources::FindObjectsOfTypeAll<HMUI::ImageView*>()->First([](HMUI::ImageView* image){ 
+            roundRectSprite = BeatLeader::FirstOrDefault(UnityEngine::Resources::FindObjectsOfTypeAll<HMUI::ImageView*>(), [](HMUI::ImageView* image){ 
                 auto sprite = image->get_sprite();
                 if (!sprite || sprite->get_name() != "RoundRect10") return false;
 
@@ -123,7 +125,7 @@ namespace UIUtils {
 		background->set_preserveAspect(bgTemplate->get_preserveAspect());
 		background->set_raycastTarget(bgTemplate->get_raycastTarget());
 		background->set_sprite(bgTemplate->get_sprite());
-		background->set_tag(bgTemplate->get_tag());
+		background->get_gameObject()->set_tag(bgTemplate->get_gameObject()->get_tag());
 		background->set_type(bgTemplate->get_type());
 		background->set_useGUILayout(bgTemplate->get_useGUILayout());
 		background->set_useLegacyMeshGeneration(bgTemplate->get_useLegacyMeshGeneration());

@@ -1,3 +1,4 @@
+#include "System/String.hpp"
 #include "Utils/BSMLUtility.hpp"
 
 namespace BeatLeader::Utils {

@@ -1,4 +1,6 @@
 #pragma once
+#include <stdexcept>
+#include <string>
 
 #include <stdlib.h>
 #include <string>
@@ -178,7 +180,23 @@ namespace FormatUtils {
             return static_cast<T>(std::stoi(value.data()));
         }
 
+        /// @brief Parses an HTML style color: #RGB, #RGBA, #RRGGBB or #RRGGBBAA (leading '#' optional)
         inline ::UnityEngine::Color ParseColor(string_view value) {
-            return UnityEngine::Color(ParseFloat(value.substr(0, 2)), ParseFloat(value.substr(2, 4)), ParseFloat(value.substr(4, 6)), ParseFloat(value.substr(6, 8)));
+            std::string hex(value);
+            if (!hex.empty() && hex[0] == '#') hex.erase(0, 1);
+
+            auto channel = [&hex](size_t index, size_t width) -> float {
+                int parsed = std::stoi(hex.substr(index, width), nullptr, 16);
+                if (width == 1) parsed *= 17; // expand short form (e.g. "8" -> 0x88)
+                return parsed / 255.0f;
+            };
+
+            if (hex.size() == 3 || hex.size() == 4) {
+                return UnityEngine::Color(channel(0, 1), channel(1, 1), channel(2, 1), hex.size() == 4 ? channel(3, 1) : 1.0f);
+            }
+            if (hex.size() == 6 || hex.size() == 8) {
+                return UnityEngine::Color(channel(0, 2), channel(2, 2), channel(4, 2), hex.size() == 8 ? channel(6, 2) : 1.0f);
+            }
+            throw std::invalid_argument("ParseColor: unsupported color format '" + std::string(value) + "'");
         }
     }

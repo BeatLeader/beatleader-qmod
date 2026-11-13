@@ -22,7 +22,7 @@ namespace BeatLeader {
     static constexpr const char* LoadingMessage = "Summoning the standings...";
     static constexpr size_t MaxMapNameLength = 28;
 
-    static SafePtrUnity<UnityEngine::RectTransform> shownContent;
+    static safe_ptr<UnityEngine::RectTransform*> shownContent;
 
     UnityEngine::RectTransform* DanceEventPanel::Shown() {
         if (!shownContent || !shownContent->get_gameObject()->get_activeInHierarchy()) return nullptr;

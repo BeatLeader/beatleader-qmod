@@ -104,7 +104,7 @@ namespace DanceDread {
 
     template <auto Method, typename R, typename... Args>
     static R CallWithoutBoxing(Args... args) {
-        static auto method = il2cpp_utils::il2cpp_type_check::MetadataGetter<Method>::methodInfo();
+        static auto method = i2c::metadata_getter<Method>::method_info();
         return reinterpret_cast<R (*)(Args..., MethodInfo const*)>(method->methodPointer)(args..., method);
     }
 
@@ -122,7 +122,7 @@ namespace DanceDread {
 
     static constexpr float HeadSearchInterval = 1;
 
-    static SafePtrUnity<Transform> head;
+    static safe_ptr<Transform*> head;
     static float nextHeadSearch = 0;
 
     Transform* Head() {
@@ -214,7 +214,7 @@ namespace DanceDread {
     }
 
     Material* NoGlowMaterial() {
-        static SafePtrUnity<Material> material;
+        static safe_ptr<Material*> material;
         if (!material) material = BSML::Helpers::GetUINoGlowMat();
         return Alive(material);
     }

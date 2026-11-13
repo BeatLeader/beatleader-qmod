@@ -1,12 +1,14 @@
+#include "include/Utils/ArrayUtils.hpp"
+#include "beatsaber-hook/shared/safeptr.hpp"
 #include "include/Core/Dance/DanceModeTracker.hpp"
 #include "include/Core/Dance/DanceDread.hpp"
 #include "include/Core/CustomModifiers.hpp"
 
-#include "beatsaber-hook/shared/utils/hooking.hpp"
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/hooking.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 
 #include "GlobalNamespace/AudioTimeSyncController.hpp"
-#include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
+#include "GlobalNamespace/BeatmapCharacteristic.hpp"
 #include "GlobalNamespace/BeatmapDataItem.hpp"
 #include "GlobalNamespace/GameEnergyCounter.hpp"
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
@@ -43,9 +45,9 @@ namespace DanceModeTracker {
     static bool draining = false;
     static float lastSongTime = 0;
 
-    static SafePtrUnity<AudioTimeSyncController> timeSyncController;
-    static SafePtrUnity<GameEnergyCounter> energyCounter;
-    static SafePtrUnity<TMPro::TextMeshProUGUI> levelText;
+    static safe_ptr<AudioTimeSyncController*> timeSyncController;
+    static safe_ptr<GameEnergyCounter*> energyCounter;
+    static safe_ptr<TMPro::TextMeshProUGUI*> levelText;
     static float hudSongTime = -1;
 
     static float FromMappingExtensions(float value) {
@@ -67,14 +69,14 @@ namespace DanceModeTracker {
 
     static rapidjson::Value const* GetCustomData(BeatmapDataItem* item) {
         static std::unordered_map<Il2CppClass*, FieldInfo*> fields;
-        auto klass = il2cpp_functions::object_get_class(reinterpret_cast<Il2CppObject*>(item));
+        auto klass = i2c::functions::object_get_class(reinterpret_cast<Il2CppObject*>(item));
         auto it = fields.find(klass);
         if (it == fields.end()) {
-            it = fields.emplace(klass, il2cpp_functions::class_get_field_from_name(klass, "customData")).first;
+            it = fields.emplace(klass, i2c::functions::class_get_field_from_name(klass, "customData")).first;
         }
         if (!it->second) return nullptr;
         Il2CppObject* wrapper = nullptr;
-        il2cpp_functions::field_get_value(reinterpret_cast<Il2CppObject*>(item), it->second, &wrapper);
+        i2c::functions::field_get_value(reinterpret_cast<Il2CppObject*>(item), it->second, &wrapper);
         if (!wrapper) return nullptr;
         auto& value = reinterpret_cast<JSONWrapperLayout*>(wrapper)->value;
         if (!value || !value->get().IsObject()) return nullptr;
@@ -131,19 +133,19 @@ namespace DanceModeTracker {
         if (!items) return;
         for (auto node = items->head; node; node = node->next) {
             auto item = node->item;
-            if (auto note = il2cpp_utils::try_cast<NoteData>(item)) {
-                if ((*note)->gameplayType != NoteData::GameplayType::Bomb && !IsFake(GetCustomData(item))) {
-                    noteTimes.push_back((*note)->time);
+            if (auto note = i2c::try_cast<NoteData*>(item)) {
+                if (note->gameplayType != NoteData::GameplayType::Bomb && !IsFake(GetCustomData(item))) {
+                    noteTimes.push_back(note->time);
                 }
-            } else if (auto slider = il2cpp_utils::try_cast<SliderData>(item)) {
-                auto chain = *slider;
+            } else if (auto slider = i2c::try_cast<SliderData*>(item)) {
+                auto chain = slider;
                 if (chain->sliderType == SliderData::Type::Burst && !IsFake(GetCustomData(item))) {
                     for (int i = 1; i < chain->sliceCount; i++) {
                         noteTimes.push_back(LerpUnclamped(chain->time, chain->tailTime, (float)i / (chain->sliceCount - 1)));
                     }
                 }
-            } else if (auto obstacle = il2cpp_utils::try_cast<ObstacleData>(item)) {
-                if (auto wall = GetWall(*obstacle)) {
+            } else if (auto obstacle = i2c::try_cast<ObstacleData*>(item)) {
+                if (auto wall = GetWall(obstacle)) {
                     walls.push_back(*wall);
                 }
             }
@@ -162,14 +164,14 @@ namespace DanceModeTracker {
             BeatLeaderLogger.warn("Dance Mode can't be combined with negative modifiers, playing without it");
             return;
         }
-        if (!setupData || (std::string)setupData->beatmapKey.beatmapCharacteristic->serializedName != "Standard") {
+        if (!setupData || setupData->beatmapKey.characteristic != BeatmapCharacteristic::Standard) {
             BeatLeaderLogger.info("Dance Mode only scores Standard maps");
             return;
         }
 
-        auto beatmapData = reinterpret_cast<IReadonlyBeatmapData*>(container->TryResolve(csTypeOf(IReadonlyBeatmapData*)));
-        auto initData = reinterpret_cast<AudioTimeSyncController_InitData*>(container->TryResolve(csTypeOf(AudioTimeSyncController_InitData*)));
-        timeSyncController = reinterpret_cast<AudioTimeSyncController*>(container->TryResolve(csTypeOf(AudioTimeSyncController*)));
+        auto beatmapData = reinterpret_cast<IReadonlyBeatmapData*>(container->TryResolve(i2c::cs_type_of<IReadonlyBeatmapData*>()));
+        auto initData = reinterpret_cast<AudioTimeSyncController_InitData*>(container->TryResolve(i2c::cs_type_of<AudioTimeSyncController_InitData*>()));
+        timeSyncController = reinterpret_cast<AudioTimeSyncController*>(container->TryResolve(i2c::cs_type_of<AudioTimeSyncController*>()));
         if (!beatmapData || !initData || !timeSyncController) {
             BeatLeaderLogger.error("Dance Mode: missing the beatmap or the song timing, playing without it");
             return;
@@ -275,7 +277,7 @@ namespace DanceModeTracker {
         if (live.SongTime == hudSongTime && levelText) return;
         hudSongTime = live.SongTime;
         if (!levelText) {
-            auto scoreUI = UnityEngine::Resources::FindObjectsOfTypeAll<ScoreUIController*>()->FirstOrDefault();
+            auto scoreUI = BeatLeader::FirstOrDefault(UnityEngine::Resources::FindObjectsOfTypeAll<ScoreUIController*>());
             if (!scoreUI || !scoreUI->_scoreText) return;
             levelText = CreateLevelText(scoreUI->_scoreText);
             scoreUI->_scoreText->enabled = false;
@@ -305,7 +307,7 @@ namespace DanceModeTracker {
         draining = live.ShouldDrain;
         if (draining && deltaTime > 0) {
             if (!energyCounter) {
-                energyCounter = UnityEngine::Resources::FindObjectsOfTypeAll<GameEnergyCounter*>()->FirstOrDefault();
+                energyCounter = BeatLeader::FirstOrDefault(UnityEngine::Resources::FindObjectsOfTypeAll<GameEnergyCounter*>());
             }
             if (energyCounter) {
                 energyCounter->_nextFrameEnergyChange -= (float)(Dance::DanceScorer::SuggestedDrainPerSecond * deltaTime);
@@ -315,8 +317,8 @@ namespace DanceModeTracker {
         RefreshHud(live);
     }
 
-    MAKE_HOOK_MATCH(DanceEnergyHandleNoteWasCut, &GameEnergyCounter::HandleNoteWasCut, void, GameEnergyCounter* self, NoteController* noteController, ByRef<NoteCutInfo> noteCutInfo) {
-        if (draining && noteCutInfo->allIsOK && noteController->noteData->gameplayType != NoteData::GameplayType::Bomb) {
+    MAKE_HOOK_MATCH(DanceEnergyHandleNoteWasCut, &GameEnergyCounter::HandleNoteWasCut, void, GameEnergyCounter* self, NoteController* noteController, by_ref<const NoteCutInfo> noteCutInfo) {
+        if (draining && noteCutInfo.as_mutable()->allIsOK && noteController->noteData->gameplayType != NoteData::GameplayType::Bomb) {
             return;
         }
         DanceEnergyHandleNoteWasCut(self, noteController, noteCutInfo);

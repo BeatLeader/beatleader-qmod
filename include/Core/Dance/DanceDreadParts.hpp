@@ -1,8 +1,8 @@
 #pragma once
 
-#include "beatsaber-hook/shared/utils/typedefs.h"
-#include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
-#include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
+#include "beatsaber-hook/shared/types.hpp"
+#include "beatsaber-hook/shared/safeptr.hpp"
+#include "beatsaber-hook/shared/utils.hpp"
 
 #include "UnityEngine/AudioClip.hpp"
 #include "UnityEngine/Color.hpp"
@@ -92,12 +92,12 @@ namespace DanceDread {
     #pragma region Engine
 
     template <typename T>
-    T* Alive(SafePtrUnity<T> const& pointer) {
+    T* Alive(safe_ptr<T*> const& pointer) {
         return pointer ? pointer.ptr() : nullptr;
     }
 
     template <typename T>
-    void Destroy(SafePtrUnity<T>& object) {
+    void Destroy(safe_ptr<T*>& object) {
         if (object) UnityEngine::Object::Destroy(object.ptr());
         object = nullptr;
     }

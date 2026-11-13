@@ -86,6 +86,7 @@ void ReplayManager::ProcessReplay(Replay const &replay, PlayEndData status, bool
     NotifyPlayUpload();
 
     if (status.GetEndType() == LevelEndType::Unknown) {
+        BeatLeaderLogger.warn("ProcessReplay: unknown level end type, replay dropped");
         return;
     }
 

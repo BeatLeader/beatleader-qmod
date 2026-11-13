@@ -2,6 +2,7 @@
 
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
+#include "GlobalNamespace/BeatmapCharacteristicExtensions.hpp"
 #include "GlobalNamespace/BeatmapLevel.hpp"
 
 #include "ModifiersCoreQuest/shared/Core/ModifiersManager.hpp"
@@ -21,7 +22,7 @@ void MapEnhancer::Enhance(Replay &replay)
     info.mapper = (string)beatmapLevel->songAuthorName;
     info.difficulty = DiffName(difficultyBeatmap.difficulty.value__);
 
-    info.mode = (string)difficultyBeatmap.beatmapCharacteristic->serializedName;
+    info.mode = (string)GlobalNamespace::BeatmapCharacteristicExtensions::SerializedName(difficultyBeatmap.characteristic);
     info.environment = (string)environmentName._environmentName;
     info.modifiers = Join(Modifiers());
     info.leftHanded = playerSpecificSettings->leftHanded;

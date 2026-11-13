@@ -175,7 +175,7 @@ namespace DanceEventModels {
 
     #pragma region Materials
 
-    static Material* FindMaterial(SafePtrUnity<Material>& cache, std::string_view name) {
+    static Material* FindMaterial(safe_ptr<Material*>& cache, std::string_view name) {
         if (cache) return cache.ptr();
         auto materials = Resources::FindObjectsOfTypeAll<Material*>();
         for (auto material : materials) {
@@ -197,7 +197,7 @@ namespace DanceEventModels {
     }
 
     Material* Solid(Color color, float minimumLight) {
-        static SafePtrUnity<Material> noteMenu;
+        static safe_ptr<Material*> noteMenu;
         static int ambientMinimumId = Shader::PropertyToID("_AmbientMinimalValue");
         auto material = Copy(FindMaterial(noteMenu, "NoteMenu"), "NoteMenu", color);
         if (material) material->SetFloat(ambientMinimumId, minimumLight);
@@ -205,7 +205,7 @@ namespace DanceEventModels {
     }
 
     Material* Glowing(Color color) {
-        static SafePtrUnity<Material> cursor;
+        static safe_ptr<Material*> cursor;
         return Copy(FindMaterial(cursor, "UICursor"), "UICursor", color);
     }
 

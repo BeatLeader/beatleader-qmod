@@ -1,6 +1,6 @@
 #pragma once
-#include "beatsaber-hook/shared/utils/logging.hpp"
-#include "beatsaber-hook/shared/utils/typedefs.h"
+#include "paper2_scotland2/shared/logger.hpp"
+#include "beatsaber-hook/shared/types.hpp"
 #include <string_view>
 
 #include "paper2_scotland2/shared/logger.hpp"

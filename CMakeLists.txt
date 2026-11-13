@@ -20,8 +20,8 @@ cmake_minimum_required(VERSION 3.21)
 project(${COMPILE_ID})
 
 # c++ standard
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED 20)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # define that stores the actual source directory
@@ -49,8 +49,6 @@ RECURSE_FILES(cpp_file_list ${SOURCE_DIR}/*.cpp)
 RECURSE_FILES(c_file_list ${SOURCE_DIR}/*.c)
 list(APPEND c_file_list ${INCLUDE_DIR}/zip/src/zip.c)
 
-# And64InlineHook.cpp is built from the patched copy in src/Utils
-RECURSE_FILES(src_inline_hook_beatsaber_hook_local_extra_c ${EXTERN_DIR}/includes/beatsaber-hook/shared/inline-hook/*.c)
 
 # add all src files to compile
 add_library(
@@ -58,7 +56,6 @@ add_library(
         SHARED
         ${cpp_file_list}
         ${c_file_list}
-        ${src_inline_hook_beatsaber_hook_local_extra_c}
 )
 
 target_include_directories(${COMPILE_ID} PRIVATE .)
@@ -77,6 +74,8 @@ target_include_directories(${COMPILE_ID} PRIVATE ${EXTERN_DIR}/includes/${CODEGE
 target_include_directories(${COMPILE_ID} PRIVATE include/zip/src)
 
 target_link_libraries(${COMPILE_ID} PRIVATE -llog -lz)
+# The modloader dlcloses mods when the game exits, after il2cpp is torn down, and static safe_ptr destructors would then crash
+target_link_options(${COMPILE_ID} PRIVATE -Wl,-z,nodelete)
 # Build the ModifiersCoreQuest submodule first (cmake -B ModifiersCoreQuest/build ModifiersCoreQuest)
 target_link_libraries(${COMPILE_ID} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ModifiersCoreQuest/build/libModifiersCoreQuest.so)
 # add extern stuff like libs and other includes

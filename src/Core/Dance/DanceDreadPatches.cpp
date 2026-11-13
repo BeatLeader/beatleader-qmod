@@ -1,7 +1,7 @@
 #include "include/Core/Dance/DanceDread.hpp"
 #include "include/Core/Dance/DanceDreadParts.hpp"
 
-#include "beatsaber-hook/shared/utils/hooking.hpp"
+#include "beatsaber-hook/shared/hooking.hpp"
 
 #include "GlobalNamespace/ColorManager.hpp"
 #include "GlobalNamespace/ColorType.hpp"
@@ -32,12 +32,12 @@ namespace DanceDread::Lights {
 
     struct ManagerColors {
         LightWithIdManager* key;
-        SafePtrUnity<LightWithIdManager> manager;
+        safe_ptr<LightWithIdManager*> manager;
         std::array<std::optional<Color>, LightWithIdManager::kMaxLightId + 1> colors;
     };
 
     struct StaticLight {
-        SafePtrUnity<TubeBloomPrePassLight> light;
+        safe_ptr<TubeBloomPrePassLight*> light;
         Color color;
     };
 
@@ -84,14 +84,14 @@ namespace DanceDread::Lights {
     void CollectStaticLights() {
         staticLights.clear();
         std::unordered_set<TubeBloomPrePassLight*> driven;
-        auto withIds = UnityEngine::Object::FindObjectsOfType(csTypeOf(TubeBloomPrePassLightWithId*));
+        auto withIds = UnityEngine::Object::FindObjectsOfType(i2c::cs_type_of<TubeBloomPrePassLightWithId*>());
         for (auto object : withIds) {
-            auto withId = reinterpret_cast<TubeBloomPrePassLightWithId*>(object.unsafePtr());
-            if (withId->_tubeBloomPrePassLight) driven.insert(withId->_tubeBloomPrePassLight.unsafePtr());
+            auto withId = reinterpret_cast<TubeBloomPrePassLightWithId*>(object.unsafe_ptr());
+            if (withId->_tubeBloomPrePassLight) driven.insert(withId->_tubeBloomPrePassLight.unsafe_ptr());
         }
-        auto lights = UnityEngine::Object::FindObjectsOfType(csTypeOf(TubeBloomPrePassLight*));
+        auto lights = UnityEngine::Object::FindObjectsOfType(i2c::cs_type_of<TubeBloomPrePassLight*>());
         for (auto object : lights) {
-            auto light = reinterpret_cast<TubeBloomPrePassLight*>(object.unsafePtr());
+            auto light = reinterpret_cast<TubeBloomPrePassLight*>(object.unsafe_ptr());
             if (!driven.contains(light)) staticLights.push_back({light, light->color});
         }
         BeatLeaderLogger.info("Dance or Die: {} lights with ids, {} static lights", withIds.size(), staticLights.size());
@@ -205,9 +205,9 @@ MAKE_HOOK_MATCH(DanceDreadShowFailEffect, &LevelFailedTextEffect::ShowEffect, vo
 }
 
 void DanceDread::ShowDeathText() {
-    auto texts = UnityEngine::Object::FindObjectsByType(csTypeOf(LevelFailedText*), UnityEngine::FindObjectsInactive::Include, UnityEngine::FindObjectsSortMode::None);
+    auto texts = UnityEngine::Object::FindObjectsByType(i2c::cs_type_of<LevelFailedText*>(), UnityEngine::FindObjectsInactive::Include, UnityEngine::FindObjectsSortMode::None);
     for (auto text : texts) {
-        OverrideFailText(reinterpret_cast<LevelFailedText*>(text.unsafePtr()));
+        OverrideFailText(reinterpret_cast<LevelFailedText*>(text.unsafe_ptr()));
     }
 }
 

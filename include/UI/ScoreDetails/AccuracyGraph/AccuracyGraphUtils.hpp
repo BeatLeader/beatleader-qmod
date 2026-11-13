@@ -1,4 +1,5 @@
 #pragma once
+#include "beatsaber-hook/shared/arrayw.hpp"
 
 #include "UnityEngine/Vector2.hpp"
 #include "UnityEngine/Vector3.hpp"

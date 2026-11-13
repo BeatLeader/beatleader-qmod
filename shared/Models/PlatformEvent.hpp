@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <optional>
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 
 class PlatformEvent {
 public:

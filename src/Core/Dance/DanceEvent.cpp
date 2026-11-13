@@ -6,6 +6,7 @@
 
 #include "shared/Models/Paged.hpp"
 
+#include "GlobalNamespace/BeatmapCharacteristicExtensions.hpp"
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
 
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
@@ -43,8 +44,7 @@ namespace DanceEvent {
         auto hash = levelId.substr(CustomLevelPrefix.size(), HashLength);
         if (maps.contains(toLower(hash))) return true;
 
-        auto characteristicSO = key.beatmapCharacteristic;
-        std::string characteristic = characteristicSO ? (std::string)characteristicSO->serializedName : "";
+        std::string characteristic = GlobalNamespace::BeatmapCharacteristicExtensions::SerializedName(key.characteristic);
         return maps.contains(MapKey(hash, characteristic, MapEnhancer::DiffName(key.difficulty.value__)));
     }
 

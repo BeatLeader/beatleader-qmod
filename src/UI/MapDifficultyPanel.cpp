@@ -4,6 +4,8 @@
 
 #include "shared/Models/TriangleRating.hpp"
 
+#include "UnityEngine/UI/Graphic.hpp"
+
 #include <cmath>
 
 DEFINE_TYPE(BeatLeader, MapDifficultyPanelComponent);
@@ -15,6 +17,10 @@ namespace BeatLeader {
     }
 
     void MapDifficultyPanel::OnInitialize() {
+        // Shown while the map status is hovered, so catching the pointer itself would hide it again
+        for (auto graphic : LocalComponent()->root->GetComponentsInChildren<UnityEngine::UI::Graphic*>(true)) {
+            graphic->set_raycastTarget(false);
+        }
         SetRootActive(false);
 
         if (_hasDifficulty) {

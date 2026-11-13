@@ -1,9 +1,9 @@
 #include "Core/SpeedModifiers.hpp"
 #include "Core/CustomModifiers.hpp"
 
-#include "beatsaber-hook/shared/utils/hooking.hpp"
+#include "beatsaber-hook/shared/hooking.hpp"
 
-#include "GlobalNamespace/AudioManagerSO.hpp"
+#include "GlobalNamespace/AudioManager.hpp"
 #include "GlobalNamespace/AudioTimeSyncController.hpp"
 #include "GlobalNamespace/GameplayCoreInstaller.hpp"
 #include "GlobalNamespace/GameplayCoreSceneSetupData.hpp"
@@ -11,7 +11,7 @@
 #include "GlobalNamespace/VariableMovementDataProvider.hpp"
 #include "Zenject/DiContainer.hpp"
 
-#include "metacore/shared/game.hpp"
+#include "metacore-bs/shared/game.hpp"
 
 #include "main.hpp"
 
@@ -47,7 +47,7 @@ MAKE_HOOK_MATCH(SpeedGameplayCoreInstallerInstall, &GameplayCoreInstaller::Insta
     // Keeps BFS and BSF scores off other leaderboards, UploadEnabled ignores this disabler
     MetaCore::Game::DisableScoreSubmissionOnce(MOD_ID);
 
-    auto initData = reinterpret_cast<AudioTimeSyncController_InitData*>(self->get_Container()->TryResolve(csTypeOf(AudioTimeSyncController_InitData*)));
+    auto initData = reinterpret_cast<AudioTimeSyncController_InitData*>(self->get_Container()->TryResolve(i2c::cs_type_of<AudioTimeSyncController_InitData*>()));
     if (!initData) {
         BeatLeaderLogger.error("Song speed modifier: no AudioTimeSyncController.InitData to apply {} to", speed);
         return;

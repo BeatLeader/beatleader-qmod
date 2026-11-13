@@ -7,11 +7,11 @@
 
 #include "include/Utils/FileManager.hpp"
 #include "include/Utils/ModConfig.hpp"
-#include "beatsaber-hook/shared/config/config-utils.hpp"
+#include "beatsaber-hook/shared/utils.hpp"
 
 namespace {
     string GetReplaysDirectory() {
-        return getDataDir(modInfo) + "replays/";
+        return get_data_dir(modInfo) + "replays/";
     }
 
     string CollapseWhitespace(string const& value) {

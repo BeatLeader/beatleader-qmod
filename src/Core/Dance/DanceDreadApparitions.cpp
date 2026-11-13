@@ -18,12 +18,12 @@ namespace DanceDread::Apparitions {
 
     static constexpr int AuraPadding = 40;
 
-    static SafePtrUnity<Sprite> silhouetteSprite;
-    static SafePtrUnity<Sprite> auraSprite;
+    static safe_ptr<Sprite*> silhouetteSprite;
+    static safe_ptr<Sprite*> auraSprite;
     static bool silhouetteFailed = false;
 
     static Sprite* EyesSprite() {
-        static SafePtrUnity<Sprite> sprite;
+        static safe_ptr<Sprite*> sprite;
         if (!sprite) {
             sprite = CreateAlphaSprite(192, 72, {0.5f, 0.5f}, [](float u, float v) {
                 v = v * 2 - 1;
@@ -115,8 +115,8 @@ namespace DanceDread::Apparitions {
     };
 
     struct EyePair {
-        SafePtrUnity<GameObject> root;
-        SafePtrUnity<UI::Image> image;
+        safe_ptr<GameObject*> root;
+        safe_ptr<UI::Image*> image;
         float threshold = 0;
         float blinkTimer = 0;
         float nextBlink = 0;
@@ -172,10 +172,10 @@ namespace DanceDread::Apparitions {
 
     static constexpr Color AuraColor = {0.75f, 0.12f, 0.3f, 1};
 
-    static SafePtrUnity<GameObject> silhouette;
-    static SafePtrUnity<UI::Image> silhouetteImage;
-    static SafePtrUnity<UI::Image> silhouetteEyes;
-    static SafePtrUnity<UI::Image> aura;
+    static safe_ptr<GameObject*> silhouette;
+    static safe_ptr<UI::Image*> silhouetteImage;
+    static safe_ptr<UI::Image*> silhouetteEyes;
+    static safe_ptr<UI::Image*> aura;
 
     struct SilhouetteState {
         float distance = StartSilhouetteDistance;

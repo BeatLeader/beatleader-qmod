@@ -6,7 +6,39 @@
 
 #include "main.hpp"
 
+#include <algorithm>
+#include <cctype>
+#include <initializer_list>
+#include <utility>
+
 namespace BeatLeader::UI::TypeHandlers {
+    namespace {
+        std::string ToLower(std::string value) {
+            std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) { return std::tolower(c); });
+            return value;
+        }
+
+        // BSML attributes carry enum names (e.g. type="Sliced"); accept names case-insensitively or a numeric value
+        template<typename T>
+        T ParseNamedEnum(std::string const& value, std::initializer_list<std::pair<char const*, T>> names) {
+            auto lowered = ToLower(value);
+            for (auto const& [name, enumValue] : names) {
+                if (lowered == name) return enumValue;
+            }
+            return static_cast<T>(std::stoi(value));
+        }
+
+        UnityEngine::UI::Image::Type ParseImageType(std::string const& value) {
+            using Type = UnityEngine::UI::Image::Type;
+            return ParseNamedEnum<Type>(value, {{"simple", Type::Simple}, {"sliced", Type::Sliced}, {"tiled", Type::Tiled}, {"filled", Type::Filled}});
+        }
+
+        UnityEngine::UI::Image::FillMethod ParseFillMethod(std::string const& value) {
+            using FillMethod = UnityEngine::UI::Image::FillMethod;
+            return ParseNamedEnum<FillMethod>(value, {{"horizontal", FillMethod::Horizontal}, {"vertical", FillMethod::Vertical}, {"radial90", FillMethod::Radial90}, {"radial180", FillMethod::Radial180}, {"radial360", FillMethod::Radial360}});
+        }
+    }
+
     static BetterImageHandler betterImageHandler{};
 
     BetterImageHandler::Base::PropMap BetterImageHandler::get_props() const {
@@ -59,12 +91,12 @@ namespace BeatLeader::UI::TypeHandlers {
 
             auto imageTypeItr = data.find("imageType");
             if (imageTypeItr != data.end()) {
-                image->set_type(FormatUtils::ParseEnum<UnityEngine::UI::Image::Type>(imageTypeItr->second));
+                image->set_type(ParseImageType(imageTypeItr->second));
             }
 
             auto fillMethodItr = data.find("fillMethod");
             if (fillMethodItr != data.end()) {
-                image->set_fillMethod(FormatUtils::ParseEnum<UnityEngine::UI::Image::FillMethod>(fillMethodItr->second));
+                image->set_fillMethod(ParseFillMethod(fillMethodItr->second));
             }
 
             auto fillOriginItr = data.find("fillOrigin");

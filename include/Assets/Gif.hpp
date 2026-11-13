@@ -22,8 +22,7 @@ struct Gif
     Gif(std::string& text) : datastream(&this->data), data(text){};
     Gif(std::span<uint8_t> const vec) : datastream(&this->data), data(reinterpret_cast<std::span<char> const &>(vec)){};
     Gif(std::span<char> const vec) : datastream(&this->data), data(vec){};
-    Gif(Array<char>* array) : datastream(&this->data), data(array){};
-    Gif(Array<uint8_t>* array) : Gif(reinterpret_cast<Array<char>*>(array)){};
+    Gif(Array<uint8_t>* array) : datastream(&this->data), data(array){};
 
     /// @brief on destruction we need to actually close the gif file otherwise we are leaking memory
     ~Gif()
@@ -118,10 +117,10 @@ struct Gif
 
                 if (frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0])
                 {
-                    pixelData[locWithinFrame] = Color32(0, 0xff, 0xff, 0xff, 0);
+                    pixelData[static_cast<il2cpp_array_size_t>(locWithinFrame)] = Color32(0, 0xff, 0xff, 0xff, 0);
                 } else {
                     color = &colorMap->Colors[frame->RasterBits[loc]];
-                    pixelData[locWithinFrame] = Color32(0, color->Red, color->Green, color->Blue, 0xff);
+                    pixelData[static_cast<il2cpp_array_size_t>(locWithinFrame)] = Color32(0, color->Red, color->Green, color->Blue, 0xff);
                 }
                 
             }
@@ -204,11 +203,11 @@ struct Gif
                     // Checks if the pixel is transparent
                     if (GCB.TransparentColor >=0 && frame->RasterBits[loc] == ext->Bytes[3] && ext->Bytes[0]) {
                         if (GCB.DisposalMode == 2) {
-                            pixelData[locWithinFrame] = Color32(0, 0xff, 0xff, 0xff, 0);
+                            pixelData[static_cast<il2cpp_array_size_t>(locWithinFrame)] = Color32(0, 0xff, 0xff, 0xff, 0);
                         }
                     } else {
                         color = &colorMap->Colors[frame->RasterBits[loc]];
-                        pixelData[locWithinFrame] = Color32(0, color->Red, color->Green, color->Blue, 0xff);
+                        pixelData[static_cast<il2cpp_array_size_t>(locWithinFrame)] = Color32(0, color->Red, color->Green, color->Blue, 0xff);
                     }
                     
                 }
@@ -251,8 +250,9 @@ private:
             this->std::basic_streambuf<CharT, TraitsT>::setg(vec.data(), vec.data(), vec.data() + vec.size());
         }
 
-        vectorwrapbuf(Array<CharT>* arr) {
-            this->std::basic_streambuf<CharT, TraitsT>::setg(arr->_values, arr->_values, arr->_values + arr->get_Length());
+        vectorwrapbuf(Array<uint8_t>* arr) {
+            auto* begin = reinterpret_cast<CharT*>(arr->_values);
+            this->std::basic_streambuf<CharT, TraitsT>::setg(begin, begin, begin + arr->max_length);
         }
     };
 

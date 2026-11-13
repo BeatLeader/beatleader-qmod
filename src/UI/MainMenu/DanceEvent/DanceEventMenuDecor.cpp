@@ -31,8 +31,8 @@
 #include "sombrero/shared/FastQuaternion.hpp"
 #include "sombrero/shared/FastVector2.hpp"
 #include "sombrero/shared/FastVector3.hpp"
-#include "beatsaber-hook/shared/utils/hooking.hpp"
-#include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
+#include "beatsaber-hook/shared/hooking.hpp"
+#include "beatsaber-hook/shared/safeptr.hpp"
 #include "bsml/shared/Helpers/getters.hpp"
 
 #include <algorithm>
@@ -164,44 +164,44 @@ namespace {
     #pragma region State
 
     struct Candle {
-        SafePtrUnity<Transform> root;
-        SafePtrUnity<UI::Image> flame;
+        safe_ptr<Transform*> root;
+        safe_ptr<UI::Image*> flame;
         float phase;
         float center;
     };
 
     struct ImagePhase {
-        SafePtrUnity<UI::Image> image;
+        safe_ptr<UI::Image*> image;
         float phase;
     };
 
     struct Glow {
-        SafePtrUnity<Material> material;
+        safe_ptr<Material*> material;
         Color color;
     };
 
     struct Pumpkin {
-        SafePtrUnity<Transform> root;
+        safe_ptr<Transform*> root;
         float phase;
         float yaw;
         std::vector<Glow> glows;
     };
 
     struct Mist {
-        SafePtrUnity<Transform> root;
+        safe_ptr<Transform*> root;
         float degreesPerSecond;
     };
 
     struct Web {
-        SafePtrUnity<HMUI::Screen> screen;
-        SafePtrUnity<Canvas> canvas;
-        SafePtrUnity<RectTransform> rect;
+        safe_ptr<HMUI::Screen*> screen;
+        safe_ptr<Canvas*> canvas;
+        safe_ptr<RectTransform*> rect;
         bool rightCorner;
     };
 
     struct Bat {
-        SafePtrUnity<Transform> root;
-        SafePtrUnity<UI::Image> image;
+        safe_ptr<Transform*> root;
+        safe_ptr<UI::Image*> image;
         FastVector3 center;
         float radius;
         float speed;
@@ -212,9 +212,9 @@ namespace {
     };
 
     struct DecorState {
-        SafePtrUnity<GameObject> root;
-        std::vector<SafePtrUnity<GameObject>> screenDecor;
-        SafePtrUnity<Camera> camera;
+        safe_ptr<GameObject*> root;
+        std::vector<safe_ptr<GameObject*>> screenDecor;
+        safe_ptr<Camera*> camera;
 
         std::vector<Pumpkin> pumpkins;
         std::vector<Candle> candles;
@@ -224,23 +224,23 @@ namespace {
         std::vector<Web> webs;
         float nextWebLayout = 0;
         bool websShown = false;
-        SafePtrUnity<RectTransform> thread;
+        safe_ptr<RectTransform*> thread;
         float threadPhase = 0;
 
         std::vector<Bat> bats;
-        SafePtrUnity<Sprite> batUp;
-        SafePtrUnity<Sprite> batDown;
+        safe_ptr<Sprite*> batUp;
+        safe_ptr<Sprite*> batDown;
 
-        SafePtrUnity<GameObject> skeleton;
-        SafePtrUnity<RectTransform> skeletonPanel;
-        SafePtrUnity<HMUI::CurvedCanvasSettings> skeletonCurve;
+        safe_ptr<GameObject*> skeleton;
+        safe_ptr<RectTransform*> skeletonPanel;
+        safe_ptr<HMUI::CurvedCanvasSettings*> skeletonCurve;
 
-        SafePtr<Array<Vector3>> corners;
+        safe_ptr<Array<Vector3>*> corners;
     };
 
     std::unique_ptr<DecorState> state;
-    SafePtrUnity<BeatLeader::DanceEventMenuDecor> decorInstance;
-    SafePtrUnity<GlobalNamespace::MainMenuViewController> mainMenuView;
+    safe_ptr<BeatLeader::DanceEventMenuDecor*> decorInstance;
+    safe_ptr<GlobalNamespace::MainMenuViewController*> mainMenuView;
 
     bool MainMenuShown() {
         return mainMenuView && mainMenuView->get_isActivated();

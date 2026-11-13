@@ -1,3 +1,4 @@
+#include "beatsaber-hook/shared/safeptr.hpp"
 #include "UI/ResultsViewController.hpp"
 
 #include "main.hpp"
@@ -21,9 +22,9 @@
 #include "UI/LeaderboardUI.hpp"
 #include "UI/QuestUI.hpp"
 #include "UI/Results/DanceResultsUI.hpp"
-#include "beatsaber-hook/shared/utils/il2cpp-functions.hpp"
+#include "beatsaber-hook/shared/api.hpp"
 #include "custom-types/shared/delegate.hpp"
-#include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
+#include "beatsaber-hook/shared/types.hpp"
 #include "bsml/shared/Helpers/getters.hpp"
 
 #include <filesystem>
@@ -32,12 +33,12 @@ using namespace GlobalNamespace;
 
 namespace ResultsView {
 
-    SafePtrUnity<BeatLeader::VotingButton> resultsVotingButton;
-    SafePtrUnity<UnityEngine::UI::Button> replayButton;
+    safe_ptr<BeatLeader::VotingButton*> resultsVotingButton;
+    safe_ptr<UnityEngine::UI::Button*> replayButton;
     BeatLeader::RankVotingPopup* votingUI;
     bool lastGameWasReplay = false;
 
-    MAKE_HOOK_MATCH(GetLastReplayStateHook, &MenuTransitionsHelper::HandleMainGameSceneDidFinish, void, MenuTransitionsHelper* self, StandardLevelScenesTransitionSetupDataSO* standardLevelScenesTransitionSetupData, LevelCompletionResults* levelCompletionResults){
+    MAKE_HOOK_MATCH(GetLastReplayStateHook, &MenuTransitionsHelper::HandleMainGameSceneDidFinish, void, MenuTransitionsHelper* self, StandardLevelScenesTransitionSetupData* standardLevelScenesTransitionSetupData, LevelCompletionResults* levelCompletionResults){
         // Save if the last Game was a Replay
         if(ReplayInstalled()) {
             lastGameWasReplay = IsInReplay();
@@ -50,7 +51,7 @@ namespace ResultsView {
         ResultsViewDidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
         if(firstActivation){
-            auto transform = self->get_transform();
+            UnityEngine::Transform* transform = self->get_transform();
             // Create voting button
             auto votingButtonImage = ::BSML::Lite::CreateClickableImage(transform, BundleLoader::bundle->modifiersIcon, [transform]() {
                 if (resultsVotingButton->state != 2) return;

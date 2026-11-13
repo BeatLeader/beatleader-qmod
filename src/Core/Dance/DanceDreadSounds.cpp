@@ -21,9 +21,9 @@ namespace DanceDread::Sounds {
         {730, 1090, 2440}, {530, 1840, 2480}, {270, 2290, 3010}, {570, 840, 2410}, {300, 870, 2240}
     };
 
-    static SafePtrUnity<AudioClip> heartbeat;
-    static SafePtrUnity<AudioClip> sting;
-    static SafePtrUnity<AudioClip> relief;
+    static safe_ptr<AudioClip*> heartbeat;
+    static safe_ptr<AudioClip*> sting;
+    static safe_ptr<AudioClip*> relief;
 
     #pragma region Clips
 
@@ -179,8 +179,8 @@ namespace DanceDread::Sounds {
 
     static constexpr int WhisperSeeds[] = {11, 23, 37, 53};
 
-    static std::array<SafePtrUnity<AudioClip>, std::size(VoiceLines)> voices;
-    static std::array<SafePtrUnity<AudioClip>, std::size(WhisperSeeds)> whispers;
+    static std::array<safe_ptr<AudioClip*>, std::size(VoiceLines)> voices;
+    static std::array<safe_ptr<AudioClip*>, std::size(WhisperSeeds)> whispers;
 
     static AudioClip* Whisper(int index) {
         if (!whispers[index]) whispers[index] = CreateWhisper(WhisperSeeds[index]);

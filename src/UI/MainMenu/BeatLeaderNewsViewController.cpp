@@ -16,7 +16,7 @@ using namespace UnityEngine;
 
 namespace BeatLeader {
 
-    static SafePtrUnity<BeatLeaderNewsViewController> instance;
+    static safe_ptr<BeatLeaderNewsViewController*> instance;
     static bool danceAutoOpened = false;
 
     static void HandleDanceEventChanged() {

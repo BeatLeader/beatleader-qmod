@@ -21,7 +21,7 @@
 #include "bsml/shared/BSML.hpp"
 #include "bsml/shared/BSML-Lite.hpp"
 #include "bsml/shared/Helpers/getters.hpp"
-#include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
+#include "beatsaber-hook/shared/safeptr.hpp"
 
 #include <cmath>
 #include <fmt/format.h>
@@ -40,11 +40,11 @@ namespace DanceResultsUI {
         return Vector2(origin.x + x, origin.y + y);
     }
 
-    static SafePtrUnity<TMPro::TextMeshProUGUI> verdictText;
-    static SafePtrUnity<TMPro::TextMeshProUGUI> danceText;
-    static SafePtrUnity<HMUI::ImageView> tombstoneImage;
-    static SafePtrUnity<TMPro::TextMeshProUGUI> tombstoneText;
-    static SafePtrUnity<BeatLeader::DanceEventResultsPanel> eventPanel;
+    static safe_ptr<TMPro::TextMeshProUGUI*> verdictText;
+    static safe_ptr<TMPro::TextMeshProUGUI*> danceText;
+    static safe_ptr<HMUI::ImageView*> tombstoneImage;
+    static safe_ptr<TMPro::TextMeshProUGUI*> tombstoneText;
+    static safe_ptr<BeatLeader::DanceEventResultsPanel*> eventPanel;
 
     #pragma region Construct
 
@@ -167,9 +167,9 @@ namespace DanceResultsUI {
     #pragma region Banner
 
     struct OverriddenText {
-        SafePtrUnity<TMPro::TMP_Text> text;
+        safe_ptr<TMPro::TMP_Text*> text;
         std::string original;
-        SafePtrUnity<Behaviour> localizer;
+        safe_ptr<Behaviour*> localizer;
     };
 
     static std::vector<OverriddenText> overriddenBannerTexts;

@@ -37,7 +37,7 @@
 
 using namespace std;
 
-#define GET_FIND_METHOD(mPtr) il2cpp_utils::il2cpp_type_check::MetadataGetter<mPtr>::methodInfo()
+#define GET_FIND_METHOD(mPtr) ::i2c::metadata_getter<mPtr>::method_info()
 
 DECLARE_CLASS_CODEGEN(BeatLeader, AccuracyGraph, UnityEngine::EventSystems::UIBehaviour) {
     DECLARE_INSTANCE_FIELD(AccuracyGraphLine*, graphLine);

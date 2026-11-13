@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 
 #include "shared/Models/Player.hpp"
 

@@ -8,7 +8,7 @@
 #include "Models/PlatformEvent.hpp"
 #include "Models/DanceEventStatus.hpp"
 
-#include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
+#include "beatsaber-hook/shared/safeptr.hpp"
 
 #include <functional>
 #include <optional>
@@ -44,7 +44,7 @@ public:
 
 private:
     std::optional<PlatformEvent> event;
-    SafePtrUnity<DanceEventPanelComponent> safeComponent;
+    safe_ptr<DanceEventPanelComponent*> safeComponent;
     int requestGeneration = 0;
     std::optional<DanceEventStatus> lastStatus;
 

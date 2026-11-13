@@ -9,7 +9,7 @@
 #include "UnityEngine/TextureWrapMode.hpp"
 
 #include "bsml/shared/Helpers/utilities.hpp"
-#include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
+#include "beatsaber-hook/shared/safeptr.hpp"
 
 #include <zlib.h>
 
@@ -57,7 +57,7 @@ namespace DanceEventAssets {
         return nullptr;
     }
 
-    static std::map<std::pair<std::string, std::pair<float, float>>, SafePtrUnity<Sprite>> sprites;
+    static std::map<std::pair<std::string, std::pair<float, float>>, safe_ptr<Sprite*>> sprites;
 
     static Sprite* CreateSprite(Texture2D* texture, Vector2 pivot) {
         if (!texture) return nullptr;
@@ -188,7 +188,7 @@ namespace DanceEventAssets {
 
     template<Sprite* (*create)()>
     static Sprite* Cached() {
-        static SafePtrUnity<Sprite> sprite;
+        static safe_ptr<Sprite*> sprite;
         if (!sprite) sprite = create();
         return sprite.ptr();
     }

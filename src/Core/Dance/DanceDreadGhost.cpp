@@ -4,7 +4,7 @@
 
 #include "UnityEngine/RectTransform.hpp"
 
-#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "beatsaber-hook/shared/rapidjson.hpp"
 
 #include "main.hpp"
 
@@ -179,7 +179,7 @@ namespace DanceDread::Ghost {
     #pragma region Visuals
 
     static Sprite* DiscSprite() {
-        static SafePtrUnity<Sprite> sprite;
+        static safe_ptr<Sprite*> sprite;
         if (!sprite) {
             sprite = CreateAlphaSprite(64, 64, {0.5f, 0.5f}, [](float u, float v) {
                 float distance = CenterDistance(u, v);
@@ -190,7 +190,7 @@ namespace DanceDread::Ghost {
     }
 
     static Sprite* BarSprite() {
-        static SafePtrUnity<Sprite> sprite;
+        static safe_ptr<Sprite*> sprite;
         if (!sprite) {
             sprite = CreateAlphaSprite(8, 32, {0.5f, 0.5f}, [](float, float v) {
                 return Clamp01((1 - std::abs(v * 2 - 1)) * 2.5f);
@@ -201,12 +201,12 @@ namespace DanceDread::Ghost {
 
     static Frames frames;
     static size_t frameIndex = 0;
-    static SafePtrUnity<GameObject> root;
-    static SafePtrUnity<Transform> head;
-    static SafePtrUnity<Transform> headBillboard;
-    static SafePtrUnity<Transform> leftSaber;
-    static SafePtrUnity<Transform> rightSaber;
-    static std::vector<SafePtrUnity<UI::Image>> images;
+    static safe_ptr<GameObject*> root;
+    static safe_ptr<Transform*> head;
+    static safe_ptr<Transform*> headBillboard;
+    static safe_ptr<Transform*> leftSaber;
+    static safe_ptr<Transform*> rightSaber;
+    static std::vector<safe_ptr<UI::Image*>> images;
     static float appliedAlpha = -1;
     static bool visible = false;
 

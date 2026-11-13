@@ -1,3 +1,5 @@
+#include "include/Utils/ArrayUtils.hpp"
+#include "beatsaber-hook/shared/safeptr.hpp"
 #include "UI/QuestUI.hpp"
 
 #include "GlobalNamespace/UIKeyboardManager.hpp"
@@ -51,7 +53,6 @@
 #include "System/Action.hpp"
 #include "System/Collections/Generic/HashSet_1.hpp"
 
-#include "Libraries/HM/HMLib/VR/HapticPresetSO.hpp"
 #include "UI/Components/ExternalComponents.hpp"
 #include "UI/Components/CustomTextSegmentedControlData.hpp"
 
@@ -60,6 +61,7 @@
 #define DEFAULT_BUTTONTEMPLATE "PracticeButton"
 
 #include "custom-types/shared/delegate.hpp"
+#include "main.hpp"
 
 using namespace GlobalNamespace;
 using namespace UnityEngine;
@@ -76,18 +78,18 @@ namespace QuestUI {
     GameObject* dropdownListPrefab = nullptr;
     GameObject* modalPrefab = nullptr;
 
-    static SafePtrUnity<TMP_FontAsset> mainTextFont;
+    static safe_ptr<TMP_FontAsset*> mainTextFont;
     TMP_FontAsset* GetMainTextFont() {
-        if(!mainTextFont) mainTextFont.emplace(Resources::FindObjectsOfTypeAll<TMP_FontAsset*>()->FirstOrDefault([](TMP_FontAsset* x) { return x->get_name() == "Teko-Medium SDF"; }));
+        if(!mainTextFont) mainTextFont.emplace(BeatLeader::FirstOrDefault(Resources::FindObjectsOfTypeAll<TMP_FontAsset*>(), [](TMP_FontAsset* x) { return x->get_name() == "Teko-Medium SDF"; }));
         if(!mainTextFont) {
             return nullptr;
         }
         return mainTextFont.ptr();
     }
 
-    static SafePtrUnity<Material> mainUIFontMaterial;
+    static safe_ptr<Material*> mainUIFontMaterial;
     Material* GetMainUIFontMaterial() {
-        if(!mainUIFontMaterial) mainUIFontMaterial.emplace(Resources::FindObjectsOfTypeAll<Material*>()->FirstOrDefault([](Material* x) { return x->get_name() == "Teko-Medium SDF Curved Softer"; }));
+        if(!mainUIFontMaterial) mainUIFontMaterial.emplace(BeatLeader::FirstOrDefault(Resources::FindObjectsOfTypeAll<Material*>(), [](Material* x) { return x->get_name() == "Teko-Medium SDF Curved Softer"; }));
         if(!mainUIFontMaterial) {
             return nullptr;
         }
@@ -102,28 +104,38 @@ namespace QuestUI {
             // beatSaberUIObject->AddComponent<MainThreadScheduler*>();
         }
         if(!dropdownListPrefab) {
-            GameObject* search = Resources::FindObjectsOfTypeAll<SimpleTextDropdown*>()->First([](SimpleTextDropdown* x) { 
+            auto dropdownTemplate = BeatLeader::FirstOrDefault(Resources::FindObjectsOfTypeAll<SimpleTextDropdown*>(), [](SimpleTextDropdown* x) { 
                     return x->get_transform()->get_parent()->get_name() == "NormalLevels"; 
                 }
-            )->get_transform()->get_parent()->get_gameObject();
-            dropdownListPrefab = Object::Instantiate(search, beatSaberUIObject->get_transform(), false);
-            static ConstString name("QuestUIDropdownListPrefab");
-            dropdownListPrefab->set_name(name);
-            dropdownListPrefab->SetActive(false);
+            );
+            if (dropdownTemplate) {
+                GameObject* search = dropdownTemplate->get_transform()->get_parent()->get_gameObject();
+                dropdownListPrefab = Object::Instantiate(search, beatSaberUIObject->get_transform(), false);
+                static ConstString name("QuestUIDropdownListPrefab");
+                dropdownListPrefab->set_name(name);
+                dropdownListPrefab->SetActive(false);
+            } else {
+                BeatLeaderLogger.error("QuestUI: dropdown template (SimpleTextDropdown under NormalLevels) not found");
+            }
         }
         if (!modalPrefab) {
-            GameObject* search = Resources::FindObjectsOfTypeAll<ModalView*>()->First([](ModalView* x) { 
+            auto modalTemplate = BeatLeader::FirstOrDefault(Resources::FindObjectsOfTypeAll<ModalView*>(), [](ModalView* x) { 
                     return x->get_transform()->get_name() == "DropdownTableView";
                 }
-            )->get_gameObject();
-            modalPrefab = Object::Instantiate(search, beatSaberUIObject->get_transform(), false);
-            
-            modalPrefab->GetComponent<ModalView*>()->_presentPanelAnimations = search->GetComponent<ModalView*>()->_presentPanelAnimations;
-            modalPrefab->GetComponent<ModalView*>()->_dismissPanelAnimation = search->GetComponent<ModalView*>()->_dismissPanelAnimation;
+            );
+            if (modalTemplate) {
+                GameObject* search = modalTemplate->get_gameObject();
+                modalPrefab = Object::Instantiate(search, beatSaberUIObject->get_transform(), false);
 
-            static ConstString name("QuestUIModalPrefab");
-            modalPrefab->set_name(name);
-            modalPrefab->SetActive(false);
+                modalPrefab->GetComponent<ModalView*>()->_presentPanelAnimations = modalTemplate->_presentPanelAnimations;
+                modalPrefab->GetComponent<ModalView*>()->_dismissPanelAnimation = modalTemplate->_dismissPanelAnimation;
+
+                static ConstString name("QuestUIModalPrefab");
+                modalPrefab->set_name(name);
+                modalPrefab->SetActive(false);
+            } else {
+                BeatLeaderLogger.error("QuestUI: modal template (ModalView named DropdownTableView) not found");
+            }
         }
 
         GetMainTextFont();
@@ -133,7 +145,7 @@ namespace QuestUI {
     static PhysicsRaycasterWithCache* physicsRaycaster = nullptr;
     PhysicsRaycasterWithCache* GetPhysicsRaycasterWithCache()
     {
-        if(!physicsRaycaster) physicsRaycaster = Resources::FindObjectsOfTypeAll<MainMenuViewController*>()->First()->GetComponent<VRGraphicRaycaster*>()->_physicsRaycaster;
+        if(!physicsRaycaster) physicsRaycaster = Resources::FindObjectsOfTypeAll<MainMenuViewController*>()[0]->GetComponent<VRGraphicRaycaster*>()->_physicsRaycaster;
         if(!physicsRaycaster) {
             return nullptr;
         }
@@ -143,16 +155,16 @@ namespace QuestUI {
     static DiContainer* diContainer = nullptr;
     DiContainer* GetDiContainer()
     {
-        if(!diContainer) diContainer = Resources::FindObjectsOfTypeAll<TextSegmentedControl*>()->FirstOrDefault([](TextSegmentedControl* x) { return x->get_transform()->get_parent()->get_name() == "PlayerStatisticsViewController" && x->_container; })->_container;
+        if(!diContainer) diContainer = BeatLeader::FirstOrDefault(Resources::FindObjectsOfTypeAll<TextSegmentedControl*>(), [](TextSegmentedControl* x) { return x->get_transform()->get_parent()->get_name() == "PlayerStatisticsViewController" && x->_container; })->_container;
         if(!diContainer) {
             return nullptr;
         }
         return diContainer;
     }
 
-    static SafePtrUnity<Material> mat_UINoGlow;
+    static safe_ptr<Material*> mat_UINoGlow;
     Material* NoGlowMaterial() {
-        if(!mat_UINoGlow) mat_UINoGlow.emplace(Resources::FindObjectsOfTypeAll<Material*>()->First([](Material* x) { return x->get_name() == "UINoGlow"; }));
+        if(!mat_UINoGlow) mat_UINoGlow.emplace(BeatLeader::FirstOrDefault(Resources::FindObjectsOfTypeAll<Material*>(), [](Material* x) { return x->get_name() == "UINoGlow"; }));
         if(!mat_UINoGlow) {
             return nullptr;
         }
@@ -173,6 +185,13 @@ namespace QuestUI {
 
     ModalView* CreateModal(Transform* parent, UnityEngine::Vector2 sizeDelta, UnityEngine::Vector2 anchoredPosition, std::function<void(ModalView*)> onBlockerClicked, bool dismissOnBlockerClicked) {
         static ConstString name("QuestUIModalPrefab");
+
+        // Lazily build the templates in case no scene transition triggered SetupPersistentObjects yet
+        if (!modalPrefab) SetupPersistentObjects();
+        if (!modalPrefab) {
+            BeatLeaderLogger.error("QuestUI::CreateModal: modal prefab unavailable, cannot create modal");
+            return nullptr;
+        }
 
         // declare var
         ModalView* orig = modalPrefab->GetComponent<ModalView*>();
@@ -223,7 +242,7 @@ namespace QuestUI {
 
         // add callback
         modal->add_blockerClickedEvent(
-            custom_types::MakeDelegate<System::Action *>(classof(System::Action *), (std::function<void()>) [onBlockerClicked, modal, dismissOnBlockerClicked] () {
+            custom_types::MakeDelegate<System::Action *>(::i2c::class_of<System::Action *>(), (std::function<void()>) [onBlockerClicked, modal, dismissOnBlockerClicked] () {
                 if (onBlockerClicked)
                     onBlockerClicked(modal); 
                 if (dismissOnBlockerClicked)
@@ -276,10 +295,10 @@ namespace QuestUI {
     }
 
     Button* CreateUIButton(Transform* parent, StringW buttonText, std::string_view buttonTemplate, std::function<void()> onClick) {
-        static std::unordered_map<std::string, SafePtrUnity<Button>> buttonCopyMap;
+        static std::unordered_map<std::string, safe_ptr<Button*>> buttonCopyMap;
         auto& buttonCopy = buttonCopyMap[std::string(buttonTemplate)];
         if (!buttonCopy) {
-            buttonCopy = Resources::FindObjectsOfTypeAll<Button*>()->LastOrDefault([&buttonTemplate](auto* x) { return x->get_name() == buttonTemplate; });
+            buttonCopy = BeatLeader::LastOrDefault(Resources::FindObjectsOfTypeAll<Button*>(), [&buttonTemplate](auto* x) { return x->get_name() == buttonTemplate; });
         }
 
         Button* button = Object::Instantiate(buttonCopy.ptr(), parent, false);
@@ -369,9 +388,9 @@ namespace QuestUI {
 
     CustomTextSegmentedControlData* CreateTextSegmentedControl(UnityEngine::Transform* parent, UnityEngine::Vector2 anchoredPosition, UnityEngine::Vector2 sizeDelta, ArrayW<StringW> values, std::function<void(int)> onCellWithIdxClicked)
     {
-        static SafePtrUnity<TextSegmentedControl> segmentedControlTemplate;
+        static safe_ptr<TextSegmentedControl*> segmentedControlTemplate;
         if (!segmentedControlTemplate)
-            segmentedControlTemplate = Resources::FindObjectsOfTypeAll<HMUI::TextSegmentedControl*>()->FirstOrDefault([](auto x){
+            segmentedControlTemplate = BeatLeader::FirstOrDefault(Resources::FindObjectsOfTypeAll<HMUI::TextSegmentedControl*>(), [](auto x){
                 return x->get_name() == "TextSegmentedControl";
         });
 

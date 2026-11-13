@@ -4,7 +4,7 @@
 #include "UnityEngine/Material.hpp"
 #include "UnityEngine/Mesh.hpp"
 
-#include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
+#include "beatsaber-hook/shared/safeptr.hpp"
 
 #include <string>
 #include <string_view>
@@ -12,7 +12,7 @@
 
 namespace DanceEventModels {
     struct Model {
-        SafePtrUnity<UnityEngine::Mesh> mesh;
+        safe_ptr<UnityEngine::Mesh*> mesh;
         std::vector<std::string> materials;
     };
 

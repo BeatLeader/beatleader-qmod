@@ -4,12 +4,18 @@
 //   open=dump dump=<name> depth=7 press=<button text>  logs a UI layout
 #ifdef BL_DEV_AUTOPLAY
 
-#include "beatsaber-hook/shared/utils/hooking.hpp"
+#include "include/Utils/ArrayUtils.hpp"
+#include "beatsaber-hook/shared/hooking.hpp"
 #include "bsml/shared/BSML/MainThreadScheduler.hpp"
 
 #include "ModifiersCoreQuest/shared/Core/ModifiersManager.hpp"
 
-#include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
+#include "GlobalNamespace/BeatmapCharacteristic.hpp"
+#include "GlobalNamespace/BeatmapCharacteristicExtensions.hpp"
+#include "GlobalNamespace/GameMode.hpp"
+#include "GlobalNamespace/GameplayAdditionalInformation.hpp"
+#include "GlobalNamespace/GameplayType.hpp"
+#include "GlobalNamespace/PlaymodeOptions.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/BeatmapKey.hpp"
 #include "GlobalNamespace/BeatmapLevel.hpp"
@@ -38,7 +44,6 @@
 #include "GlobalNamespace/PlayerData.hpp"
 #include "GlobalNamespace/PlayerDataModel.hpp"
 #include "GlobalNamespace/PracticeSettings.hpp"
-#include "GlobalNamespace/RecordingToolManager.hpp"
 #include "GlobalNamespace/SoloFreePlayFlowCoordinator.hpp"
 #include "System/Nullable_1.hpp"
 #include "UnityEngine/Resources.hpp"
@@ -73,22 +78,24 @@ static std::map<std::string, std::string> ReadConfig() {
 }
 
 static void StartLevel(MainFlowCoordinator* main, std::map<std::string, std::string> config) {
-    auto level = main->_beatmapLevelsModel->GetBeatmapLevel(config["level"]);
+    auto level = main->_beatmapLevelsModel->GetBeatmapLevel(config["level"], false);
     if (!level) {
         BeatLeaderLogger.error("AutoPlay: no level {}", config["level"]);
         return;
     }
 
     std::optional<BeatmapKey> key;
-    for (auto characteristic : UnityEngine::Resources::FindObjectsOfTypeAll<BeatmapCharacteristicSO*>()) {
-        if ((std::string)characteristic->serializedName == config["characteristic"]) {
+    for (int i = BeatmapCharacteristic::Standard.value__; i <= BeatmapCharacteristic::Degree90.value__; i++) {
+        BeatmapCharacteristic characteristic;
+        characteristic.value__ = i;
+        if ((std::string)BeatmapCharacteristicExtensions::SerializedName(characteristic) == config["characteristic"]) {
             BeatmapDifficulty difficulty;
             difficulty.value__ = std::stoi(config["difficulty"]);
-            key = BeatmapKey(characteristic, difficulty, StringW(config["level"]));
+            key = BeatmapKey(characteristic, difficulty, StringW(config["level"]), GameplayType::BeatSaber);
             break;
         }
     }
-    if (!key || !level->GetDifficultyBeatmapData(key->beatmapCharacteristic, key->difficulty)) {
+    if (!key || !level->GetDifficultyBeatmapData(by_ref<BeatmapKey const>(*key))) {
         BeatLeaderLogger.error("AutoPlay: no {} difficulty {} (0 Easy .. 4 ExpertPlus)", config["characteristic"], config["difficulty"]);
         return;
     }
@@ -104,16 +111,17 @@ static void StartLevel(MainFlowCoordinator* main, std::map<std::string, std::str
 
     BeatLeaderLogger.info("AutoPlay: starting {} {} {}", config["level"], config["characteristic"], config["difficulty"]);
     main->_menuTransitionsHelper->StartStandardLevel(
-        "Party", byref(*key), level, playerData->overrideEnvironmentSettings, nullptr, false, nullptr,
+        GameMode::Party, by_ref<BeatmapKey const>(*key), level, playerData->overrideEnvironmentSettings, nullptr, false,
         playerData->gameplayModifiers, playerData->playerSpecificSettings, practice,
-        main->_soloFreePlayFlowCoordinator->_environmentsListModel, "Menu", false, false,
-        nullptr, nullptr, nullptr, nullptr, System::Nullable_1<RecordingToolManager_SetupData>());
+        main->_soloFreePlayFlowCoordinator->_environmentsListModel,
+        GameplayAdditionalInformation::New_ctor("Menu", false, false, PlaymodeOptions(), nullptr, false, nullptr, false),
+        nullptr, nullptr, nullptr, nullptr, nullptr);
 }
 
 static void CheckModifiersMenu(MainFlowCoordinator* main, std::map<std::string, std::string> config) {
     main->HandleMainMenuViewControllerDidFinish(nullptr, MainMenuViewController::MenuButton::SoloFreePlay);
     BSML::MainThreadScheduler::ScheduleAfterTime(3, [config] {
-        auto setup = UnityEngine::Resources::FindObjectsOfTypeAll<GameplaySetupViewController*>()->FirstOrDefault();
+        auto setup = BeatLeader::FirstOrDefault(UnityEngine::Resources::FindObjectsOfTypeAll<GameplaySetupViewController*>());
         if (!setup) {
             BeatLeaderLogger.error("AutoPlay: no gameplay setup view");
             return;
@@ -150,16 +158,16 @@ static void CheckModifiersMenu(MainFlowCoordinator* main, std::map<std::string, 
 }
 
 static void DumpLayout(UnityEngine::Transform* transform, int depth, int maxDepth) {
-    auto rect = il2cpp_utils::try_cast<UnityEngine::RectTransform>(transform);
+    auto rect = i2c::try_cast<UnityEngine::RectTransform*>(transform);
     if (rect) {
-        auto r = (*rect)->rect;
+        auto r = rect->rect;
         auto element = transform->GetComponent<UnityEngine::UI::LayoutElement*>();
         BeatLeaderLogger.info("AutoPlay: {}{} active {} size {:.1f}x{:.1f} pos {:.1f},{:.1f} world x {:.2f} pref {:.1f} min {:.1f} flex {:.1f} layout pref {:.1f} min {:.1f} flex {:.1f}",
             std::string(depth * 2, ' '), (std::string)transform->name, transform->gameObject->activeInHierarchy, r.width, r.height,
-            (*rect)->anchoredPosition.x, (*rect)->anchoredPosition.y, transform->position.x,
+            rect->anchoredPosition.x, rect->anchoredPosition.y, transform->position.x,
             element ? element->preferredWidth : -1, element ? element->minWidth : -1, element ? element->flexibleWidth : -1,
-            UnityEngine::UI::LayoutUtility::GetPreferredWidth(*rect), UnityEngine::UI::LayoutUtility::GetMinWidth(*rect),
-            UnityEngine::UI::LayoutUtility::GetFlexibleWidth(*rect));
+            UnityEngine::UI::LayoutUtility::GetPreferredWidth(rect), UnityEngine::UI::LayoutUtility::GetMinWidth(rect),
+            UnityEngine::UI::LayoutUtility::GetFlexibleWidth(rect));
     }
     if (depth >= maxDepth) return;
     for (int i = 0; i < transform->childCount; i++) {
@@ -201,7 +209,7 @@ MAKE_HOOK_MATCH(AutoPlayMainFlowDidActivate, &MainFlowCoordinator::DidActivate, 
                     break;
                 }
             }
-            SafePtrUnity<UnityEngine::GameObject> root = go.ptr();
+            safe_ptr<UnityEngine::GameObject*> root = go.ptr();
             BSML::MainThreadScheduler::ScheduleAfterTime(1, [root, depth] {
                 if (root) DumpLayout(root->transform, 0, depth);
             });
