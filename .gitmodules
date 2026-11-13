@@ -1,0 +1,3 @@
+[submodule "ModifiersCoreQuest"]
+	path = ModifiersCoreQuest
+	url = git@github.com:BeatLeader/ModifiersCoreQuest.git
